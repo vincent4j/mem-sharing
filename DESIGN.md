@@ -55,7 +55,16 @@
 
 1. **项目记忆 = context-keeper**。周一 Codex 会话按其规则写 worklogs;周二 WorkBuddy 通过"继续"入口恢复——跨执行器连续性由"记忆在项目里 + 三家都被同一 Skill 规则驱动"保证。
 2. **记忆跟着仓库走**:记录库在 `<repo>/docs/context-keeper/` 且提交进 Git,worktree 天然继承、多设备天然同步(Paseo worktree 场景已由 context-keeper 该设计覆盖)。
-3. **规则与记忆分层**(与 Codex/Claude 官方口径一致):必须始终生效的硬规则仍写 AGENTS.md/CLAUDE.md 本体;进度、事实、经验是记忆,走 context-keeper 记录库,由 bridge 触发规则驱动。
+3. **规则与记忆分层,项目规则的唯一源是项目根 `AGENTS.md`**:
+   - `AGENTS.md` = 项目硬规则(构建命令、代码规范、禁止事项),与执行器无关,提交进 Git;
+   - 进度、事实、经验是**记忆**,走 context-keeper 记录库,由 bridge 触发规则驱动;
+   - `~/.agents-group` = 用户级跨项目规则。三层互不抢地盘。
+   - **各执行器对 AGENTS.md 的可达性**(必须显式打通,否则规则只对部分 Agent 生效):
+     | 执行器 | 可达性 | 打通方式 |
+     |---|---|---|
+     | Codex | 原生读取 Git 根→cwd 链 | 无需处理 |
+     | Claude Code | **默认"有 CLAUDE.md 就不读 AGENTS.md"** | CLAUDE.md 内放 `@AGENTS.md` import(原生支持) |
+     | WorkBuddy | 无原生支持 | 用户级约定引导(§6,保留现行"项目规则读 AGENTS.md"条款) |
 4. **私有记忆只出不进**:Codex/WorkBuddy/Claude 各自的自动记忆库是黑盒生成物,保持原样,不做互通枢纽。
 
 ## 4. 三执行器接入矩阵
@@ -78,12 +87,13 @@ check-memory  [--project <Git根>]
 
 `enable-memory` 的动作(全部幂等,操作前查 Git 状态、备份、指纹漂移检测):
 
-1. 调用 context-keeper 的 `install.py` 把 Skill 装进所选执行器的项目 Skill 目录(`--all` 语义,同名冲突即停,不覆盖);
-2. Codex/Claude:执行其已验收的 `--ensure-bridge`(`--codex` / `--claude` 各自的规则文件);
-3. WorkBuddy:写入本仓库定义的 WorkBuddy 桥接块(§6);
-4. 读回校验 + 提示"新会话验收"(§7)。
+1. **确保项目规则基座**:项目根 `AGENTS.md` 存在(无则创建骨架);`CLAUDE.md` 存在时确认含 `@AGENTS.md` 引用(§3 决策 3 的可达性打通);
+2. 调用 context-keeper 的 `install.py` 把 Skill 装进所选执行器的项目 Skill 目录(`--all` 语义,同名冲突即停,不覆盖);
+3. Codex/Claude:执行其已验收的 `--ensure-bridge`(`--codex` / `--claude` 各自的规则文件);
+4. WorkBuddy:写入本仓库定义的 WorkBuddy 桥接块(§6);
+5. 读回校验 + 提示"新会话验收"(§7)。
 
-`check-memory`:检测三家入口块存在/漂移、`AGENTS.override.md` 劫持风险、记录库位置与迁移门禁状态。
+`check-memory`:检测三家入口块存在/漂移、CLAUDE.md 的 `@AGENTS.md` 引用存在、CLAUDE.md 内非引用规则增长、`AGENTS.override.md` 劫持风险、记录库位置与迁移门禁状态。
 
 `remove-memory`:仅移除入口块与 Skill 链接,不动 `docs/context-keeper/` 记录本体(记忆是项目资产,删除必须用户显式做)。
 
@@ -94,7 +104,7 @@ context-keeper 的 install.py 对 WorkBuddy 刻意停写:"自动入口尚未完�
 - **落点**:项目 `.workbuddy/memory/MEMORY.md` 顶部(WorkBuddy 原生加载该文件;其每日日志机制照旧,不冲突)。
 - **内容**:复用 context-keeper 的 BRIDGE 规则语义(无项目聊天边界、限量历史检索触发、自然节点自动记录、追加式日志、事实边界),以 `<!-- context-keeper:workbuddy:start/end -->` 标记块写入,措辞适配 WorkBuddy 记忆文件语境。
 - **验收通过后**:把 WorkBuddy 桥接模板与验收证据回传 context-keeper 仓库,解除其 install.py 对 WorkBuddy 的写入限制——**桥接的终局是消失**:一旦 context-keeper 原生支持,本仓库编排命令只调它,不再维护私有模板。
-- 一次性的用户级配合改动:把 `~/.workbuddy/MEMORY.md` 中现行的"项目规则唯一来源是项目根 AGENTS.md"约定改写为"项目记忆用 context-keeper 记录库;硬规则仍可写 AGENTS.md",避免两套约定打架。
+- 一次性的用户级配合改动:`~/.workbuddy/MEMORY.md` 中现行的"项目规则唯一来源是项目根 AGENTS.md"约定**保留规则条款**(WorkBuddy 靠它读 AGENTS.md,这是 §3 可达性打通的一环),只**追加记忆条款**:"项目记忆(进度/事实/经验)用 context-keeper 记录库,由项目 `.workbuddy/memory/MEMORY.md` 的桥接块驱动"——规则走 AGENTS.md、记忆走 context-keeper,两不打架。
 
 ## 7. 验收协议(静态配置不算数)
 
@@ -115,7 +125,9 @@ context-keeper 的 install.py 对 WorkBuddy 刻意停写:"自动入口尚未完�
 | `AGENTS.override.md` 劫持 Codex 入口 | check 检测并告警;本仓库永不使用 override 机制 |
 | bridge 块漂移/被手工编辑 | 标记块指纹校验(沿用 context-keeper 幂等逻辑);漂移即停,人工核对 |
 | 与 context-keeper 版本脱节 | 本仓库不复制其规则文本为第二真源——WorkBuddy 桥接验收后立即回传上游,只保留临时副本并注明来源版本 |
-| 双重入口打架(WorkBuddy 老约定 vs 桥接) | §6 的用户级约定改写;check 检测旧约定残留 |
+| 双重入口打架(WorkBuddy 老约定 vs 桥接) | §6 的用户级约定补记;check 检测旧约定残留 |
+| 项目规则双写漂移(AGENTS.md 与 CLAUDE.md 各存一份规则) | 规则唯一源 AGENTS.md;CLAUDE.md 只放 `@AGENTS.md` 引用 + bridge 块;check 对 CLAUDE.md 中非引用的规则增长告警 |
+| `@AGENTS.md` import 被误删(Claude 断 rules) | check 校验 CLAUDE.md 引用行存在;enable 幂等补装 |
 | 32KiB / 200 行预算 | 入口块体积由 context-keeper 模板控制;本仓库不再往规则文件追加任何记忆类内容 |
 
 ## 9. 落地路线
