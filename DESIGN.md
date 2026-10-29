@@ -73,6 +73,7 @@
 |---|---|---|---|
 | 项目 Skill 目录 | `.agents/skills`、`.codex/skills`(context-keeper 安装器支持) | `.claude/skills`(支持) | `.workbuddy/skills`(支持) |
 | 自动入口落点 | 项目 `AGENTS.md`(bridge 已验收 ✅) | 项目 `CLAUDE.md`(bridge 已验收 ✅) | **`.workbuddy/memory/MEMORY.md` 顶部(本仓库设计,待验收)** |
+| 嵌套(子目录)规则文件 | 根→cwd 逐级 AGENTS.md,拼接、近者优先(共享 32KiB) | 子目录 CLAUDE.md/AGENTS.md 在该目录工作时按需加载 | **无嵌套机制**,仅项目根 `.workbuddy/memory/`;子目录规则不可达(盲区,§5.2) |
 | 指令预算 | AGENTS.md 链默认 32KiB,bridge 块已控制体积 | CLAUDE.md 建议 <200 行 | 未见公开上限 |
 | 验收手段 | 复述当前指令链(官方推荐) | `/context`、`/memory` | 新会话口头验证 |
 | 特有风险 | `AGENTS.override.md` 会劫持整个 AGENTS.md(装入口前检测) | 有 CLAUDE.md 时不读 AGENTS.md(入口必须进 CLAUDE.md) | "重置记忆"清空 `.workbuddy/memory/`(需幂等重装入口) |
@@ -96,6 +97,29 @@ check-memory  [--project <Git根>]
 `check-memory`:检测三家入口块存在/漂移、CLAUDE.md 的 `@AGENTS.md` 引用存在、CLAUDE.md 内非引用规则增长、`AGENTS.override.md` 劫持风险、记录库位置与迁移门禁状态。
 
 `remove-memory`:仅移除入口块与 Skill 链接,不动 `docs/context-keeper/` 记录本体(记忆是项目资产,删除必须用户显式做)。
+
+### 5.1 存量整理(已有多份记录的项目首次启用时)
+
+场景:装本系统之前,项目已分别积累了 CLAUDE.md(Claude 用)和 AGENTS.md(Codex 用)的内容,两份可能重复且互相漂移。首次 `enable-memory` 进入存量整理阶段,**预览 → 用户逐类确认 → 执行**(迁移门禁模式,参照 context-keeper 迁移门禁),不做盲移:
+
+1. **扫描分类**:根与各子目录的 `AGENTS.md`、`CLAUDE.md`、`CLAUDE.local.md`,逐条标记为:规则 / 记忆类(进度、事实、经验、偏好)/ 装配内容(@import、bridge 块)。
+2. **归位**:
+   - 规则 → 合并进(同级)`AGENTS.md` 唯一源;**两文件冲突或漂移的条目并列展示双方原文,由用户裁定**,不自动取舍;
+   - 记忆类 → 蒸馏进 context-keeper:进度与事实更新 `memory-keeper.md` 并追加一条 `worklogs/` legacy 日志(注明来源文件与日期);可复用经验进 `evolution/`(须有依据,无依据标待验证);
+   - 个人偏好 → 留在 `CLAUDE.local.md`(gitignore 层),不并入团队可见的 AGENTS.md。
+3. **瘦身**:CLAUDE.md 只剩 `@AGENTS.md` 引用 + context-keeper bridge 块;AGENTS.md 移除记忆类内容,保持纯规则。
+4. **全程时间戳备份 + 迁移报告**(什么内容、从哪个文件、去了哪里、用户裁定记录)。
+
+分类需要判断:由 agent 执行、用户确认;工具只负责扫描、预览、备份与读回校验。
+
+### 5.2 嵌套文件(子目录的规则与记忆)
+
+各家原生能力不同(§4 矩阵):Codex 逐级链、Claude 按需加载、**WorkBuddy 无嵌套机制**。规则:
+
+1. **嵌套文件只放模块规则,不放记忆**——与根部分层一致。模块记忆(子模块的进度、事实、经验)统一进 context-keeper **单库**,用主题命名与 `memory-keeper.md` 链接表达模块归属,不在子目录另建记忆文件,避免记忆碎片化(monorepo 同样适用)。
+2. 模块规则放**子目录 AGENTS.md**:Codex 原生可达、Claude 按需可达;**WorkBuddy 是已知盲区**——对 WorkBuddy 重要的模块规则需在根 AGENTS.md 留摘要或入口提及,或明确接受 WorkBuddy 只感知根级规则(在 AGENTS.md 首部声明该边界)。
+3. 存量子目录 CLAUDE.md 走 §5.1 同套流程:规则并入同级 AGENTS.md;无 Claude 特有内容则迁完删除(让 Claude 落到按需加载 AGENTS.md),有则瘦身为 `@AGENTS.md` 引用。
+4. 嵌套规则文件保持简短(与根共享 Codex 32KiB 链预算),细节下沉 context-keeper 记录库或 `references/`。
 
 ## 6. WorkBuddy 自动入口桥接(本仓库的主要新增工作)
 
