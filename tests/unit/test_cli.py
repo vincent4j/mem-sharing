@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import io
+import importlib.util
 import json
 import os
 import shutil
@@ -16,6 +17,7 @@ import sys
 import tempfile
 import types
 import unittest
+import unittest.mock
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SCRIPTS_DIR = os.path.join(REPO_ROOT, "scripts")
@@ -529,38 +531,89 @@ class CliRoutingTests(CliTestCase):
         self.assertTrue(envelope["warnings"])
         self.assertIn("未执行任何写入", envelope["errors"][0]["message"])
 
-    def test_interactive_enable_reaches_kernel_stub(self):
-        code, envelope, _ = self.run_cli("enable-memory", interactive=True)
-        self.assertEqual(code, 2)
-        self.assertEqual(envelope["errors"][0]["code"], "kernel_unavailable")
+    @unittest.skipUnless(
+        importlib.util.find_spec("agm_core.enable"),
+        "enable 命令体(M2-04)交付后本用例生效",
+    )
+    def test_interactive_enable_reaches_enable_kernel(self):
+        captured = {}
 
-    def test_enable_with_approval_file_reaches_kernel_stub(self):
+        def fake_run(request):
+            captured["request"] = request
+            return {
+                "status": "completed",
+                "projects": [],
+                "changes": [],
+                "warnings": [],
+                "errors": [],
+            }
+
+        with unittest.mock.patch("agm_core.enable.run", side_effect=fake_run):
+            code, envelope, _ = self.run_cli("enable-memory", interactive=True)
+        self.assertEqual(code, 0)
+        self.assertEqual(envelope["status"], "completed")
+        self.assertEqual(captured["request"]["command"], "enable-memory")
+
+    @unittest.skipUnless(
+        importlib.util.find_spec("agm_core.enable"),
+        "enable 命令体(M2-04)交付后本用例生效",
+    )
+    def test_enable_with_approval_file_reaches_enable_kernel(self):
         path = _write_json(_approval_data())
+        captured = {}
+
+        def fake_run(request):
+            captured["request"] = request
+            return {
+                "status": "completed",
+                "projects": [],
+                "changes": [],
+                "warnings": [],
+                "errors": [],
+            }
+
         try:
-            code, envelope, _ = self.run_cli(
-                "enable-memory",
-                "--memory",
-                "--approval-file",
-                path,
-                interactive=False,
-            )
-            self.assertEqual(code, 2)
-            self.assertEqual(envelope["errors"][0]["code"], "kernel_unavailable")
+            with unittest.mock.patch("agm_core.enable.run", side_effect=fake_run):
+                code, envelope, _ = self.run_cli(
+                    "enable-memory",
+                    "--memory",
+                    "--approval-file",
+                    path,
+                    interactive=False,
+                )
+            self.assertEqual(code, 0)
+            self.assertEqual(envelope["status"], "completed")
             self.assertEqual(envelope["command"], "enable-memory")
+            self.assertEqual(captured["request"]["command"], "enable-memory")
         finally:
             os.unlink(path)
 
-    def test_remove_with_approval_file_reaches_kernel_stub(self):
+    def test_remove_with_approval_file_reaches_remove_kernel(self):
         data = _approval_data(
             command="remove-memory", agents=["codex"], memory_authorization=None
         )
         path = _write_json(data)
+        captured = {}
+
+        def fake_run(request):
+            captured["request"] = request
+            return {
+                "status": "completed",
+                "projects": [],
+                "changes": [],
+                "warnings": [],
+                "errors": [],
+            }
+
         try:
-            code, envelope, _ = self.run_cli(
-                "remove-memory", "--approval-file", path, interactive=False
-            )
-            self.assertEqual(code, 2)
-            self.assertEqual(envelope["errors"][0]["code"], "kernel_unavailable")
+            with unittest.mock.patch("agm_core.remove.run", side_effect=fake_run):
+                code, envelope, _ = self.run_cli(
+                    "remove-memory", "--approval-file", path, interactive=False
+                )
+            self.assertEqual(code, 0)
+            self.assertEqual(envelope["status"], "completed")
+            self.assertEqual(captured["request"]["command"], "remove-memory")
+            self.assertEqual(captured["request"]["approval"]["command"], "remove-memory")
         finally:
             os.unlink(path)
 
