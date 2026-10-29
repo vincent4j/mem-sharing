@@ -523,9 +523,10 @@ def _execute(argv, *, platform, interactive, table_path, home):
     except agm_paths.PathsError as exc:
         raise CliError(exc.code, str(exc), command=command) from None
 
-    # 写命令批准门(裁定 D-M2-04 方案 A):非交互且未绑定批准 → 待确认(5),不自行批准;
-    # TTY 只影响能否提问,不扩大权限。未知 OS/占位已在前一步硬停(2)。
-    if command in WRITE_COMMANDS and approval is None and not interactive:
+    # 写命令批准门(裁定 D-M2-04 方案 A):remove 保守前置门保留(非交互且未绑定批准 → 5);
+    # enable 的免批准判定(幂等补装)由内核在写锁内依 registry 现场裁决(M2-04 已实现),
+    # 本外壳不前置截断,内核返回 approval_required 时同样映射为 5。TTY 只影响能否提问。
+    if command == "remove-memory" and approval is None and not interactive:
         return make_envelope(
             command,
             STATUS_APPROVAL_REQUIRED,

@@ -472,23 +472,46 @@ class CliParseTests(CliTestCase):
         self.assertEqual(code, 2)
 
     def test_valid_parse_reaches_routing(self):
-        # 合法参数不会死在解析层:非交互 enable 停在批准门(5),证明解析通过
-        code, envelope, _ = self.run_cli(
-            "enable-memory", "--project", "/repo", "--agent", "codex", "claude", "--memory"
-        )
+        # 合法参数不会死在解析层:路由到内核(此处 mock),内核返回待确认 → 5
+        with unittest.mock.patch(
+            "agm_core.enable.run",
+            return_value={
+                "status": "approval_required",
+                "approval_required": True,
+                "next_action": "需要 --approval-file",
+                "projects": [], "changes": [], "warnings": [], "errors": [],
+            },
+        ):
+            code, envelope, _ = self.run_cli(
+                "enable-memory", "--project", "/repo", "--agent", "codex", "claude", "--memory"
+            )
         self.assertEqual(code, 5)
         self.assertEqual(envelope["command"], "enable-memory")
         self.assertEqual(envelope["status"], "approval_required")
 
 
 class CliRoutingTests(CliTestCase):
-    def test_noninteractive_enable_returns_5(self):
-        code, envelope, err = self.run_cli("enable-memory", interactive=False)
+    def test_noninteractive_enable_kernel_judges_approval(self):
+        # enable 无 CLI 前置门:非交互无批准直达内核,由内核(M2-04 锁内判定)裁决
+        captured = {}
+
+        def fake_run(request):
+            captured["request"] = request
+            return {
+                "status": "approval_required",
+                "approval_required": True,
+                "next_action": "需要 --approval-file 绑定已确认计划",
+                "projects": [], "changes": [], "warnings": [], "errors": [],
+            }
+
+        with unittest.mock.patch("agm_core.enable.run", side_effect=fake_run):
+            code, envelope, err = self.run_cli("enable-memory", interactive=False)
         self.assertEqual(code, 5)
         self.assertEqual(envelope["status"], "approval_required")
         self.assertTrue(envelope["approval_required"])
         self.assertIn("--approval-file", envelope["next_action"])
         self.assertEqual(envelope["errors"], [])
+        self.assertEqual(captured["request"]["command"], "enable-memory")
         self.assertIn("待授权", err)
 
     def test_noninteractive_remove_returns_5(self):
@@ -517,19 +540,40 @@ class CliRoutingTests(CliTestCase):
         finally:
             os.unlink(path)
 
+    @unittest.skipUnless(
+        importlib.util.find_spec("agm_core.check"),
+        "check 命令体(M2-05)交付后本用例生效",
+    )
     def test_check_has_no_approval_gate(self):
-        code, envelope, _ = self.run_cli("check-memory", interactive=False)
-        self.assertEqual(code, 2)
-        self.assertEqual(envelope["errors"][0]["code"], "kernel_unavailable")
+        with unittest.mock.patch(
+            "agm_core.check.run",
+            return_value={
+                "status": "completed",
+                "projects": [], "changes": [], "warnings": [], "errors": [],
+            },
+        ):
+            code, envelope, _ = self.run_cli("check-memory", interactive=False)
+        self.assertEqual(code, 0)
+        self.assertEqual(envelope["status"], "completed")
         self.assertNotEqual(envelope["status"], "approval_required")
 
-    def test_kernel_stub_reports_no_writes(self):
-        code, envelope, _ = self.run_cli("check-memory", "--all", interactive=False)
-        self.assertEqual(code, 2)
-        self.assertEqual(envelope["status"], "failed")
+    @unittest.skipUnless(
+        importlib.util.find_spec("agm_core.check"),
+        "check 命令体(M2-05)交付后本用例生效",
+    )
+    def test_check_result_envelope_passthrough(self):
+        with unittest.mock.patch(
+            "agm_core.check.run",
+            return_value={
+                "status": "gaps",
+                "projects": [], "changes": [], "warnings": ["w"], "errors": [],
+            },
+        ):
+            code, envelope, _ = self.run_cli("check-memory", "--all", interactive=False)
+        self.assertEqual(code, 1)
+        self.assertEqual(envelope["status"], "gaps")
         self.assertEqual(envelope["changes"], [])
         self.assertTrue(envelope["warnings"])
-        self.assertIn("未执行任何写入", envelope["errors"][0]["message"])
 
     @unittest.skipUnless(
         importlib.util.find_spec("agm_core.enable"),
@@ -857,18 +901,23 @@ class RealEntrySubprocessTests(unittest.TestCase):
             cwd=REPO_ROOT,
         )
 
-    def test_enable_memory_noninteractive_exit_5(self):
-        proc = self._run("enable-memory")
+    def test_remove_memory_noninteractive_exit_5(self):
+        # 真实子进程冒烟:remove 的 CLI 保守前置门(非交互无批准 → 5,不触内核)。
+        # enable 的非交互路径已交内核判定,不在单测中触碰真实项目(M2-07/08 做真实装配验收)。
+        proc = self._run("remove-memory")
         self.assertEqual(proc.returncode, 5)
         envelope = json.loads(proc.stdout)
         self.assertEqual(envelope["status"], "approval_required")
         self.assertTrue(envelope["approval_required"])
 
-    def test_check_memory_kernel_unavailable_exit_2(self):
+    def test_check_memory_subprocess_smoke(self):
+        # 真实子进程冒烟:check 路由到已交付内核,对真实仓库的结果取决于现场
+        # (0 无缺口 / 1 有缺口),只断言信封结构稳定,不钉死退出码。
         proc = self._run("check-memory")
-        self.assertEqual(proc.returncode, 2)
+        self.assertIn(proc.returncode, (0, 1))
         envelope = json.loads(proc.stdout)
-        self.assertEqual(envelope["errors"][0]["code"], "kernel_unavailable")
+        self.assertEqual(envelope["command"], "check-memory")
+        self.assertIn(envelope["status"], ("completed", "gaps"))
 
     def test_fourth_command_exit_2(self):
         proc = self._run("fix-memory")
