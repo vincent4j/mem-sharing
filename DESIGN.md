@@ -98,28 +98,45 @@ check-memory  [--project <Git根>]
 
 `remove-memory`:仅移除入口块与 Skill 链接,不动 `docs/context-keeper/` 记录本体(记忆是项目资产,删除必须用户显式做)。
 
-### 5.1 存量整理(已有多份记录的项目首次启用时)
+### 5.1 存量整理(首次启用时,覆盖项目级与用户级两个维度)
 
-场景:装本系统之前,项目已分别积累了 CLAUDE.md(Claude 用)和 AGENTS.md(Codex 用)的内容,两份可能重复且互相漂移。首次 `enable-memory` 进入存量整理阶段,**预览 → 用户逐类确认 → 执行**(迁移门禁模式,参照 context-keeper 迁移门禁),不做盲移:
+装本系统之前各处已积累的内容,首次 `enable-memory` 进入存量整理阶段:**预览 → 用户逐类确认 → 执行**,不做盲移,也**不做任何内容加工**——只搬运归位,不蒸馏、不改写(后续消化若需要,由 context-keeper 自身功能处理,不属于本层)。
 
-1. **扫描分类**:根与各子目录的 `AGENTS.md`、`CLAUDE.md`、`CLAUDE.local.md`,逐条标记为:规则 / 记忆类(进度、事实、经验、偏好)/ 装配内容(@import、bridge 块)。
-2. **归位**:
-   - 规则 → 合并进(同级)`AGENTS.md` 唯一源;**两文件冲突或漂移的条目并列展示双方原文,由用户裁定**,不自动取舍;
-   - 记忆类 → 蒸馏进 context-keeper:进度与事实更新 `memory-keeper.md` 并追加一条 `worklogs/` legacy 日志(注明来源文件与日期);可复用经验进 `evolution/`(须有依据,无依据标待验证);
-   - 个人偏好 → 留在 `CLAUDE.local.md`(gitignore 层),不并入团队可见的 AGENTS.md。
-3. **瘦身**:CLAUDE.md 只剩 `@AGENTS.md` 引用 + context-keeper bridge 块;AGENTS.md 移除记忆类内容,保持纯规则。
-4. **全程时间戳备份 + 迁移报告**(什么内容、从哪个文件、去了哪里、用户裁定记录)。
+**项目维度**(根与各子目录的 `AGENTS.md`、`CLAUDE.md`、`CLAUDE.local.md`):
 
-分类需要判断:由 agent 执行、用户确认;工具只负责扫描、预览、备份与读回校验。
+1. 扫描分类:规则 / 记忆类(进度、事实、经验)/ 装配内容(@import、bridge 块);
+2. 归位:
+   - 规则 → 合并进(同级)`AGENTS.md` 唯一源;两文件冲突或漂移的条目**并列展示双方原文,由用户裁定**;
+   - 记忆类 → **原样搬运**为 context-keeper `worklogs/` 的一条 legacy 日志(注明来源文件与日期),不蒸馏、不改写;
+   - 个人偏好 → 留在 `CLAUDE.local.md`(gitignore 层),不并入团队可见的 AGENTS.md;
+3. 瘦身:CLAUDE.md 只剩 `@AGENTS.md` 引用 + bridge 块;AGENTS.md 只剩规则。
 
-### 5.2 嵌套文件(子目录的规则与记忆)
+**用户维度**(各执行器用户级入口:`~/.codex/AGENTS.md`、`~/.claude/CLAUDE.md`、`~/.workbuddy/MEMORY.md`):
 
-各家原生能力不同(§4 矩阵):Codex 逐级链、Claude 按需加载、**WorkBuddy 无嵌套机制**。规则:
+1. 扫描分类存量内容:跨执行器通用规则 / 执行器专属规则 / 人格与私人内容;
+2. 归位:通用规则 → 合并进 `~/.agents-group/memories/MEMORY.md`(用户级唯一源,压缩为短规则);专属规则 → 留在各自原生文件;人格/私人内容(SOUL、USER 等)一律不动;冲突条目用户裁定;
+3. 瘦身:各用户级文件只保留专属规则 + 指向公共源的指针。
 
-1. **嵌套文件只放模块规则,不放记忆**——与根部分层一致。模块记忆(子模块的进度、事实、经验)统一进 context-keeper **单库**,用主题命名与 `memory-keeper.md` 链接表达模块归属,不在子目录另建记忆文件,避免记忆碎片化(monorepo 同样适用)。
-2. 模块规则放**子目录 AGENTS.md**:Codex 原生可达、Claude 按需可达;**WorkBuddy 是已知盲区**——对 WorkBuddy 重要的模块规则需在根 AGENTS.md 留摘要或入口提及,或明确接受 WorkBuddy 只感知根级规则(在 AGENTS.md 首部声明该边界)。
-3. 存量子目录 CLAUDE.md 走 §5.1 同套流程:规则并入同级 AGENTS.md;无 Claude 特有内容则迁完删除(让 Claude 落到按需加载 AGENTS.md),有则瘦身为 `@AGENTS.md` 引用。
-4. 嵌套规则文件保持简短(与根共享 Codex 32KiB 链预算),细节下沉 context-keeper 记录库或 `references/`。
+全程时间戳备份 + 迁移报告(什么内容、从哪个文件、去了哪里、用户裁定记录)。分类由 agent 执行、用户确认;工具只做扫描、预览、备份与读回校验。
+
+### 5.2 子目录里的 CLAUDE.md / AGENTS.md 怎么处理
+
+先说清三家自己的机制差别:
+
+- **Codex**:把从 Git 根到当前目录**沿途每个目录的 AGENTS.md 全部拼接**加载;
+- **Claude Code**:根 CLAUDE.md 常驻;**子目录的 CLAUDE.md / AGENTS.md 只在处理该目录文件时按需加载**;
+- **WorkBuddy 没有这套东西**:它是工作台应用,**你打开哪个文件夹,哪个文件夹就是"项目"**,记忆只挂在这个根(`<项目根>/.workbuddy/memory/`,应用在项目内注入)。"子目录各有各的文件"这个维度在它的产品概念里不存在;它能读 AGENTS.md 靠的是你写进其用户级记忆的约定指令,不是原生文件链。
+
+所以子目录文件里的内容按"是要求还是记录"分流:
+
+- **"要求"**(对这段代码一直生效的规则,例如"本服务用 pnpm、测试跑 pytest")→ **留在子目录的 AGENTS.md 里**——Codex 沿途拼接读得到,Claude 按需也读得到;
+- **"记录"**(进度、踩坑、结论这类记忆)→ **不留子目录**,统一记到项目根的 context-keeper 记录库,用文件名/主题标明属于哪个子目录——不在每个子目录各建一套记忆,避免碎片化。
+
+操作上就三条:
+
+1. **WorkBuddy 读不到子目录文件,这是它的能力边界**:对 WorkBuddy 重要的子目录要求,在根 AGENTS.md 里提一句;其余接受它只感知根级规则。
+2. **已有的子目录 CLAUDE.md**:"要求"并入同目录 AGENTS.md,"记录"按 §5.1 搬去 context-keeper;两边搬完后文件空了就删(Claude 会自动落到读同目录 AGENTS.md)。
+3. **子目录文件要短**:Codex 沿途所有 AGENTS.md 拼在一起总共只有 32KiB 预算,子目录文件越长,越挤占根文件;放不下的细节进 context-keeper 记录库或 `references/`。
 
 ## 6. WorkBuddy 自动入口桥接(本仓库的主要新增工作)
 
