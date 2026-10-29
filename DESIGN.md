@@ -119,24 +119,30 @@ check-memory  [--project <Git根>]
 
 全程时间戳备份 + 迁移报告(什么内容、从哪个文件、去了哪里、用户裁定记录)。分类由 agent 执行、用户确认;工具只做扫描、预览、备份与读回校验。
 
-### 5.2 子目录里的 CLAUDE.md / AGENTS.md 怎么处理
+### 5.2 子目录的规则和记忆怎么处理
 
-先说清三家自己的机制差别:
+一句话:**子目录的 AGENTS.md 只写"要求";所有记忆——不管哪个子目录产生的——都只存一份,放项目根的 context-keeper 记录库,用文件名标明出处。**
 
-- **Codex**:把从 Git 根到当前目录**沿途每个目录的 AGENTS.md 全部拼接**加载;
-- **Claude Code**:根 CLAUDE.md 常驻;**子目录的 CLAUDE.md / AGENTS.md 只在处理该目录文件时按需加载**;
-- **WorkBuddy 没有这套东西**:它是工作台应用,**你打开哪个文件夹,哪个文件夹就是"项目"**,记忆只挂在这个根(`<项目根>/.workbuddy/memory/`,应用在项目内注入)。"子目录各有各的文件"这个维度在它的产品概念里不存在;它能读 AGENTS.md 靠的是你写进其用户级记忆的约定指令,不是原生文件链。
+背景:三家机制不同。Codex 把 Git 根到当前目录**沿途每个 AGENTS.md 拼接**加载;Claude 的根 CLAUDE.md 常驻、子目录 CLAUDE.md/AGENTS.md 在处理该目录时**按需**加载;WorkBuddy 是"打开哪个文件夹哪个就是项目",记忆只挂项目根,**子目录任何文件它都不感知**。
 
-所以子目录文件里的内容按"是要求还是记录"分流:
+**存量:已有的子目录 CLAUDE.md(如 `services/api/CLAUDE.md`)里的内容分两堆搬走:**
 
-- **"要求"**(对这段代码一直生效的规则,例如"本服务用 pnpm、测试跑 pytest")→ **留在子目录的 AGENTS.md 里**——Codex 沿途拼接读得到,Claude 按需也读得到;
-- **"记录"**(进度、踩坑、结论这类记忆)→ **不留子目录**,统一记到项目根的 context-keeper 记录库,用文件名/主题标明属于哪个子目录——不在每个子目录各建一套记忆,避免碎片化。
+| 内容 | 搬到哪 | 例子 |
+|---|---|---|
+| 要求(一直生效的规则) | 并入 `services/api/AGENTS.md` | "本服务用 pnpm,测试跑 pytest" |
+| 记忆(进度、踩坑、结论) | 原文搬到 `docs/context-keeper/worklogs/2026-10-29-legacy-services-api.md` | "token 校验放错中间件,正确位置是 auth.ts" |
 
-操作上就三条:
+搬完 CLAUDE.md 空了就删——Claude 在该目录工作时会自动读同目录 AGENTS.md,不受影响。
 
-1. **WorkBuddy 读不到子目录文件,这是它的能力边界**:对 WorkBuddy 重要的子目录要求,在根 AGENTS.md 里提一句;其余接受它只感知根级规则。
-2. **已有的子目录 CLAUDE.md**:"要求"并入同目录 AGENTS.md,"记录"按 §5.1 搬去 context-keeper;两边搬完后文件空了就删(Claude 会自动落到读同目录 AGENTS.md)。
-3. **子目录文件要短**:Codex 沿途所有 AGENTS.md 拼在一起总共只有 32KiB 预算,子目录文件越长,越挤占根文件;放不下的细节进 context-keeper 记录库或 `references/`。
+**增量:以后在某个子目录工作时产生的新记忆(如在 `services/api/` 排了个错)**,记进 context-keeper 的 worklog,**文件名带上子目录名**:`docs/context-keeper/worklogs/2026-10-29-services-api-token排错.md`;不在 `services/api/` 下新建任何记忆文件。
+
+**为什么记忆不留在子目录、非要集中到根?**
+
+1. WorkBuddy 读不到子目录文件——放根库,三家才都读得到;
+2. Codex 沿途所有 AGENTS.md 共享 32KiB 预算——只够放短规则,放不下记忆;
+3. context-keeper 的"继续/查找"建立在单一记录库上——记忆散进目录树就没法统一检索。
+
+类比:**要求是贴在部门门口的告示**(子目录 AGENTS.md,在该目录干活的人才需要看);**记忆是归档进档案室的案卷**(context-keeper 库,档案袋上写清楚是哪个部门的事)。**归属是标签,不是位置。**
 
 ## 6. WorkBuddy 自动入口桥接(本仓库的主要新增工作)
 
