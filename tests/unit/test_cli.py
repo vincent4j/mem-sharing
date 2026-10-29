@@ -919,6 +919,34 @@ class RealEntrySubprocessTests(unittest.TestCase):
         self.assertEqual(envelope["command"], "check-memory")
         self.assertIn(envelope["status"], ("completed", "gaps"))
 
+    def test_cold_start_no_pycache(self):
+        # CLI 全程零写入:隔离副本冷启动(import agm_core)不得产生 __pycache__
+        import shutil as _shutil
+
+        with tempfile.TemporaryDirectory() as tmp:
+            _shutil.copytree(
+                os.path.join(REPO_ROOT, "scripts"),
+                os.path.join(tmp, "scripts"),
+                ignore=_shutil.ignore_patterns("__pycache__", "*.pyc"),
+            )
+            proc = subprocess.run(
+                [sys.executable, os.path.join(tmp, "scripts", "agm.py"), "check-memory"],
+                capture_output=True,
+                text=True,
+                cwd=tmp,
+            )
+            pycache = [
+                root
+                for root, _dirs, _files in os.walk(tmp)
+                if os.path.basename(root) == "__pycache__"
+            ]
+            self.assertEqual(pycache, [], "冷启动产生了字节码缓存: %s" % pycache)
+            self.assertIn(
+                proc.returncode,
+                (0, 1, 2),
+                "冒烟仅要求可运行的失败语义,实际输出: %s" % proc.stdout[:200],
+            )
+
     def test_fourth_command_exit_2(self):
         proc = self._run("fix-memory")
         self.assertEqual(proc.returncode, 2)

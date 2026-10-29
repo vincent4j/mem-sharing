@@ -35,6 +35,9 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
+# CLI 全程零写入(D7):在首次导入 agm_core 前禁用字节码缓存,冷启动不得产生 __pycache__。
+sys.dont_write_bytecode = True
+
 from agm_core import paths as agm_paths
 
 SCHEMA_VERSION = 1
