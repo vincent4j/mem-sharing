@@ -1,4 +1,6 @@
-# agent-group-memory
+# agent-group-memory · 多 Agent 记忆共享
+
+> Multi-Agent Memory Sharing —— 周一用 Codex、周二用 WorkBuddy,同一个项目,同一份记忆。
 
 跨执行器(Codex / Claude Code / WorkBuddy)共享记忆的**互通编排层**:一条命令把项目规则入口与
 [context-keeper](https://github.com/vincent4j/context-keeper) 记忆库装配到三个执行器,换工具不失忆。
@@ -34,7 +36,8 @@ python3 /path/to/agent-group-memory/scripts/agm.py enable-memory --project <目�
 ~~~
 
 装配内容:项目四条 Skill 符号链接(指向你确认过的 context-keeper checkout)、AGENTS.md/CLAUDE.md
-桥接块、WorkBuddy 项目桥接与用户级例外条款、`docs/context-keeper/` 记录库。只触碰上述受管对象;
+桥接块、WorkBuddy 项目桥接(经 context-keeper 安装器 `--workbuddy` ensure 写入与维护——上游已正式
+接管,M3 回传完成)与用户级例外条款、`docs/context-keeper/` 记录库。只触碰上述受管对象;
 你的既有规则字节原样保留。
 
 ## 三命令与退出码
@@ -71,11 +74,23 @@ stderr 是人读摘要。
 - **remove→重装不是字节无损**:受管块内容不变,但块间连接符换行会重排;WorkBuddy 项目
   MEMORY.md 每个完整周期文件尾多一个换行(详见
   [docs/acceptance/m2-platforms.md](docs/acceptance/m2-platforms.md) §3)。
-- **Claude Code 读回已验证,但未显式走 Skill/resume 的程序化验收**;WorkBuddy 桥接**待运行时验收**
-  (装配静态就绪,新会话接力未执行)。
+- **Claude Code 读回已验证,但未显式走 Skill/resume 的程序化验收**;WorkBuddy 桥接已由上游
+  context-keeper 接管(`--workbuddy` ensure,既有块幂等接管已验证),**真机新会话接力验收待做**。
 - **registry 与备份是本机文件**(`scripts/registry.json`、`scripts/backups/`,已 gitignore):
   不随仓库分发,换机器/新 clone 须重新 `enable-memory` 重建登记;记录库内容则随项目提交。
 - 用户级共享 `~/.agents-group` 已独立建成,不在本仓库范围;本期不做 Skills/MCP 管理。
+
+## 文档导航
+
+| 文档 | 内容 |
+|---|---|
+| [DESIGN.md](DESIGN.md) | 设计方案 v1.1:三系统分工边界、核心决策、验收协议 |
+| [docs/plan/architecture.md](docs/plan/architecture.md) | 实现架构:模块、registry/路径表 schema、CLI 合同 |
+| [docs/plan/decisions-m2.md](docs/plan/decisions-m2.md) | M2 五项用户裁定与依据 |
+| [docs/plan/tasks.md](docs/plan/tasks.md) | 16 项任务书(M1/M2 已全部执行完毕,含验收指向) |
+| [docs/acceptance/](docs/acceptance/) | 全部验收证据:M1 dogfood 四环接力、M2 矩阵与两项目复制、平台矩阵、M3 上游接管 |
+| [docs/history/](docs/history/) | 设计定稿过程记录 |
+| docs/context-keeper/ | 本仓库自己的项目记忆(吃自己的狗粮,记录全部里程碑) |
 
 ## 开发
 
@@ -85,5 +100,5 @@ python3 -m unittest discover -s tests/integration   # 53 项
 ~~~
 
 设计:[DESIGN.md](DESIGN.md);实现合同:[docs/plan/architecture.md](docs/plan/architecture.md);
-验收证据:[docs/acceptance/](docs/acceptance/)(M1 dogfood、M2 工具化矩阵、平台矩阵)。
+验收证据:[docs/acceptance/](docs/acceptance/)(M1 dogfood、M2 工具化矩阵、平台矩阵、M3 上游回传)。
 Git 提交与发布由用户亲自执行,本工具不主动 commit/push。

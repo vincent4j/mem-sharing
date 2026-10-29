@@ -1,6 +1,6 @@
 ---
 name: agent-group-memory
-description: 跨执行器规则与项目记忆编排。enable-memory/remove-memory/check-memory 三命令已实现并在 macOS 完成安装/重装/卸载/失败恢复验收;Windows/Linux 未验证,WorkBuddy 桥接待运行时验收。
+description: 多 Agent 记忆共享——跨执行器规则与项目记忆编排。enable-memory/remove-memory/check-memory 三命令已实现并在 macOS 完成安装/重装/卸载/失败恢复验收;Windows/Linux 未验证;WorkBuddy 桥接已由 context-keeper 上游接管,真机新会话验收待做。
 ---
 
 # Agent Group Memory
