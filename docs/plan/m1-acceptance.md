@@ -6,21 +6,23 @@
 
 ## A. 开始前填表（M1-01）
 
+2026-10-29 只读预检已完成，详见 [preflight.md](../acceptance/m1-01/preflight.md)。以下仅为现场事实；装配、授权和运行用例均未执行。
+
 | 项目 | 实际值／证据（待填） | 通过条件 |
 |---|---|---|
-| run_id、操作者、UTC 时间 | 待填 | 唯一；每条证据可回溯 |
-| OS、Python、Git 根、主 checkout、HEAD | 待填 | macOS，确为本仓库主 checkout；无身份混淆 |
-| Git 状态与待操作文件 | 待填 | 保留既有修改；目标变更范围明确 |
-| Keeper 来源路径、提交/哈希、安装器接口 | 待填 | 来源已核验；未使用猜测参数 |
-| 三家实际可用性及版本 | 待填 | 目录信号不能替代可运行会话 |
-| 三家 Skill 安装路径与链接目标 | 待填 | 指向同一 Keeper 源码；不覆盖复制目录 |
-| bridge 路径、marker、指纹、ownership | 待填 | 三家可读回；WorkBuddy 仍标待验收 |
-| WorkBuddy 用户约定前后 diff | 待填 | 保留公共源/AGENTS.md，只追加记忆条款 |
-| 记录库实际路径与位置授权证据 | 待填 | 明确 yes、位置批准且库可用；第四态成立 |
-| 备份 manifest 与恢复范围 | 待填 | 配置可恢复；库本体不由 AGM 删除 |
-| 单份存量样本来源、批准与 Git 可见性变化 | 待填 | 可公开、逐项批准；不含凭据/私有正文 |
-| AGENTS.override 与子目录盲区 | 待填 | override 冲突已处理；WorkBuddy 盲区明确接受 |
-| 两个负向隔离环境 | 待填 | 旧版 fixture 不替换真实记录库；测试内容无隐私 |
+| run_id、操作者、UTC 时间 | m1-01-20261029T103841Z；呱唧；2026-10-29T10:38:41Z 起 | 唯一；每条证据可回溯 |
+| OS、Python、Git 根、主 checkout、HEAD | macOS 26.6.2 arm64；Python 3.14.3 `/opt/homebrew/opt/python@3.14/bin/python3.14`；主 checkout `/Users/vincent4j/Tools/Source/agent-group-memory`；HEAD `a43e31cdccd54a886f85aa16ae9b0c03e2f3667e` | macOS，确为本仓库主 checkout；无身份混淆 |
+| Git 状态与待操作文件 | 起始干净；本轮仅预检报告与本表；根 AGENTS.md/CLAUDE.md 及 .workbuddy/ 均缺失，后续写入待授权 | 保留既有修改；目标变更范围明确 |
+| Keeper 来源路径、提交/哈希、安装器接口 | `/Users/vincent4j/Tools/Source/context-keeper`；`a8e584159b3853b11f96b0ec89036d04ce29dce2`；工作区干净；三文件哈希/接口见 preflight §3；安装预览 rc=0 + approval_required=true，未安装 | 来源已核验；未使用猜测参数 |
+| 三家实际可用性及版本 | Codex CLI 0.162.0、Claude Code CLI 2.1.295（--version rc=0）；WorkBuddy.app 5.9.3（仅 plist）；三家新会话均 not-run | 目录信号不能替代可运行会话 |
+| 三家 Skill 安装路径与链接目标 | 用户级 ~/.agents/skills、~/.claude/skills、~/.workbuddy/skills 的 context-keeper 均解析到同一源码；项目四落点全缺失（见 preflight §2） | 指向同一 Keeper 源码；不覆盖复制目录 |
+| bridge 路径、marker、指纹、ownership | 项目三家 bridge 全缺失；Codex 用户块配对但与源码不同，保护为漂移候选；用户对象 reused/unknown；指纹见 preflight §2 | 三家可读回；WorkBuddy 仍标待验收 |
+| WorkBuddy 用户约定前后 diff | 本轮无写入；缺公共源引用，且“事实归 AGENTS.md/项目 MEMORY 只放指针”与拟部署冲突；待裁定追加例外（preflight §5） | 保留公共源/AGENTS.md，只追加记忆条款 |
+| 记录库实际路径与位置授权证据 | 未发现库/配置/旧结构；候选 `/Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper` 尚未批准；第四态 blocked，不运行 init | 明确 yes、位置批准且库可用；第四态成立 |
+| 备份 manifest 与恢复范围 | 本轮未创建；计划 scripts/backups/<UTC-操作ID>/，仅批准配置与链接；具体范围/恢复见 preflight §6，记录库不回删 | 配置可恢复；库本体不由 AGM 删除 |
+| 单份存量样本来源、批准与 Git 可见性变化 | 未知、未批准；M1-05 blocked，不读取私有内容补样本 | 可公开、逐项批准；不含凭据/私有正文 |
+| AGENTS.override 与子目录盲区 | 根/祖先/仓内及 ~/.codex 未见 override；仓内未见子目录规则；WorkBuddy 子目录盲区按 DESIGN 保留 | override 冲突已处理；WorkBuddy 盲区明确接受 |
+| 两个负向隔离环境 | 未创建、位置/范围未批准；N1/N2 均 not-run | 旧版 fixture 不替换真实记录库；测试内容无隐私 |
 
 检查顺序：
 
