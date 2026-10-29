@@ -1,17 +1,622 @@
-"""agent-group-memory CLI 占位：尚未实现，不提供可运行的安装行为。
+#!/usr/bin/env python3
+"""agent-group-memory CLI 外壳(M2-03):严格参数解析、路径表加载、批准文件结构校验、
+稳定 JSON 输出与退出码。
 
-计划入口：enable-memory / remove-memory / check-memory。
-契约见 docs/plan/architecture.md，任务见 docs/plan/tasks.md。
+退出码(裁定 D-M2-05):0 完成、1 check 缺口、2 参数/schema/冲突/执行或恢复失败、
+3 Keeper 迁移门禁、5 待授权;多结果优先级 2 > 3 > 5 > 1 > 0。
+
+命令体接线状态(内核桩清单;接线前命令体一律返回 kernel_unavailable,不产生任何写入):
+  TODO(M2-04): agm_core.enable.run —— enable-memory 装配(基座→四态→补缺)与 keeper 子进程协议;
+  TODO(M2-05): agm_core.check.run —— check-memory 只读巡检(不得创建锁/缓存/registry 写入);
+  TODO(M2-06): agm_core.remove.run —— remove-memory 所有权卸载。
+  依赖的 M2-02 内核(agm_core project/registry/entries/transaction)由并行任务交付;内核异常
+  合同为 ValueError 子类 + .code 字符串属性,本外壳直接序列化进 errors[];user 级路径经
+  agm_core.paths.allowed_user_paths 产出并随 request 传递,CLI 层不放宽。
+
+命令模块合同(桩):提供 run(request: dict) -> dict;request 由 build_request 构造,
+返回 dict 携带 status/projects/changes/warnings/errors/approval_required/next_action。
+接线 M2-04 时注意:非交互幂等补装是否免批准,必须由内核依 registry 现场判定,本外壳的
+批准门是保守前置门,不猜测现场。
+合同文档:docs/plan/architecture.md v2 §3/§4、docs/plan/decisions-m2.md §5(已裁定)。
 """
 
+from __future__ import annotations
 
-def enable_memory():
-    """待实现：经授权装配规则基座与可选记忆档。"""
+import argparse
+import importlib
+import json
+import os
+import re
+import sys
+from datetime import datetime
+from pathlib import Path
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
+
+from agm_core import paths as agm_paths
+
+SCHEMA_VERSION = 1
+KNOWN_COMMANDS = ("enable-memory", "remove-memory", "check-memory")
+WRITE_COMMANDS = ("enable-memory", "remove-memory")
+
+STATUS_COMPLETED = "completed"
+STATUS_GAPS = "gaps"
+STATUS_APPROVAL_REQUIRED = "approval_required"
+STATUS_MIGRATION_REQUIRED = "migration_required"
+STATUS_FAILED = "failed"
+STATUS_RECOVERY_REQUIRED = "recovery_required"
+
+EXIT_OK = 0
+EXIT_GAPS = 1
+EXIT_FAILED = 2
+EXIT_MIGRATION = 3
+EXIT_APPROVAL = 5
+
+_STATUS_EXIT = {
+    STATUS_COMPLETED: EXIT_OK,
+    STATUS_GAPS: EXIT_GAPS,
+    STATUS_FAILED: EXIT_FAILED,
+    STATUS_RECOVERY_REQUIRED: EXIT_FAILED,
+    STATUS_MIGRATION_REQUIRED: EXIT_MIGRATION,
+    STATUS_APPROVAL_REQUIRED: EXIT_APPROVAL,
+}
+# 依裁定 D-M2-05:迁移门禁错误在场 → 3;但执行/恢复失败(status=failed/recovery_required)
+# 仍压过迁移 → 2,envelope 完整保留全部错误。
+_MIGRATION_ERROR_CODES = frozenset(("migration_required",))
 
 
-def remove_memory():
-    """待实现：仅撤销本工具创建且未漂移的对象。"""
+class CliError(ValueError):
+    """参数/路径表/批准文件错误;code 序列化进 errors[].code。"""
+
+    def __init__(self, code, message, *, path=None, recovery=None, command=None):
+        super().__init__(message)
+        self.code = code
+        self.path = path
+        self.recovery = recovery
+        self.command = command
 
 
-def check_memory():
-    """待实现：只读报告现场状态与缺口。"""
+def error_item(code, message, *, path=None, recovery=None):
+    return {"code": code, "path": path, "message": message, "recovery": recovery}
+
+
+def make_envelope(
+    command,
+    status,
+    *,
+    projects=None,
+    changes=None,
+    warnings=None,
+    errors=None,
+    approval_required=False,
+    next_action=None,
+):
+    """构造输出合同要求的唯一 JSON envelope(architecture §4)。"""
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "command": command,
+        "status": status,
+        "projects": list(projects or []),
+        "changes": list(changes or []),
+        "warnings": list(warnings or []),
+        "errors": list(errors or []),
+        "approval_required": bool(approval_required),
+        "next_action": next_action,
+    }
+
+
+def exit_for(status, errors=()):
+    """状态/错误 → 进程退出码;优先级 2 > 3 > 5 > 1 > 0;未知状态保守归 2。"""
+    if status in (STATUS_FAILED, STATUS_RECOVERY_REQUIRED):
+        return EXIT_FAILED
+    codes = {item.get("code") for item in errors if isinstance(item, dict)}
+    if status == STATUS_MIGRATION_REQUIRED or codes & _MIGRATION_ERROR_CODES:
+        return EXIT_MIGRATION
+    if status == STATUS_APPROVAL_REQUIRED:
+        return EXIT_APPROVAL
+    if status == STATUS_GAPS:
+        return EXIT_GAPS
+    return _STATUS_EXIT.get(status, EXIT_FAILED)
+
+
+class _StrictParser(argparse.ArgumentParser):
+    """argparse 报错不直接退出进程,抛 CliError 以便仍输出统一 JSON envelope。"""
+
+    def error(self, message):
+        raise CliError("invalid_arguments", message)
+
+
+_SINGLE_USE_FLAGS = ("--project", "--agent", "--memory", "--no-memory", "--all", "--approval-file")
+
+
+def _prescan_single_use(argv):
+    """argparse 对重复单值参数会静默取后者;合同要求重复使用必须拒绝,先扫描原始 argv。"""
+    counts = {}
+    for token in argv:
+        if not isinstance(token, str):
+            continue
+        for flag in _SINGLE_USE_FLAGS:
+            if token == flag or token.startswith(flag + "="):
+                counts[flag] = counts.get(flag, 0) + 1
+    duplicated = sorted(flag for flag, count in counts.items() if count > 1)
+    if duplicated:
+        raise CliError("invalid_arguments", "参数只能使用一次: %s" % ", ".join(duplicated))
+
+
+def build_parser():
+    parser = _StrictParser(
+        prog="agm",
+        description="agent-group-memory CLI(合同: docs/plan/architecture.md v2)",
+    )
+    sub = parser.add_subparsers(dest="command", metavar="command", required=True)
+
+    enable = sub.add_parser("enable-memory", help="经授权装配规则基座与可选记忆档")
+    enable.add_argument("--project", metavar="GIT_ROOT", help="显式项目 Git 根;缺省从 cwd 定位")
+    enable.add_argument(
+        "--agent",
+        nargs="+",
+        metavar="AGENT",
+        help="目标执行器,一次多个唯一值(codex/claude/workbuddy);缺省三家",
+    )
+    memory_group = enable.add_mutually_exclusive_group()
+    memory_group.add_argument(
+        "--memory", dest="memory_choice", action="store_const", const="yes", help="启用记忆档"
+    )
+    memory_group.add_argument(
+        "--no-memory", dest="memory_choice", action="store_const", const="no", help="不装记忆档并记录 no"
+    )
+    enable.add_argument(
+        "--approval-file", metavar="JSON", help="非交互批准文件(裁定 D-M2-04;仅写命令)"
+    )
+
+    remove = sub.add_parser("remove-memory", help="仅撤销本工具所有权对象")
+    remove.add_argument("--project", metavar="GIT_ROOT", help="显式项目 Git 根;缺省从 cwd 定位")
+    remove.add_argument(
+        "--approval-file", metavar="JSON", help="非交互批准文件(裁定 D-M2-04;仅写命令)"
+    )
+
+    check = sub.add_parser("check-memory", help="只读报告现场状态与缺口")
+    check_group = check.add_mutually_exclusive_group()
+    check_group.add_argument("--project", metavar="GIT_ROOT", help="显式项目 Git 根;缺省仅当前目标")
+    check_group.add_argument("--all", action="store_true", help="巡检全部已登记项目")
+    return parser
+
+
+def _guess_command(argv):
+    """从原始 argv 尽力识别子命令,供解析失败的 envelope 归属;启发式,不影响执行。"""
+    previous = None
+    for token in argv:
+        if not isinstance(token, str):
+            continue
+        if token in KNOWN_COMMANDS and previous not in ("--project", "--approval-file"):
+            return token
+        previous = token if token.startswith("--") else None
+    return None
+
+
+_APPROVAL_FIELDS = (
+    "schema_version",
+    "command",
+    "main_checkout",
+    "checkout",
+    "git_common_dir",
+    "agents",
+    "memory_authorization",
+    "store_path",
+    "provider_source",
+    "provider_fingerprints",
+    "changes",
+    "confirmed_at",
+    "reference",
+)
+_APPROVAL_OPERATIONS = frozenset(("create", "update", "remove"))
+_HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
+_UTC_ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$")
+
+
+def _reject_approval_duplicate_keys(pairs):
+    seen = set()
+    for key, _ in pairs:
+        if key in seen:
+            raise CliError("approval_file_invalid", "批准文件 JSON 存在重复键: %s" % key)
+        seen.add(key)
+    return dict(pairs)
+
+
+def _approval_fail(message, path=None):
+    raise CliError("approval_file_invalid", message, path=path)
+
+
+def _check_abs_path(value, label, path):
+    if not isinstance(value, str) or not value or not os.path.isabs(value):
+        _approval_fail("%s 必须是非空绝对路径" % label, path)
+
+
+def _check_fingerprint(value, label, path):
+    if value is None:
+        return
+    if not isinstance(value, str) or not _HEX64_RE.match(value):
+        _approval_fail("%s 必须是 64 位小写十六进制 sha256 或 null" % label, path)
+
+
+def load_approval(path):
+    """读取批准文件;重复 JSON 键、非法 JSON、不可读均为 approval_file_invalid。"""
+    if not os.path.isfile(path):
+        raise CliError("approval_file_invalid", "批准文件不存在: %s" % path, path=path)
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle, object_pairs_hook=_reject_approval_duplicate_keys)
+    except CliError:
+        raise
+    except json.JSONDecodeError as exc:
+        raise CliError("approval_file_invalid", "批准文件不是合法 JSON: %s" % exc, path=path)
+    except (OSError, UnicodeDecodeError) as exc:
+        raise CliError("approval_file_invalid", "批准文件不可读: %s" % exc, path=path)
+    if not isinstance(data, dict):
+        _approval_fail("批准文件顶层必须是对象", path)
+    return data
+
+
+def validate_approval(data, *, command, agents, memory_choice, path=None):
+    """批准 envelope 的 CLI 级结构校验(裁定 D-M2-04 方案 A 字段集)。
+
+    仅校验结构与本命令已知目标的匹配;与锁内现场(主键/指纹/库位置/源码身份)的一致性
+    核对由内核在写锁内完成(TODO M2-04 接线),CLI 不在此扩大核对也不放宽。
+    """
+    keys = set(data)
+    expected = set(_APPROVAL_FIELDS)
+    missing = sorted(expected - keys)
+    unknown = sorted(keys - expected)
+    if missing:
+        _approval_fail("批准文件缺少字段: %s" % ", ".join(missing), path)
+    if unknown:
+        _approval_fail("批准文件含未知字段: %s" % ", ".join(unknown), path)
+    if type(data["schema_version"]) is not int or data["schema_version"] != 1:
+        _approval_fail("批准文件 schema_version 必须是整数 1", path)
+    if data["command"] != command:
+        raise CliError(
+            "approval_mismatch",
+            "批准文件 command=%r 与实际命令 %r 不一致" % (data["command"], command),
+            path=path,
+        )
+    for field in ("main_checkout", "checkout", "git_common_dir"):
+        _check_abs_path(data[field], "批准文件 %s" % field, path)
+    file_agents = data["agents"]
+    if not isinstance(file_agents, list) or not file_agents:
+        _approval_fail("批准文件 agents 必须是非空数组", path)
+    try:
+        canonical = agm_paths.resolve_agents(file_agents)
+    except agm_paths.PathsError as exc:
+        raise CliError("approval_file_invalid", "批准文件 agents 非法: %s" % exc, path=path) from None
+    if command != "remove-memory" and canonical != list(agents or []):
+        raise CliError(
+            "approval_mismatch",
+            "批准范围(agents=%s)与命令目标(%s)不一致,须重新预览确认" % (canonical, list(agents or [])),
+            path=path,
+        )
+    memory = data["memory_authorization"]
+    if command == "remove-memory":
+        if memory is not None:
+            raise CliError(
+                "approval_mismatch", "remove-memory 的 memory_authorization 必须为 null(不改选择)", path=path
+            )
+    else:
+        if memory not in ("yes", "no", None):
+            _approval_fail("批准文件 memory_authorization 仅接受 yes/no/null", path)
+        if memory_choice is not None and memory != memory_choice:
+            raise CliError(
+                "approval_mismatch",
+                "批准文件 memory_authorization=%r 与命令参数 %r 冲突" % (memory, memory_choice),
+                path=path,
+            )
+    if data["store_path"] is not None:
+        _check_abs_path(data["store_path"], "批准文件 store_path", path)
+    if data["provider_source"] is not None:
+        _check_abs_path(data["provider_source"], "批准文件 provider_source", path)
+    fingerprints = data["provider_fingerprints"]
+    if not isinstance(fingerprints, list):
+        _approval_fail("批准文件 provider_fingerprints 必须是数组", path)
+    for item in fingerprints:
+        if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
+            _approval_fail("provider_fingerprints 项字段必须恰好是 path、sha256", path)
+        _check_abs_path(item["path"], "provider_fingerprints 项 path", path)
+        if not isinstance(item["sha256"], str) or not _HEX64_RE.match(item["sha256"]):
+            _approval_fail("provider_fingerprints 项 sha256 必须是 64 位小写十六进制", path)
+    changes = data["changes"]
+    if not isinstance(changes, list):
+        _approval_fail("批准文件 changes 必须是数组", path)
+    for item in changes:
+        if not isinstance(item, dict) or set(item) != {
+            "path",
+            "operation",
+            "before_fingerprint",
+            "after_fingerprint",
+        }:
+            _approval_fail(
+                "changes 项字段必须恰好是 path、operation、before_fingerprint、after_fingerprint", path
+            )
+        _check_abs_path(item["path"], "changes 项 path", path)
+        if item["operation"] not in _APPROVAL_OPERATIONS:
+            _approval_fail("changes 项 operation 仅接受 create/update/remove", path)
+        _check_fingerprint(item["before_fingerprint"], "changes 项 before_fingerprint", path)
+        _check_fingerprint(item["after_fingerprint"], "changes 项 after_fingerprint", path)
+    confirmed = data["confirmed_at"]
+    if not isinstance(confirmed, str) or not _UTC_ISO_RE.match(confirmed):
+        _approval_fail("confirmed_at 必须是 UTC ISO8601(YYYY-MM-DDTHH:MM:SS[.小数]Z)", path)
+    else:
+        for pattern in ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%fZ"):
+            try:
+                datetime.strptime(confirmed, pattern)
+                break
+            except ValueError:
+                continue
+        else:
+            _approval_fail("confirmed_at 不是合法 UTC 时间: %s" % confirmed, path)
+    if not isinstance(data["reference"], str) or not data["reference"]:
+        _approval_fail("reference 必须是非空定位字符串(不保存对话正文)", path)
+    return data
+
+
+_COMMAND_MODULES = {
+    "enable-memory": ("agm_core.enable", "run"),
+    "remove-memory": ("agm_core.remove", "run"),
+    "check-memory": ("agm_core.check", "run"),
+}
+
+
+def _normalize_errors(errors):
+    """命令模块 errors[] 规范化;缺 code 即整体拒绝(错误序列化必须含 code)。"""
+    normalized = []
+    for item in errors or []:
+        if not isinstance(item, dict) or not isinstance(item.get("code"), str) or not item["code"]:
+            return None
+        normalized.append(
+            error_item(
+                item["code"],
+                str(item.get("message", "")),
+                path=item.get("path"),
+                recovery=item.get("recovery"),
+            )
+        )
+    return normalized
+
+
+def _envelope_from_result(command, result):
+    """把命令模块返回 dict 规范化为输出 envelope(字段合同固定,status 必填)。"""
+    if not isinstance(result, dict) or result.get("status") not in _STATUS_EXIT:
+        return make_envelope(
+            command,
+            STATUS_FAILED,
+            errors=[
+                error_item("command_result_invalid", "命令模块返回无法识别的结果(status 缺失或非法)")
+            ],
+        )
+    errors = _normalize_errors(result.get("errors"))
+    if errors is None:
+        return make_envelope(
+            command,
+            STATUS_FAILED,
+            errors=[error_item("command_result_invalid", "命令模块 errors[] 项缺少 code")],
+        )
+    return make_envelope(
+        command,
+        result["status"],
+        projects=result.get("projects"),
+        changes=result.get("changes"),
+        warnings=result.get("warnings"),
+        errors=errors,
+        approval_required=result.get("approval_required", False),
+        next_action=result.get("next_action"),
+    )
+
+
+def dispatch(command, request):
+    """路由到命令模块;模块未交付时返回 kernel_unavailable(合同桩,见模块 docstring 清单)。"""
+    module_name, entry_name = _COMMAND_MODULES[command]
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError:
+        return make_envelope(
+            command,
+            STATUS_FAILED,
+            warnings=[
+                "命令体 %s.%s 尚未接线(分别由 M2-04/M2-05/M2-06 交付)" % (module_name, entry_name),
+                "M2-02 内核模块(agm_core project/registry/entries/transaction)合并后随命令体一并接线",
+            ],
+            errors=[
+                error_item(
+                    "kernel_unavailable",
+                    "命令体尚未实现: 未找到 %s;本次未执行任何写入" % module_name,
+                    recovery="等待对应任务合并接线后重试;本次参数解析、路径表与批准结构校验已通过",
+                )
+            ],
+            next_action="等待 %s 命令模块交付后重试" % command,
+        )
+    entry = getattr(module, entry_name, None)
+    if not callable(entry):
+        return make_envelope(
+            command,
+            STATUS_FAILED,
+            errors=[
+                error_item(
+                    "kernel_unavailable",
+                    "命令体 %s 缺少入口 %s;本次未执行任何写入" % (module_name, entry_name),
+                    recovery="等待对应任务合并接线后重试",
+                )
+            ],
+        )
+    return _envelope_from_result(command, entry(request))
+
+
+def build_request(
+    command,
+    namespace,
+    *,
+    agents,
+    approval,
+    table,
+    platform_key,
+    platform_config,
+    table_path,
+    interactive,
+    home,
+):
+    """构造传给命令模块的 request(dict);接线合同见模块 docstring。
+
+    allowed_user_paths 仅 enable-memory 提供(--agent 目标已知,经路径表展开);remove/check
+    的目标由内核依登记与路径表现场推导,CLI 不放宽用户级路径校验(M2-02 合同)。
+    """
+    allowed = (
+        agm_paths.allowed_user_paths(platform_config, agents, home=home)
+        if command == "enable-memory"
+        else []
+    )
+    return {
+        "command": command,
+        "project": getattr(namespace, "project", None),
+        "agents": agents,
+        "memory_choice": getattr(namespace, "memory_choice", None),
+        "all": bool(getattr(namespace, "all", False)),
+        "approval": approval,
+        "interactive": interactive,
+        "platform": platform_key,
+        "agents_table": table,
+        "platform_config": platform_config,
+        "agents_table_path": table_path,
+        "home": home,
+        "allowed_user_paths": allowed,
+    }
+
+
+def _execute(argv, *, platform, interactive, table_path, home):
+    argv = list(argv)
+    try:
+        _prescan_single_use(argv)
+        namespace = build_parser().parse_args(argv)
+    except CliError as exc:
+        if exc.command is None:
+            exc.command = _guess_command(argv)
+        raise
+
+    command = namespace.command
+    try:
+        agents = agm_paths.resolve_agents(namespace.agent) if command == "enable-memory" else None
+        table = agm_paths.load_agents_table(table_path)
+        platform_key = agm_paths.current_platform(platform)
+        platform_config = agm_paths.select_platform(table, platform_key)
+        approval = None
+        if getattr(namespace, "approval_file", None) is not None:
+            approval = load_approval(namespace.approval_file)
+            approval = validate_approval(
+                approval,
+                command=command,
+                agents=agents,
+                memory_choice=getattr(namespace, "memory_choice", None),
+                path=namespace.approval_file,
+            )
+    except CliError as exc:
+        if exc.command is None:
+            exc.command = command
+        raise
+    except agm_paths.PathsError as exc:
+        raise CliError(exc.code, str(exc), command=command) from None
+
+    # 写命令批准门(裁定 D-M2-04 方案 A):非交互且未绑定批准 → 待确认(5),不自行批准;
+    # TTY 只影响能否提问,不扩大权限。未知 OS/占位已在前一步硬停(2)。
+    if command in WRITE_COMMANDS and approval is None and not interactive:
+        return make_envelope(
+            command,
+            STATUS_APPROVAL_REQUIRED,
+            approval_required=True,
+            warnings=["非交互环境(非 TTY)无法提问;不从 stdin 猜测 yes,不因环境变量自动批准"],
+            next_action=(
+                "非交互写命令需 --approval-file <JSON> 绑定用户已确认的执行计划"
+                "(裁定 D-M2-04),或在交互终端运行"
+            ),
+        )
+
+    request = build_request(
+        command,
+        namespace,
+        agents=agents,
+        approval=approval,
+        table=table,
+        platform_key=platform_key,
+        platform_config=platform_config,
+        table_path=table_path or agm_paths.default_table_path(),
+        interactive=interactive,
+        home=home or str(Path.home()),
+    )
+    return dispatch(command, request)
+
+
+def _detect_interactive(stdin, stdout):
+    try:
+        return bool(stdin.isatty() and stdout.isatty())
+    except Exception:
+        return False
+
+
+def main(
+    argv=None,
+    *,
+    stdin=None,
+    stdout=None,
+    stderr=None,
+    platform=None,
+    interactive=None,
+    table_path=None,
+    home=None,
+):
+    """执行 CLI 并返回进程退出码;stdin/stdout/platform 等注入点供测试使用。
+
+    stdout 恒输出单个 JSON envelope;stderr 输出人读诊断。帮助文本(-h)由 argparse
+    直接输出,不属于执行结果。
+    """
+    in_stream = stdin if stdin is not None else sys.stdin
+    out_stream = stdout if stdout is not None else sys.stdout
+    err_stream = stderr if stderr is not None else sys.stderr
+    if interactive is None:
+        interactive = _detect_interactive(in_stream, out_stream)
+    try:
+        envelope = _execute(
+            argv if argv is not None else sys.argv[1:],
+            platform=platform,
+            interactive=interactive,
+            table_path=table_path,
+            home=home,
+        )
+    except CliError as exc:
+        recovery = exc.recovery
+        if recovery is None and exc.code == "invalid_arguments":
+            recovery = "核对参数后重试;参数合同见 docs/plan/architecture.md §4"
+        envelope = make_envelope(
+            exc.command,
+            STATUS_FAILED,
+            errors=[error_item(exc.code, str(exc), path=exc.path, recovery=recovery)],
+        )
+    except Exception as exc:  # 未预期内部失败保守报告,不猜测成功
+        envelope = make_envelope(
+            None,
+            STATUS_FAILED,
+            errors=[
+                error_item(
+                    "internal_error",
+                    "未预期的内部错误: %s" % exc,
+                    recovery="请把上述信息交给维护者;本次未执行任何写入",
+                )
+            ],
+        )
+    print(json.dumps(envelope, ensure_ascii=False, indent=2), file=out_stream)
+    if envelope["errors"]:
+        first = envelope["errors"][0]
+        print("[agm] %s: %s" % (first.get("code"), first.get("message")), file=err_stream)
+    elif envelope["approval_required"]:
+        print("[agm] 待授权: %s" % (envelope.get("next_action") or ""), file=err_stream)
+    return exit_for(envelope["status"], envelope["errors"])
+
+
+if __name__ == "__main__":
+    sys.exit(main())
