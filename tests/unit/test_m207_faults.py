@@ -34,10 +34,6 @@ class M207Fixture(unittest.TestCase):
         subprocess.run(["git", "init", "-q", str(self.root)], check=True)
         self.install = self.area / "agm" / "scripts"
         self.install.mkdir(parents=True)
-        templates = self.install.parent / "templates"
-        templates.mkdir()
-        original = SCRIPTS.parent / "templates/workbuddy-bridge.md"
-        (templates / original.name).write_bytes(original.read_bytes())
         self.home = self.area / "home"
         self.home.mkdir()
         self.source = self._keeper_source()
@@ -57,6 +53,9 @@ class M207Fixture(unittest.TestCase):
         (source / "SKILL.md").write_text("name: context-keeper\n")
         (source / "scripts/install.py").write_text(
             'BRIDGE_START = "<!-- context-keeper:start -->"\n'
+            'WORKBUDDY_BRIDGE_START = "<!-- context-keeper:workbuddy:start -->"\n'
+            'WORKBUDDY_BRIDGE_END = "<!-- context-keeper:workbuddy:end -->"\n'
+            'WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\\nUpstream WorkBuddy rules\\n{WORKBUDDY_BRIDGE_END}\\n"\n'
             'BRIDGE_END = "<!-- context-keeper:end -->"\n'
             'BRIDGE = f"{BRIDGE_START}\\nKeeper rules\\n{BRIDGE_END}\\n"\n'
         )
@@ -68,7 +67,7 @@ class M207Fixture(unittest.TestCase):
         rc, data = 0, {}
         if argv[1].endswith("install.py"):
             if "--ensure-bridge" in argv:
-                name = "AGENTS.md" if "--codex" in argv else "CLAUDE.md"
+                name = ".workbuddy/memory/MEMORY.md" if "--workbuddy" in argv else "AGENTS.md" if "--codex" in argv else "CLAUDE.md"
                 data = {"scope": "project", "bridge": str(self.root / name), "action": "unchanged"}
             elif "--approved" not in argv:
                 links, rules = [], []
@@ -76,8 +75,7 @@ class M207Fixture(unittest.TestCase):
                     for template in self.config[agent]["project_skill_roots"]:
                         base = template.split("{project}/", 1)[1]
                         links.append(str(self.root / base / "context-keeper"))
-                    if agent in ("codex", "claude"):
-                        rules.append(str(self.root / ("AGENTS.md" if agent == "codex" else "CLAUDE.md")))
+                    rules.append(paths.expand_path(self.config[agent]["project_bridge_entry"], home=str(self.home), project=str(self.root)))
                 data = {"approval_required": True, "skill_entries": links, "rule_files": rules}
             else:
                 data = {"scope": "project", "project": str(self.root)}

@@ -13,18 +13,21 @@ from pathlib import Path
 BRIDGE_START = "<!-- context-keeper:start -->"
 BRIDGE_END = "<!-- context-keeper:end -->"
 BRIDGE = f"{BRIDGE_START}\nKeeper rules\n{BRIDGE_END}\n"
+WORKBUDDY_BRIDGE_START = "<!-- context-keeper:workbuddy:start -->"
+WORKBUDDY_BRIDGE_END = "<!-- context-keeper:workbuddy:end -->"
+WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\nUpstream WorkBuddy rules\n{WORKBUDDY_BRIDGE_END}\n"
 args = sys.argv[1:]
 def value(name): return args[args.index(name)+1]
 source = Path(__file__).resolve().parents[1]
 if '--ensure-bridge' in args:
     root = Path(value('--root'))
-    bridge = root / ('AGENTS.md' if '--codex' in args else 'CLAUDE.md')
-    assert BRIDGE.rstrip() in bridge.read_text()
+    bridge = root / ('.workbuddy/memory/MEMORY.md' if '--workbuddy' in args else 'AGENTS.md' if '--codex' in args else 'CLAUDE.md')
+    assert (WORKBUDDY_BRIDGE if "--workbuddy" in args else BRIDGE).rstrip() in bridge.read_text()
     print(json.dumps(dict(scope='project', bridge=str(bridge), action='unchanged')))
 else:
     root = Path(value('--project'))
     links, rules = [], []
-    for agent, roots, entry in [('codex', ['.agents', '.codex'], 'AGENTS.md'), ('claude', ['.claude'], 'CLAUDE.md'), ('workbuddy', ['.workbuddy'], None)]:
+    for agent, roots, entry in [('codex', ['.agents', '.codex'], 'AGENTS.md'), ('claude', ['.claude'], 'CLAUDE.md'), ('workbuddy', ['.workbuddy'], '.workbuddy/memory/MEMORY.md')]:
         if '--'+agent not in args: continue
         links += [str(root / base / 'skills/context-keeper') for base in roots]
         if entry: rules.append(str(root / entry))
@@ -34,7 +37,7 @@ else:
         for link in links:
             assert Path(link).is_symlink() and Path(link).resolve() == source
         for rule in rules:
-            assert BRIDGE.rstrip() in Path(rule).read_text()
+            assert (WORKBUDDY_BRIDGE if Path(rule).name == "MEMORY.md" else BRIDGE).rstrip() in Path(rule).read_text()
         print(json.dumps(dict(scope='project', project=str(root))))
 '''
 

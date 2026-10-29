@@ -1,6 +1,6 @@
 """M2-07 集成回归:agm.py CLI 子进程级的装/补/查/拆全周期幂等与故障矩阵。
 
-隔离:整体拷贝真实安装树(agm.py + agm_core + agents.json + templates)到临时目录,
+隔离:整体拷贝真实安装树(agm.py + agm_core + agents.json)到临时目录,
 临时 HOME、临时项目仓库、Keeper 桩 checkout(真实子进程脚本);不触碰真实
 registry/入口/记录库。所有断言基于真实文件字节/mtime 快照与 CLI JSON envelope,
 不以 mock 成功替代文件行为。运行:仓库根目录 `python3 -m unittest discover -s tests/integration`。
@@ -25,6 +25,9 @@ from pathlib import Path
 BRIDGE_START = "<!-- context-keeper:start -->"
 BRIDGE_END = "<!-- context-keeper:end -->"
 BRIDGE = f"{BRIDGE_START}\nKeeper rules\n{BRIDGE_END}\n"
+WORKBUDDY_BRIDGE_START = "<!-- context-keeper:workbuddy:start -->"
+WORKBUDDY_BRIDGE_END = "<!-- context-keeper:workbuddy:end -->"
+WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\nUpstream WorkBuddy rules\n{WORKBUDDY_BRIDGE_END}\n"
 SKILLS = {"codex": (".agents/skills", ".codex/skills"), "claude": (".claude/skills",), "workbuddy": (".workbuddy/skills",)}
 
 def main():
@@ -33,8 +36,8 @@ def main():
     source = Path(__file__).resolve().parents[1]
     if "--ensure-bridge" in args:
         root = Path(value("--root"))
-        bridge = root / ("AGENTS.md" if "--codex" in args else "CLAUDE.md")
-        assert BRIDGE.rstrip() in bridge.read_text()
+        bridge = root / (".workbuddy/memory/MEMORY.md" if "--workbuddy" in args else "AGENTS.md" if "--codex" in args else "CLAUDE.md")
+        assert (WORKBUDDY_BRIDGE if "--workbuddy" in args else BRIDGE).rstrip() in bridge.read_text()
         print(json.dumps(dict(scope="project", bridge=str(bridge), action="unchanged")))
         sys.exit(0)
     root = Path(value("--project"))
@@ -42,15 +45,14 @@ def main():
     for agent, bases in SKILLS.items():
         if "--" + agent not in args: continue
         links += [str(root / base / "context-keeper") for base in bases]
-        if agent in ("codex", "claude"):
-            rules.append(str(root / ("AGENTS.md" if agent == "codex" else "CLAUDE.md")))
+        rules.append(str(root / (".workbuddy/memory/MEMORY.md" if agent == "workbuddy" else "AGENTS.md" if agent == "codex" else "CLAUDE.md")))
     if "--approved" not in args:
         print(json.dumps(dict(approval_required=True, skill_entries=links, rule_files=rules)))
         sys.exit(0)
     for link in links:
         assert Path(link).is_symlink() and Path(link).resolve() == source
     for rule in rules:
-        assert BRIDGE.rstrip() in Path(rule).read_text()
+        assert (WORKBUDDY_BRIDGE if Path(rule).name == "MEMORY.md" else BRIDGE).rstrip() in Path(rule).read_text()
     print(json.dumps(dict(scope="project", project=str(root))))
 
 try:
@@ -111,7 +113,6 @@ class CliHarness(unittest.TestCase):
         core.mkdir()
         for source in (REPO / "scripts/agm_core").glob("*.py"):
             shutil.copy(source, core / source.name)
-        shutil.copytree(REPO / "templates", self.install.parent / "templates")
         self.agm = self.install / "agm.py"
         self.registry = self.install / "registry.json"
         self.home = self.area / "home"

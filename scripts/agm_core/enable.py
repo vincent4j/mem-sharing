@@ -25,6 +25,7 @@ from .transaction import Change, Snapshot, Transaction, TransactionError, read_s
 
 KEEPER_MARKER = {"start": "<!-- context-keeper:start -->", "end": "<!-- context-keeper:end -->"}
 BASE_MARKER = {"start": "<!-- agent-group-memory:rules:start -->", "end": "<!-- agent-group-memory:rules:end -->"}
+WORKBUDDY_MARKER = {"start": "<!-- context-keeper:workbuddy:start -->", "end": "<!-- context-keeper:workbuddy:end -->"}
 EXCEPTION_MARKER = {"start": "<!-- agent-group-memory:keeper-exception:start -->", "end": "<!-- agent-group-memory:keeper-exception:end -->"}
 
 
@@ -61,15 +62,18 @@ def _source_fingerprints(source):
     return [{"path": str(p), "sha256": entries.sha256(p.read_bytes())} for p in sorted(files)]
 
 
-def _bridge_template(source):
+def _bridge_template(source, agent="codex"):
     """Read upstream literals without importing/executing provider Python."""
+    prefix = "WORKBUDDY_" if agent == "workbuddy" else ""
+    names = tuple(prefix + name for name in ("BRIDGE_START", "BRIDGE_END", "BRIDGE"))
+    marker = WORKBUDDY_MARKER if agent == "workbuddy" else KEEPER_MARKER
     constants = {}
     tree = ast.parse((source / "scripts/install.py").read_text(encoding="utf-8"))
     for node in tree.body:
         if not isinstance(node, ast.Assign) or len(node.targets) != 1 or not isinstance(node.targets[0], ast.Name):
             continue
         name = node.targets[0].id
-        if name not in ("BRIDGE_START", "BRIDGE_END", "BRIDGE"):
+        if name not in names:
             continue
         value = node.value
         if isinstance(value, ast.Constant) and isinstance(value.value, str):
@@ -85,8 +89,8 @@ def _bridge_template(source):
                 else:
                     raise EnableError("provider_protocol_invalid", "Unsupported Keeper bridge template expression")
             constants[name] = "".join(parts)
-    value = constants.get("BRIDGE", "").rstrip("\n").encode("utf-8")
-    if entries.managed_span(value, **_marker_args(KEEPER_MARKER)) != (0, len(value)):
+    value = constants.get(prefix + "BRIDGE", "").rstrip("\n").encode("utf-8")
+    if entries.managed_span(value, **_marker_args(marker)) != (0, len(value)):
         raise EnableError("provider_protocol_invalid", "Keeper bridge template markers do not match")
     return value
 
@@ -466,8 +470,8 @@ def _run_locked(request, install, result):
                 plan.object(path, "", [a], "skill_symlink", target=source)
             target = Path(paths.expand_path(config[a]["project_bridge_entry"], home=home, project=key))
             if a == "workbuddy":
-                raw = (install.parent / "templates/workbuddy-bridge.md").read_bytes().rstrip(b"\n")
-                marker = {"start": "<!-- context-keeper:workbuddy:start -->", "end": "<!-- context-keeper:workbuddy:end -->"}
+                raw = _bridge_template(source, "workbuddy")
+                marker = WORKBUDDY_MARKER
                 plan.object(target, "#keeper", [a], "block", marker=marker, block=raw, top=True)
                 user = Path(paths.expand_path(config[a]["user_entry"], home=home))
                 plan.object(user, "#keeper-exception", [a], "user_convention", scope="user", marker=EXCEPTION_MARKER,
@@ -525,7 +529,7 @@ def _run_locked(request, install, result):
         argv = ["install.py", "--project", str(root)] + ["--" + a for a in agents]
         preview = _call(request, source, argv, allow_preview=True, fingerprints=fingerprints)
         all_links = {o["path"] for o in assembly["objects"].values() if o["kind"] == "skill_symlink" and set(o["agents"]) & set(agents)}
-        expected_rules = {str(root / name) for a, name in (("codex", "AGENTS.md"), ("claude", "CLAUDE.md")) if a in agents}
+        expected_rules = {paths.expand_path(config[a]["project_bridge_entry"], home=home, project=key) for a in agents}
         if (set(preview.get("skill_entries", [])) != all_links or set(preview.get("rule_files", [])) != expected_rules):
             raise EnableError("provider_scope_mismatch", "Keeper preview declared unexpected project outputs")
         init_argv = ["context_keeper_probe.py", "init", "--root", str(root), "--store-dir", str(store)]
@@ -560,12 +564,10 @@ def _run_locked(request, install, result):
             if installed.get("scope") != "project" or installed.get("project") != str(root):
                 raise EnableError("provider_scope_mismatch", "Keeper installation is not for this project")
             for a in agents:
-                if a == "workbuddy":
-                    continue
                 alias = Path(paths.expand_path(config[a]["project_skill_roots"][0], home=home, project=key)) / "context-keeper"
                 ensured = _call(request, source, ["install.py", "--ensure-bridge", "--skill-dir", str(alias),
                                 "--root", str(root), "--" + a, "--approved"], fingerprints=fingerprints)
-                if (ensured.get("scope") != "project" or ensured.get("bridge") != str(root / ("AGENTS.md" if a == "codex" else "CLAUDE.md"))
+                if (ensured.get("scope") != "project" or ensured.get("bridge") != paths.expand_path(config[a]["project_bridge_entry"], home=home, project=key)
                         or ensured.get("action") != "unchanged"):
                     raise EnableError("provider_scope_mismatch", "ensure-bridge did not verify an unchanged project bridge")
             for output, snap in plan.after.items():

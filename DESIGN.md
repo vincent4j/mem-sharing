@@ -174,8 +174,6 @@ agent-group-memory/
     agm.py                 # 单一 CLI(enable-memory / remove-memory / check-memory)
     agents.json            # 执行器路径表:各 OS 入口路径 + 安装信号
     registry.json          # 运行时生成:项目登记 + 纳管状态(集中项目外,--all 巡检依据)
-  templates/
-    workbuddy-bridge.md    # WorkBuddy 桥接模板(回传上游后删除)
   docs/
     history/               # 历史决策记录
   tests/
@@ -195,13 +193,13 @@ agent-group-memory/
 
 **用户级记忆结构(保留 memories/ 目录,定为"索引 + 主题文件")**:`memories/MEMORY.md` 只做**索引**——一主题一行、附链接,常驻注入,上限沿用 Claude 官方量化值 ≤200 行 / 25KB;记忆细节写入 `memories/<主题>.md`,由索引引用、按需读取,不占常驻预算。将来记忆增多,动作是**加主题文件,不是加长索引**(与 Claude auto memory 的"MEMORY.md 索引 + 主题文件"同构);`references/` 继续放操作手册类,与记忆分开放。此结构升级独立于 M1,由用户决定何时执行(当前单文件可先直接当索引用)。
 
-## 5. WorkBuddy 桥接(本仓库主要新增工作,待运行时验收能力)
+## 5. WorkBuddy 桥接(上游已接管配置,待运行时验收)
 
-context-keeper 的安装器对 WorkBuddy 刻意停写("自动入口尚未完成运行时验证"),本仓库补齐:
+M3 已将 WorkBuddy 桥接交由 context-keeper 安装器管理。AGM 从上游安装器读取模板,在事务内完成漂移检查与预写,再调用上游 install 和 `--ensure-bridge --workbuddy` 验证不变:
 
 - **落点**:项目 `.workbuddy/memory/MEMORY.md` 顶部(WorkBuddy 唯一原生项目级挂载点;其每日日志机制照旧);
 - **内容**:复用 context-keeper BRIDGE 规则语义(无项目聊天边界、限量历史检索触发、自然节点记录、追加式日志、事实边界、**迁移门禁:退出码 3 即停止读写**),以 `<!-- context-keeper:workbuddy:start/end -->` 标记块写入;
-- **终局是消失**:验收通过后,模板与证据回传 context-keeper,解除其安装器限制;本仓库删除私有模板,不留第二真源;**M3 回传时同步验证旧块移交**(上游安装器接管已写入的块),避免遗留双入口;
+- **单一真源**:上游 `scripts/install.py` 持有模板;本仓库已删除私有模板。三处既有块与上游模板字节级兼容,marker 识别支持幂等更新,不新增重复块;接管证据见 `docs/acceptance/m3/`。WorkBuddy 真机新会话验收仍由用户选择,不以配置接管代替;
 - **用户级配合**:`~/.workbuddy/MEMORY.md` 现行"项目规则唯一来源是 AGENTS.md"约定**保留**(它是 D1 可达性的一环),只**追加**记忆条款:"项目记忆用 context-keeper 记录库,由项目桥接块驱动"。
 
 ## 6. 验收协议(三执行器接力闭环)
@@ -251,7 +249,7 @@ context-keeper 的安装器对 WorkBuddy 刻意停写("自动入口尚未完成�
 | M1 dogfood(**macOS、单仓库、三执行器接力闭环**) | 本仓库启用:基座 + 记忆档(含记录库授权)+ WorkBuddy 桥接 + 用户级约定追加;存量只做**一份已批准、可公开的样本** | §6 正向闭环 + 两个负向用例 |
 | M1.5(独立) | 用户级全面整理;(如需)memories/ 升级为"索引 + 主题文件"结构 | 用户逐项确认的迁移报告 |
 | M2 工具化 | 单一 CLI + 执行器路径表 + registry;平台矩阵(安装/重装/卸载/失败恢复,macOS 优先) | knowwind、poster-fit 复制,幂等重装通过 |
-| M3 上游回传 | WorkBuddy 桥接模板与验收证据回传 context-keeper,解除其限制 + 旧块移交验证;本仓库删私有模板 | context-keeper 原生安装 WorkBuddy 入口成功且无双入口 |
+| M3 上游回传(工作区实现) | 上游已接管 WorkBuddy 模板/install/ensure;本仓库改读上游模板并调用安装器,私有模板已删除 | 旧块字节兼容、无双入口、三项目只读 check;证据见 docs/acceptance/m3。未 commit/push,真机新会话验收可选 |
 | 后续 | Skills/MCP 纳入本工具(用户待定);其余执行器按同模式逐家接入 | — |
 
 ## 9. 对既有 `~/.agents-group` 实现的借鉴与简化

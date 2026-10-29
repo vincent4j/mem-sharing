@@ -23,10 +23,6 @@ class EnableFixture(unittest.TestCase):
         subprocess.run(["git", "init", "-q", str(self.root)], check=True)
         self.install = self.area / "agm/scripts"
         self.install.mkdir(parents=True)
-        templates = self.install.parent / "templates"
-        templates.mkdir()
-        original = SCRIPTS.parent / "templates/workbuddy-bridge.md"
-        (templates / original.name).write_bytes(original.read_bytes())
         self.home = self.area / "home"
         self.home.mkdir()
         self.source = self.area / "keeper"
@@ -36,6 +32,9 @@ class EnableFixture(unittest.TestCase):
         (self.source / "scripts/install.py").write_text('''BRIDGE_START = "<!-- context-keeper:start -->"
 BRIDGE_END = "<!-- context-keeper:end -->"
 BRIDGE = f"{BRIDGE_START}\\nKeeper rules\\n{BRIDGE_END}\\n"
+WORKBUDDY_BRIDGE_START = "<!-- context-keeper:workbuddy:start -->"
+WORKBUDDY_BRIDGE_END = "<!-- context-keeper:workbuddy:end -->"
+WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\\nUpstream WorkBuddy rules\\n{WORKBUDDY_BRIDGE_END}\\n"
 ''')
         (self.source / "scripts/context_keeper_probe.py").write_text("# isolated stub\n")
         self.config = paths.select_platform(paths.load_agents_table(), "darwin")
@@ -59,14 +58,13 @@ BRIDGE = f"{BRIDGE_START}\\nKeeper rules\\n{BRIDGE_END}\\n"
         rc, data = 0, {}
         if argv[1].endswith("install.py"):
             if "--ensure-bridge" in argv:
-                name = "AGENTS.md" if "--codex" in argv else "CLAUDE.md"
+                name = ".workbuddy/memory/MEMORY.md" if "--workbuddy" in argv else "AGENTS.md" if "--codex" in argv else "CLAUDE.md"
                 data = {"scope": "user" if self.bad_ensure else "project", "bridge": str(self.root / name), "action": "unchanged"}
             elif "--approved" not in argv:
                 links, rules = [], []
                 for a in self.request["agents"]:
                     links.extend(str(self.root / p.split("{project}/", 1)[1] / "context-keeper") for p in self.config[a]["project_skill_roots"])
-                    if a in ("codex", "claude"):
-                        rules.append(str(self.root / ("AGENTS.md" if a == "codex" else "CLAUDE.md")))
+                    rules.append(paths.expand_path(self.config[a]["project_bridge_entry"], home=str(self.home), project=str(self.root)))
                 if self.preview_extra:
                     rules.append(str(self.root / "UNSELECTED.md"))
                 data = {"approval_required": True, "skill_entries": links, "rule_files": rules}
@@ -259,8 +257,8 @@ class EnableTests(EnableFixture):
         for state in ("skill_installed", "bridge_assembled"):
             self.assertTrue(all(f["status"] == "ready" for f in a["states"][state].values()))
         self.assertEqual(a["runtime_acceptance"]["status"], "pending")
-        self.assertEqual(len([c for c in self.calls if "--ensure-bridge" in c]), 2)
-        self.assertFalse(any("--workbuddy" in c for c in self.calls if "--ensure-bridge" in c))
+        self.assertEqual(len([c for c in self.calls if "--ensure-bridge" in c]), 3)
+        self.assertTrue(any("--workbuddy" in c for c in self.calls if "--ensure-bridge" in c))
 
     def test_idempotent_configs_not_rewritten_and_ownership_retained(self):
         self.apply("yes", True)
