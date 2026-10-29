@@ -4,16 +4,18 @@
 
 ## 构建
 
-(占位:M2 CLI 落地后补充实际命令)
+无需构建,纯 Python 标准库实现;入口 `python3 scripts/agm.py`(仅 macOS 已实证,Windows/Linux 未测)。
 
 ## 测试
 
-(占位:tests/ 就位后补充实际命令)
+- 全量:`python3 -m unittest discover -s tests/unit && python3 -m unittest discover -s tests/integration`
+- 单套件示例:`python3 -m unittest tests.unit.test_cli`
 
 ## 约定
 
 - Git 提交、推送由用户亲自执行,工具与 Agent 不主动 commit/push。
 - 不修改上游 context-keeper 与旧 ~/.agents-group 管理器的源码。
+
 
 <!-- context-keeper:start -->
 ## Context Keeper

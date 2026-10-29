@@ -4,11 +4,15 @@
 
 - M2-08 两项目复制与新会话验收；状态：进行中（部分通过）；触发：用户按操作单执行两项目 WorkBuddy 新会话；完成：审核 WorkBuddy 实际读回证据后关闭三家验收；证据：[重跑日志](worklogs/2026-10-29-M2-08重跑装配与新会话验收.md)。
 
+- M2 收官遗留（M2-09 后）；状态：待办；触发：后续迭代或用户要求；范围：Claude 显式走 Skill/resume 的程序化验证、卸载/重装周期换行重排的可选打磨（AGENTS/CLAUDE 块尾换行迁移、WorkBuddy MEMORY.md 每周期 +1 换行）、AGENTS.md 构建/测试占位文案补充、Windows/Linux 环境具备后的平台扩展；证据：[M2-09 日志](worklogs/2026-10-29-M2-09平台矩阵与发布前文档.md)、[平台矩阵](../acceptance/m2-platforms.md)。
+
 - M1 整体验收补证；状态：阻断；触发：取得 WorkBuddy N1/N2 运行证据并另行安排标准无污染接力；完成：三家负向齐备及 P2/P3 流程缺口关闭；证据：[收口日志](worklogs/2026-10-29-M1负向验证与收口.md)。
 
 （无。接力验证 T1 已于 2026-10-29T19:42:21+08:00 完成，完成情况见下方主题摘要与第三环日志；M1-06 整体验收仍未通过。）
 
 ## 主题摘要（按类型）
+
+- **M2-09 平台矩阵与发布文档（当前）：** M2 收官已完成。macOS 四项 passed（安装/重装引 M2-08 与 m2-matrix，卸载/失败恢复为本仓库真实演练：remove/enable 全周期 rc=0、真实 Transaction 硬崩溃后 recover_manifest 字节复原）；Windows/Linux not-run。README 重写为用户文档、SKILL 过时表述清零、agents.json 维持不动（runtime_status 枚举无合法扩展值）。281 项测试基线与终态全绿。已知限制入 README：created 漂移需人工/remove 重装、周期换行重排、WorkBuddy 待运行时验收、registry 为本机文件。来源：[M2-09 日志](worklogs/2026-10-29-M2-09平台矩阵与发布前文档.md)、[平台矩阵](../acceptance/m2-platforms.md)。
 
 - **M2-08 复制验收：** 0919ec9 后两项目装配与幂等通过，四个 Codex/Claude 新会话实际读回记录；poster-fit 原 AGENTS 完整字节为新文件前缀，其他 dirty 字节/mtime 不变。WorkBuddy 未运行，Claude 未显式走 Skill/resume；整体部分通过。来源：[重跑日志](worklogs/2026-10-29-M2-08重跑装配与新会话验收.md)、[旧阻断日志](worklogs/2026-10-29-M2-08两项目盘点与装配阻断.md)。
 
@@ -24,6 +28,10 @@
 - [进化经验索引](evolution/index.md)
 
 ## 时间线（最新在前）
+
+## 2026-10-29 - M2-09 平台矩阵与发布前文档 `milestone`
+- **任务：** M2 收官——平台矩阵、本仓库真实卸载/重装/失败恢复演练、README/SKILL 发布文档、281 项测试全绿。
+- **详见：** [日志](worklogs/2026-10-29-M2-09平台矩阵与发布前文档.md)
 
 ## 2026-10-29 - M2-08 重跑装配与新会话验收 `test`
 - **任务：** 两项目真实装配、幂等、dirty保留及新会话读回；整体部分通过，待WorkBuddy。
