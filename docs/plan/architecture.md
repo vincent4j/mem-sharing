@@ -1,6 +1,6 @@
-# 实现架构（开工合同草案）
+# 实现架构 v2（M2-01 定稿稿）
 
-基线：DESIGN.md v1.1，53314d7。本文细化实现，不改变 D1–D7；尚未编码或运行验收。字段名与退出码是实现约定草案，设计缺口见 [tasks.md](tasks.md) 的 O1–O9，相关任务在缺口解决前不得自行补设计。M1 macOS、单仓库；M2 工具化。Skills/MCP 管理、用户级全面整理、记忆内容加工均不在本期。
+基线：DESIGN.md v1.1，53314d7；v2 于 2026-10-29 对照 M1 round3 实际 registry 定稿字段及校验合同。文档版本 v2 不等于 registry schema 升版，后者仍为 1。本文细化实现，不改变 D1–D7；CLI 仍是占位，本文不证明工具或运行时验收完成。政策建议及需用户裁定项见 [decisions-m2.md](decisions-m2.md)，未裁定项不得当作批准实现。M1 macOS、单仓库；M2 工具化。Skills/MCP 管理、用户级全面整理、记忆内容加工均不在本期。
 
 ## 0. 文档发现与允许接口
 
@@ -38,7 +38,7 @@ M1 可由人工严格执行同一顺序，不以先完成整个 M2 CLI 为前提
 
 ## 2. 集中 registry.json 完整字段合同
 
-唯一位置：安装源 scripts/registry.json；运行时生成且 gitignore，不提交示例状态、不在被管项目放 AGM 状态。以下为 schema v1 类型定义（不是现存登记）；所有字段必填，可空字段显式为 null。未知版本/未知枚举/重复对象 ID/路径越界均拒绝写入，不宽松补默认授权。
+唯一位置：安装源 scripts/registry.json；运行时生成且 gitignore，不提交示例状态、不在被管项目放 AGM 状态。以下 schema v1 与 round3 实际字段一致；所有字段必填，可空字段显式为 null，没有可省略字段。新登记初始化值见 §2.1，不可用初始化值补齐损坏账本。未知字段/版本/枚举、重复 JSON 键/对象 ID、路径越界均拒绝写入，不宽松补默认授权。
 
 ~~~text
 Registry = {
@@ -48,7 +48,7 @@ Registry = {
 }
 Project = {
   main_checkout: AbsolutePath,                 # 必须等于 projects 的键
-  memory_authorization: "yes" | "no" | null,  # null 仅未询问/登记损坏未知
+  memory_authorization: "yes" | "no" | null,  # null 为未知；损坏账本仅内存表示
   authorization_evidence: Evidence | null,
   provider_source: AbsolutePath | null,
   checkouts: Map<CheckoutAbsolutePath, Assembly>
@@ -91,7 +91,7 @@ OwnedObject = {
   ownership: "created" | "reused" | "unknown",
   marker: { start: string, end: string } | null,
   fingerprint: { algorithm: "sha256", basis: "file_bytes" | "block_bytes" | "link_target", value: Hex64 } | null,
-  original_existed: boolean | null,
+  original_existed: boolean | null,          # 指该可撤销单元，非必然指承载文件
   link_target: AbsolutePath | null,
   backup_manifest: AbsolutePath | null,
   consumers: UniqueArray<CheckoutAbsolutePath>
@@ -111,6 +111,56 @@ OwnedObject = {
 - registry 损坏时 check 只在内存重建可观察事实并输出；不得落盘或恢复授权/所有权。--all 失去项目索引则说明无法枚举全部，不全盘扫描。用户指定 --project 可检查该现场；随后授权 enable 才备份损坏文件并持久重建，未知所有权按保护处理。
 - 移动/删除/重 clone 只告警，不凭同名项目继承授权；需要重新 enable。路径必须规范化绝对路径，Git common-dir 身份核对；符号链接输出路径冲突停止。
 
+### 2.1 类型、必填、初始化与交叉校验（冻结）
+
+- `Agent` 仅 `codex/claude/workbuddy`；JSON boolean 不当作 integer。`AbsolutePath` 为本机规范绝对路径，无 `~`、占位、`.`/`..`；checkout/main/common-dir/provider/store 按实际解析路径核对。对象 `path` 保留链接自身的绝对落点，不 resolve 成链接目标；目标独立放 `link_target`。输出落点的父链若出现未批准符号链接或越界即拒绝。
+- `ObjectId` 为非空字符串，沿用实际“绝对落点”或“绝对落点#用途后缀”（如 `#base/#keeper/#import/#keeper-exception`）；不解析后缀推导权限。不同单元可同 path，ID 在整个 registry 唯一；同一 path/marker 不可重复登记为两个可撤销对象。
+- `UTC_ISO8601` 为合法 UTC 时间，统一写 `YYYY-MM-DDTHH:MM:SS[.小数]Z`。`Hex64` 为 64 位小写十六进制。`Evidence.reference`、非 null 的 `Fact.evidence` 为非空定位字符串；允许 round3 的多个路径/说明串，不假设为单一路径，也不存原始对话。引用存在不等于授权可信，需核对来源与范围。
+- 空 registry 的显式初值为 `schema_version=1, projects={}, shared_objects={}`。新 Project 的未知选择为 `memory_authorization=null, authorization_evidence=null, provider_source=null`；main_checkout 必须已解析。新 Assembly 必须已有合法 common-dir 和非空目标 agents，不能凭空登记 Git 身份。新 Fact 为 `unknown/null/null`；观测后才改 missing/blocked/ready。新 store 为 `path=null, location_approved=false, approval_evidence=null`；objects/shared IDs 为空，runtime 为 `pending/null`。这些是构造约定，不是读取时的缺字段默认。
+- `yes/no` 均要求非 null 授权证据，null 选择对应 null 证据。`location_approved=true` 要求实际 path 和证据；false 时 approval_evidence 为 null，可有尚未批准的候选 path。provider_source 非 null 只说明已定位，不证明 source ready。
+- agents 必须非空、唯一；写出按 codex、claude、workbuddy 排序。`skill_installed` 与 `bridge_assembled` 的键必须恰好等于 Assembly.agents。Codex 两个 Skill 落点都正确才可将 codex 的 Skill Fact 置 ready。新增目标取已登记集合与本次选择的并集；缩小本次 `--agent` 不暗中删除其他目标。
+- ready/missing/blocked 必须有非 null observed_at 和 evidence；unknown 可全空，或附本次无法判明的时间与证据。`runtime_acceptance=passed/failed` 要求 evidence_path 非 null 且实际验收证据可定位；pending 可为 null。装配变更、源码身份变化或影响执行器的漂移使既有 passed 失效，下一次写命令登记 pending；check 只报告失效，不改历史登记。
+- Assembly.objects 只放 scope=project 且 path 位于该 checkout 的对象；shared_objects 只放 scope=user 且位于已核验路径表允许的用户入口。自定义 store 可以在 checkout 外，但不是可卸载对象。shared_object_ids 必须全部存在，且引用与 shared object.consumers 双向一致；消费者只能是已登记 checkout。项目对象 consumers 恰为所属 checkout；共享 consumers 可空，表示保留的无消费者对象。
+- fingerprint 非 null 时必须满足如下 basis 约束：`block` 必须有非空且不同的 start/end marker，fingerprint.basis=block_bytes；`skill_symlink` 必须 marker=null、link_target 非 null、basis=link_target；`file` 必须 marker/link_target=null、basis=file_bytes。`user_convention` 在 v1 只支持有 marker 的 block_bytes 单元。`import` 沿用 round3 的 marker=null、file_bytes、ownership=reused/unknown；v1 不支持自动删除整文件哈希承载的 import，不以整文件指纹声称可安全撤销一行。
+- 非链接对象 link_target=null。created 要有 `original_existed=false`、非 null fingerprint 和可核验 backup_manifest；reused 要有 original_existed=true 和 fingerprint；unknown 的这三个证据字段允许 null，绝不因此获删除权。manifest 是必要线索而非单独的可信创建证明。
+
+### 2.2 SHA-256 与所有权（冻结）
+
+算法字段固定 `sha256`，value=`SHA256(输入字节).hexdigest()`；不 trim、不规范化 CRLF/BOM/Unicode、不附加换行。file_bytes 为整文件原始字节；block_bytes 为唯一 start marker 起至唯一 end marker 末尾（含两个 marker），不含块外换行。重复、倒序、嵌套/残缺 marker 均冲突，不按首次命中静默切片。link_target 为链接解析后的规范绝对目标路径 UTF-8 字节，不附换行；须同时确认现场仍是 symlink 且目标相符，普通目录同目标哈希不算链接。源码内容哈希另作预检证据，不替代链接所有权。此规则与 round3 08/11 操作中的 hashlib 实参一致。
+
+`created` 仅来自本工具本次批准操作的“单元原先不存在→实际创建→读回成功→可信账本提交”；反复 enable 不降级为 reused。原来已存在的正确对象为 reused；发现时无法确认创建来源为 unknown。reused/unknown 不因同模板、同 marker、用户再次授权 enable、或重算指纹而升级为 created。unknown 经现场核验为正确既有对象可登记 reused，但仍不可删除；只有该对象已确证不存在、以后在另次批准操作中新建，才形成新的 created 记录，不能覆盖伪造旧历史。
+
+created 漂移后保留原有所有权及期望指纹并报告 blocked，不刷新指纹掩盖漂移。对象丢失只报告 missing；批准后补建可重新记创建证据。卸载成功只从活动账本移除该对象/引用，历史留在 manifest；保留对象及 no/yes 选择不能随意抹掉。remove 不是撤销记忆选择，也不是删除记忆资产。
+
+同文件 `#base` 的 reused 全文件快照与 `#keeper` created 块可以重叠：删除权限只来自块记录。受控块变化会改变全文件哈希，不能据此把 reused 基座升级或删掉整个文件；check 要区分自有块变化与块外变化。新建文件在其内部块移除后可保留空骨架；无可信整文件创建证据时不整文件删除。
+
+### 2.3 四阶段事实与合法迁移（冻结）
+
+“四态”指四个独立装配阶段，每个 Fact 又有 ready/missing/blocked/unknown 四个状态；不是四个顺次互斥的全局状态。源码/Skill/bridge 可以各自 ready，第四阶段仍 unknown/blocked。
+
+| Fact 原状态 | 合法目标及条件 |
+|---|---|
+| unknown | unknown；只读核实后 ready/missing/blocked，必须附本次证据 |
+| missing | missing；补建并读回或发现已存在正确对象后 ready；冲突/授权拒绝/迁移门禁后 blocked；无法继续观测后 unknown |
+| ready | 复核后 ready；对象确证消失后 missing；漂移/权限/身份失配/授权失效后 blocked；不能观测时 unknown |
+| blocked | 阻断仍在则 blocked；原因已解除且重新验证后 ready；确证不存在后 missing；无法确认原因或现场后 unknown |
+
+状态改变只能基于新证据，不能仅凭子进程 rc=0 或其他阶段 ready。check 将迁移算在输出中，不更新时间戳、不写 registry。写命令只在获批范围内、读回后提交事实；失败报告现场与恢复结果，不先持久化 ready。
+
+第四阶段遇迁移门禁/身份冲突/歧义即 blocked 并停止相关流程；其他情况依次判断：项目选择 null→unknown；no、位置未获批、身份冲突、旧库迁移门禁或歧义→blocked；yes 且位置获批但库确认缺失→missing；yes、位置获批、实际库可用、门禁通过→ready。普通目录存在/源码可用不构成库可用；check 无法通过只读证据判定迁移状态时报告 unknown，不调用会写缓存的探针。Fact 的历史 observed_at 不是永久有效期。
+
+授权选择仅在明确新批准下 `null→yes/no`、`no→yes` 或 `yes→no`；无新批准保持原值。选择 no 不隐式卸载已有对象。ready 的降级不自动抹掉原批准；身份不再相符则原批准对当前 checkout 无效。运行验收仅新会话证据可 `pending→passed/failed`，重验可以改变 passed/failed，装配变动回 pending；不可由四阶段全 ready 推导 passed。
+
+### 2.4 Git 身份、恢复与未裁定边界
+
+Git 主 checkout 从 `git worktree list --porcelain` 与 `git rev-parse --git-common-dir` 的规范路径交叉确定，不按当前分支、仓库 basename 或 remote URL 判为同项目。普通 clone 的 Git 根即主 checkout；linked worktree 的根是 checkout，主键仍为主 checkout。显式 --project 必须是根，省略可从 cwd 子目录向上定位；不把其他 checkout 的入口或库当作本 checkout 已装好。
+
+schema v1 保留 checkouts 容器，但当前批准合同仅覆盖主 checkout；O1 未决前不写 linked worktree、不复制主项目授权。check 可报告 worktree 与主键、未纳管事实。若选择独立授权方案，多 checkout 的 memory_authorization 必须移到 Assembly 或增加 checkout 授权覆盖并升级 schema，不能复用当前 Project 的单个 yes/no 模拟。
+
+路径/common-dir 足以发现不同路径 clone、移动或 common-dir 变化；**无法可靠识别“删掉后在同路径重 clone”或原位替换 .git**。不把 HEAD/remote 内容相同作为实例身份。该限制必须报告，v1 不宣称自动检测所有重 clone；已知更换实例需重新 enable 并取得当前授权。若要求自动识别此情形，先另定外置实例证据及 schema 升版，不在项目创建 UUID/AGM 状态。
+
+registry 丢失/损坏时不恢复 created 或 yes/no；check --all 无索引即报告范围不完整，不扫描整机。check --project 只构造内存观察，未知所有权仍保护。O7 关于写重建后 unknown/reused 的取舍、O2 最后消费者释放政策未裁定前，保持不删除未知或用户共享对象的边界；具体候选及输入/预期矩阵见 decisions-m2.md。
+
 ## 3. agents.json 路径表合同
 
 当前骨架在 scripts/agents.json，只定义 darwin。顶层 schema_version=1，platforms 为 OS→Agent→配置映射；Agent 限定上述三家。每项包含：
@@ -126,6 +176,8 @@ OwnedObject = {
 | bridge_owner | context-keeper / agent-group-memory |
 | runtime_status | upstream_verified_local_pending / pending；本机通过写 registry，不改静态表 |
 
+路径表所有表列字段必填、无读取缺省；路径/模式/枚举为非空字符串，schema_version 为整数 1，未知版本/字段/重复 JSON 键拒绝。platforms 至少一个 OS，每个平台应完整列出三家（不完整平台不能冒充已支持）；静态 runtime_status 不接受 passed。数组项不重复；installation_signals 仅接受表列三个必填字段及固定 kind/strength，不将其扩展为命令执行器。未来平台条目先取得实证，不按操作系统名称猜路径。
+
 仅允许 {home}、{project} 占位，分别由 Path.home()、校验后的 checkout 根展开；未知 OS/占位停止，不硬套 macOS。目录存在只表示安装线索，可能为残留；目录不存在也不能证明未安装。显式 --agent 与用户确认决定目标，目录线索不授权写入，也不证明 CLI/应用可运行。后续若加入应用 bundle/命令信号，先实证再扩 schema，不猜 WorkBuddy 应用包名。
 
 ## 4. CLI 参数与输出约定
@@ -136,13 +188,17 @@ python3 scripts/agm.py remove-memory [--project <Git根>]
 python3 scripts/agm.py check-memory [--project <Git根>|--all]
 ~~~
 
---project 缺省从 cwd 定位 Git 根，显式路径要求是 Git 根；--agent 一次接受多个唯一值，未知值拒绝。--memory 与 --no-memory 互斥；--all 仅 check 可用。未指定 agent 的目标规则尚需 O6 收敛，M1 一律显式三家。不新增公开 --force/--repair 或第四子命令。骨架未接 argparse，不应运行它验收 CLI。
+--project 缺省从 cwd 定位 Git 根，显式路径要求是 Git 根；--agent 一次接受多个唯一值，未知值拒绝。--memory 与 --no-memory 互斥；--all 仅 check 可用。`enable-memory` 未指定 --agent 时目标固定为 codex、claude、workbuddy 三家（本次任务指定），不按残留目录缩减；显式 --agent 非空且一次使用，重复值拒绝，不能影响未选执行器。M1 历史操作仍以其显式参数为证。不新增公开 --force/--repair 或第四子命令。骨架未接 argparse，不应运行它验收 CLI。
 
 enable 总是准备规则基座；--no-memory 不装记忆且记录 no；缺省未就绪推荐说明后取得同意，已就绪且有授权直接补装，曾拒绝不重复问。provider 已就绪但项目授权未知，不能据此默认同意。交互确认须展示范围与记录路径；非交互需要用户决定的步骤停止并返回结构化待确认信息，不自行批准。
 
-输出建议：stdout 单个 JSON 对象，stderr 人读诊断/交互提示；JSON 含 schema_version=1、command、status、projects[]、changes[]、warnings[]、errors[]、approval_required、next_action。projects[] 每项含主键、checkout、四态、目标 agents 与 evidence；changes[] 每项含 path、operation、ownership、before/after 指纹、applied 布尔；errors[] 含 code、path（可 null）、message、recovery。check 的 changes 永远为空，候选修复放 next_action。不得输出凭据或私有记忆正文。
+参数只适用于示例中列明的命令；remove 不接受 --agent/--memory，按当前 checkout 登记目标撤销；check 不接受任何写入批准参数。省略 --all 的 check 仅当前目标，--all 不与 --project 同用。未知参数、重复单值参数、空 --agent 与互斥组合必须在写入前拒绝。--memory 表达启用选择，不等于批准任意用户级文件或任意记录库位置；--no-memory 仍需合法基座写范围。TTY 只影响能否提问，不扩大权限；非 TTY 不从 stdin 猜测 yes，不因 CI/环境变量自动批准。
 
-| 退出码（AGM 草案） | 含义 |
+非交互批准承载**尚未批准公开参数**。D-M2-04 建议新增 `--approval-file <JSON>`（只限两写命令），由宿主将用户已确认的具体计划绑定到命令、主键/checkout/common-dir、目标 agents、记忆选择、实际库位置、源码身份、对象变更和预期前指纹；字段方案与备选见 decisions-m2.md。在裁定前，非交互遇缺批准只能返回待确认，不能擅加 --yes/--approved/--store-dir 等 AGM 参数。上游自己的 --approved 仅在 AGM 已验证同范围批准后传入，不成为用户批准的替代来源。
+
+输出合同：stdout 单个 JSON 对象，stderr 人读诊断/交互提示；JSON 含 schema_version=1、command、status、projects[]、changes[]、warnings[]、errors[]、approval_required、next_action。projects[] 每项含主键、checkout、四态、目标 agents 与 evidence；changes[] 每项含 path、operation、ownership、before/after 指纹、applied 布尔；errors[] 含 code、path（可 null）、message、recovery。check 的 changes 永远为空，候选修复放 next_action。status 固定 completed/gaps/approval_required/migration_required/failed/recovery_required；approval_required 为 boolean，projects/changes/warnings/errors 为数组；next_action 为字符串或 null。解析失败仍尽量输出同一 JSON envelope（command 可 null），帮助文本不属于执行结果。项目项字段为 main_checkout、checkout、states、agents、evidence、runtime_acceptance（沿用登记结构，现场判失效时输出 pending 并告警）；evidence 为定位字符串数组。change.operation 为 create/update/remove，applied 仅表示最终保留的本次变更，回滚成功置 false；指纹可 null，失败的中间写入在 errors/recovery 中报告。before/after 字段名固定为 before_fingerprint/after_fingerprint。不得输出凭据或私有记忆正文。
+
+| 退出码（建议，需用户裁定 D-M2-05） | 含义 |
 |---|---|
 | 0 | 请求完成；check 仅说明静态检查结果，不代表新会话验收 |
 | 1 | check 发现缺口/漂移，需用户 enable 或人工核对 |
@@ -150,7 +206,7 @@ enable 总是准备规则基座；--no-memory 不装记忆且记录 no；缺省�
 | 3 | Keeper 迁移门禁，停止相关读写 |
 | 5 | 需授权/确认，未完成请求 |
 
-安装器 rc=0 + approval_required 映射 AGM 5；probe init 的 5 同样处理；init 的 2 不伪装成 3。未知子进程失败一律不提升就绪。运行时验收 pending 与装配 ready 分开呈现。
+建议表获批准后：安装器 rc=0 + approval_required 映射 AGM 5；probe init 的 5 同样处理；init 的 2 不伪装成 3。未知子进程失败一律不提升就绪。运行时验收 pending 与装配 ready 分开呈现。建议多结果退出优先级：执行/参数/schema/恢复失败 2 > 迁移 3 > 待确认 5 > 检查缺口 1 > 完成 0；即使返回 2 也保留 migration_required 错误，绝不继续迁移相关读写。第四阶段因显式 no 被阻断时，enable --no-memory 的已批准基座完成可返回 0；check 则以 gaps 说明记忆未启用。运行验收 pending 本身不将静态 check 判为失败；请求的静态条件缺口才返回 1。
 
 ## 5. 写命令的执行与恢复
 
