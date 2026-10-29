@@ -17,3 +17,12 @@ __pycache__/
 /scripts/registry.json.*
 /scripts/.agm.lock
 /scripts/backups/
+
+# 本机 Skill 装配链接(绝对路径指向本机 Keeper 源码,新 clone 须重新 enable;D3)
+/.agents/skills/
+/.codex/skills/
+/.claude/skills/
+/.workbuddy/skills/
+
+# WorkBuddy 原生每日日志(个人本地;项目记忆走 context-keeper 记录库)
+/.workbuddy/memory/2*.md
