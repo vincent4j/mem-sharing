@@ -11,3 +11,9 @@ build/
 __pycache__/
 *.pyc
 .venv/
+
+# AGM 本机装配状态与恢复材料（不是项目记忆）
+/scripts/registry.json
+/scripts/registry.json.*
+/scripts/.agm.lock
+/scripts/backups/

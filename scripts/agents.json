@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "platforms": {
+    "darwin": {
+      "codex": {
+        "user_entry": "{home}/.codex/AGENTS.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/AGENTS.md",
+        "project_skill_roots": ["{project}/.agents/skills", "{project}/.codex/skills"],
+        "installation_signals": [{"kind": "directory_exists", "path": "{home}/.codex", "strength": "hint"}],
+        "rule_mode": "native",
+        "bridge_owner": "context-keeper",
+        "runtime_status": "upstream_verified_local_pending"
+      },
+      "claude": {
+        "user_entry": "{home}/.claude/CLAUDE.md",
+        "project_rule_entry": "{project}/CLAUDE.md",
+        "project_bridge_entry": "{project}/CLAUDE.md",
+        "project_skill_roots": ["{project}/.claude/skills"],
+        "installation_signals": [{"kind": "directory_exists", "path": "{home}/.claude", "strength": "hint"}],
+        "rule_mode": "import_agents",
+        "bridge_owner": "context-keeper",
+        "runtime_status": "upstream_verified_local_pending"
+      },
+      "workbuddy": {
+        "user_entry": "{home}/.workbuddy/MEMORY.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/.workbuddy/memory/MEMORY.md",
+        "project_skill_roots": ["{project}/.workbuddy/skills"],
+        "installation_signals": [{"kind": "directory_exists", "path": "{home}/.workbuddy", "strength": "hint"}],
+        "rule_mode": "user_convention",
+        "bridge_owner": "agent-group-memory",
+        "runtime_status": "pending"
+      }
+    }
+  }
+}

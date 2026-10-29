@@ -250,7 +250,7 @@ context-keeper 的安装器对 WorkBuddy 刻意停写("自动入口尚未完成�
 |---|---|---|
 | M1 dogfood(**macOS、单仓库、三执行器接力闭环**) | 本仓库启用:基座 + 记忆档(含记录库授权)+ WorkBuddy 桥接 + 用户级约定追加;存量只做**一份已批准、可公开的样本** | §6 正向闭环 + 两个负向用例 |
 | M1.5(独立) | 用户级全面整理;(如需)memories/ 升级为"索引 + 主题文件"结构 | 用户逐项确认的迁移报告 |
-| M2 工具化 | 单一 CLI + 执行器路径表 + memory-state + registry;平台矩阵(安装/重装/卸载/失败恢复,macOS 优先) | knowwind、poster-fit 复制,幂等重装通过 |
+| M2 工具化 | 单一 CLI + 执行器路径表 + registry;平台矩阵(安装/重装/卸载/失败恢复,macOS 优先) | knowwind、poster-fit 复制,幂等重装通过 |
 | M3 上游回传 | WorkBuddy 桥接模板与验收证据回传 context-keeper,解除其限制 + 旧块移交验证;本仓库删私有模板 | context-keeper 原生安装 WorkBuddy 入口成功且无双入口 |
 | 后续 | Skills/MCP 纳入本工具(用户待定);其余执行器按同模式逐家接入 | — |
 
