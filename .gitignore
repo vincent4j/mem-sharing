@@ -1,0 +1,13 @@
+# 本地工具状态
+.zcode/
+
+# macOS
+.DS_Store
+
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
