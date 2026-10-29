@@ -161,6 +161,13 @@ class _Plan:
         return self.after[path]
 
     def object(self, path, suffix, agents, kind, *, marker=None, block=None, target=None, scope="project", top=False):
+        """Plan shared drift for review without granting ownership override.
+
+        A created unit's external drift is still rejected by registry commit,
+        even with exact-plan approval. Recovery requires manual inspection and
+        restoration of the registered bytes, or a separately reviewed remove
+        and re-enable; approval here never bypasses that ownership guard.
+        """
         path = Path(path)
         objects = self.shared if scope == "user" else self.assembly["objects"]
         oid = str(path) + suffix
@@ -189,10 +196,19 @@ class _Plan:
             if marker:
                 actual = entries.block_fingerprint(data, **_marker_args(marker))
                 desired = entries.block_fingerprint(block, **_marker_args(marker))
-                if actual is not None and actual != (old["fingerprint"]["value"] if old and old["fingerprint"] else desired):
+                trusted = old["fingerprint"]["value"] if old and old["fingerprint"] else desired
+                shared_block = scope == "user" and old is not None and old["fingerprint"] is not None
+                if shared_block and actual != trusted and desired != trusted:
+                    raise EnableError("drift", "Registered shared block cannot be reconstructed from the install template: " + str(path))
+                if actual is not None and actual != trusted and not (shared_block and desired == trusted):
                     raise EnableError("drift", "Managed block drifted: " + str(path))
-                new = entries.render_block(data, block, **_marker_args(marker), expected_fingerprint=actual,
-                                           position="top" if top else "append")
+                if shared_block and actual == trusted:
+                    # Registered shared content is authoritative; templates are
+                    # for installation, not implicit migrations of user rules.
+                    new, desired = data, trusted
+                else:
+                    new = entries.render_block(data, block, **_marker_args(marker), expected_fingerprint=actual,
+                                               position="top" if top else "append")
                 fp, existed, basis = desired, actual is not None, "block_bytes"
             else:
                 new, existed, basis = data, snap.kind != "absent", "file_bytes"
@@ -230,7 +246,7 @@ class _Plan:
                  "after_fingerprint": c.after.fingerprint} for c in sorted(self.changes(), key=lambda c: str(c.path))]
 
 
-def _preflight_objects(assembly, shared):
+def _preflight_objects(assembly, shared, review_user_units=()):
     for obj in list(assembly["objects"].values()) + [shared[key] for key in assembly["shared_object_ids"]]:
         snap = read_snapshot(obj["path"])
         if snap.kind == "absent":
@@ -238,6 +254,9 @@ def _preflight_objects(assembly, shared):
         if obj["kind"] in ("block", "user_convention"):
             actual = registry._unit_fingerprint(snap, obj)
             if actual is not None and (not obj["fingerprint"] or actual != obj["fingerprint"]["value"]):
+                if (obj["scope"] == "user" and obj["kind"] == "user_convention"
+                        and (obj["path"], obj["marker"]["start"]) in review_user_units):
+                    continue  # Planned below; only an exact approved repair may write it.
                 raise EnableError("drift", "Registered managed block drifted: " + obj["path"])
         elif obj["kind"] == "skill_symlink":
             entries.verify_link(obj["path"], obj["link_target"])
@@ -272,6 +291,10 @@ def _consistent_repair(previous, current, plan, choice, source, store, old_share
                 continue
             if prior["fingerprint"] != obj["fingerprint"]:
                 return False
+            if obj["scope"] == "user" and obj["marker"] and change.expected.kind == "file":
+                actual = registry._unit_fingerprint(change.expected, prior)
+                if actual is not None and actual != prior["fingerprint"]["value"]:
+                    return False  # External edits require a fresh exact-plan review.
     return True
 
 
@@ -311,9 +334,14 @@ def run(request):
         for item in result["projects"]:
             if getattr(exc, "code", None) in ("migration_required", "keeper_failed", "store_unavailable", "approval_required"):
                 item["states"]["store_authorized_ready"] = _fact("blocked", getattr(exc, "code", "provider failure"))
-        result["errors"].append({"code": getattr(exc, "code", "enable_failed"), "path": None,
-                                "message": str(exc), "recovery": getattr(exc, "manifest", None)})
+        recovery = getattr(exc, "manifest", None)
         result["next_action"] = "Inspect preserved evidence; re-preview before retrying. No store assets are deleted."
+        if getattr(exc, "code", None) == "registry_invalid" and "created unit drifted" in str(exc):
+            recovery = ("人工核对并还原登记内容，或另行审查 remove 后重新 enable 的恢复方案；"
+                        "精确计划批准不能覆盖 created 对象的漂移保护。")
+            result["next_action"] = recovery
+        result["errors"].append({"code": getattr(exc, "code", "enable_failed"), "path": None,
+                                "message": str(exc), "recovery": recovery})
         return result
 
 
@@ -341,7 +369,6 @@ def _run_locked(request, install, result):
     assembly = p["checkouts"][key]
     if assembly["git_common_dir"] != str(identity.git_common_dir):
         raise EnableError("project_identity_mismatch", "Git common-dir changed; do not inherit authorization")
-    _preflight_objects(assembly, data["shared_objects"])
     for a in agents:
         if a not in assembly["agents"]:
             assembly["agents"].append(a)
@@ -359,6 +386,13 @@ def _run_locked(request, install, result):
         choice = "yes" if input().strip().lower() in ("y", "yes") else "no"
     if choice not in ("yes", "no", None):
         raise EnableError("approval_mismatch", "Invalid memory choice")
+    review_user_units = []
+    if "workbuddy" in agents:
+        user_path = paths.expand_path(config["workbuddy"]["user_entry"], home=home)
+        review_user_units.append((user_path, BASE_MARKER["start"]))
+        if choice == "yes":
+            review_user_units.append((user_path, EXCEPTION_MARKER["start"]))
+    _preflight_objects(assembly, data["shared_objects"], review_user_units)
     source = (approval.get("provider_source") if approval else p["provider_source"]) if choice == "yes" else None
     if choice == "yes" and source is None:
         candidates = set()
@@ -414,8 +448,17 @@ def _run_locked(request, install, result):
         plan.object(path, "#import", ["claude"], "import")
     if "workbuddy" in agents:
         path = Path(paths.expand_path(config["workbuddy"]["user_entry"], home=home))
-        plan.object(path, "#rules", ["workbuddy"], "user_convention", scope="user", marker=BASE_MARKER,
-                    block=_block(BASE_MARKER, "项目规则读取当前项目根 AGENTS.md。保留已有公共源与用户约定。"))
+        snap = plan.snapshot(path)
+        registered_rules = any(o["path"] == str(path) and o["marker"] == BASE_MARKER
+                               for o in data["shared_objects"].values())
+        if (snap.kind == "file" and not registered_rules
+                and entries.block_fingerprint(snap.data, **_marker_args(BASE_MARKER)) is None):
+            # M1 reuses the existing user entry as a whole-file baseline.
+            # Do not append a second rule convention to that shared entry.
+            plan.object(path, "#base", ["workbuddy"], "file", scope="user")
+        else:
+            plan.object(path, "#rules", ["workbuddy"], "user_convention", scope="user", marker=BASE_MARKER,
+                        block=_block(BASE_MARKER, "项目规则读取当前项目根 AGENTS.md。保留已有公共源与用户约定。"))
     if choice == "yes" and source:
         for a in agents:
             for template in config[a]["project_skill_roots"]:
@@ -428,7 +471,7 @@ def _run_locked(request, install, result):
                 plan.object(target, "#keeper", [a], "block", marker=marker, block=raw, top=True)
                 user = Path(paths.expand_path(config[a]["user_entry"], home=home))
                 plan.object(user, "#keeper-exception", [a], "user_convention", scope="user", marker=EXCEPTION_MARKER,
-                            block=_block(EXCEPTION_MARKER, "项目记忆用 context-keeper 记录库，由项目桥接块驱动；不在用户入口保存项目历史。"))
+                            block=_block(EXCEPTION_MARKER, "## Context Keeper 项目记忆例外\n\n项目记忆用 context-keeper 记录库，由项目桥接块驱动。项目规则唯一来源仍为 AGENTS.md；已启用 context-keeper 的项目，其进度、事实与经验写入已获授权的记录库，项目 .workbuddy/memory/MEMORY.md 可在顶部包含受控桥接块。此条款作为既有\u201c事实归 AGENTS.md、项目 MEMORY 只放指针\u201d约定的记忆例外；其余原文约定保留。"))
             else:
                 plan.object(target, "#keeper", [a], "block", marker=KEEPER_MARKER, block=bridge)
     actual_plan = {"schema_version": 1, "command": "enable-memory", "main_checkout": key,
@@ -495,7 +538,7 @@ def _run_locked(request, install, result):
         assembly["states"]["store_authorized_ready"] = _fact("blocked", "memory authorization is no")
     assembly["runtime_acceptance"] = {"status": "pending", "evidence_path": None}
     # Normalize file/import reuse hashes after all overlapping block edits.
-    for obj in assembly["objects"].values():
+    for obj in list(assembly["objects"].values()) + [data["shared_objects"][oid] for oid in assembly["shared_object_ids"]]:
         if obj["kind"] in ("file", "import") and obj["ownership"] != "created" and Path(obj["path"]) in plan.after:
             obj["fingerprint"]["value"] = plan.after[Path(obj["path"])].fingerprint
     called = []

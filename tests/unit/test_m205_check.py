@@ -583,6 +583,31 @@ class CheckReadOnlyTests(unittest.TestCase):
         self.assertEqual(len(shared), 1)
         self.assertEqual(shared[0]["status"], "drifted")
 
+    def test_m1_shared_exception_uses_registered_bytes_not_install_template(self):
+        from agm_core.enable import EXCEPTION_MARKER, _block
+        main, data = build_installed_project(self.sb, "proj")
+        user_memory = self.sb.home / ".workbuddy/MEMORY.md"
+        block = _block(EXCEPTION_MARKER, "Previously approved user exception")
+        content = USER_MEMORY_BASE + block + b"\nOutside user rules\n"
+        user_memory.write_bytes(content)
+        shared = next(iter(data["shared_objects"].values()))
+        shared.update(marker=EXCEPTION_MARKER, fingerprint=_fp("block_bytes", sha256(block)))
+        data["shared_objects"][str(user_memory) + "#base"] = _obj(
+            "file", str(user_memory), ["workbuddy"], "reused", scope="user",
+            fingerprint=_fp("file_bytes", sha256(content)), consumers=[str(main)])
+        data["projects"][str(main)]["checkouts"][str(main)]["shared_object_ids"].append(str(user_memory) + "#base")
+        self.sb.write_registry(data)
+        before = tree_state(self.sb.root)
+        envelope, _ = run_check(self.sb, ["--project", str(main)])
+        shared_report = [o for o in envelope["projects"][0]["objects"] if o["scope"] == "user"]
+        self.assertEqual([o["status"] for o in shared_report], ["ok", "ok"])
+        self.assertEqual(tree_state(self.sb.root), before)
+        user_memory.write_bytes(content.replace(b"Previously approved", b"Externally changed"))
+        envelope, code = run_check(self.sb, ["--project", str(main)])
+        shared_report = [o for o in envelope["projects"][0]["objects"] if o["scope"] == "user"]
+        self.assertEqual(code, 1)
+        self.assertTrue(all(o["status"] == "drifted" for o in shared_report))
+
     def test_runtime_passed_invalidated_on_drift(self):
         main, _registry = build_installed_project(self.sb, "proj", runtime_passed=True)
         (main / "AGENTS.md").write_bytes(AGENTS_BASE + DRIFTED_BLOCK)

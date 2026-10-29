@@ -125,6 +125,110 @@ BRIDGE = f"{BRIDGE_START}\\nKeeper rules\\n{BRIDGE_END}\\n"
 
 
 class EnableTests(EnableFixture):
+    def seed_m1_user_entry(self, custom_exception=False, reused_exception=False):
+        self.apply("yes", True)
+        path = self.home / ".workbuddy/MEMORY.md"
+        data = self.load()
+        shared = data["shared_objects"]
+        rules_id = str(path) + "#rules"
+        rules = shared.pop(rules_id)
+        content = path.read_bytes()
+        span = enable.entries.managed_span(content, **enable._marker_args(enable.BASE_MARKER))
+        content = b"# Existing user conventions\n" + content[:span[0]] + content[span[1]:]
+        if custom_exception:
+            block = enable._block(enable.EXCEPTION_MARKER, "Previously approved exception wording")
+            content = enable.entries.render_block(content, block, **enable._marker_args(enable.EXCEPTION_MARKER),
+                        expected_fingerprint=enable.entries.block_fingerprint(content, **enable._marker_args(enable.EXCEPTION_MARKER)))
+            shared[str(path) + "#keeper-exception"]["fingerprint"]["value"] = sha256(block)
+        if reused_exception:
+            shared[str(path) + "#keeper-exception"].update(ownership="reused", original_existed=True)
+        path.write_bytes(content)
+        rules.update(kind="file", marker=None, ownership="reused", original_existed=True,
+                     fingerprint={"algorithm": "sha256", "basis": "file_bytes", "value": sha256(content)})
+        shared[str(path) + "#base"] = rules
+        assembly = data["projects"][str(self.root)]["checkouts"][str(self.root)]
+        assembly["shared_object_ids"].remove(rules_id)
+        assembly["shared_object_ids"].append(str(path) + "#base")
+        (self.install / "registry.json").write_bytes(registry.serialize_registry(data,
+            allowed_user_paths=paths.allowed_user_paths(self.config, None, home=str(self.home))))
+        self.request["approval"] = None
+        self.calls.clear()
+        return path
+
+    def test_m1_shared_entry_unchanged_for_new_consumer_despite_new_template(self):
+        path = self.seed_m1_user_entry(custom_exception=True)
+        before = path.read_bytes(), path.stat().st_mtime_ns
+        second = self.area / "second project"
+        second.mkdir()
+        subprocess.run(["git", "init", "-q", str(second)], check=True)
+        self.request.update(project=str(second), approval={"provider_source": str(self.source),
+                            "memory_authorization": "yes", "store_path": None})
+        result = enable.run(self.request)
+        self.assertEqual(result["status"], "approval_required", result)
+        plan = json.loads(result["next_action"])
+        self.assertNotIn(str(path), [c["path"] for c in plan["changes"]])
+        self.assertEqual((path.read_bytes(), path.stat().st_mtime_ns), before)
+        self.assertEqual(self.calls, [])
+
+    def test_shared_exception_external_edit_requires_exact_update_review(self):
+        path = self.seed_m1_user_entry(reused_exception=True)
+        original = path.read_bytes()
+        marker = enable.EXCEPTION_MARKER
+        span = enable.entries.managed_span(original, **enable._marker_args(marker))
+        foreign = enable._block(marker, "External edit")
+        edited = original[:span[0]] + foreign + original[span[1]:]
+        path.write_bytes(edited)
+        result = enable.run(self.request)
+        self.assertEqual(result["status"], "approval_required", result)
+        plan = json.loads(result["next_action"])
+        changes = [c for c in plan["changes"] if c["path"] == str(path)]
+        self.assertEqual(changes, [{"path": str(path), "operation": "update",
+                        "before_fingerprint": sha256(edited), "after_fingerprint": sha256(original)}])
+        self.assertEqual(path.read_bytes(), edited)
+        self.assertEqual(self.calls, [])
+        plan.update(confirmed_at="2026-10-29T00:00:00Z", reference="review exact shared repair")
+        self.request["approval"] = plan
+        result = enable.run(self.request)
+        self.assertEqual(result["status"], "completed", result)
+        self.assertEqual(path.read_bytes(), original)
+        self.assertEqual(self.load()["shared_objects"][str(path) + "#base"]["fingerprint"]["value"], sha256(original))
+
+    def test_created_shared_drift_still_preserves_registry_ownership_guard(self):
+        path = self.seed_m1_user_entry()
+        edited = path.read_bytes().replace("项目记忆例外".encode(), b"External edit")
+        path.write_bytes(edited)
+        result = enable.run(self.request)
+        self.assertEqual(result["status"], "approval_required", result)
+        plan = json.loads(result["next_action"])
+        self.assertIn(str(path), [c["path"] for c in plan["changes"]])
+        plan.update(confirmed_at="2026-10-29T00:00:00Z", reference="review created drift")
+        self.request["approval"] = plan
+        result = enable.run(self.request)
+        self.assertEqual(result["status"], "failed", result)
+        self.assertEqual(result["errors"][0]["code"], "registry_invalid")
+        self.assertIn("created unit drifted", result["errors"][0]["message"])
+        self.assertIn("人工核对并还原", result["errors"][0]["recovery"])
+        self.assertIn("remove", result["next_action"])
+        self.assertEqual(path.read_bytes(), edited)
+
+    def test_unknown_approved_shared_wording_cannot_be_repaired_with_new_template(self):
+        path = self.seed_m1_user_entry(custom_exception=True, reused_exception=True)
+        edited = path.read_bytes().replace(b"Previously approved", b"External edit")
+        path.write_bytes(edited)
+        result = enable.run(self.request)
+        self.assertEqual(result["status"], "failed", result)
+        self.assertEqual(result["errors"][0]["code"], "drift")
+        self.assertEqual(path.read_bytes(), edited)
+        self.assertEqual(self.calls, [])
+
+    def test_m1_shared_entry_idempotent_without_template_migration(self):
+        path = self.seed_m1_user_entry(custom_exception=True)
+        before = path.read_bytes(), path.stat().st_mtime_ns
+        result = enable.run(self.request)
+        self.assertEqual(result["status"], "completed", result)
+        self.assertEqual(result["changes"], [])
+        self.assertEqual((path.read_bytes(), path.stat().st_mtime_ns), before)
+
     def test_preview_is_no_write_and_has_exact_changes(self):
         plan = self.preview()
         self.assertEqual(plan["memory_authorization"], "no")
