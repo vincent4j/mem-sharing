@@ -19,14 +19,14 @@ from contextlib import ExitStack
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import detect, legacy_import as legacy, migrate, paths, registry, user_entries
+from . import detect, legacy_import as legacy, migrate, paths, registry, user_entries, versions
 from .layout import RuntimeLayout
 from .transaction import Snapshot, TransactionError, _apply, _atomic_file, read_snapshot
 
 PRODUCT = 'agent-group-memory'
 SCHEMA = 1
 JOURNAL_KEYS = 'schema_version product_id operation_id plan approval status intent created_directories completed snapshot_complete snapshot_location entry_registry_sha256 final_registry_sha256'
-PLAN_KEYS = 'schema_version command operation_id channel layout source source_files tools versions requested_agents effective_agents entry_plan entry_inputs observations scene_sha256 legacy_identity legacy_import outputs directories bootstrap journal staged_registry metadata_scopes changes agent_facts source_tree_sha256 plan_sha256'
+PLAN_KEYS = 'schema_version command operation_id channel layout source source_files tools versions requested_agents effective_agents entry_plan entry_inputs observations scene_sha256 legacy_identity legacy_import outputs directories bootstrap journal staged_registry metadata_scopes changes agent_facts source_tree_sha256 inventory plan_sha256'
 
 
 class InstallError(ValueError):
@@ -168,9 +168,15 @@ def inspect_machine(request):
     try:
         runtime = _runtime(request)
         result['layout'] = runtime.describe()
+        guard=runtime.home/'.agents-group-upgrade.json'
+        if os.path.lexists(guard):
+            result.update(scene='interrupted',errors=['upgrade marker: '+str(guard)])
+            return result
         observations = result['observations']
         observations.update(_walk(runtime.root))
         observations.update(_walk(runtime.code))
+        _real_chain(versions.root(runtime),runtime.home)
+        observations.update(_walk(versions.root(runtime)))
         for p in (runtime.code.parent,runtime.code.parent.parent):observations[str(p)]=_node(p)
         known_old = sorted({Path(p).resolve() for p in request.get('legacy_registries', [])} |
                            ({Path(request['source']['root'])/'scripts/registry.json'} if request.get('source') else set()))
@@ -203,6 +209,9 @@ def inspect_machine(request):
                 validated,_=_load_journal(opdir/'journal.json')
             elif command=='migrate-machine':
                 validated,_=migrate._load_journal(opdir/'journal.json')
+            elif command=='upgrade-machine':
+                from . import upgrade
+                validated,_=upgrade._load_journal(opdir/'journal.json')
             else:
                 _fail('Unexplained completed bootstrap metadata')
         v = _node(runtime.registry)
@@ -229,11 +238,21 @@ def inspect_machine(request):
                     _fail('dual active ledgers require explicit migration recovery')
                 if _node(old)['kind'] != 'absent' and str(old) not in (data.get('migration') or {}).get('tombstones',{}):
                     _fail('unexplained legacy registry')
-            source,_ = _source(request)
+            source,source_files = _source(request)
             identity = {'url':source['url'],'commit':source['commit'],'tree_sha256':source['tree_sha256']}
             if data['product']['product_code_version']==source['version'] and data['product']['source']==identity:
                 result.update(scene='same',channel='upgrade')
+            elif 'conversions' in request:
+                from . import upgrade
+                try:
+                    upgrade._conversion(request,data,versions.descriptor(runtime,source,source_files),request.get('direction','upgrade'))
+                except ValueError:
+                    result.update(scene='future',errors=['no exact supported release conversion'])
+                else:
+                    result.update(scene='valid_old',channel='upgrade')
             elif {'version':data['product']['product_code_version'],'source':data['product']['source']} in request.get('supported_sources',[]):
+                # Historical read-only callers; execution still requires the full
+                # exact conversion in upgrade.plan_upgrade, never this short list.
                 result.update(scene='valid_old',channel='upgrade')
             else:
                 result.update(scene='future',errors=['no supported source conversion'])
@@ -252,6 +271,8 @@ def inspect_machine(request):
             else:
                 _fail('Legacy product state: '+scene['scene'])
             return result
+        if os.path.lexists(versions.root(runtime)):
+            _fail('Persistent product inventory without active ledger; explicit recovery required')
         if _node(runtime.code)['kind']!='absent':
             _fail('Product code without active ledger; not v0')
         for old in known_old:
@@ -366,7 +387,7 @@ def plan_install(request):
         _real_chain(Path(directory),runtime.home)
         if _node(directory)['kind'] not in ('absent','directory'): _fail('Directory conflict: '+directory)
     saved_inputs={k:copy.deepcopy(request[k]) for k in ('platform_config','agents','search_paths','app_directories','user_candidates') if k in request}
-    plan={'schema_version':1,'command':'install-machine','operation_id':op,'channel':scene['channel'],
+    plan={'schema_version':2,'command':'install-machine','operation_id':op,'channel':scene['channel'],
           'layout':runtime.describe(),'source':source,'source_files':files,'tools':tools,
           'versions':{'schema_version':2,'product_structure_version':1,'product_code_version':source['version']},
           'requested_agents':(entry_result.get('agents') or {}).get('requested',paths.resolve_agents(request.get('agents'))),
@@ -375,8 +396,10 @@ def plan_install(request):
           'observations':scene['observations'],'scene_sha256':legacy.digest(legacy.encoded(scene['observations'])),
           'legacy_identity':'confirmed_v0' if imported else None,'source_tree_sha256':imported['source_tree_sha256'] if imported else None,'legacy_import':imported,'outputs':outputs,
           'directories':sorted(directories,key=lambda p:(len(Path(p).parts),p)),
+          'inventory':versions.descriptor(runtime,source,files),
           'bootstrap':str(bootstrap),'journal':str(bootstrap/'journal.json'),'staged_registry':str(bootstrap/'staged-registry.json'),
           'metadata_scopes':[str(bootstrap),str(runtime.backups/('v0-'+op))] if imported else [str(bootstrap)]}
+    plan['metadata_scopes'] += [str(versions.root(runtime))]
     plan['changes']=([{'path':item['path'],'operation':'reuse' if item['before']==item['after'] else 'create' if item['before']['kind']=='absent' else 'legacy_index',
                        'before':item['before'],'after':item['after']} for item in outputs]
         + [{'path':p,'operation':'mkdir','before':_node(p)} for p in plan['directories'] if _node(p)['kind']=='absent']
@@ -384,6 +407,7 @@ def plan_install(request):
         + [{'path':str(runtime.registry),'operation':'commit_registry_last','before':{'kind':'absent'},
             'after':{'product':_seed(plan)['product'],'machine_agents':plan['effective_agents'],
                      'machine_objects':(entry_plan or {}).get('machine_objects',[]),'legacy_import':_seed(plan)['legacy_import']}}]
+        + [{'path':plan['inventory']['slot'],'operation':'register_persistent_version','before':_node(plan['inventory']['slot'])}]
         + [{'path':scope,'operation':'operation_metadata','before':{'kind':'absent'}} for scope in plan['metadata_scopes']]
         + [{'path':str(p),'operation':'writer_lock','before':{'kind':'absent'}} for p in
            (runtime.home/'.agents-group-install.lock',runtime.lock,runtime.transaction_lock)])
@@ -391,13 +415,17 @@ def plan_install(request):
     return plan
 
 
-def _validate(plan):
-    registry._keys(plan,PLAN_KEYS,'install plan')
+def _validate(plan, *, historical=False):
+    old = historical and isinstance(plan,dict) and type(plan.get('schema_version')) is int and plan.get('schema_version')==1 and 'inventory' not in plan
+    registry._keys(plan,' '.join(k for k in PLAN_KEYS.split() if not old or k!='inventory'),'install plan')
     body=dict(plan); digest=body.pop('plan_sha256')
-    if legacy.digest(legacy.encoded(body))!=digest or plan['schema_version']!=1 or plan['command']!='install-machine':
+    if legacy.digest(legacy.encoded(body))!=digest or plan['schema_version']!=(1 if old else 2) or plan['command']!='install-machine':
         _fail('Invalid installation plan')
     runtime=RuntimeLayout(Path(plan['layout']['root']).parent)
     runtime.validate_paths(); _real_chain(runtime.code,runtime.home)
+    if not old:
+        versions.validate(runtime,plan['inventory'])
+        if plan['inventory']!=versions.descriptor(runtime,plan['source'],plan['source_files']):_fail('Inventory/source mismatch')
     op=migrate._op(plan['operation_id'])
     bootstrap=runtime.home/('.agents-group-install-'+op)
     if plan['layout']!=runtime.describe() or plan['bootstrap']!=str(bootstrap) or plan['journal']!=str(bootstrap/'journal.json') or plan['staged_registry']!=str(bootstrap/'staged-registry.json'):
@@ -765,9 +793,13 @@ def _finish(journal,request,hook):
         user_entries._preflight_machine_units(data)
         if plan['legacy_import']:_snapshot_verify(plan,plan['legacy_import']['snapshot'])
         _import_manifest(journal,'committed',hook)
+        versions.activate(runtime,plan['inventory'],plan['operation_id'],plan['journal'],journal['final_registry_sha256'],
+            mkdir=lambda p:_mkdir(journal,p,hook),intent=lambda k,p:_intent(journal,k,p,hook))
         journal['status']='committed';_save(journal)
         return {'status':'completed','journal':plan['journal'],'operation_id':plan['operation_id'],'finalized_only':True}
     _toolkit(journal,hook);_stage_code(journal,hook)
+    versions.ensure(runtime,plan['inventory'],Path(plan['bootstrap'])/'code-source',plan['operation_id'],
+        mkdir=lambda p:_mkdir(journal,p,hook),intent=lambda k,p:_intent(journal,k,p,hook),hook=hook)
     if plan['legacy_import']:
         if not journal['snapshot_complete']:_import_manifest(journal,'prepared',hook)
         _make_snapshot(journal,hook);_import_manifest(journal,'snapshot_complete',hook)
@@ -794,6 +826,8 @@ def _finish(journal,request,hook):
     if hook:hook('after_commit',runtime.registry)
     if _node(runtime.registry).get('sha256')!=journal['final_registry_sha256']:_fail('Registry commit readback drift')
     _verify_outputs(plan);_verify_entry_outputs(plan);user_entries._preflight_machine_units(data)
+    versions.activate(runtime,plan['inventory'],plan['operation_id'],plan['journal'],journal['final_registry_sha256'],
+        mkdir=lambda p:_mkdir(journal,p,hook),intent=lambda k,p:_intent(journal,k,p,hook))
     _import_manifest(journal,'committed',hook);journal['status']='committed';_save(journal)
     return {'status':'completed','journal':plan['journal'],'operation_id':plan['operation_id'],'legacy_import':plan['legacy_import'] is not None}
 
@@ -837,7 +871,7 @@ def _load_journal(path):
     if path.is_symlink() or path!=path.resolve():_fail('Unsafe journal path')
     journal=migrate._json(path)
     registry._keys(journal,JOURNAL_KEYS,'installation journal')
-    runtime=_validate(journal['plan']);_approve(journal['plan'],journal['approval'])
+    runtime=_validate(journal['plan'],historical=journal['status'] in ('committed','rolled_back'));_approve(journal['plan'],journal['approval'])
     if journal['schema_version']!=1 or journal['product_id']!=PRODUCT or journal['operation_id']!=journal['plan']['operation_id'] or str(path)!=journal['plan']['journal']:
         _fail('Journal identity mismatch')
     if type(journal['snapshot_complete']) is not bool:_fail('Invalid snapshot completion marker')
@@ -974,7 +1008,7 @@ def _rollback_install(journal,request,hook):
     # Keep bootstrap, tools and source snapshot evidence. Only remove ours if empty.
     for directory in reversed(journal['created_directories']):
         p=Path(directory)
-        if p.is_relative_to(Path(plan['bootstrap'])) or plan['legacy_import'] and p.is_relative_to(Path(plan['legacy_import']['snapshot']).parent):continue
+        if p.is_relative_to(versions.root(runtime)) or p.is_relative_to(Path(plan['bootstrap'])) or plan['legacy_import'] and p.is_relative_to(Path(plan['legacy_import']['snapshot']).parent):continue
         if p.is_dir() and not p.is_symlink():
             try:p.rmdir()
             except OSError:pass
@@ -1011,7 +1045,7 @@ def recover_install(recovery_plan,approval,*,request=None,hook=None):
     if result['status']=='rolled_back':
         for raw in reversed(journal['created_directories']):
             path=Path(raw)
-            if path.is_relative_to(Path(plan['bootstrap'])) or plan['legacy_import'] and path.is_relative_to(Path(plan['legacy_import']['snapshot']).parent):continue
+            if path.is_relative_to(versions.root(runtime)) or path.is_relative_to(Path(plan['bootstrap'])) or plan['legacy_import'] and path.is_relative_to(Path(plan['legacy_import']['snapshot']).parent):continue
             if path.is_dir() and not path.is_symlink():
                 try:path.rmdir()
                 except OSError:pass

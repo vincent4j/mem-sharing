@@ -28,6 +28,9 @@ import json
 import os
 import re
 import sys
+
+# Installed release trees are manifest-closed; CLI use must not add cache files.
+sys.dont_write_bytecode = True
 from datetime import datetime
 from pathlib import Path
 

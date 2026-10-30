@@ -86,4 +86,7 @@ def from_request(request):
     if not isinstance(layout, RuntimeLayout) or layout.home != Path(request["home"]):
         raise LayoutError("runtime_layout_invalid", "Injected layout must match request.home")
     layout.validate_paths()
+    marker = layout.home / ".agents-group-upgrade.json"
+    if marker.exists() or marker.is_symlink():
+        raise LayoutError("machine_upgrade_pending", "Machine upgrade requires explicit recovery: " + str(marker))
     return layout
