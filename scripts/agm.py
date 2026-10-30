@@ -31,8 +31,8 @@ from agm_core import paths as agm_paths
 from agm_core import layout as agm_layout
 
 SCHEMA_VERSION = 1
-KNOWN_COMMANDS = ("enable-memory", "remove-memory", "check-memory")
-WRITE_COMMANDS = ("enable-memory", "remove-memory")
+KNOWN_COMMANDS = ("enable-memory", "enable-memory-batch", "remove-memory", "check-memory")
+WRITE_COMMANDS = ("enable-memory", "enable-memory-batch", "remove-memory")
 INSTALL_NEXT_ACTION = "先阅读 INSTALL.md，运行 python3 -B <已核验源>/scripts/install.py 预览机器安装；确认后用 --approval-file 执行。"
 
 STATUS_COMPLETED = "completed"
@@ -124,7 +124,7 @@ class _StrictParser(argparse.ArgumentParser):
         raise CliError("invalid_arguments", message)
 
 
-_SINGLE_USE_FLAGS = ("--project", "--agent", "--memory", "--no-memory", "--all", "--approval-file")
+_SINGLE_USE_FLAGS = ("--project", "--directory", "--agent", "--memory", "--no-memory", "--all", "--approval-file")
 
 
 def _prescan_single_use(argv):
@@ -167,6 +167,11 @@ def build_parser():
         "--approval-file", metavar="JSON", help="非交互批准文件(裁定 D-M2-04;仅写命令)"
     )
 
+    batch = sub.add_parser("enable-memory-batch", help="扫描 Git 主 checkout，集中批准后批量启用记忆")
+    batch.add_argument("--directory", required=True, metavar="DIR", help="只读递归扫描的目录(含自身)")
+    batch.add_argument("--agent", nargs="+", metavar="AGENT", help="透传单项目启用的执行器选择；缺省按安装事实")
+    batch.add_argument("--approval-file", metavar="JSON", help="绑定完整批量计划的一次批准文件")
+
     remove = sub.add_parser("remove-memory", help="仅撤销本工具所有权对象")
     remove.add_argument("--project", metavar="GIT_ROOT", help="显式项目 Git 根;缺省从 cwd 定位")
     remove.add_argument(
@@ -186,7 +191,7 @@ def _guess_command(argv):
     for token in argv:
         if not isinstance(token, str):
             continue
-        if token in KNOWN_COMMANDS and previous not in ("--project", "--approval-file"):
+        if token in KNOWN_COMMANDS and previous not in ("--project", "--directory", "--approval-file"):
             return token
         previous = token if token.startswith("--") else None
     return None
@@ -357,6 +362,12 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
     仅校验结构与本命令已知目标的匹配;与锁内现场(主键/指纹/库位置/源码身份)的一致性
     核对由内核在写锁内完成;CLI 校验 rebuild 独立确认与旧账哈希的绑定。
     """
+    if command == "enable-memory-batch":
+        from agm_core.batch_enable import validate_approval as validate_batch
+        try:
+            return validate_batch(data, agents=agents)
+        except ValueError as exc:
+            _approval_fail(str(exc), path)
     if command not in ("enable-memory", "remove-memory"):
         _approval_fail("该命令不接受批准", path)
     keys = set(data)
@@ -444,6 +455,7 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
 
 _COMMAND_MODULES = {
     "enable-memory": ("agm_core.enable", "run"),
+    "enable-memory-batch": ("agm_core.batch_enable", "run"),
     "remove-memory": ("agm_core.remove", "run"),
     "check-memory": ("agm_core.check", "run"),
 }
@@ -563,7 +575,8 @@ def build_request(
     return {
         "command": command,
         "project": getattr(namespace, "project", None),
-        "agents": None if command == "enable-memory" and getattr(namespace, "agent", None) is None else agents,
+        "directory": getattr(namespace, "directory", None),
+        "agents": None if command in ("enable-memory", "enable-memory-batch") and getattr(namespace, "agent", None) is None else agents,
         "memory_choice": getattr(namespace, "memory_choice", None),
         "all": bool(getattr(namespace, "all", False)),
         "approval": approval,
@@ -590,7 +603,7 @@ def _execute(argv, *, platform, interactive, table_path, home):
 
     command = namespace.command
     try:
-        agents = agm_paths.resolve_agents(namespace.agent) if command == "enable-memory" else None
+        agents = agm_paths.resolve_agents(namespace.agent) if command in ("enable-memory", "enable-memory-batch") else None
         table = agm_paths.load_agents_table(table_path)
         platform_key = agm_paths.current_platform(platform)
         platform_config = agm_paths.select_platform(table, platform_key)
