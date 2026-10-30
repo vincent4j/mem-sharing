@@ -193,13 +193,11 @@ agent-group-memory/
 │   └── agent-group-memory/   #   本产品自身落位(唯一源)
 ├── mcp/                      # 无密钥 MCP 声明,一文件一 server(<name>.json)
 ├── backups/                  # 操作前时间戳备份(带保留期限,90 天提醒清理)
-├── var/                      # 本机状态:registry.json(项目纳管 + 用户级指针记账)、进程锁
-└── legacy/                   # 旧手工实现迁移归档(只读):manage.py/sync.py/project_manage.py
-                              #   及 .sync-state.json 等旧状态文件;内容目录迁走后脚体退役于此
+└── var/                      # 本机状态:registry.json(项目纳管 + 用户级指针记账)、进程锁
 ```
 
-- **内容四目录(memories/references/skills/mcp)从旧实现原样迁入**,语义不变;
-- **状态收编**:旧实现散落的五套状态文件由 `var/registry.json` 统一替代(代码仓库内的 `scripts/registry.json` 随 M4 迁移至此,仓库不再持有本机状态);
+- **内容四目录(memories/references/skills/mcp)是产品结构**;本机旧手工实现的迁移由 M4 迁移工具一次性处理(旧脚本退役、内容迁入),**不进入产品目录结构**——新用户安装时不存在旧实现;
+- **状态收编**:旧实现散落的多套状态文件由 `var/registry.json` 统一替代(代码仓库内的 `scripts/registry.json` 随 M4 迁移至此,仓库不再持有本机状态);
 - 各执行器的用户级入口文件(`~/.codex/AGENTS.md` 等)不在本目录——它们是装配产物,由 registry 记账;
 - 确切迁移与并存切换策略由 M4 任务书定,本结构为目标态。
 

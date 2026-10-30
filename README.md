@@ -1,14 +1,20 @@
 <div align="center">
 
-# 多 Agent 记忆融合 · Multi-Agent Memory Fusion
+# 多 Agent 记忆融合
 
-给多个 AI 编程 Agent 装上同一份项目记忆。
+**Multi-Agent Memory Fusion**
 
-**周一用 Codex,周二用 WorkBuddy,同一个项目,同一份记忆。**
+给你的每一个 AI 编程 Agent 同一份记忆。
 
-[为什么需要](#-为什么需要-multi-agent-memory-fusion) ·
-[快速上手](#-快速上手) ·
-[三命令](#-三命令与退出码) ·
+**你的习惯,换谁上场都记得;项目的进度,隔天接着往下干。**
+
+Codex 记住的偏好,Claude Code 接着用;
+昨天做到一半的工作,今天任何 Agent 接着做。
+
+[为什么需要](#-为什么需要) ·
+[能帮你做什么](#-能帮你做什么) ·
+[安装](#-安装在哪里怎么装) ·
+[目录结构](#-agents-group-是什么) ·
 [设计理念](#-设计理念)
 
 </div>
@@ -16,122 +22,122 @@
 ---
 
 <a id="为什么需要"></a>
-## 💡 为什么需要 Multi-Agent Memory Fusion?
+## 💡 为什么需要?
 
-你同时使用多个 AI Agent 时,是不是也遇到过这些问题?
+你同时用几个 AI Agent 时,是不是天天遇到这些?
 
-- 🔄 **换个工具,记忆清零?** → 周一用 Codex 把方案定了、坑踩完了,周二换 Claude Code 或 WorkBuddy 接手,它什么都不知道,你又得从头交代。
-- 🧩 **规则写了三份,越写越散?** → Codex 读 `AGENTS.md`,Claude 读 `CLAUDE.md`,WorkBuddy 只认自己的记忆文件——同一个项目,三处规则各自漂移。
-- 🔁 **装配靠手,坏了没人知道?** → 手工给每个 Agent 配入口,配完就忘;哪天被重置或误改,静默失效。
+- 🧠 **习惯说一遍,换个工具全白说?** → 你让 Codex 记住了"提交信息用中文""先出方案我确认再动手",换成 Claude Code,它一无所知,同样的话你得从头再说一遍。
+- 📋 **昨天做到一半,今天从头交代?** → 同一个项目,方案昨天定好了、坑昨天踩完了,今天开个新会话,它完全不记得昨天,你又得重新讲一遍背景。
+- 🧩 **规则写了三份,越写越散?** → Codex 读 `AGENTS.md`,Claude 读 `CLAUDE.md`,WorkBuddy 只认自己的记忆文件——同一个项目,规则散在三处,越改越乱。
 
-**难道每次换工具,都得你来交接进度、同步规则、检查配置?**
+**难道每换一次工具、每开一次新会话,都得你来重复交代?**
 
-Multi-Agent Memory Fusion 一条命令,把「**项目规则单一源** + **项目记忆库**」装配到三个执行器:规则三家同读,记忆三方共写,谁来了都接着干。
-
-项目记忆库由开源的 [Context Keeper(上下文守望者)](https://github.com/vincent4j/context-keeper) 提供——它是一个给 AI 编程 Agent 装上项目记忆的 Skill:自动保存进度、续接上次工作、查找历史事实、沉淀可复用经验。你**不需要单独安装它**,本产品装配时自动带上。
+多 Agent 记忆融合,把「**你的习惯(用户级)+ 项目规则 + 项目记忆(可选)**」一次装配到你常用的每个 Agent:三家同读一份规则,共写一份记忆,谁来了都接着干。
 
 ### ✅ 在你用之前,你可能想知道
 
 | | |
 |---|---|
-| 🧩 **Context Keeper 是什么?要单独装吗?** | 一个开源的项目记忆 Skill(保存进度/续接/查找历史/经验进化),是本产品的记忆引擎。**不用单独装**——装配时自动带上,记录库就在你项目的 `docs/context-keeper/` 里,纯 Markdown 可读。 |
-| ⚡ **会多花 Token 吗?** | 规则文件里只追加几个指针块;记忆本体在项目内,由记忆规则按需读取,不全量注入。 |
-| 📝 **需要自己维护吗?** | 装配、巡检、修复、卸载由命令完成;记忆的记录与整理由 Agent 在工作中自动执行,你不手写日志。 |
-| 🔒 **会动我的文件吗?** | 只触碰声明的受管对象,**块外字节一字不动**;指纹漂移即拒绝写入(实测:poster-fit 的未提交文件字节级保留)。 |
-| 🤖 **支持哪些 Agent / 平台?** | Codex、Claude Code、WorkBuddy;macOS 安装/重装/卸载/失败恢复四项已验收,Windows/Linux 不声称支持。 |
-| 🧹 **想撤掉怎么办?** | `remove-memory` 只撤销本工具创建的对象;你的记录库与既有规则永不删除。 |
+| ⚡ **会多花 Token 吗?** | 规则文件里只加几个指针块;记忆放在项目里按需读取,不全量注入对话。 |
+| 📝 **需要自己维护吗?** | 不用。装配、巡检、修复、卸载由工具完成;记忆的记录与整理由 Agent 在干活时自动执行,你不手写日志。 |
+| 🔒 **会动我的文件吗?** | 只碰明确声明的受管对象,**其余内容一字不动**;发现被外部改动时拒绝写入并如实报告,不猜、不覆盖。 |
+| 🤖 **支持哪些 Agent / 平台?** | Codex、Claude Code、WorkBuddy;macOS 已完整验收,Windows / Linux 暂不声称支持。 |
+| 🧹 **想撤掉怎么办?** | 一条命令按所有权精确卸载,只拆本工具创建的东西;你的记录库和既有规则永不删除。 |
 
 ---
 
 <a id="能帮你做什么"></a>
 ## 🎯 能帮你做什么?
 
-| 你遇到的问题 | Multi-Agent Memory Fusion 怎么处理 | 你得到什么 |
+| 你遇到的问题 | 怎么处理 | 你得到什么 |
 |---|---|---|
-| 换工具就失忆,交接全靠你 | 把项目记忆库(Context Keeper)装配到三个执行器,新会话自动续接 | 周一 Codex、周二 WorkBuddy 无缝接力 |
-| 规则三处各写一份 | 项目根 `AGENTS.md` 单一规则源;CLAUDE.md 放 `@AGENTS.md` 引用;WorkBuddy 桥接由上游接管 | 一份规则,三家同读 |
-| 装完不知道坏没坏 | `check-memory` 只读巡检:入口漂移、缺口、`AGENTS.override.md` 劫持全部报告 | 一条命令看健康,不修复只说实话 |
-| 配置被重置/误改 | `enable-memory` 幂等补装:现场与登记一致时免重新批准,一键复原 | 坏了自己发现,修了不留痕 |
-| 不想要了 | `remove-memory` 按所有权精确卸载 | 只拆自建的,你的东西分毫不动 |
+| 习惯换个工具就丢 | 用户级公共记忆装配到每一家 Agent | 偏好说一遍,全家生效 |
+| 项目进度隔天就忘 | 项目记忆(可选)自动保存、自动续接 | 昨天做到哪、为什么这样做,今天直接接着干 |
+| 规则三处各自漂移 | 项目根 `AGENTS.md` 单一规则源,三家同读 | 一份规则,改一次,处处生效 |
+| 装配坏了没人知道 | 只读巡检:入口丢失、内容漂移、配置劫持全部报告 | 健康一眼可见,复原一键完成且不留痕 |
+| 不想要了 | 按所有权精确卸载 | 只拆自建对象,你的资产分毫不动 |
+
+**项目维度的记忆是可选项,由开源引擎 [Context Keeper(上下文守望者)](https://github.com/vincent4j/context-keeper) 提供**——它给 AI 编程 Agent 装上项目记忆:自动保存进度、续接上次工作、查找历史事实、沉淀可复用经验。装配时自动带上,**不需要单独安装**;不启用它,规则互通和习惯共享照常工作。
 
 ---
 
 <a id="记忆融合如何发生"></a>
 ## 🧠 记忆融合是如何发生的?
 
-**三套系统各管一层,边界一次说清:**
+**一套产品,两层记忆,一个引擎:**
 
-| 层 | 归属 | 管什么 |
+| 层 | 放在哪 | 管什么 |
 |---|---|---|
-| 用户级 | `~/.agents-group`(**本产品用户级层**,随产品安装自动创建) | 跨项目、跨执行器的个人规则与共享 Skills 的公共源 |
-| 项目记忆 | [Context Keeper](https://github.com/vincent4j/context-keeper)(开源记忆引擎,装配时自动安装) | 记录库本体:保存/继续/查找、按证据自我进化 |
-| 编排层 | **本工具** | 谁在什么时机被装上、被触发:装配、巡检、授权记账、所有权卸载 |
+| 用户级 | `~/.agents-group`(本产品创建,见[下文](#-agents-group-是什么)) | 你的跨项目习惯与偏好、共享 Skills 的公共源 |
+| 项目级 | 项目内的记忆库(提交进 Git) | 项目进度、决策、事实、经验——由 Context Keeper 引擎驱动 |
+| 编排层 | 本产品 | 谁在什么时机被装上、被触发:装配、巡检、授权记账、精确卸载 |
 
-**装配四态**:源码可用 → Skill 安装 → 桥接装配 → 记录库授权。没有用户批准,第四态不会发生;**写入永远走精确批准文件**(逐路径前后指纹),幂等补装除外。
-
-**WorkBuddy 桥接已回传上游**:context-keeper 的安装器正式接管 `--workbuddy` 入口,本工具的私有模板已删除——**桥接的终局是消失**。
+记忆跟着仓库走(项目记忆随 Git 分发,换设备、开分支都在),装配跟着机器走(入口与链接是本机状态,一条命令重建)。
 
 ---
 
-<a id="快速上手"></a>
-## 🚀 快速上手
+<a id="安装在哪里怎么装"></a>
+## 📦 安装在哪里、怎么装?
 
-**方式一(推荐):对 Agent 说人话。** 把下面这段话复制给任一已装本工具的执行器:
-
-```text
-请用 Multi-Agent Memory Fusion 给这个项目装配跨执行器记忆:先预览,把精确计划给我确认后再执行。
-```
-
-**方式二:直接 CLI。** 在目标项目里执行(路径填本仓库 checkout):
+**安装一次,所有项目生效。** 目前是两步手动克隆(一键安装脚本在路线图中):
 
 ```bash
-# 1) 预览(只读):返回 5 时,stdout 的 next_action 就是待确认的精确计划
-python3 /path/to/agent-group-memory/scripts/agm.py enable-memory --project <目标项目Git根> --memory
+# 1) 克隆本产品(家目录下的用户级中枢)
+git clone https://github.com/vincent4j/agent-group-memory \
+    ~/.agents-group/skills/agent-group-memory
 
-# 2) 把 next_action JSON 存成文件,补上 confirmed_at(UTC,以 Z 结尾)与 reference,即为批准文件
-python3 /path/to/agent-group-memory/scripts/agm.py enable-memory --project <目标项目Git根> \
-    --memory --approval-file plan.json
+# 2) 克隆记忆引擎到任意位置(项目记忆是可选项,想用才需要)
+git clone https://github.com/vincent4j/context-keeper ~/Tools/Source/context-keeper
 ```
 
-### 三命令与退出码
+装好后,在任意项目里对任一 Agent 说一句人话即可,预览和确认由它转述给你:
 
-| 命令 | 作用 | 关键参数 |
-|---|---|---|
-| `enable-memory` | 经授权装配/补装规则基座与记忆档 | `--project` `--agent codex\|claude\|workbuddy…`(缺省三家)`--memory\|--no-memory` `--approval-file` |
-| `check-memory` | 只读巡检现场状态与缺口,不修复 | `--project`(缺省当前)或 `--all`(全部已登记项目) |
-| `remove-memory` | 仅撤销本工具创建的对象;记录库永不删除 | `--project` `--approval-file` |
+```text
+请用 agent-group-memory 给这个项目装配跨执行器记忆:先预览,把计划给我确认后再执行。
+```
 
-| 退出码 | 含义 |
+---
+
+<a id="agents-group-是什么"></a>
+## 🗂 `~/.agents-group` 是什么?
+
+本产品的**用户级中枢**,安装时在家目录自动创建,你的习惯和共享能力都放在这里:
+
+```text
+~/.agents-group/
+├── memories/                 # 你的跨项目习惯与偏好
+│   ├── MEMORY.md             #   索引:一个主题一行,Agent 每次开工前读它
+│   └── <主题>.md             #   某个主题的详细规则,需要时才展开读
+├── references/               # 操作手册类长文档(比如"怎么发布这个产品")
+├── skills/                   # 共享 Skills 公共源,自动投影到每家 Agent
+│   └── agent-group-memory/   #   本产品自身
+├── mcp/                      # 无密钥的工具声明,一家声明全家可用
+├── backups/                  # 每次操作前的自动备份(带保留期限)
+└── var/                      # 本机装配台账:哪些项目纳管了、各家入口的指纹
+```
+
+| 目录 | 给你什么 |
 |---|---|
-| 0 | 完成(check 全绿 / 幂等无变更) |
-| 1 | check 发现缺口(只报告,不修复) |
-| 2 | 参数、schema、路径冲突、执行或恢复失败 |
-| 3 | context-keeper 迁移门禁:立即停止读写,先看迁移预览 |
-| 5 | 待授权:需要批准文件(或在交互终端确认) |
-
-stdout 恒为单个 JSON envelope,stderr 是人读摘要。
+| `memories/` | "我喜欢中文提交""先方案后动手"这类偏好写一次,三个 Agent 都遵守 |
+| `references/` | 长流程手册不用塞进规则里,Agent 需要时自己去读 |
+| `skills/` | 给一家 Agent 装的 Skill,全家共享,一处更新处处生效 |
+| `mcp/` | 声明一次工具接入,不再逐家配置 |
+| `var/` | 装配台账,巡检"哪些项目装了、入口是否完好"就靠它 |
 
 ---
 
 <a id="项目里会新增什么"></a>
-## 📁 项目里会新增什么?
+## 📁 装配后的项目里会新增什么?
 
 ```text
 你的项目/
-├── AGENTS.md                  # 规则唯一源(已有则只追加桥接块,块外字节不动)
-├── CLAUDE.md                  # 仅一行 @AGENTS.md 引用 + 桥接块
-├── .workbuddy/
-│   ├── skills/context-keeper  # Skill 符号链接(本机装配,gitignore)
-│   └── memory/MEMORY.md       # 顶部桥接块(上游 --workbuddy 维护)
-├── .agents/skills/ · .codex/skills/ · .claude/skills/   # Skill 链接(本机)
-└── docs/context-keeper/       # 记忆本体:memory-keeper / plans / worklogs / evolution(提交进 Git)
+├── AGENTS.md                # 规则唯一源(已有则只追加桥接块,其余内容一字不动)
+├── CLAUDE.md                # 仅一行对 AGENTS.md 的引用
+├── docs/context-keeper/     # 项目记忆库:进度、计划、日志、经验(提交进 Git)
+└── (各家 Agent 的 Skill 入口与桥接——本机装配,不进仓库)
 ```
 
-| 产物 | 性质 |
-|---|---|
-| `AGENTS.md` / `CLAUDE.md` / WorkBuddy 桥接块 | 项目资产,随 Git 分发 |
-| `docs/context-keeper/` 记录库 | 项目资产,随 Git 分发——**worktree 天然继承、多设备天然同步** |
-| Skill 符号链接、`registry.json`、备份 | **本机装配状态**(gitignore):新机器重新 `enable-memory` 即可 |
+记忆库是纯 Markdown,你随时可以打开阅读;它随 Git 分发,所以**换电脑、开分支、多人协作都天然同步**。
 
 ---
 
@@ -140,30 +146,17 @@ stdout 恒为单个 JSON envelope,stderr 是人读摘要。
 
 **记忆跟着仓库走,装配跟着机器走。**
 
-- **不重复造轮子。** 项目记忆的一切归 context-keeper;本工具只做编排——边界判据:*记忆的内容与结构归 Keeper,谁在什么时机被装上、被触发归本工具,跨项目用户规则归本产品的 `~/.agents-group` 层*。
-- **每一层只有一个真源。** 规则在 `AGENTS.md`,记忆在记录库,用户规则在公共源;宁可要指针,不要副本。
-- **静态配置不算数。** 一切装配以新会话运行时验收为准(见 `docs/acceptance/` 的四执行器接力证据)。
-- **漂移即停,人工核对。** 指纹不一致就拒绝写入,不猜、不自动覆盖;批准文件也不能越过这道保护。
-- **桥接的终局是消失。** WorkBuddy 桥接已回传 context-keeper 上游,本工具不留第二真源。
+- **不重复造轮子。** 项目记忆的一切归 Context Keeper;本产品专注编排——把对的东西装到对的地方。
+- **每一层只有一个真源。** 习惯在 `~/.agents-group`,规则在 `AGENTS.md`,项目记忆在记忆库;宁可要指针,不要副本。
+- **静态配置不算数。** 一切装配以新会话的实际表现为准(不做"文件放那就当能用"的假设)。
+- **漂移即停,人工核对。** 内容被外部改动就拒绝写入,不猜、不自动覆盖。
+- **桥接的终局是消失。** WorkBuddy 桥接已回传 Context Keeper 上游,本产品不留第二份真源。
 
-### 已知限制
+### 了解更多
 
-- created 对象被外部改动无自动修复:需人工还原,或批准 remove 后重装;
-- remove→重装周期中块间换行会重排(受管块内容不变);
-- WorkBuddy 真机新会话接力验收待做(装配与上游接管已验证);
-- registry 与备份是本机文件,换机器/新 clone 须重新 `enable-memory`;
-- 用户级层(`~/.agents-group` 的产品化与旧手工实现的迁移替代)为 M4 规划中;本期不做 Skills/MCP 管理。
-
-### 文档与开发
-
-设计:[DESIGN.md](DESIGN.md) · 实现合同:[docs/plan/architecture.md](docs/plan/architecture.md) ·
-裁定记录:[docs/plan/decisions-m2.md](docs/plan/decisions-m2.md) ·
-任务书(已收官):[docs/plan/tasks.md](docs/plan/tasks.md) ·
-全部验收证据:[docs/acceptance/](docs/acceptance/)
+完整设计:[DESIGN.md](DESIGN.md) · 验收证据:[docs/acceptance/](docs/acceptance/) ·
+任务与决策记录:[docs/plan/](docs/plan/)
 
 ```bash
-python3 -m unittest discover -s tests/unit          # 228 项
-python3 -m unittest discover -s tests/integration   # 53 项
+python3 -m unittest discover -s tests/unit && python3 -m unittest discover -s tests/integration
 ```
-
-Git 提交与发布由用户亲自执行,本工具不主动 commit/push。
