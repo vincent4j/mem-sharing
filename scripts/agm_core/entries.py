@@ -88,3 +88,53 @@ def verify_link(path, target):
     if not path.is_symlink() or path.resolve() != target:
         raise EntryConflict("not the expected symlink: " + str(path))
     return link_fingerprint(target)
+
+
+def reference_span(data: bytes, *, expected=None):
+    """Unique native @AGENTS.md line, preserving its exact original bytes."""
+    offset, found = 0, []
+    for line in data.splitlines(keepends=True):
+        body = line.rstrip(b'\r\n')
+        if body.strip() == b'@AGENTS.md':
+            found.append((offset, offset + len(line)))
+        elif body.lstrip().startswith(b'@AGENTS.md'):
+            raise EntryConflict('ambiguous @AGENTS.md reference')
+        offset += len(line)
+    if len(found) > 1:
+        raise EntryConflict('duplicate @AGENTS.md references')
+    span = found[0] if found else None
+    if expected is not None and (span is None or data[span[0]:span[1]] != expected):
+        raise EntryConflict('managed reference missing or edited')
+    return span
+
+
+def lifecycle_span(data, obj):
+    record = obj['lifecycle']
+    unit = bytes.fromhex(record['unit_hex'])
+    if obj['kind'] == 'import':
+        span = reference_span(data, expected=unit)
+    else:
+        span = managed_span(data, **obj['marker'])
+        if span is None or data[span[0]:span[1]] != unit:
+            raise EntryConflict('managed lifecycle block missing or edited')
+    return span
+
+
+def remove_lifecycle_unit(data, obj):
+    """Only remove verified unit bytes and still-adjacent recorded separators."""
+    left, right = lifecycle_span(data, obj)
+    prefix = bytes.fromhex(obj['lifecycle']['prefix_hex'])
+    suffix = bytes.fromhex(obj['lifecycle']['suffix_hex'])
+    if prefix and data[max(0,left-len(prefix)):left] == prefix:
+        left -= len(prefix)
+    if suffix and data[right:right+len(suffix)] == suffix:
+        right += len(suffix)
+    return data[:left] + data[right:]
+
+
+def free_project_rules(obj):
+    """M2 base objects are history, never active rule ownership in schema=2."""
+    return (obj['scope'] == 'project' and Path(obj['path']).name == 'AGENTS.md'
+            and (obj['kind'] == 'file' or obj.get('marker') == {
+                'start':'<!-- agent-group-memory:rules:start -->',
+                'end':'<!-- agent-group-memory:rules:end -->'}))

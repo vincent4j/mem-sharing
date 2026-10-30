@@ -18,7 +18,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
-from runtime_fixture import seed_runtime, installed_registry
+from runtime_fixture import seed_runtime, installed_registry, seed_project_executors
 from agm_core import check as check_mod
 from agm_core import enable, paths, registry
 from agm_core.remove import run as remove_run
@@ -49,6 +49,8 @@ class M207Fixture(unittest.TestCase):
                         "agents_table_path": str(self.install / "agents.json"),
                         "runtime_layout": self.runtime, "runner": self.runner}
         (self.install / "agents.json").write_bytes((SCRIPTS / "agents.json").read_bytes())
+
+        self.request.update(seed_project_executors(self.home))
 
     def _keeper_source(self):
         source = self.area / "keeper"
@@ -94,6 +96,8 @@ class M207Fixture(unittest.TestCase):
 
     def preview(self, memory="no", source=False):
         self.request["memory_choice"] = memory
+        if memory=="yes" and "workbuddy" in self.request["agents"]:
+            (self.root/".workbuddy/memory").mkdir(parents=True,exist_ok=True)  # WorkBuddy-native precondition, §8.2.
         if source:
             alias = self.root / ".agents/skills/context-keeper"
             alias.parent.mkdir(parents=True, exist_ok=True)
@@ -308,6 +312,8 @@ class FaultMatrixTests(M207Fixture):
         alias = self.root / ".agents/skills/context-keeper"
         alias.parent.mkdir(parents=True, exist_ok=True)
         alias.symlink_to(self.source, target_is_directory=True)
+        # §8.2: native directory is supplied by WorkBuddy, never by AGM.
+        (self.root / ".workbuddy/memory").mkdir(parents=True, exist_ok=True)
         self.request.update(approval=None, memory_choice="yes")
         result = enable.run(self.request)
         self.assertEqual(result["status"], "approval_required", result)

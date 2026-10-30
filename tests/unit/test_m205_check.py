@@ -80,6 +80,10 @@ class Sandbox:
         self.provider.mkdir(parents=True)
         self.table_dir.mkdir()
         (self.provider / "SKILL.md").write_text("# context-keeper\n", encoding="utf-8")
+        (self.provider/"scripts").mkdir()  # R4 verified minimum source fixture.
+        (self.provider/"scripts/install.py").write_text("# source fixture\n")
+        (self.provider/"scripts/context_keeper_probe.py").write_text("# source fixture\n")
+        _git(self.provider,"init","-q")
         shutil.copy(os.path.join(SCRIPTS_DIR, "agents.json"), self.table_dir / "agents.json")
         (self.table_dir / "backups").mkdir()
         with open(self.table_dir / "agents.json", "r", encoding="utf-8") as handle:
@@ -485,7 +489,9 @@ class CheckReadOnlyTests(unittest.TestCase):
         # import 对象基线(仅引用行)与现文件(含块)不同 → baseline_changed,信息性不算缺口
         statuses = {item["id"]: item["status"] for item in report["objects"]}
         self.assertEqual(statuses[str(main / "CLAUDE.md") + "#import"], "baseline_changed")
-        self.assertTrue(all(s == "ok" for i, s in statuses.items() if not i.endswith("#import")))
+        # §8.1: historical AGENTS bases are free project rules, not drift guards.
+        self.assertEqual(statuses[str(main / "AGENTS.md") + "#base"], "unverified")
+        self.assertTrue(all(s == "ok" for i, s in statuses.items() if not i.endswith(("#import", "AGENTS.md#base"))))
 
     def test_all_mode_healthy_matrix(self):
         main, _registry = build_installed_project(self.sb, "proj")

@@ -217,6 +217,7 @@ _APPROVAL_FIELDS = (
     "confirmed_at",
     "reference",
 )
+_ENABLE_APPROVAL_FIELDS = frozenset(("installation", "native_pending", "memory_transition", "rebuild", "rebuild_confirmation"))
 _APPROVAL_OPERATIONS = frozenset(("create", "update", "remove"))
 _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 _UTC_ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$")
@@ -265,16 +266,105 @@ def load_approval(path):
     return data
 
 
+
+def _validate_enable_extensions(data, requested, path):
+    """Validate optional kernel plan facts; no field grants authority on its own."""
+    def fields(value, names, label):
+        if not isinstance(value, dict) or set(value) != set(names.split()):
+            _approval_fail(label + " 字段不符", path)
+    def digest(value, label):
+        if not isinstance(value, str) or not _HEX64_RE.fullmatch(value):
+            _approval_fail(label + " 必须是 sha256", path)
+    def agent_list(value, label):
+        if (not isinstance(value, list) or any(a not in agm_paths.AGENT_ORDER for a in value)
+                or len(set(value)) != len(value)):
+            _approval_fail(label + " 必须是无重复执行器数组", path)
+    installation = data.get("installation")
+    if "installation" in data:
+        if not isinstance(installation, dict) or set(installation) != set(requested):
+            _approval_fail("installation 必须逐项覆盖请求的执行器", path)
+        for fact in installation.values():
+            fields(fact, "status fingerprint", "installation 项")
+            if fact["status"] not in ("installed", "absent", "unknown"):
+                _approval_fail("installation status 非法", path)
+            digest(fact["fingerprint"], "installation fingerprint")
+        effective = [a for a in requested if installation[a]["status"] == "installed"]
+        if data["agents"] != effective:
+            _approval_fail("agents 与 installation 已验证安装范围不一致", path)
+    if "native_pending" in data:
+        pending = data["native_pending"]
+        if pending not in ([], ["workbuddy"]) or any(a not in data["agents"] for a in pending):
+            _approval_fail("native_pending 仅接受已选 WorkBuddy", path)
+    if "memory_transition" in data:
+        transition = data["memory_transition"]
+        fields(transition, "before after scope affected_agents reused_conflicts", "memory_transition")
+        if (transition["before"] not in (None, "yes", "no")
+                or transition["after"] not in ("yes", "no")
+                or transition["after"] != data["memory_authorization"]
+                or transition["scope"] != "all registered project agents"):
+            _approval_fail("memory_transition 授权范围不符", path)
+        agent_list(transition["affected_agents"], "affected_agents")
+        if not isinstance(transition["reused_conflicts"], list):
+            _approval_fail("reused_conflicts 必须是数组", path)
+        for conflict in transition["reused_conflicts"]:
+            fields(conflict, "path ownership action", "reused_conflicts 项")
+            _check_abs_path(conflict["path"], "reused_conflicts path", path)
+            if (conflict["ownership"] not in ("reused", "unknown", "unregistered")
+                    or conflict["action"] != "preserve bytes; explicit denial guard"):
+                _approval_fail("reused_conflicts 保留策略非法", path)
+    if ("rebuild" in data) != ("rebuild_confirmation" in data):
+        _approval_fail("rebuild 必须绑定独立 rebuild_confirmation", path)
+    if "rebuild" in data:
+        rebuild, confirmation = data["rebuild"], data["rebuild_confirmation"]
+        fields(rebuild, "classification reason registry_sha256 registry_bytes project_count removed_projects removed_shared_objects scope", "rebuild")
+        if rebuild["classification"] not in ("registry_project_corrupt", "registry_evidence_unavailable"):
+            _approval_fail("rebuild classification 非法", path)
+        digest(rebuild["registry_sha256"], "rebuild registry_sha256")
+        for name in ("registry_bytes", "project_count"):
+            if type(rebuild[name]) is not int or rebuild[name] < 0:
+                _approval_fail("rebuild " + name + " 必须是非负整数", path)
+        if (not isinstance(rebuild["reason"], str) or not rebuild["reason"]
+                or rebuild["scope"] != "reset all project registrations and shared consumer indexes; preserve machine identity and all user files"
+                or not isinstance(rebuild["removed_projects"], list)
+                or len(rebuild["removed_projects"]) != rebuild["project_count"]):
+            _approval_fail("rebuild 全局影响摘要非法", path)
+        seen = set()
+        for item in rebuild["removed_projects"]:
+            fields(item, "main_checkout record_sha256", "removed_projects 项")
+            _check_abs_path(item["main_checkout"], "removed_projects main_checkout", path)
+            digest(item["record_sha256"], "removed_projects record_sha256")
+            if item["main_checkout"] in seen:
+                _approval_fail("removed_projects 重复", path)
+            seen.add(item["main_checkout"])
+        shared = rebuild["removed_shared_objects"]
+        if not isinstance(shared, list) or any(not isinstance(v, str) or not v for v in shared) or len(set(shared)) != len(shared):
+            _approval_fail("removed_shared_objects 必须是无重复字符串数组", path)
+        fields(confirmation, "registry_sha256 confirmed_at reference", "rebuild_confirmation")
+        digest(confirmation["registry_sha256"], "rebuild_confirmation registry_sha256")
+        if confirmation["registry_sha256"] != rebuild["registry_sha256"]:
+            _approval_fail("rebuild_confirmation 与计划旧账哈希不一致", path)
+        # Reuse the base envelope's evidence validation, including calendar validity.
+        evidence = dict(data)
+        for name in _ENABLE_APPROVAL_FIELDS:
+            evidence.pop(name, None)
+        evidence.update(confirmed_at=confirmation["confirmed_at"], reference=confirmation["reference"])
+        evidence["agents"] = list(requested)
+        validate_approval(evidence, command="enable-memory", agents=requested, memory_choice=None, path=path)
+
+
 def validate_approval(data, *, command, agents, memory_choice, path=None):
-    """批准 envelope 的 CLI 级结构校验(裁定 D-M2-04 方案 A 字段集)。
+    """批准 envelope 的命令级结构校验(含内核版本化计划字段)。
 
     仅校验结构与本命令已知目标的匹配;与锁内现场(主键/指纹/库位置/源码身份)的一致性
-    核对由内核在写锁内完成(TODO M2-04 接线),CLI 不在此扩大核对也不放宽。
+    核对由内核在写锁内完成;CLI 校验 rebuild 独立确认与旧账哈希的绑定。
     """
+    if command not in ("enable-memory", "remove-memory"):
+        _approval_fail("该命令不接受批准", path)
     keys = set(data)
     expected = set(_APPROVAL_FIELDS)
+    allowed = expected | (_ENABLE_APPROVAL_FIELDS if command == "enable-memory" else set())
     missing = sorted(expected - keys)
-    unknown = sorted(keys - expected)
+    unknown = sorted(keys - allowed)
     if missing:
         _approval_fail("批准文件缺少字段: %s" % ", ".join(missing), path)
     if unknown:
@@ -290,13 +380,16 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
     for field in ("main_checkout", "checkout", "git_common_dir"):
         _check_abs_path(data[field], "批准文件 %s" % field, path)
     file_agents = data["agents"]
-    if not isinstance(file_agents, list) or not file_agents:
+    revocation = data.get("memory_transition", {})
+    empty_revocation = (isinstance(revocation, dict) and revocation.get("before") == "yes"
+                        and revocation.get("after") == "no" and "installation" in data)
+    if not isinstance(file_agents, list) or (not file_agents and not empty_revocation):
         _approval_fail("批准文件 agents 必须是非空数组", path)
     try:
-        canonical = agm_paths.resolve_agents(file_agents)
+        canonical = agm_paths.resolve_agents(file_agents) if file_agents else []
     except agm_paths.PathsError as exc:
         raise CliError("approval_file_invalid", "批准文件 agents 非法: %s" % exc, path=path) from None
-    if command != "remove-memory" and canonical != list(agents or []):
+    if command != "remove-memory" and "installation" not in data and canonical != list(agents or []):
         raise CliError(
             "approval_mismatch",
             "批准范围(agents=%s)与命令目标(%s)不一致,须重新预览确认" % (canonical, list(agents or [])),
@@ -362,6 +455,8 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
             _approval_fail("confirmed_at 不是合法 UTC 时间: %s" % confirmed, path)
     if not isinstance(data["reference"], str) or not data["reference"]:
         _approval_fail("reference 必须是非空定位字符串(不保存对话正文)", path)
+    if command == "enable-memory":
+        _validate_enable_extensions(data, list(agents or []), path)
     return data
 
 
@@ -483,7 +578,7 @@ def build_request(
     return {
         "command": command,
         "project": getattr(namespace, "project", None),
-        "agents": agents,
+        "agents": None if command == "enable-memory" and getattr(namespace, "agent", None) is None else agents,
         "memory_choice": getattr(namespace, "memory_choice", None),
         "all": bool(getattr(namespace, "all", False)),
         "approval": approval,

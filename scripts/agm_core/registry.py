@@ -325,6 +325,70 @@ def _validate_migration_record(migration):
             verify_archived_references(migration)
 
 
+def _project_lifecycle_view(projects, pending_manifest):
+    """Versioned v2 units; v1 remains strict and cannot acquire these rights."""
+    from . import entries
+    view=copy.deepcopy(projects)
+    if not isinstance(view,dict):return view
+    for project in view.values():
+        if not isinstance(project,dict) or not isinstance(project.get('checkouts'),dict):continue
+        for assembly in project['checkouts'].values():
+            if not isinstance(assembly,dict) or not isinstance(assembly.get('objects'),dict):continue
+            for oid,obj in assembly['objects'].items():
+                if not isinstance(obj,dict) or 'lifecycle' not in obj:continue
+                _keys(obj,'kind path scope agents ownership marker fingerprint original_existed link_target backup_manifest consumers lifecycle','v2 lifecycle object')
+                life=obj.pop('lifecycle')
+                _keys(life,'version unit_hex prefix_hex suffix_hex file_created operation_id container_units','v2 lifecycle')
+                if type(life['version']) is not int or life['version']!=1 or type(life['file_created']) is not bool:
+                    _fail('unsupported lifecycle version/type')
+                if (obj['scope']!='project' or obj['ownership']!='created'
+                        or obj['original_existed'] is not False or obj['kind'] not in ('import','block')):
+                    _fail('lifecycle requires independently created project unit')
+                _text(life['operation_id']);_unique(life['container_units'],nonempty=True)
+                if oid not in life['container_units']:_fail('container must name its own unit')
+                for key in ('unit_hex','prefix_hex','suffix_hex'):
+                    if not isinstance(life[key],str):_fail('invalid lifecycle bytes')
+                    try:raw=bytes.fromhex(life[key])
+                    except ValueError:_fail('invalid lifecycle hex')
+                    if raw.hex()!=life[key]:_fail('noncanonical lifecycle hex')
+                unit=bytes.fromhex(life['unit_hex'])
+                if not unit or bytes.fromhex(life['prefix_hex']) not in (b'',b'\n',b'\r\n') or bytes.fromhex(life['suffix_hex']) not in (b'',b'\n',b'\r\n'):
+                    _fail('invalid lifecycle unit/separators')
+                if obj['kind']=='import':
+                    if Path(obj['path']).name!='CLAUDE.md' or entries.reference_span(unit,expected=unit)!=(0,len(unit)) or obj['fingerprint']['basis']!='reference_line':
+                        _fail('invalid created reference')
+                elif entries.managed_span(unit,**obj['marker'])!=(0,len(unit)):
+                    _fail('invalid created block')
+                if obj['fingerprint']['value']!=entries.sha256(unit):_fail('lifecycle unit fingerprint mismatch')
+                _path(obj['backup_manifest'])
+                if obj['backup_manifest']!=pending_manifest:
+                    try:
+                        manifest=json.loads(Path(obj['backup_manifest']).read_text(),object_pairs_hook=_no_duplicates)
+                        matches=[e for e in manifest['entries'] if e['path']==obj['path']]
+                        if manifest['schema_version']!=1 or len(matches)!=1:raise ValueError('creation output missing')
+                        before=matches[0]['before']
+                        if life['operation_id']!=Path(obj['backup_manifest']).parent.name or life['file_created']!=(before['kind']=='absent'):
+                            raise ValueError('container creation provenance mismatch')
+                        if before['kind']=='file':
+                            name=before['backup']
+                            if Path(name).name!=name:raise ValueError('unsafe before backup')
+                            backup=Path(obj['backup_manifest']).parent/name
+                            if backup.is_symlink():raise ValueError('before backup symlink')
+                            data=backup.read_bytes()
+                            if entries.sha256(data)!=before['fingerprint']:raise ValueError('before backup changed')
+                            span=entries.reference_span(data) if obj['kind']=='import' else entries.managed_span(data,**obj['marker'])
+                            if span is not None:raise ValueError('unit existed before creation')
+                        elif before['kind']!='absent':raise ValueError('invalid creation before type')
+                    except (OSError,ValueError,KeyError,TypeError) as exc:
+                        raise RegistryError('lifecycle creation evidence unavailable: '+str(exc)) from exc
+                # Validate the old structural semantics using a non-owning view;
+                # returned/persisted v2 ownership/line fingerprint is unchanged.
+                if obj['kind']=='import':
+                    obj['ownership']='reused';obj['original_existed']=True;obj['backup_manifest']=None
+                    obj['fingerprint']=dict(obj['fingerprint'],basis='file_bytes')
+    return view
+
+
 def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
     """Active v2 only. Legacy v1 is available solely via explicit diagnostic APIs."""
     if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] == 1:
@@ -337,7 +401,12 @@ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
     # Preserve recorded Evidence strings. Strict v1 validates a semantic view
     # whose runtime receipt can resolve through a hash-verified v2 archive; the
     # original v1 validator and the returned/persisted data are unchanged.
-    project_view = data["projects"]
+    try:
+        project_view = _project_lifecycle_view(data["projects"], _pending_manifest)
+    except RegistryError:
+        raise
+    except (ValueError, KeyError, TypeError, AttributeError) as exc:
+        raise RegistryError("invalid lifecycle metadata: " + str(exc)) from exc
     if migration is not None and migration["status"] == "committed" and isinstance(project_view, dict):
         project_view = copy.deepcopy(project_view)
         for project in project_view.values():
@@ -605,12 +674,15 @@ def recovered_object(obj, *, verified=False):
 
 
 def _unit_fingerprint(snapshot, obj):
-    from .entries import block_fingerprint, link_fingerprint, sha256
+    from .entries import block_fingerprint, link_fingerprint, sha256, reference_span
     if snapshot.kind == "absent":
         return None
     kind = obj["kind"]
     if kind in ("block", "user_convention") and snapshot.kind == "file":
         return block_fingerprint(snapshot.data, obj["marker"]["start"], obj["marker"]["end"])
+    if kind == "import" and obj.get("lifecycle") and snapshot.kind == "file":
+        span=reference_span(snapshot.data)
+        return None if span is None else sha256(snapshot.data[span[0]:span[1]])
     if kind in ("file", "import") and snapshot.kind == "file":
         return sha256(snapshot.data)
     if kind == "skill_symlink" and snapshot.kind == "symlink":
@@ -628,11 +700,16 @@ def validate_ownership_transition(previous, current, *, changes=()):
         if old["ownership"] != "created" and new["ownership"] == "created":
             _fail("cannot recover created ownership: " + oid)
         if old["ownership"] == "created":
+            if old.get("lifecycle")!=new.get("lifecycle"):
+                _fail("cannot retrofit/change lifecycle deletion provenance")
             if new["ownership"] != "created":
                 _fail("cannot silently discard created ownership")
             for name in ("kind", "path", "scope", "marker", "original_existed", "link_target"):
                 if old[name] != new[name]:
                     _fail("cannot change identity of a created unit")
+            from .entries import free_project_rules
+            if free_project_rules(old):
+                continue  # Legacy base bytes are project-owned rules, not active guard units.
             change = writes.get(old["path"])
             if change is not None:
                 actual = _unit_fingerprint(change.expected, old)
@@ -708,6 +785,12 @@ def commit_registry(path, data, *, transaction, expected, changes=(),
             if block_fingerprint(before.data or b"", marker["start"], marker["end"]) is not None:
                 _fail("cannot claim an existing block as created")
             actual = block_fingerprint(after.data, marker["start"], marker["end"])
+        elif obj["kind"] == "import" and obj.get("lifecycle"):
+            from .entries import reference_span
+            if before.kind not in ("absent","file") or after.kind!="file" or reference_span(before.data or b"") is not None:
+                _fail("cannot claim an existing reference as created")
+            span=reference_span(after.data,expected=bytes.fromhex(obj["lifecycle"]["unit_hex"]))
+            actual=sha256(after.data[span[0]:span[1]])
         elif obj["kind"] == "file":
             if before.kind != "absent" or after.kind != "file":
                 _fail("cannot claim an existing file as created")
@@ -718,6 +801,9 @@ def commit_registry(path, data, *, transaction, expected, changes=(),
             actual = link_fingerprint(after.target)
         else:
             _fail("unsupported created unit")
+        if obj.get("lifecycle"):
+            if obj["lifecycle"]["file_created"]!=(before.kind=="absent") or obj["lifecycle"]["operation_id"]!=transaction.directory.name:
+                _fail("lifecycle creation must bind the actual before image and operation")
         if obj["fingerprint"] is None or actual != obj["fingerprint"]["value"]:
             _fail("creation fingerprint does not match actual write")
     content = serialize_registry(data, allowed_user_paths=allowed_user_paths,

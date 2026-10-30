@@ -22,7 +22,7 @@ REPO = Path(__file__).resolve().parents[2]
 
 sys.path.insert(0, str(REPO / "scripts"))
 sys.path.insert(0, str(REPO / "tests/unit"))
-from runtime_fixture import seed_runtime
+from runtime_fixture import seed_runtime, seed_project_executors, CLI_DETECTION_BOOTSTRAP
 
 INSTALL_STUB = r'''import json, sys, traceback
 from pathlib import Path
@@ -133,13 +133,14 @@ class CliHarness(unittest.TestCase):
         (self.keeper / "scripts/install.py").write_text(INSTALL_STUB)
         (self.keeper / "scripts/context_keeper_probe.py").write_text(PROBE_STUB)
         self._approvals = itertools.count()
+        self.execution_signals=seed_project_executors(self.home)
 
     def git(self, *args):
         subprocess.run(["git", *args], check=True, capture_output=True)
 
     def cli(self, argv):
-        env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1")
-        result = subprocess.run([sys.executable, str(self.agm), *argv], cwd=str(self.area),
+        env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1", PATH=self.execution_signals["search_paths"][0])
+        result = subprocess.run([sys.executable,"-B","-c",CLI_DETECTION_BOOTSTRAP,str(self.agm),*argv], cwd=str(self.area),
                                 capture_output=True, text=True, env=env)
         envelope = json.loads(result.stdout)
         return result.returncode, envelope
@@ -148,8 +149,8 @@ class CliHarness(unittest.TestCase):
         """交互(PTY)路径:remove 的内核级预览仅在交互终端可达(非交互被外壳保守门拦截)。"""
         import pty
         master, slave = pty.openpty()
-        env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1")
-        proc = subprocess.Popen([sys.executable, str(self.agm), *argv], stdin=slave,
+        env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1", PATH=self.execution_signals["search_paths"][0])
+        proc = subprocess.Popen([sys.executable,"-B","-c",CLI_DETECTION_BOOTSTRAP,str(self.agm),*argv], stdin=slave,
                                 stdout=slave, stderr=subprocess.PIPE, env=env,
                                 cwd=str(self.area))
         os.close(slave)
@@ -214,6 +215,7 @@ class CliHarness(unittest.TestCase):
 
     def enable_memory(self, *, edit=None):
         """完整装配记忆档:先建项目 Skill 链接供源发现,再预览→批准→执行。"""
+        (self.root/".workbuddy/memory").mkdir(parents=True,exist_ok=True)  # Native WorkBuddy-created fixture, §8.2.
         self.link_alias()
         return self.approve(["enable-memory", "--project", str(self.root), "--memory"], edit=edit)
 
@@ -287,7 +289,7 @@ class InstallOrderTests(CliHarness):
         rc, envelope = self.approve(["enable-memory", "--project", str(self.root), "--no-memory"])
         self.assertEqual(rc, 0, envelope)
         self.assertTrue((self.root / "AGENTS.md").read_bytes()
-                        .startswith(b"<!-- agent-group-memory:rules:start -->"))
+                        .startswith(b"# " + self.root.name.encode()))
         self.assertFalse((self.root / "docs/context-keeper").exists())
 
         rc, envelope = self.enable_memory()
@@ -299,8 +301,8 @@ class InstallOrderTests(CliHarness):
         self.assertIn(b"Keeper rules", (self.root / "AGENTS.md").read_bytes())
         ledger = json.loads(self.registry.read_text())
         assembly = ledger["projects"][str(self.root)]["checkouts"][str(self.root)]
-        self.assertEqual(assembly["objects"][str(self.root / "AGENTS.md") + "#base"]["ownership"],
-                         "created")
+        # §8.1: free rules carry no managed base ownership.
+        self.assertNotIn(str(self.root / "AGENTS.md") + "#base", assembly["objects"])
         alias = assembly["objects"][str(self.root / ".agents/skills/context-keeper")]
         self.assertEqual(alias["ownership"], "reused", "先置链接由 AGM 接管为 reused,不改写")
 
@@ -314,6 +316,8 @@ class InstallOrderTests(CliHarness):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.symlink_to(self.keeper, target_is_directory=True)
 
+        # §8.2: fixture represents a native WorkBuddy-opened project.
+        (self.root / ".workbuddy/memory").mkdir(parents=True, exist_ok=True)
         rc, envelope = self.approve(["enable-memory", "--project", str(self.root), "--memory"])
         self.assertEqual(rc, 0, envelope)
         data = (self.root / "AGENTS.md").read_bytes()
@@ -323,9 +327,8 @@ class InstallOrderTests(CliHarness):
         ledger = json.loads(self.registry.read_text())
         objects = ledger["projects"][str(self.root)]["checkouts"][str(self.root)]["objects"]
         self.assertEqual(objects[str(self.root / "AGENTS.md") + "#keeper"]["ownership"], "reused")
-        base = objects[str(self.root / "AGENTS.md") + "#base"]
-        self.assertEqual((base["kind"], base["ownership"]), ("file", "reused"),
-                         "既有 AGENTS.md 整体按 reused 文件保护,不追加基座块")
+        self.assertNotIn(str(self.root / "AGENTS.md") + "#base", objects,
+                         "§8.1: AGENTS 非桥接正文为自由规则,不登记整文件基线")
 
 
 class BoundaryTests(CliHarness):
@@ -443,9 +446,8 @@ class BoundaryTests(CliHarness):
         self.assertNotIn(b"agent-group-memory:rules", agents_left)
         self.assertNotIn(b"context-keeper:start", agents_left,
                          "AGM 创建的受管块应被摘除(块间残余字节按字节精确保留)")
-        self.assertIn(b"@AGENTS.md", (self.root / "CLAUDE.md").read_bytes(),
-                      "import 引用受 schema v1 保护,remove 后保留")
-        self.assertNotIn(b"context-keeper:start", (self.root / "CLAUDE.md").read_bytes())
+        self.assertFalse((self.root / "CLAUDE.md").exists(),
+                         "§8.1: 新 v2 纯入口有独立创建证据,可删除空薄壳")
         self.assertEqual((self.root / "docs/context-keeper/memory-keeper.md").read_bytes(),
                          store_marker, "记录库资产在 remove 后必须原样保留")
         for base in (".codex", ".claude", ".workbuddy"):
@@ -478,6 +480,8 @@ class BoundaryTests(CliHarness):
         alias = second / ".agents/skills/context-keeper"
         alias.parent.mkdir(parents=True)
         alias.symlink_to(self.keeper, target_is_directory=True)
+        # §8.2: native-ready fixture; AGM must not manufacture this directory.
+        (second / ".workbuddy/memory").mkdir(parents=True)
         rc, envelope = self.approve(["enable-memory", "--project", str(second), "--memory"])
         self.assertEqual(rc, 0, envelope)
 
@@ -493,7 +497,11 @@ class BoundaryTests(CliHarness):
 
         path = second / "AGENTS.md"
         data = path.read_bytes()
-        path.write_bytes(data.replace(b"# Project Rules", b"# drifted rules"))
+        # §8.1: free project rules do not drift; the actual bridge still does.
+        path.write_bytes(data + b"\nFree user rules\n")
+        rc, envelope = self.cli(["check-memory", "--all"])
+        self.assertEqual(rc, 0, envelope)
+        path.write_bytes(path.read_bytes().replace(b"Keeper rules", b"edited bridge"))
         rc, envelope = self.cli(["check-memory", "--all"])
         self.assertEqual(rc, 1, envelope)
         by_project = {p["checkout"]: p for p in envelope["projects"]}

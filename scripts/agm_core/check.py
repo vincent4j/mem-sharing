@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import paths as agm_paths
-from .entries import EntryConflict, block_fingerprint, managed_span, sha256, verify_link
+from .entries import EntryConflict, block_fingerprint, managed_span, sha256, verify_link, free_project_rules, reference_span
 from .project import ProjectError, resolve_project
 from .registry import RegistryError, load_registry, require_installed
 
@@ -120,7 +120,7 @@ def _verify_objects(objects, shared_objects, checkout):
     statuses, observations = {}, []
     block_ids = {}  # path -> [oid] 受管块对象,供整文件对象区分块外变化
     for oid, obj in relevant.items():
-        if obj["kind"] in ("block", "user_convention"):
+        if obj["kind"] in ("block", "user_convention") and not free_project_rules(obj):
             block_ids.setdefault(obj["path"], []).append(oid)
 
     def observe(oid, obj, status, detail):
@@ -143,6 +143,9 @@ def _verify_objects(objects, shared_objects, checkout):
     for oid, obj in ordered:
         kind = obj["kind"]
         on_disk, data = _observe_path(obj["path"])
+        if free_project_rules(obj):
+            observe(oid,obj,"unverified","历史 AGENTS 基座属于项目自由规则,不守护正文或授予删除权")
+            continue
         if kind in ("block", "user_convention"):
             if on_disk == "absent":
                 observe(oid, obj, "missing", "承载文件缺失")
@@ -206,7 +209,16 @@ def _verify_objects(objects, shared_objects, checkout):
             if on_disk != "file":
                 observe(oid, obj, "blocked", "落点不是普通文件(%s)" % on_disk)
                 continue
-            if not _reference_line_present(data):
+            try:
+                span=reference_span(data)
+            except EntryConflict as exc:
+                observe(oid,obj,"blocked",str(exc));continue
+            if obj.get("lifecycle"):
+                if span is None:observe(oid,obj,"missing","受管引用行缺失")
+                elif sha256(data[span[0]:span[1]])!=obj["fingerprint"]["value"]:observe(oid,obj,"drifted","受管引用行被编辑")
+                else:observe(oid,obj,"ok","独立引用单元指纹相符,正文自由编辑")
+                continue
+            if span is None:
                 observe(oid, obj, "missing", "@AGENTS.md 引用行缺失")
                 continue
             expected = (obj.get("fingerprint") or {}).get("value")
@@ -254,6 +266,7 @@ def _bridge_fact(agent, platform_config, *, home, checkout, objects, statuses):
         (oid, obj)
         for oid, obj in objects.items()
         if obj["kind"] in ("block", "user_convention") and obj["path"] == bridge_path
+        and obj.get("marker")==dict(zip(("start","end"),BRIDGE_MARKERS[entry["bridge_owner"]]))
     ]
     if related:
         states = [statuses.get(oid, "unverified") for oid, _ in related]
@@ -524,11 +537,25 @@ def _observe_project(
     # 四态现场观测(不信任登记时间戳,逐项重新只读核实)。
     if project_entry is not None and project_entry.get("provider_source"):
         provider = project_entry["provider_source"]
-        if os.path.isdir(provider):
-            source_fact = _fact("ready", "provider 源码目录存在: %s" % provider)
+        required=[Path(provider)/'SKILL.md',Path(provider)/'scripts/install.py',Path(provider)/'scripts/context_keeper_probe.py']
+        absent=[p for p in required if _observe_path(str(p))[0]=='absent']
+        invalid=[p for p in required if _observe_path(str(p))[0] not in ('absent','file') or p.is_symlink() or p.resolve()!=p]
+        if absent:
+            source_fact=_fact('missing','provider 必需文件缺失: '+', '.join(map(str,absent)))
+            for p in absent:gaps.append(_gap('source_missing','provider 必需文件缺失',path=str(p),suggestion='manual'))
+        elif invalid:
+            source_fact=_fact('blocked','provider 必需文件类型/链接异常: '+', '.join(map(str,invalid)))
+            for p in invalid:gaps.append(_gap('source_invalid','provider 必需文件不是可信普通文件',path=str(p),suggestion='manual'))
         else:
-            source_fact = _fact("missing", "登记 provider_source 不存在: %s(可能被移动)" % provider)
-            gaps.append(_gap("source_missing", "登记 provider_source 不存在: %s" % provider, path=provider, suggestion="manual"))
+            try:
+                from .enable import _source_fingerprints,_source_evidence
+                fingerprints=_source_fingerprints(Path(provider))
+                expected=assembly['states']['source_available']['evidence'] if assembly else None
+                if expected and expected.startswith('Keeper source sha256:') and expected!=_source_evidence(fingerprints):
+                    raise ValueError('provider 与已批准源码指纹不同')
+                source_fact=_fact('ready','provider 最低文件集、Git 身份与可用批准指纹只读核验: '+provider)
+            except (ValueError,OSError) as exc:
+                source_fact=_fact('blocked',str(exc));gaps.append(_gap('source_invalid',str(exc),path=provider,suggestion='manual'))
     else:
         source_fact = _fact("unknown", "未登记 provider 源码位置" if project_entry is not None else "项目未登记,源码位置未知")
 
@@ -537,6 +564,8 @@ def _observe_project(
         agent_objects = _agent_objects(objects, shared_objects, checkout, agent)
         skill_facts[agent] = _skill_fact(agent, platform_config, home=home, checkout=checkout, objects=agent_objects, statuses=statuses)
         bridge_fact, bridge_path = _bridge_fact(agent, platform_config, home=home, checkout=checkout, objects=agent_objects, statuses=statuses)
+        memory_denied=project_entry is not None and project_entry.get("memory_authorization")=="no"
+        if memory_denied:bridge_fact=_fact("blocked","本项目自动记忆授权为 no;历史桥接/Skill 不授予自动写入权限")
         bridge_facts[agent] = bridge_fact
         # 对象级缺口已定位到路径时不重复报事实级缺口;未登记现场没有对象可依,才报事实级。
         agent_gap_paths = {
@@ -548,12 +577,12 @@ def _observe_project(
             agent in item["agents"] and item["kind"] == "skill_symlink"
             and item["status"] in ("missing", "drifted", "blocked") for item in observations
         )
-        if skill_facts[agent]["status"] in ("missing", "blocked") and not skill_object_gap:
+        if not memory_denied and skill_facts[agent]["status"] in ("missing", "blocked") and not skill_object_gap:
             blocked = skill_facts[agent]["status"] == "blocked"
             gaps.append(_gap("skill_conflict" if blocked else "skill_missing", skill_facts[agent]["evidence"], agent=agent, suggestion="manual" if blocked else "enable"))
-        if bridge_fact["status"] == "missing" and bridge_path not in agent_gap_paths:
+        if not memory_denied and bridge_fact["status"] == "missing" and bridge_path not in agent_gap_paths:
             gaps.append(_gap("bridge_missing", bridge_fact["evidence"], agent=agent, path=bridge_path, suggestion="enable"))
-        elif bridge_fact["status"] == "blocked" and bridge_path not in agent_gap_paths:
+        elif not memory_denied and bridge_fact["status"] == "blocked" and bridge_path not in agent_gap_paths:
             gaps.append(_gap("bridge_conflict", bridge_fact["evidence"], agent=agent, path=bridge_path, suggestion="manual"))
         entry = platform_config[agent]
         rule_path = agm_paths.expand_path(entry["project_rule_entry"], home=home, project=checkout)

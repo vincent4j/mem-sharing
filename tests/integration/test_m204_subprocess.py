@@ -155,8 +155,10 @@ class SubprocessTests(EnableFixture):
         assembly = self.load()['projects'][str(self.root)]['checkouts'][str(self.root)]
         alias = str(self.root / '.agents/skills/context-keeper')
         self.assertEqual(assembly['objects'][alias]['ownership'], 'reused')
-        base = assembly['objects'][str(self.root / 'AGENTS.md') + '#base']
-        self.assertEqual(base['ownership'], 'created')
+        # §8.1: project rules remain free; only the Keeper bridge is managed.
+        self.assertNotIn(str(self.root / 'AGENTS.md') + '#base', assembly['objects'])
+        self.assertTrue((self.root / 'AGENTS.md').is_file())
+        self.assertEqual(assembly['objects'][str(self.root / 'AGENTS.md') + '#keeper']['ownership'], 'created')
 
     def test_keeper_first_adopts_correct_bridges_as_reused(self):
         block = enable._bridge_template(self.source)

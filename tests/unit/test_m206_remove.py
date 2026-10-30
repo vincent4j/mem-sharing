@@ -160,10 +160,15 @@ class RemoveUnitTests(RemoveFixture):
             plan_remove(self.data, self.identity)
         self.assertEqual(caught.exception.code, 'protected_memory_asset')
 
-    def test_whole_file_and_reused_unit_overlap_refused(self):
+    def test_agents_free_whole_file_preserved_while_owned_bridge_removed(self):
+        # §8.1: the historical AGENTS whole-file base confers no deletion right.
         self.add_object('file', self.entry, oid='whole')
-        with self.assertRaises(RemoveError):
-            plan_remove(self.data, self.identity)
+        updated, changes, warnings = plan_remove(self.data, self.identity)
+        self.assertEqual(len(changes), 1)
+        self.assertEqual(changes[0].after.kind, 'file')
+        self.assertNotIn(BLOCK, changes[0].after.data)
+        self.assertIn(b'new user text', changes[0].after.data)
+        self.assertIn('whole', updated['projects'][self.main]['checkouts'][self.main]['objects'])
 
 
 if __name__ == '__main__':

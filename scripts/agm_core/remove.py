@@ -8,7 +8,7 @@ import copy
 from . import layout
 from pathlib import Path
 
-from .entries import block_fingerprint, link_fingerprint, remove_block, sha256
+from .entries import block_fingerprint, link_fingerprint, remove_block, sha256, free_project_rules, lifecycle_span, remove_lifecycle_unit
 from .paths import allowed_user_paths
 from .project import resolve_project
 from .registry import load_registry, commit_registry, serialize_registry, require_installed
@@ -59,7 +59,9 @@ def _verify_created(obj, snapshot):
     expected = obj['fingerprint']['value']
     actual = None
     try:
-        if obj['kind'] in ('block', 'user_convention') and snapshot.kind == 'file':
+        if obj.get('lifecycle') and snapshot.kind=='file':
+            left,right=lifecycle_span(snapshot.data,obj);actual=sha256(snapshot.data[left:right])
+        elif obj['kind'] in ('block', 'user_convention') and snapshot.kind == 'file':
             actual = block_fingerprint(snapshot.data, **obj['marker'])
         elif obj['kind'] == 'file' and snapshot.kind == 'file':
             actual = sha256(snapshot.data)
@@ -91,6 +93,16 @@ def plan_remove(data, identity):
     snapshots, units, warnings = {}, {}, []
     for oid, obj in assembly['objects'].items():
         path = Path(obj['path'])
+        if obj.get('marker',{})=={'start':'<!-- agent-group-memory:memory-denied:start -->','end':'<!-- agent-group-memory:memory-denied:end -->'} and project['memory_authorization']=='no':
+            _verify_created(obj,read_snapshot(path)) if obj['ownership']=='created' else None
+            warnings.append('保留 no 停用规则,防止历史 reused 指令在 remove 后重激活：%s' % path)
+            continue
+        if free_project_rules(obj) or path.name=='AGENTS.md' and obj['kind']=='skill_symlink':
+            warnings.append('保留项目自由规则及历史基座证据：%s' % path)
+            continue
+        if obj['kind']=='file' and (path.name=='CLAUDE.md' or path.name=='MEMORY.md' and '.workbuddy' in path.parts):
+            warnings.append('保留缺少独立引用/容器创建证据的旧入口：%s' % path)
+            continue
         if obj['ownership'] != 'created':
             warnings.append('保留 %s 对象：%s' % (obj['ownership'], path))
             continue
@@ -114,9 +126,16 @@ def plan_remove(data, identity):
         else:
             content = snapshot.data
             for obj in objects:
-                content = remove_block(content, **obj['marker'],
+                if obj.get('lifecycle'):content=remove_lifecycle_unit(content,obj)
+                else:content = remove_block(content, **obj['marker'],
                                        expected_fingerprint=obj['fingerprint']['value'])
-            change = Change.file(path, content, expected=snapshot)
+            # A proven new thin container may disappear only when every byte
+            # was one of this tool's independently created units/separators.
+            removed_ids={oid for oid,obj in assembly['objects'].items() if obj in objects}
+            allowed_ids=set().union(*(set(o.get('lifecycle',{}).get('container_units',[])) for o in objects))
+            pure_container=(not content and not preserved and path.name!='AGENTS.md' and removed_ids<=allowed_ids
+                            and any(o.get('lifecycle',{}).get('file_created') for o in objects))
+            change = Change.delete(path,expected=snapshot) if pure_container else Change.file(path, content, expected=snapshot)
         changes.append(change)
     for oid in list(target['shared_object_ids']):
         obj = updated['shared_objects'][oid]

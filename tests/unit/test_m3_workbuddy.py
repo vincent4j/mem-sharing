@@ -39,6 +39,8 @@ class WorkBuddyProtocolTests(EnableFixture):
         self.assertEqual(bridge.read_bytes(), before)
 
     def test_missing_upstream_template_fails_closed_without_fallback(self):
+        # §8.2: establish native-ready precondition so template validation is reached.
+        (self.root / '.workbuddy/memory').mkdir(parents=True, exist_ok=True)
         source = self.source / 'scripts/install.py'
         source.write_text(source.read_text().replace('WORKBUDDY_BRIDGE =', 'OLD_WORKBUDDY_BRIDGE ='))
         self.request.update(memory_choice='yes', approval={'provider_source': str(self.source), 'memory_authorization': 'yes'})

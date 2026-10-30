@@ -20,12 +20,15 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import entries, paths, project, registry, layout
+from . import entries, paths, project, registry, layout, detect
 from .transaction import Change, Snapshot, Transaction, TransactionError, read_snapshot, write_lock
 
 KEEPER_MARKER = {"start": "<!-- context-keeper:start -->", "end": "<!-- context-keeper:end -->"}
 BASE_MARKER = {"start": "<!-- agent-group-memory:rules:start -->", "end": "<!-- agent-group-memory:rules:end -->"}
 WORKBUDDY_MARKER = {"start": "<!-- context-keeper:workbuddy:start -->", "end": "<!-- context-keeper:workbuddy:end -->"}
+DENIED_MARKER = {"start":"<!-- agent-group-memory:memory-denied:start -->", "end":"<!-- agent-group-memory:memory-denied:end -->"}
+DENIED_TEXT = "本项目已撤销自动记忆授权。本段优先于本文件中的历史 context-keeper 桥接和 Skill 触发说明：不得自动调用记忆写入、迁移、初始化或建库，不得因残留 Skill/桥接恢复旧授权；历史内容仅供只读参考。只有用户重新明确批准本项目 enable-memory --memory 后才可恢复自动记录。"
+
 EXCEPTION_MARKER = {"start": "<!-- agent-group-memory:keeper-exception:start -->", "end": "<!-- agent-group-memory:keeper-exception:end -->"}
 
 
@@ -57,7 +60,7 @@ def _source_fingerprints(source):
     except project.ProjectError as exc:
         raise EnableError("provider_source_invalid", "Keeper source is not a Git root: " + str(exc)) from exc
     files = set(required) | set((source / "scripts").rglob("*.py"))
-    if any(p.is_symlink() or p.resolve() != p for p in files):
+    if any(not p.is_file() or p.is_symlink() or p.resolve() != p for p in files):
         raise EnableError("provider_source_invalid", "Keeper source scripts must not be symlinks")
     return [{"path": str(p), "sha256": entries.sha256(p.read_bytes())} for p in sorted(files)]
 
@@ -236,23 +239,106 @@ class _Plan:
                    "original_existed": not created, "link_target": str(target) if target else None,
                    "backup_manifest": str(self.tx.manifest_path) if created else None,
                    "consumers": [str(self.root)]}
+        if scope=="project" and marker in (KEEPER_MARKER,WORKBUDDY_MARKER,DENIED_MARKER) and obj["ownership"]=="created" and old is None:
+            unit=proposed.data[entries.managed_span(proposed.data,**marker)[0]:entries.managed_span(proposed.data,**marker)[1]]
+            obj["lifecycle"]={"version":1,"unit_hex":unit.hex(),
+                "prefix_hex":(b"\n" if not top and original.kind=="file" and original.data and not original.data.endswith(b"\n") else b"").hex(),
+                "suffix_hex":(b"\n" if top and original.data else b"").hex(),
+                "file_created":self.before[path].kind=="absent", "operation_id":self.tx.directory.name,"container_units":[oid]}
         objects[oid] = obj
         if scope == "user" and oid not in self.assembly["shared_object_ids"]:
             self.assembly["shared_object_ids"].append(oid)
         return original
 
+    def reference(self,path):
+        path=Path(path);oid=str(path)+"#import";objects=self.assembly['objects']
+        old=next((o for o in objects.values() if o['path']==str(path) and o['kind']=='import'),None)
+        if old is not None:oid=next(k for k,v in objects.items() if v is old)
+        snap=self.snapshot(path)
+        if snap.kind not in ('absent','file'):raise EnableError('path_conflict','CLAUDE entry must be regular')
+        body=snap.data or b'';span=entries.reference_span(body)
+        if old and old.get('lifecycle'):
+            entries.lifecycle_span(body,old)
+            return
+        if span is None:
+            prefix=b'\n' if body and not body.endswith(b'\n') else b''
+            unit=b'@AGENTS.md\n';self.after[path]=Snapshot('file',body+prefix+unit,snap.mode or 0o600)
+        else:prefix=b'';unit=body[span[0]:span[1]]
+        if old:
+            old['fingerprint']={'algorithm':'sha256','basis':'file_bytes','value':entries.sha256(self.after[path].data)}
+            return  # Legacy reused import never acquires creation/deletion rights.
+        created=span is None
+        obj={'kind':'import','path':str(path),'scope':'project','agents':['claude'],'ownership':'created' if created else 'reused',
+             'marker':None,'fingerprint':{'algorithm':'sha256','basis':'reference_line' if created else 'file_bytes','value':entries.sha256(unit) if created else entries.sha256(body)},
+             'original_existed':not created,'link_target':None,'backup_manifest':str(self.tx.manifest_path) if created else None,'consumers':[str(self.root)]}
+        if created:
+            obj['lifecycle']={'version':1,'unit_hex':unit.hex(),'prefix_hex':prefix.hex(),'suffix_hex':'','file_created':self.before[path].kind=='absent',
+                              'operation_id':self.tx.directory.name,'container_units':[oid]}
+        objects[oid]=obj
+
+    def erase(self,oid):
+        obj=self.assembly['objects'][oid];path=Path(obj['path']);snap=self.snapshot(path)
+        actual=registry._unit_fingerprint(snap,obj)
+        if not obj['fingerprint'] or actual!=obj['fingerprint']['value']:
+            raise EnableError('drift','Cannot revoke edited/missing created unit: '+str(path))
+        if obj['kind']=='skill_symlink':self.after[path]=Snapshot('absent')
+        elif obj.get('lifecycle'):
+            self.after[path]=Snapshot('file',entries.remove_lifecycle_unit(snap.data,obj),snap.mode)
+        else:
+            self.after[path]=Snapshot('file',entries.remove_block(snap.data,**obj['marker'],expected_fingerprint=actual),snap.mode)
+        del self.assembly['objects'][oid]
+
+    def authorization(self,choice,*,transition):
+        conflicts=[]
+        if choice=='yes':
+            for oid,obj in list(self.assembly['objects'].items()):
+                if obj.get('marker')==DENIED_MARKER:
+                    if obj['ownership']!='created':raise EnableError('authorization_conflict','User-owned denial cannot be lifted')
+                    self.erase(oid)
+            return conflicts
+        if choice!='no':return conflicts
+        targets={self.root/'AGENTS.md'}
+        for oid,obj in list(self.assembly['objects'].items()):
+            trigger=(obj['kind']=='block' and obj.get('marker') in (KEEPER_MARKER,WORKBUDDY_MARKER)) or (obj['kind']=='skill_symlink' and Path(obj['path']).name=='context-keeper')
+            if not trigger:continue
+            if obj['ownership']=='created':self.erase(oid)
+            else:
+                conflicts.append({'path':obj['path'],'ownership':obj['ownership'],'action':'preserve bytes; explicit denial guard'})
+                if obj['kind']=='block':targets.add(Path(obj['path']))
+        # A pre-registry historical bridge is not deletion authority either.
+        for path,marker in ((self.root/'AGENTS.md',KEEPER_MARKER),(self.root/'CLAUDE.md',KEEPER_MARKER),(self.root/'.workbuddy/memory/MEMORY.md',WORKBUDDY_MARKER)):
+            snap=self.snapshot(path)
+            if snap.kind=='file' and entries.managed_span(snap.data,**marker) is not None:
+                targets.add(path)
+                if not any(c['path']==str(path) for c in conflicts):conflicts.append({'path':str(path),'ownership':'unregistered','action':'preserve bytes; explicit denial guard'})
+        existing_guard=any(o.get('marker')==DENIED_MARKER for o in self.assembly['objects'].values())
+        if transition or conflicts or existing_guard:
+            for path in sorted(targets):
+                self.object(path,'#memory-denied',list(self.assembly['agents']),'block',marker=DENIED_MARKER,block=_block(DENIED_MARKER,DENIED_TEXT))
+        return conflicts
+
+    def finalize_lifecycle(self):
+        objects=self.assembly['objects']
+        for oid,obj in objects.items():
+            if obj.get('lifecycle') and obj['backup_manifest']==str(self.tx.manifest_path):
+                obj['lifecycle']['container_units']=sorted(k for k,v in objects.items() if v['path']==obj['path'] and v.get('lifecycle') and v['ownership']=='created')
+
     def changes(self):
         return [Change(path, self.after[path], snap) for path, snap in self.before.items() if self.after[path] != snap]
 
     def description(self):
-        return [{"path": str(c.path), "operation": "create" if c.expected.kind == "absent" else "update",
+        return [{"path": str(c.path), "operation": "remove" if c.after.kind == "absent" else "create" if c.expected.kind == "absent" else "update",
                  "before_fingerprint": c.expected.fingerprint,
                  "after_fingerprint": c.after.fingerprint} for c in sorted(self.changes(), key=lambda c: str(c.path))]
 
 
 def _preflight_objects(assembly, shared, review_user_units=()):
     for obj in list(assembly["objects"].values()) + [shared[key] for key in assembly["shared_object_ids"]]:
+        if entries.free_project_rules(obj):continue
         snap = read_snapshot(obj["path"])
+        if obj["kind"]=="import" and obj.get("lifecycle"):
+            if snap.kind!="file" or registry._unit_fingerprint(snap,obj)!=obj["fingerprint"]["value"]:
+                raise EnableError("drift","Managed reference missing or edited: "+obj["path"])
         if snap.kind == "absent":
             continue  # Only exact prior units may subsequently be repaired without a fresh approval.
         if obj["kind"] in ("block", "user_convention"):
@@ -366,9 +452,24 @@ def _run_locked(request, runtime, result, *, locked=True):
     except registry.RegistryError:
         previous_registry, rebuild = registry.plan_registry_rebuild(expected_registry, allowed_user_paths=allowed)
     previous_registry = registry.require_installed(previous_registry)
+    detection=detect.detect_agents(config,agents,home=str(home),search_paths=request.get('search_paths'),
+        app_directories=request.get('app_directories'),user_candidates=request.get('user_candidates'),runner=request.get('detect_runner'))
+    requested_agents=list(agents)
+    effective=[a for a in agents if detection['agents'][a]['status']=='installed']
+    prior=previous_registry['projects'].get(key)
+    revoking=(request.get('memory_choice') or (request.get('approval') or {}).get('memory_authorization'))=='no' and prior is not None and prior['memory_authorization']=='yes'
+    result['installation']={'requested':requested_agents,'effective':effective,'skipped':{a:detection['agents'][a]['status'] for a in requested_agents if a not in effective}}
+    if request.get('agents') is not None and len(effective)!=len(agents) and not revoking:
+        raise EnableError('agent_not_installed','Explicit agent is not verified installed: '+json.dumps(result['installation']['skipped']))
+    agents=effective
+    if not agents and not revoking:
+        result.update(status='gaps',next_action='Verify/install an executor before creating project entries')
+        result['warnings'].append('No verified installed executor; project/entry state unchanged')
+        return result
     data = copy.deepcopy(previous_registry)
     previous = copy.deepcopy(data["projects"].get(key))
-    p = data["projects"].setdefault(key, registry.new_project(identity, agents))
+    if key not in data["projects"]:data["projects"][key]=registry.new_project(identity,agents)
+    p = data["projects"][key]
     assembly = p["checkouts"][key]
     if assembly["git_common_dir"] != str(identity.git_common_dir):
         raise EnableError("project_identity_mismatch", "Git common-dir changed; do not inherit authorization")
@@ -406,6 +507,11 @@ def _run_locked(request, runtime, result, *, locked=True):
                     candidates.add(path.resolve())
         if len(candidates) == 1:
             source = str(candidates.pop())
+    native=root/'.workbuddy/memory'
+    native_pending='workbuddy' in agents and not native.exists()
+    if 'workbuddy' in agents and (native.is_symlink() or native.exists() and not native.is_dir()):
+        raise EnableError('path_conflict','WorkBuddy native memory directory must be real')
+    memory_agents=[a for a in agents if a!='workbuddy' or not native_pending]
     fingerprints, bridge, store = [], None, None
     if choice == "yes" and source:
         if str(Path(source).resolve()) != source:
@@ -428,33 +534,23 @@ def _run_locked(request, runtime, result, *, locked=True):
     tx = Transaction(lock_path=runtime.transaction_lock, backup_root=runtime.backups,
                      allowed_roots=[root, registry_path] + [Path(v) for v in allowed])
     plan = _Plan(assembly, data["shared_objects"], root, tx)
-    base = root / "AGENTS.md"
-    if read_snapshot(base).kind == "absent":
-        plan.object(base, "#base", agents, "block", marker=BASE_MARKER,
-                    block=_block(BASE_MARKER, "# Project Rules\n\nKeep shared project rules in this file."))
-    else:
-        # An existing base is protected reuse, including M1's whole-file snapshots.
-        existing_base = next((o for o in assembly["objects"].values() if o["path"] == str(base) and o["marker"] == BASE_MARKER), None)
-        if existing_base:
-            plan.object(base, "#base", agents, "block", marker=BASE_MARKER,
-                        block=_block(BASE_MARKER, "# Project Rules\n\nKeep shared project rules in this file."))
-        else:
-            plan.object(base, "#base", agents, "file")
-    if "claude" in agents:
-        path = root / "CLAUDE.md"
-        snap = plan.snapshot(path)
-        if snap.kind not in ("absent", "file"):
-            raise EnableError("path_conflict", "CLAUDE.md is not a regular file")
-        if b"@AGENTS.md" not in (snap.data or b"").splitlines():
-            body = snap.data or b""
-            plan.after[path] = Snapshot("file", body + (b"\n" if body and not body.endswith(b"\n") else b"") + b"@AGENTS.md\n", snap.mode or 0o600)
-        plan.object(path, "#import", ["claude"], "import")
+    base=root/'AGENTS.md'
+    snap=plan.snapshot(base)
+    if snap.kind=='absent':plan.after[base]=Snapshot('file',('# '+root.name+'\n\n## 项目规则\n').encode(),0o600)
+    elif snap.kind!='file':raise EnableError('path_conflict','AGENTS must be a regular file')
+    revoke_conflicts=plan.authorization(choice,transition=previous is not None and previous['memory_authorization']=='yes' and choice=='no')
+    if 'claude' in agents:plan.reference(root/'CLAUDE.md')
     if "workbuddy" in agents:
         path = Path(paths.expand_path(config["workbuddy"]["user_entry"], home=home))
         snap = plan.snapshot(path)
         registered_rules = any(o["path"] == str(path) and o["marker"] == BASE_MARKER
                                for o in data["shared_objects"].values())
-        if (snap.kind == "file" and not registered_rules
+        machine_rules=[o for o in data['machine']['objects'].values() if o['path']==str(path) and o['marker']==BASE_MARKER]
+        if machine_rules:
+            obj=machine_rules[0]
+            if registry._unit_fingerprint(snap,obj)!=(obj.get('fingerprint') or {}).get('value'):
+                raise EnableError('drift','Machine convention drift; project does not rewrite it')
+        elif (snap.kind == "file" and not registered_rules
                 and entries.block_fingerprint(snap.data, **_marker_args(BASE_MARKER)) is None):
             # M1 reuses the existing user entry as a whole-file baseline.
             # Do not append a second rule convention to that shared entry.
@@ -463,7 +559,7 @@ def _run_locked(request, runtime, result, *, locked=True):
             plan.object(path, "#rules", ["workbuddy"], "user_convention", scope="user", marker=BASE_MARKER,
                         block=_block(BASE_MARKER, "项目规则读取当前项目根 AGENTS.md。保留已有公共源与用户约定。"))
     if choice == "yes" and source:
-        for a in agents:
+        for a in memory_agents:
             for template in config[a]["project_skill_roots"]:
                 path = Path(paths.expand_path(template, home=home, project=key)) / "context-keeper"
                 plan.object(path, "", [a], "skill_symlink", target=source)
@@ -477,11 +573,16 @@ def _run_locked(request, runtime, result, *, locked=True):
                             block=_block(EXCEPTION_MARKER, "## Context Keeper 项目记忆例外\n\n项目记忆用 context-keeper 记录库，由项目桥接块驱动。项目规则唯一来源仍为 AGENTS.md；已启用 context-keeper 的项目，其进度、事实与经验写入已获授权的记录库，项目 .workbuddy/memory/MEMORY.md 可在顶部包含受控桥接块。此条款作为既有\u201c事实归 AGENTS.md、项目 MEMORY 只放指针\u201d约定的记忆例外；其余原文约定保留。"))
             else:
                 plan.object(target, "#keeper", [a], "block", marker=KEEPER_MARKER, block=bridge)
+    plan.finalize_lifecycle()
     actual_plan = {"schema_version": 1, "command": "enable-memory", "main_checkout": key,
                    "checkout": str(root), "git_common_dir": str(identity.git_common_dir), "agents": agents,
                    "memory_authorization": choice, "store_path": str(store) if store else None,
                    "provider_source": str(source) if source else None, "provider_fingerprints": fingerprints,
-                   "changes": plan.description()}
+                   "changes": plan.description(),
+                   "installation":{a:{"status":detection["agents"][a]["status"],"fingerprint":detect.detection_fingerprint(detection["agents"][a])} for a in requested_agents},
+                   "native_pending":["workbuddy"] if native_pending else []}
+    if revoke_conflicts or previous and choice is not None and previous["memory_authorization"]!=choice:
+        actual_plan["memory_transition"]={"before":previous["memory_authorization"] if previous else None,"after":choice,"scope":"all registered project agents", "affected_agents":assembly["agents"],"reused_conflicts":revoke_conflicts}
     if rebuild:
         actual_plan["rebuild"] = rebuild
     def approval_template():
@@ -501,6 +602,9 @@ def _run_locked(request, runtime, result, *, locked=True):
                        (KEEPER_MARKER, {"start": "<!-- context-keeper:workbuddy:start -->", "end": "<!-- context-keeper:workbuddy:end -->"})]
             bridge_ready = bool(bridges) and all(entries.block_fingerprint(plan.before[Path(o["path"])].data or b"", **_marker_args(o["marker"])) == o["fingerprint"]["value"] for o in bridges)
             observed["bridge_assembled"][a] = _fact("ready" if bridge_ready else "missing", "project bridge preflight")
+    if native_pending and choice=="yes":
+        for phase in ("skill_installed","bridge_assembled"):
+            observed[phase]["workbuddy"]=_fact("blocked","WorkBuddy native memory directory must already exist")
     result["projects"] = [{"main_checkout": key, "checkout": str(root), "states": observed,
                            "agents": assembly["agents"], "evidence": [str(registry_path)],
                            "runtime_acceptance": {"status": "pending", "evidence_path": None}}]
@@ -537,7 +641,7 @@ def _run_locked(request, runtime, result, *, locked=True):
         result.update(status="approval_required", approval_required=True,
                       next_action=approval_template())
         return result
-    if choice == "yes" and source is None:
+    if choice == "yes" and memory_agents and source is None:
         raise EnableError("provider_source_missing", "Confirm an existing Keeper checkout; no source download/fallback is permitted")
     if not locked:
         # Inspection is write-free; only an authorized execution takes the shared lock.
@@ -548,29 +652,37 @@ def _run_locked(request, runtime, result, *, locked=True):
         with write_lock(runtime.lock):
             return _run_locked(approved_request, runtime, result, locked=True)
     p["memory_authorization"], p["authorization_evidence"] = choice, evidence
-    if choice == "yes":
+    if choice == "yes" and memory_agents:
         p["provider_source"] = str(source)
         assembly["store"] = {"path": str(store), "location_approved": True, "approval_evidence": evidence}
         assembly["states"]["source_available"] = _fact("ready", _source_evidence(fingerprints))
         # All relevant outputs have already been drift-checked. Preview never counts as ready.
-        argv = ["install.py", "--project", str(root)] + ["--" + a for a in agents]
+        argv = ["install.py", "--project", str(root)] + ["--" + a for a in memory_agents]
         preview = _call(request, source, argv, allow_preview=True, fingerprints=fingerprints)
-        all_links = {o["path"] for o in assembly["objects"].values() if o["kind"] == "skill_symlink" and set(o["agents"]) & set(agents)}
-        expected_rules = {paths.expand_path(config[a]["project_bridge_entry"], home=home, project=key) for a in agents}
+        all_links = {o["path"] for o in assembly["objects"].values() if o["kind"] == "skill_symlink" and set(o["agents"]) & set(memory_agents)}
+        expected_rules = {paths.expand_path(config[a]["project_bridge_entry"], home=home, project=key) for a in memory_agents}
         if (set(preview.get("skill_entries", [])) != all_links or set(preview.get("rule_files", [])) != expected_rules):
             raise EnableError("provider_scope_mismatch", "Keeper preview declared unexpected project outputs")
         init_argv = ["context_keeper_probe.py", "init", "--root", str(root), "--store-dir", str(store)]
         _call(request, source, init_argv, allow_preview=True, fingerprints=fingerprints)
-        for a in agents:
+        for a in memory_agents:
             assembly["states"]["skill_installed"][a] = _fact("ready", "verified project links: " + str(source))
             assembly["states"]["bridge_assembled"][a] = _fact("ready", config[a]["project_bridge_entry"])
         assembly["states"]["store_authorized_ready"] = _fact("ready", "Keeper init + metadata readback: " + str(store))
     else:
-        assembly["states"]["store_authorized_ready"] = _fact("blocked", "memory authorization is no")
+        assembly["states"]["store_authorized_ready"] = _fact("blocked", "memory authorization is no" if choice=='no' else 'WorkBuddy must create its native memory directory first')
+    if choice=='no':
+        for a in assembly['agents']:
+            assembly['states']['bridge_assembled'][a]=_fact('blocked','Automatic project memory authorization revoked; historical assets retained')
+            assembly['states']['skill_installed'][a]=_fact('unknown','Created trigger links removed; reused links confer no authorization')
+    if native_pending and choice=='yes':
+        for phase in ('skill_installed','bridge_assembled'):
+            assembly['states'][phase]['workbuddy']=_fact('blocked','Open the project in WorkBuddy first; AGM does not create native .workbuddy/memory')
+
     assembly["runtime_acceptance"] = {"status": "pending", "evidence_path": None}
     # Normalize file/import reuse hashes after all overlapping block edits.
     for obj in list(assembly["objects"].values()) + [data["shared_objects"][oid] for oid in assembly["shared_object_ids"]]:
-        if obj["kind"] in ("file", "import") and obj["ownership"] != "created" and Path(obj["path"]) in plan.after:
+        if obj["kind"] in ("file", "import") and obj["ownership"] != "created" and not entries.free_project_rules(obj) and Path(obj["path"]) in plan.after:
             obj["fingerprint"]["value"] = plan.after[Path(obj["path"])].fingerprint
     called = []
     def hook(event, path):
@@ -585,12 +697,12 @@ def _run_locked(request, runtime, result, *, locked=True):
                 if read_snapshot(output) != snap:
                     raise EnableError("drift", "Output changed after approval: " + str(output))
             called.append(True)
-        if event == "before_write" and path == registry_path and choice == "yes":
+        if event == "before_write" and path == registry_path and choice == "yes" and memory_agents:
             # Before the registry commit the config is current; provider calls must be no-op.
             installed = _call(request, source, argv + ["--approved"], fingerprints=fingerprints)
             if installed.get("scope") != "project" or installed.get("project") != str(root):
                 raise EnableError("provider_scope_mismatch", "Keeper installation is not for this project")
-            for a in agents:
+            for a in memory_agents:
                 alias = Path(paths.expand_path(config[a]["project_skill_roots"][0], home=home, project=key)) / "context-keeper"
                 ensured = _call(request, source, ["install.py", "--ensure-bridge", "--skill-dir", str(alias),
                                 "--root", str(root), "--" + a, "--approved"], fingerprints=fingerprints)
@@ -620,11 +732,13 @@ def _run_locked(request, runtime, result, *, locked=True):
             result["warnings"].append("Configuration rolled back; any Keeper store/config assets are preserved.")
             raise cause
         raise
-    result["status"] = "completed"
+    result["status"] = "gaps" if native_pending and choice=="yes" else "completed"
     result["changes"] = [dict(item, ownership=_change_ownership(plan, item["path"]), applied=True) for item in plan.description()]
     result["projects"] = [{"main_checkout": key, "checkout": str(root), "states": assembly["states"],
                            "agents": assembly["agents"], "evidence": [str(registry_path)],
                            "runtime_acceptance": assembly["runtime_acceptance"]}]
+    if revoke_conflicts:result["warnings"].append("Historical reused triggers preserved; explicit project memory denial guards installed")
+    if native_pending:result["warnings"].append("WorkBuddy native .workbuddy/memory must be created by WorkBuddy; no AGM mkdir")
     result["warnings"].append("Runtime acceptance pending; same-path replacement of .git cannot be reliably detected by schema v1.")
     if rebuild:
         result["warnings"].append("Corrupt registry backed up; prior authorization/created ownership was not recovered.")

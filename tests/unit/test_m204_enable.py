@@ -10,7 +10,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
-from runtime_fixture import seed_runtime, installed_registry
+from runtime_fixture import seed_runtime, installed_registry, seed_project_executors
 from agm_core import enable, paths, registry
 from agm_core.entries import sha256
 
@@ -54,6 +54,8 @@ WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\\nUpstream WorkBuddy rules\\n{WORK
                         "home": str(self.home), "platform_config": self.config,
                         "runtime_layout": self.runtime, "runner": self.runner}
 
+        self.request.update(seed_project_executors(self.home))
+
     def runner(self, argv, **kwargs):
         self.calls.append(argv)
         self.assertEqual(kwargs["env"]["HOME"], str(self.home))
@@ -92,6 +94,8 @@ WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\\nUpstream WorkBuddy rules\\n{WORK
 
     def preview(self, memory="no", source=False, store=None):
         self.request["memory_choice"] = memory
+        if memory=="yes" and "workbuddy" in self.request["agents"]:
+            (self.root/".workbuddy/memory").mkdir(parents=True,exist_ok=True)  # WorkBuddy-native precondition, §8.2.
         if source:
             # The dispatch contract carries source/location in the approval envelope.
             self.request["approval"] = {"provider_source": str(self.source), "memory_authorization": memory,
