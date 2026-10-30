@@ -90,8 +90,8 @@ def agent_group_menu_text(code):
         "健康检查：只读检查已登记入口 → %s check-memory --project <项目绝对路径>\n"
         "停用记忆：撤入口并保留数据 → %s remove-memory --project <项目绝对路径>；仅禁自动项目经历记录、保留入口用 enable-memory --no-memory\n"
         "整理用户规则：公共与独有分开，逐条计划后一次批准 → 按 SKILL.md 治理流程执行\n"
-        "批量启用记忆：扫描给定目录，汇总预览后一次批准 → 各项目 enable-memory\n"
-        % (cli, installer, cli, cli)
+        "批量启用记忆：扫描给定目录，汇总预览后一次批准 → %s enable-memory-batch --directory <目录绝对路径>\n"
+        % (cli, installer, cli, cli, cli)
     )
 
 
