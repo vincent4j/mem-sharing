@@ -25,6 +25,12 @@ class RuntimeLayout:
 
     @property
     def root(self):
+        return self.home / ".mem-sharing"
+
+    @property
+    def legacy_root(self):
+        # §23(2026-10-30 裁定):v0 手工实现的历史位置,改名后只作 v0 导入源,
+        # 原地不动、只读;产品自身永不写入此目录。判别/导入见 user_install。
         return self.home / ".agents-group"
 
     @property
@@ -33,7 +39,7 @@ class RuntimeLayout:
         # R 只保留公共记忆与台账。本路径恒指"当前生效版本";版本切换布局(如
         # versions/<semver> + 指针)由 M4-07 定稿,故 code 暂不纳入 validate_paths
         # 的符号链接禁用清单。
-        return self.home / ".local" / "share" / "agent-group-memory"
+        return self.home / ".local" / "share" / "mem-sharing"
 
     @property
     def var(self):
@@ -86,7 +92,7 @@ def from_request(request):
     if not isinstance(layout, RuntimeLayout) or layout.home != Path(request["home"]):
         raise LayoutError("runtime_layout_invalid", "Injected layout must match request.home")
     layout.validate_paths()
-    marker = layout.home / ".agents-group-upgrade.json"
+    marker = layout.home / ".mem-sharing-upgrade.json"
     if marker.exists() or marker.is_symlink():
         raise LayoutError("machine_upgrade_pending", "Machine upgrade requires explicit recovery: " + str(marker))
     return layout

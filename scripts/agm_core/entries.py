@@ -136,5 +136,5 @@ def free_project_rules(obj):
     """M2 base objects are history, never active rule ownership in schema=2."""
     return (obj['scope'] == 'project' and Path(obj['path']).name == 'AGENTS.md'
             and (obj['kind'] == 'file' or obj.get('marker') == {
-                'start':'<!-- agent-group-memory:rules:start -->',
-                'end':'<!-- agent-group-memory:rules:end -->'}))
+                'start':'<!-- mem-sharing:rules:start -->',
+                'end':'<!-- mem-sharing:rules:end -->'}))

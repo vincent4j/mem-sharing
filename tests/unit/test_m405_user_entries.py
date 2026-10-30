@@ -16,8 +16,8 @@ from agm_core.transaction import read_snapshot  # noqa: E402
 from runtime_fixture import installed_registry, seed_runtime  # noqa: E402
 from test_m405_detect import fake_codesign  # noqa: E402
 
-BASE_MARKER = {"start": "<!-- agent-group-memory:rules:start -->",
-               "end": "<!-- agent-group-memory:rules:end -->"}
+BASE_MARKER = {"start": "<!-- mem-sharing:rules:start -->",
+               "end": "<!-- mem-sharing:rules:end -->"}
 
 
 class UserEntryFixture(unittest.TestCase):
@@ -160,9 +160,9 @@ class UserEntryFixture(unittest.TestCase):
         data = entry.read_bytes()
         self.assertIn(BASE_MARKER["start"].encode(), data)
         self.assertIn(str(self.memory_index).encode(), data)
-        # v1.11:入口文本携带治理条款与 /agent-group 菜单;无任何 Skill 投影落点。
+        # v1.11:入口文本携带治理条款与 /mem-sharing 菜单;无任何 Skill 投影落点。
         self.assertIn(user_entries.GOVERNANCE_RULES_TEXT.encode(), data)
-        self.assertIn("/agent-group 菜单".encode(), data)
+        self.assertIn("/mem-sharing 菜单".encode(), data)
         self.assertIn("enable-memory".encode(), data)
         self.assertFalse((self.home / ".codex" / "skills").exists())
         ledger = self.load_ledger()
@@ -197,8 +197,8 @@ class UserEntryFixture(unittest.TestCase):
         entry = self.home / ".codex" / "AGENTS.md"
         registry_bytes = self.runtime.registry.read_bytes()
         drifted = entry.read_bytes().replace(
-            b"agent-group-memory:rules:start -->",
-            b"agent-group-memory:rules:start -- tampered", 1)
+            b"mem-sharing:rules:start -->",
+            b"mem-sharing:rules:start -- tampered", 1)
         entry.write_bytes(drifted)
         before = self.tree()
         result = self.preview()
@@ -323,7 +323,7 @@ class UserEntryFixture(unittest.TestCase):
         self.assertIn(user_entries.WORKBUDDY_CONVENTION_TEXT.encode(), data)
         self.assertIn(user_entries.GOVERNANCE_RULES_TEXT.encode(), data)
         self.assertIn(user_entries.WORKBUDDY_FALLBACK_TEXT.encode(), data)
-        self.assertIn("/agent-group 菜单".encode(), data)
+        self.assertIn("/mem-sharing 菜单".encode(), data)
         self.assertIn("批量启用记忆".encode(), data)
 
     def test_workbuddy_existing_entry_without_block_is_preserved(self):

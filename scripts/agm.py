@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""agent-group-memory CLI 外壳(M2-03):严格参数解析、路径表加载、批准文件结构校验、
+"""memSharing CLI 外壳(M2-03):严格参数解析、路径表加载、批准文件结构校验、
 稳定 JSON 输出与退出码。
 
 退出码(裁定 D-M2-05):0 完成、1 check 缺口、2 参数/schema/冲突/执行或恢复失败、
@@ -158,7 +158,7 @@ def _prescan_single_use(argv):
 def build_parser():
     parser = _StrictParser(
         prog="agm",
-        description="agent-group-memory CLI(合同: docs/plan/architecture.md v2)",
+        description="memSharing CLI(合同: docs/plan/architecture.md v2)",
     )
     sub = parser.add_subparsers(dest="command", metavar="command", required=True)
 

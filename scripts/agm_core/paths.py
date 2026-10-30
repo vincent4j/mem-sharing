@@ -36,7 +36,7 @@ AGENT_FIELDS = (
     "runtime_status",
 )
 RULE_MODES = frozenset(("native", "import_agents", "user_convention"))
-BRIDGE_OWNERS = frozenset(("context-keeper", "agent-group-memory"))
+BRIDGE_OWNERS = frozenset(("context-keeper", "mem-sharing"))
 RUNTIME_STATUSES = frozenset(("upstream_verified_local_pending", "pending"))
 HINT_SIGNAL_KINDS = frozenset(("directory_exists",))
 STRONG_SIGNAL_KINDS = frozenset(("path_executable", "macos_app_bundle", "user_receipt"))

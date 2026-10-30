@@ -87,13 +87,13 @@ class InstallerCLITests(unittest.TestCase):
                                 cwd=self.cwd,env=self.env,capture_output=True,text=True)
             report=json.loads(proc.stdout)
             self.assertIn('scripts/install.py',report['next_action'],report)
-            self.assertEqual(before,self.snapshot());self.assertFalse((self.home/'.agents-group').exists())
+            self.assertEqual(before,self.snapshot());self.assertFalse((self.home/'.mem-sharing').exists())
 
     def test_acquisition_is_separate_approved_and_pinned_using_local_git_transport(self):
         # The product transport is fixed to OFFICIAL. Only this child process gets
         # a Git URL rewrite to the isolated fixture; no external network request.
         config=self.area/'git-fixture.config'
-        config.write_text('[url "'+str(self.source)+'"]\n\tinsteadOf = https://github.com/vincent4j/agent-group-memory\n')
+        config.write_text('[url "'+str(self.source)+'"]\n\tinsteadOf = https://github.com/vincent4j/mem-sharing\n')
         self.env['GIT_CONFIG_GLOBAL']=str(config);self.env['GIT_CONFIG_NOSYSTEM']='1'
         stage=self.area/'approved stage'
         code,preview=self.run_cli('--acquire','--commit',self.commit,'--version','0.4.0','--staging',str(stage))

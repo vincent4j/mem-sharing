@@ -24,12 +24,12 @@ from . import entries, paths, project, registry, layout, detect
 from .transaction import Change, Snapshot, Transaction, TransactionError, read_snapshot, write_lock
 
 KEEPER_MARKER = {"start": "<!-- context-keeper:start -->", "end": "<!-- context-keeper:end -->"}
-BASE_MARKER = {"start": "<!-- agent-group-memory:rules:start -->", "end": "<!-- agent-group-memory:rules:end -->"}
+BASE_MARKER = {"start": "<!-- mem-sharing:rules:start -->", "end": "<!-- mem-sharing:rules:end -->"}
 WORKBUDDY_MARKER = {"start": "<!-- context-keeper:workbuddy:start -->", "end": "<!-- context-keeper:workbuddy:end -->"}
-DENIED_MARKER = {"start":"<!-- agent-group-memory:memory-denied:start -->", "end":"<!-- agent-group-memory:memory-denied:end -->"}
+DENIED_MARKER = {"start":"<!-- mem-sharing:memory-denied:start -->", "end":"<!-- mem-sharing:memory-denied:end -->"}
 DENIED_TEXT = "本项目已撤销自动记忆授权。本段优先于本文件中的历史 context-keeper 桥接和 Skill 触发说明：不得自动调用记忆写入、迁移、初始化或建库，不得因残留 Skill/桥接恢复旧授权；历史内容仅供只读参考。只有用户重新明确批准本项目 enable-memory --memory 后才可恢复自动记录。"
 
-EXCEPTION_MARKER = {"start": "<!-- agent-group-memory:keeper-exception:start -->", "end": "<!-- agent-group-memory:keeper-exception:end -->"}
+EXCEPTION_MARKER = {"start": "<!-- mem-sharing:keeper-exception:start -->", "end": "<!-- mem-sharing:keeper-exception:end -->"}
 
 
 class EnableError(ValueError):

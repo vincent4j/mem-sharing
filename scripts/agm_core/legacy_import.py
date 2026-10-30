@@ -135,16 +135,23 @@ def markdown_links(root, tree):
     return reports
 
 
-def plan_import(root, operation_id):
-    root = Path(root)
-    tree = inventory(root)
-    if (root / 'skills/agent-group-memory').exists() or (root / 'skills/agent-group-memory').is_symlink():
+def plan_import(source_root, target_root, operation_id):
+    """v0 导入计划:源(历史位置 ~/.agents-group,只读、原地不动)与目标 R 分离。
+
+    §23(2026-10-30 裁定)前源/目标同路径,导入会替换源内文件并以阅读包留档;
+    分离后源侧零写入,复制/阅读包/快照全部落在目标 R 下(快照机制与夹具语义
+    保留,只改路径)。PRESERVED_IN_PLACE 目录原地保留不复制。
+    """
+    source_root = Path(source_root)
+    target_root = Path(target_root)
+    tree = inventory(source_root)
+    if (source_root / 'skills/agent-group-memory').exists() or (source_root / 'skills/agent-group-memory').is_symlink():
         raise LegacyError('v0 product-name Skill requires separate preservation/identity review')
-    package = root / 'memories' / ('legacy-v0-' + operation_id)
-    archive = root / 'backups' / ('v0-' + operation_id)
+    package = target_root / 'memories' / ('legacy-v0-' + operation_id)
+    archive = target_root / 'backups' / ('v0-' + operation_id)
     if os.path.lexists(package) or os.path.lexists(archive):
         raise LegacyError('existing package/archive requires explicit same-op recovery')
-    links = markdown_links(root, tree)
+    links = markdown_links(source_root, tree)
     items = []
     for node in tree['nodes']:
         target = str(package / node['path'])
@@ -152,23 +159,21 @@ def plan_import(root, operation_id):
         items.append(dict(node, source_relative_path=node['path'], sha256_or_link_text_hash=node['sha256'], target=target, disposition=disposition,
                           before={'kind': 'absent', 'fingerprint': None},
                           after=node['sha256'], completed=False))
-        items.append(dict(node, source_relative_path=node['path'], sha256_or_link_text_hash=node['sha256'], target=str(root / node['path']), disposition='reuse',
+        items.append(dict(node, source_relative_path=node['path'], sha256_or_link_text_hash=node['sha256'], target=str(source_root / node['path']), disposition='reuse',
                           before={'kind':node['type'], 'fingerprint':node['sha256']},
                           after=node['sha256'], completed=False))
     old_index = next((n for n in tree['nodes'] if n['path'] == 'memories/MEMORY.md'), None)
     if old_index is not None and old_index['type'] != 'file':
         raise LegacyError('legacy MEMORY index must be a regular file')
+    # 新索引是 R 下的全新文件;v0 原文(含旧 MEMORY.md)源侧原地保留、字节不动。
     index = ('# 公共记忆\n\n' + ('- [v0 原始记忆](legacy-v0-' + operation_id + '/memories/MEMORY.md)\n' if old_index else '')
              + '- [主题目录](topics/)\n').encode()
-    for item in items:
-        if item['target']==str(root/'memories/MEMORY.md'):
-            item['disposition']='legacy_index';item['after']=digest(index)
     excluded = [n for n in tree['nodes'] if n.get('disposition') == 'excluded_link']
     for name in PRESERVED_IN_PLACE:
         # 原地保留登记:不在 ROOTS 内、不复制不镜像,只进排除清单供批准与报告展示。
-        if os.path.lexists(root / name):
+        if os.path.lexists(source_root / name):
             excluded.append({'path': name, 'type': 'directory', 'disposition': 'preserved_in_place'})
-    return {'identity_warning':'未发现可核验产品痕迹,不能排除历史台账被删。仅在确认这是 v0 手工目录后批准 confirmed_v0;否则停止恢复。禁止并发旧同步/管理写操作。', 'source': tree, 'source_root': str(root), 'source_tree_sha256': tree['tree_sha256'],
+    return {'identity_warning':'未发现可核验产品痕迹,不能排除历史台账被删。仅在确认这是 v0 手工目录后批准 confirmed_v0;否则停止恢复。禁止并发旧同步/管理写操作。', 'source': tree, 'source_root': str(source_root), 'source_tree_sha256': tree['tree_sha256'],
             'snapshot': str(archive / 'source'), 'manifest': str(archive / 'import-manifest.json'),
             'package': str(package), 'items': items, 'links': links,
             'excluded': excluded,

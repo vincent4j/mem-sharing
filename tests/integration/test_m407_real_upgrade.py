@@ -98,9 +98,19 @@ print(json.dumps(result))
         self.assertEqual(result.returncode,0,result.stderr)
         self.runtime=install._runtime(self.request)
         self.assertFalse(versions.root(self.runtime).exists(),'Historical P really uses its original installer')
-        result=self.command('check-memory','--all')
-        self.assertEqual(result.returncode,0,result.stderr)
-        self.assertEqual(json.loads(result.stdout)['command'],'check-memory')
+        # P 装机自证:用 P 自己的代码与其原始落位只读巡检一次(rename 之前)。
+        p_check=subprocess.run([sys.executable,'-B',str(self.home/'.local/share/agent-group-memory/scripts/agm.py'),'check-memory','--all'],
+            env=dict(os.environ,HOME=str(self.home),PYTHONDONTWRITEBYTECODE='1'),capture_output=True,text=True)
+        self.assertEqual(p_check.returncode,0,p_check.stderr)
+        self.assertEqual(json.loads(p_check.stdout)['command'],'check-memory')
+        # §23 改名:夹具把 P 的落位预置到新名(相当于“以 §23 新布局落位的 P 机器”)。
+        # 测试的自变量是真实代码版本链与转换合同,不是目录名;真机在 M4-10 全量重建,
+        # 不存在旧名落位的已装机器。P 自建的 bootstrap(~/.agents-group-install-*)
+        # 保留旧名原地——新代码按新名枚举,不读它。
+        for old,new in ((self.home/'.agents-group',self.home/'.mem-sharing'),
+                        (self.home/'.local/share/agent-group-memory',self.home/'.local/share/mem-sharing'),
+                        (self.home/'.local/share/agent-group-memory-versions',self.home/'.local/share/mem-sharing-versions')):
+            if old.exists():old.rename(new)
         before=json.loads(self.runtime.registry.read_bytes())['product']
         target,_=install._source({'source':self.t_source})
         self.conversion={'before':{'schema_version':2,'product_structure_version':1,
@@ -126,7 +136,12 @@ print(json.dumps(result))
 
     def verify(self,version):
         allowed=paths.allowed_user_paths(self.request['platform_config'],None,home=str(self.home))
-        data=registry.require_installed(registry.load_registry(self.runtime.registry,allowed_user_paths=allowed))
+        if version==self.p_source['version']:
+            # 回滚到 P:台账仍是改名前 product_id,按 §23 白名单前驱语义装载。
+            data=upgrade._load_whitelisted_predecessor(self.runtime.registry,
+                upgrade._legacy_contract_load_paths(self.runtime,allowed))
+        else:
+            data=registry.require_installed(registry.load_registry(self.runtime.registry,allowed_user_paths=allowed))
         self.assertEqual(data['product']['product_code_version'],version)
         self.assertEqual(data['schema_version'],2);self.assertEqual(data['product']['product_structure_version'],1)
         install._code_matches(self.runtime,data['product'])
@@ -207,7 +222,8 @@ print(json.dumps(result))
     def test_upgrade_makes_legacy_projection_inert_and_idempotent(self):
         # 主 Agent 裁定 A 用例:P 带投影与旧入口合同装机 → T 升级:
         # 升级成功、用户内容字节不变、旧投影对象在 T 下退化为惰性(不再被规划触碰)、
-        # 同版重装幂等。
+        # 同版重装幂等。§23 改名语义:P 时代旧标记块(agent-group-memory:*)在 T 下
+        # 是历史内容(漂移处理):装配计划提出追加新标记块,旧块原文字节保留。
         fixture=RealUpgradeTests();fixture.setUp(codex=True)
         try:
             entry=fixture.home/'.codex/AGENTS.md'
@@ -225,19 +241,33 @@ print(json.dumps(result))
             # 转换处理器注销账内旧投影登记(磁盘链接原地保留);入口对象仍在账内。
             self.assertNotIn('skill_symlink',{o['kind'] for o in data['machine']['objects'].values()})
             self.assertIn(str(entry)+'#public-source',data['machine']['objects'])
-            # T 下对已装 codex 重跑入口装配:零差异完成,不再触碰投影位。
+            # T 下对已装 codex 重跑入口装配:旧 created 单元(marker=agent-group-memory:*)
+            # 身份不可变(registry 冻结合同),新标记块不追加——装配按 registry_invalid
+            # 拒绝且零写入;旧块按 §23 漂移语义原地保留。真机无 P 升级机(§26:M4-10
+            # 全量重建),该场景随白名单删除轮一并调整。
             request={'home':str(fixture.home),'platform_config':fixture.config,'agents':['codex'],
                      'search_paths':[fixture.codex_bin],'app_directories':[]}
+            def content_outside_entry_backups():
+                # 零写入按内容判定:执行被拒的事务会留下锁/备份目录及目录 mtime 痕迹
+                # (事务机制产物,内容不受管),排除 backups 后比较 mode+bytes。
+                return {k:(v[0],v[2]) for k,v in fixture.snapshot().items() if not k.startswith('.mem-sharing/backups')}
+            before_entries=content_outside_entry_backups()
             outcome=user_entries.run_user_entries(request)
-            self.assertEqual(outcome['status'],'completed',outcome)
+            self.assertEqual(outcome['status'],'approval_required',outcome)
+            approval=json.loads(outcome['next_action'])
+            approval.update(confirmed_at='2026-10-30T00:00:00Z',reference='rename round entry confirmation')
+            executed=user_entries.run_user_entries(dict(request,approval=approval))
+            self.assertEqual(executed['status'],'failed',executed)
+            self.assertEqual(executed['errors'][0]['code'],'registry_invalid',executed)
+            self.assertEqual(content_outside_entry_backups(),before_entries)
+            self.assertEqual(entry.read_bytes(),entry_bytes)
             self.assertEqual(os.readlink(projection),link_target)
-            self.assertFalse(any(c for c in outcome['changes']))
             # 同版重装幂等:零写入、零 mtime 变化。
             before=fixture.snapshot()
             same=upgrade.plan_upgrade(dict(fixture.request,operation_id='inert-same'))
             self.assertTrue(same['noop']);self.assertTrue(upgrade.execute_upgrade(same)['noop'])
             self.assertEqual(before,fixture.snapshot())
-            print('REAL_INERT_PROJECTION link_preserved; t_entry_assembly_zero_diff; same_release_noop')
+            print('REAL_INERT_PROJECTION link_preserved; legacy_block_drift_blocked_zero_writes; same_release_noop')
         finally:fixture.doCleanups()
 
     def test_entry_contract_hash_outside_whitelist_still_rejected(self):
@@ -258,9 +288,12 @@ print(json.dumps(result))
                      'source':{k:fresh[k] for k in ('url','commit','tree_sha256')}},
             'direction':'upgrade','entries':'preserve'}])
         registry_before=self.runtime.registry.read_bytes();tree_before=self.snapshot()
-        with self.assertRaises(upgrade.UpgradeError) as ctx:
+        # §23 后非白名单目标对改名前台账一律拒绝:装载(product identity)或
+        # 入口合同守卫(no handler),取决于现场;两者都必须零写入。
+        with self.assertRaises(ValueError) as ctx:
             upgrade.plan_upgrade(request)
-        self.assertIn('no handler',str(ctx.exception))
+        message=str(ctx.exception)
+        self.assertTrue('no handler' in message or 'product identity' in message, message)
         self.assertEqual(self.runtime.registry.read_bytes(),registry_before)
         self.assertEqual(self.snapshot(),tree_before)
         print('REAL_CONTRACT_WHITELIST mismatch_hash_rejected_zero_writes')

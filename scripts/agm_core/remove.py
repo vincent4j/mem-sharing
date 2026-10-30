@@ -93,7 +93,7 @@ def plan_remove(data, identity):
     snapshots, units, warnings = {}, {}, []
     for oid, obj in assembly['objects'].items():
         path = Path(obj['path'])
-        if obj.get('marker',{})=={'start':'<!-- agent-group-memory:memory-denied:start -->','end':'<!-- agent-group-memory:memory-denied:end -->'} and project['memory_authorization']=='no':
+        if obj.get('marker',{})=={'start':'<!-- mem-sharing:memory-denied:start -->','end':'<!-- mem-sharing:memory-denied:end -->'} and project['memory_authorization']=='no':
             _verify_created(obj,read_snapshot(path)) if obj['ownership']=='created' else None
             warnings.append('保留 no 停用规则,防止历史 reused 指令在 remove 后重激活：%s' % path)
             continue

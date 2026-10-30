@@ -33,14 +33,15 @@ class InstallFixture(unittest.TestCase):
             'files':{str(p.relative_to(self.source)):legacy.digest(p.read_bytes()) for p in self.source.rglob('*') if p.is_file()}}}
 
     def v0(self):
-        for name in ('memories','references','skills','mcp'):(self.runtime.root/name).mkdir(parents=True)
-        (self.runtime.root/'memories/MEMORY.md').write_bytes(b'\xef\xbb\xbf# Old\r\n[ref](../references/ops.md)\r\n[topic](topic.md)\xff')
-        (self.runtime.root/'memories/topic.md').write_bytes(b'unchanged\r\n\xff')
-        (self.runtime.root/'references/ops.md').write_bytes(b'private original\x00\n')
-        (self.runtime.root/'skills/example.txt').write_bytes(b'skill\r\n')
-        (self.runtime.root/'manage.py').write_bytes(b'old code do not run')
-        (self.runtime.root/'mcp/private').write_bytes(b'untouched')
-        return {str(p.relative_to(self.runtime.root)):p.read_bytes() for p in self.runtime.root.rglob('*') if p.is_file()}
+        # §23:v0 内容在历史位置 ~/.agents-group(源,原地不动);R=~/.mem-sharing 是目标。
+        for name in ('memories','references','skills','mcp'):(self.runtime.legacy_root/name).mkdir(parents=True)
+        (self.runtime.legacy_root/'memories/MEMORY.md').write_bytes(b'\xef\xbb\xbf# Old\r\n[ref](../references/ops.md)\r\n[topic](topic.md)\xff')
+        (self.runtime.legacy_root/'memories/topic.md').write_bytes(b'unchanged\r\n\xff')
+        (self.runtime.legacy_root/'references/ops.md').write_bytes(b'private original\x00\n')
+        (self.runtime.legacy_root/'skills/example.txt').write_bytes(b'skill\r\n')
+        (self.runtime.legacy_root/'manage.py').write_bytes(b'old code do not run')
+        (self.runtime.legacy_root/'mcp/private').write_bytes(b'untouched')
+        return {str(p.relative_to(self.runtime.legacy_root)):p.read_bytes() for p in self.runtime.legacy_root.rglob('*') if p.is_file()}
 
     def plan(self):return install.plan_install(self.request)
     def execute(self,plan=None,hook=None):
@@ -90,7 +91,7 @@ class InstallTests(InstallFixture):
         # v1.11:入口含治理条款与菜单;无 Skill 投影落点。
         body=entry.read_text()
         self.assertIn(user_entries.GOVERNANCE_RULES_TEXT,body)
-        self.assertIn('/agent-group 菜单',body)
+        self.assertIn('/mem-sharing 菜单',body)
         self.assertFalse((self.home/'.codex/skills').exists())
         self.assertFalse((self.home/'.claude').exists());self.assertFalse((self.home/'.workbuddy').exists())
         data=registry.load_registry(self.runtime.registry,allowed_user_paths=paths.allowed_user_paths(self.config,None,home=str(self.home)))
@@ -100,19 +101,19 @@ class InstallTests(InstallFixture):
     def test_v0_exact_snapshot_legacy_package_and_same_op_no_reimport(self):
         old=self.v0();plan=self.plan()
         self.assertEqual(plan['legacy_identity'],'confirmed_v0')
-        self.assertEqual(list(self.home.glob('.agents-group-install-*')),[])
+        self.assertEqual(list(self.home.glob('.mem-sharing-install-*')),[])
         bad=approved(plan);bad['legacy_identity']=None
         with self.assertRaises(ValueError):install.execute_install(plan,bad)
         self.execute(plan)
         package=Path(plan['legacy_import']['package']);snapshot=Path(plan['legacy_import']['snapshot'])
         for rel,raw in old.items():
+            self.assertEqual((self.runtime.legacy_root/rel).read_bytes(),raw)
             if rel.split('/')[0] in legacy.ROOTS:
                 self.assertEqual((package/rel).read_bytes(),raw)
                 self.assertEqual((snapshot/rel).read_bytes(),raw)
-                if rel!='memories/MEMORY.md':self.assertEqual((self.runtime.root/rel).read_bytes(),raw)
-            else:self.assertEqual((self.runtime.root/rel).read_bytes(),raw)
-        # v1.11:v0 skills/mcp 原地不动,不进阅读包/快照,只登记排除。
-        self.assertTrue((self.runtime.root/'skills/example.txt').is_file())
+        # v1.11/§23:v0 源(历史位置)整体原地不动,不进阅读包/快照,只登记排除。
+        self.assertEqual((self.runtime.legacy_root/'memories/MEMORY.md').read_bytes(),old['memories/MEMORY.md'])
+        self.assertTrue((self.runtime.legacy_root/'skills/example.txt').is_file())
         self.assertFalse((package/'skills').exists());self.assertFalse((snapshot/'skills').exists())
         preserved={e['path'] for e in plan['legacy_import']['excluded'] if e.get('disposition')=='preserved_in_place'}
         self.assertEqual(preserved,{'skills','mcp'})
@@ -125,13 +126,13 @@ class InstallTests(InstallFixture):
 
     def test_source_and_destination_drift_stop_before_bootstrap(self):
         self.v0();plan=self.plan()
-        (self.runtime.root/'references/ops.md').write_bytes(b'external')
+        (self.runtime.legacy_root/'references/ops.md').write_bytes(b'external')
         with self.assertRaises(ValueError):self.execute(plan)
-        self.assertEqual(list(self.home.glob('.agents-group-install-*')),[])
+        self.assertEqual(list(self.home.glob('.mem-sharing-install-*')),[])
         self.assertFalse(self.runtime.code.exists())
 
     def test_target_conflict_and_code_symlink_parents_are_zero_write(self):
-        self.v0();package=self.runtime.root/'memories/legacy-v0-fixture-m404';package.mkdir()
+        self.v0();package=self.runtime.root/'memories/legacy-v0-fixture-m404';package.mkdir(parents=True)
         (package/'MEMORY.md').write_bytes(b'conflict')
         with self.assertRaises(ValueError):self.plan()
         self.assertFalse(self.runtime.registry.exists())
@@ -158,13 +159,13 @@ class InstallTests(InstallFixture):
                             self.assertEqual(len(list(fixture.runtime.backups.glob('v0-*'))),1)
                         else:
                             self.assertFalse(fixture.runtime.registry.exists())
-                            for rel,raw in old.items():self.assertEqual((fixture.runtime.root/rel).read_bytes(),raw)
+                            for rel,raw in old.items():self.assertEqual((fixture.runtime.legacy_root/rel).read_bytes(),raw)
                     finally:fixture.doCleanups()
 
     def test_external_symlink_recorded_not_dereferenced_or_activated(self):
         self.v0();outside=self.area/'outside';outside.write_bytes(b'not copied')
-        link=self.runtime.root/'references/external';link.symlink_to(outside)
-        internal=self.runtime.root/'references/internal';internal.symlink_to('../references/ops.md')
+        link=self.runtime.legacy_root/'references/external';link.symlink_to(outside)
+        internal=self.runtime.legacy_root/'references/internal';internal.symlink_to('../references/ops.md')
         plan=self.plan()
         preserved={e['path'] for e in plan['legacy_import']['excluded'] if e.get('disposition')=='preserved_in_place'}
         self.assertEqual(preserved,{'skills','mcp'})
@@ -174,13 +175,13 @@ class InstallTests(InstallFixture):
         self.assertEqual(os.readlink(package/'references/internal'),'../references/ops.md')
         self.assertNotIn(b'not copied',Path(plan['legacy_import']['manifest']).read_bytes())
         # v0 skills 原文/链接原地保留,不复制不镜像。
-        self.assertTrue((self.runtime.root/'skills/example.txt').is_file())
+        self.assertTrue((self.runtime.legacy_root/'skills/example.txt').is_file())
         self.assertFalse((package/'skills').exists())
 
     def test_cyclic_special_collisions_and_new_broken_link_stop_readonly(self):
-        self.v0();link=self.runtime.root/'references/loop';link.symlink_to('loop')
+        self.v0();link=self.runtime.legacy_root/'references/loop';link.symlink_to('loop')
         with self.assertRaises(ValueError):self.plan()
-        link.unlink();(self.runtime.root/'memories/new.md').write_text('[bad](../manage.py)')
+        link.unlink();(self.runtime.legacy_root/'memories/new.md').write_text('[bad](../manage.py)')
         with self.assertRaises(ValueError):self.plan()
         self.assertFalse(self.runtime.registry.exists())
 
@@ -212,8 +213,8 @@ class InstallTests(InstallFixture):
         self.assertFalse((self.home/'.codex').exists())
 
     def test_v0_without_old_index_and_existing_empty_directory(self):
-        (self.runtime.root/'references').mkdir(parents=True)
-        (self.runtime.root/'references/only.txt').write_bytes(b'only reference')
+        (self.runtime.legacy_root/'references').mkdir(parents=True)
+        (self.runtime.legacy_root/'references/only.txt').write_bytes(b'only reference')
         self.assertEqual(self.execute()['status'],'completed')
         self.assertTrue((self.runtime.root/'memories/MEMORY.md').is_file())
 
@@ -229,7 +230,7 @@ class InstallTests(InstallFixture):
         from test_m403_migrate import MigrationFixture, OLD_COMMIT
         fixture=MigrationFixture();fixture.setUp()
         try:
-            root=fixture.runtime.root
+            root=fixture.runtime.legacy_root
             (root/'memories').mkdir(parents=True);(root/'memories/MEMORY.md').write_bytes(b'v0 old')
             request=dict(self.request,home=str(fixture.home),legacy_registries=[str(fixture.old)],
                          legacy_source_commits={str(fixture.old):OLD_COMMIT})
@@ -250,7 +251,7 @@ class InstallTests(InstallFixture):
                     fixture.v0();fixture.codex();plan=fixture.plan()
                     def hook(event,path):
                         if event=='before_commit':
-                            if stage=='source':(fixture.runtime.root/'references/ops.md').write_bytes(b'external')
+                            if stage=='source':(fixture.runtime.legacy_root/'references/ops.md').write_bytes(b'external')
                             if stage=='entry':(fixture.home/'.codex/AGENTS.md').write_bytes(b'external')
                             if stage=='snapshot':
                                 p=Path(plan['legacy_import']['snapshot'])/'references/ops.md';p.chmod(0o600);p.write_bytes(b'corrupt')

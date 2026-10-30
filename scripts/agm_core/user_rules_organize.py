@@ -19,7 +19,7 @@ from .transaction import Change, Snapshot, Transaction, TransactionError, read_s
 COMMAND = 'organize-user-rules'
 _COMMON = re.compile(r'中文|语言|简洁|简体|繁体|提交|commit|风格|流程|偏好|批准|确认|测试|核验|验证|证据|先规划|先分析|先计划|勿|不要|禁止|不得|format|concise|approval|language', re.I)
 _SPECIFIC = re.compile(r'codex|claude|workbuddy|cursor|paseo|openai|anthropic|mcp|skills?|执行器专属|专属|agent专用|\.codex|\.claude|\.workbuddy|[~/$][\w./-]+|`[^`]+`|\b(?:npm|npx|uvx|python\d*|git|bash|zsh)\s+[-\w]', re.I)
-_MARKER = re.compile(rb'<!-- agent-group-memory:([a-zA-Z0-9_-]+):start -->')
+_MARKER = re.compile(rb'<!-- mem-sharing:([a-zA-Z0-9_-]+):start -->')
 
 
 class OrganizeError(ValueError):
@@ -59,10 +59,10 @@ def _objects(data):
 
 def _protected(data, path, runtime, objects):
     spans = []
-    markers = {(match.group(0), b'<!-- agent-group-memory:'+match.group(1)+b':end -->')
+    markers = {(match.group(0), b'<!-- mem-sharing:'+match.group(1)+b':end -->')
                for match in _MARKER.finditer(data)}
     # End-only/unknown damaged AGM markup must not become ordinary rule text.
-    ends = re.findall(rb'<!-- agent-group-memory:([a-zA-Z0-9_-]+):end -->', data)
+    ends = re.findall(rb'<!-- mem-sharing:([a-zA-Z0-9_-]+):end -->', data)
     if set(ends) != {match.group(1) for match in _MARKER.finditer(data)}:
         _fail('entry_conflict', 'Incomplete AGM markers: '+str(path))
     for obj in objects:
@@ -256,8 +256,8 @@ def _build(request):
         else:
             content=('# 用户公共规则\n\n## L1 概要\n\n当前有效结论：以下通用约定经完整计划集中确认后由各执行器共享。\n待办：规则变化时手写更新本概要及索引结论。\n\n## L2 原文与来源\n').encode()
         for item in moved:
-            marker={'start':'<!-- agent-group-memory:organized-'+item['item_id']+':start -->',
-                    'end':'<!-- agent-group-memory:organized-'+item['item_id']+':end -->'}
+            marker={'start':'<!-- mem-sharing:organized-'+item['item_id']+':start -->',
+                    'end':'<!-- mem-sharing:organized-'+item['item_id']+':end -->'}
             origin='~/'+str(Path(item['source']).relative_to(runtime.home))
             block=(marker['start']+'\n'+item['text'].rstrip('\r\n')+'\n\n> 迁自 '+origin+
                    '('+stamp+', 原段 sha256 '+item['sha256'][:16]+')\n'+marker['end']).encode()

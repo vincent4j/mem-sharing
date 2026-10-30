@@ -71,7 +71,7 @@ def _valid_table():
                         {"kind": "directory_exists", "path": "{home}/.workbuddy", "strength": "hint"}
                     ],
                     rule_mode="user_convention",
-                    bridge_owner="agent-group-memory",
+                    bridge_owner="mem-sharing",
                     runtime_status="pending",
                 ),
             }

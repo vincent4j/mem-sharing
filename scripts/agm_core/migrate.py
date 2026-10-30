@@ -238,7 +238,7 @@ def _materialize_inputs(sources, commits, evidence_files, allowed, archive):
 
 
 def _redirect(plan, source):
-    return _bytes({"product_id": "agent-group-memory", "operation_id": plan["operation_id"],
+    return _bytes({"product_id": "mem-sharing", "operation_id": plan["operation_id"],
                    "source_registry": source, "source_sha256": plan["source_sha256"],
                    "target_registry": plan["layout"]["registry"], "status": "handoff"})
 
@@ -274,7 +274,7 @@ def _target_state(plan):
 
 
 def _journal_path(runtime, op):
-    return runtime.home / (".agents-group-install-" + _op(op)) / "journal.json"
+    return runtime.home / (".mem-sharing-install-" + _op(op)) / "journal.json"
 
 
 def inspect_migration(runtime, source_registries=(), *, allowed_user_paths=()):
@@ -288,13 +288,13 @@ def inspect_migration(runtime, source_registries=(), *, allowed_user_paths=()):
         sources = [_canonical(path) for path in source_registries]
         target_exists = os.path.lexists(runtime.registry)
         pending = []
-        for bootstrap in sorted(runtime.home.glob(".agents-group-install-*")):
+        for bootstrap in sorted(runtime.home.glob(".mem-sharing-install-*")):
             if bootstrap.is_symlink():
                 _fail("Bootstrap symlink conflict")
             journal = bootstrap / "journal.json"
             if journal.is_file():
                 observed = _json(journal)
-                if observed.get("product_id") == "agent-group-memory" and observed.get("status") not in ("committed", "rolled_back"):
+                if observed.get("product_id") == "mem-sharing" and observed.get("status") not in ("committed", "rolled_back"):
                     validated, _ = _load_journal(journal)
                     _recovery_scene(validated)
                     pending.append(str(journal))
@@ -348,7 +348,7 @@ def plan_migration(runtime, source_registries, *, source_commits, product,
         _fail("Cannot start migration: " + scene["scene"] + ": " + scene["message"])
     if set(source_commits) != set(map(str, sources)):
         _fail("Every legacy source needs its pinned code identity")
-    locks = [runtime.home / ".agents-group-install.lock", runtime.lock, runtime.transaction_lock]
+    locks = [runtime.home / ".mem-sharing-install.lock", runtime.lock, runtime.transaction_lock]
     locks += [path.parent / ".agm.lock" for path in sources]
     if any(os.path.lexists(path) for path in locks):
         _fail("Existing writer lock; no metadata or locks will be created", "lock_conflict")
@@ -537,7 +537,7 @@ def _lock(path, plan):
     """Use the existing lock primitive, adding a removable recovery owner record."""
     with write_lock(path):
         owner = path / "migration-owner.json"
-        _put(owner, _bytes({"product_id": "agent-group-memory", "operation_id": plan["operation_id"],
+        _put(owner, _bytes({"product_id": "mem-sharing", "operation_id": plan["operation_id"],
                                    "pid": os.getpid(), "plan_sha256": plan["plan_sha256"]}), 0o600)
         try:
             yield
@@ -612,7 +612,7 @@ def execute_migration(plan, approval, *, hook=None):
         _fail("Source/plan drift before execution", "source_drift")
     hook = hook or (lambda event, path: None)
     with ExitStack() as stack:
-        stack.enter_context(_lock(runtime.home / ".agents-group-install.lock", plan))
+        stack.enter_context(_lock(runtime.home / ".mem-sharing-install.lock", plan))
         for info in sorted(plan["sources"], key=lambda item: item["registry"]):
             stack.enter_context(_lock(Path(info["registry"]).parent / ".agm.lock", plan))
         _verify_sources(plan)
@@ -621,7 +621,7 @@ def execute_migration(plan, approval, *, hook=None):
         bootstrap = Path(plan["bootstrap"])
         bootstrap.mkdir(mode=0o700)
         _sync_directory(bootstrap.parent)
-        journal = {"schema_version": 1, "product_id": "agent-group-memory", "plan": plan, "approval": approval,
+        journal = {"schema_version": 1, "product_id": "mem-sharing", "plan": plan, "approval": approval,
                    "operation_id": plan["operation_id"], "status": "prepared", "intent": None,
                    "created_directories": [], "switch_started": []}
         _save(Path(plan["journal"]), journal)
@@ -644,7 +644,7 @@ def _load_journal(path):
     registry._keys(journal, "schema_version product_id plan approval operation_id status intent created_directories switch_started", "migration journal")
     runtime = _validate_plan(journal["plan"])
     if (journal["schema_version"] != 1 or type(journal["schema_version"]) is not int
-            or journal["product_id"] != "agent-group-memory" or journal["operation_id"] != journal["plan"]["operation_id"]
+            or journal["product_id"] != "mem-sharing" or journal["operation_id"] != journal["plan"]["operation_id"]
             or Path(path) != Path(journal["plan"]["journal"])):
         _fail("Invalid migration journal identity")
     if journal["status"] not in ("prepared", "applying", "recovery_required", "committed", "rolled_back"):
@@ -662,7 +662,7 @@ def _load_journal(path):
 
 
 def _lock_paths(runtime, plan):
-    return ([runtime.home / ".agents-group-install.lock"]
+    return ([runtime.home / ".mem-sharing-install.lock"]
             + [Path(item["registry"]).parent / ".agm.lock" for item in sorted(plan["sources"], key=lambda entry: entry["registry"])]
             + [runtime.lock, runtime.transaction_lock])
 
@@ -680,7 +680,7 @@ def _stale_observation(path, plan):
         _fail("Unknown lock owner; inspect manually without deleting it", "lock_conflict")
     owner = _json(path / "migration-owner.json")
     registry._keys(owner, "product_id operation_id pid plan_sha256", "lock owner")
-    if (owner["product_id"] != "agent-group-memory" or owner["operation_id"] != plan["operation_id"]
+    if (owner["product_id"] != "mem-sharing" or owner["operation_id"] != plan["operation_id"]
             or owner["plan_sha256"] != plan["plan_sha256"] or type(owner["pid"]) is not int or owner["pid"] <= 0):
         _fail("Lock owner identity does not match recovery operation", "lock_conflict")
     try:
@@ -810,7 +810,7 @@ def recover_migration(recovery_plan, approval, *, hook=None):
         (path / "migration-owner.json").unlink()
         path.rmdir()
     with ExitStack() as stack:
-        stack.enter_context(_lock(runtime.home / ".agents-group-install.lock", plan))
+        stack.enter_context(_lock(runtime.home / ".mem-sharing-install.lock", plan))
         for info in sorted(plan["sources"], key=lambda item: item["registry"]):
             stack.enter_context(_lock(Path(info["registry"]).parent / ".agm.lock", plan))
         _recovery_scene(journal)

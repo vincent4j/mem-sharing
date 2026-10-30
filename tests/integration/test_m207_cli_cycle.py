@@ -443,7 +443,7 @@ class BoundaryTests(CliHarness):
         rc, envelope = self.approve_remove()
         self.assertEqual(rc, 0, envelope)
         agents_left = (self.root / "AGENTS.md").read_bytes()
-        self.assertNotIn(b"agent-group-memory:rules", agents_left)
+        self.assertNotIn(b"mem-sharing:rules", agents_left)
         self.assertNotIn(b"context-keeper:start", agents_left,
                          "AGM 创建的受管块应被摘除(块间残余字节按字节精确保留)")
         self.assertFalse((self.root / "CLAUDE.md").exists(),

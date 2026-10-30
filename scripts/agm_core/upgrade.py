@@ -19,7 +19,7 @@ from . import user_install as install
 from .layout import RuntimeLayout
 from .transaction import Snapshot, _apply, read_snapshot
 
-PRODUCT = 'agent-group-memory'
+PRODUCT = 'mem-sharing'
 PLAN_KEYS = ('schema_version command operation_id direction channel layout source source_files tools '
              'before_registry before_registry_hex before_product after_registry_hex final_registry_sha256 '
              'before_inventory target_inventory conversion migration_plan outputs obsolete_directories directories '
@@ -30,7 +30,7 @@ PHASES = ('prepare', 'archive', 'inventory', 'code', 'verify', 'commit')
 
 # v1.11(2026-10-30)入口合同变更的唯一精确转换白名单(主 Agent 批准,仅此一对哈希,
 # 不开"文件变了就放行"的通用口子):本发行同时变更 agents.json(移除 user_skill_roots)
-# 与 user_entries.py(移除产品 Skill 投影、入口模板加治理条款与 /agent-group 菜单)。
+# 与 user_entries.py(移除产品 Skill 投影、入口模板加治理条款与 /mem-sharing 菜单)。
 # before = P(27d6e26)两文件字节 SHA256,after = 本发行两文件字节 SHA256;两向各一条
 # (P→T 升级与 §12.2 显式批准的 T→P 回退)。任何其他哈希组合仍按无处理器拒绝。
 # 升级语义:entries:'preserve' 照旧——旧 machine 账中的 skill_symlink 对象退化为惰性
@@ -40,11 +40,11 @@ _ENTRY_CONTRACT_WHITELIST = (
     # P(27d6e26) → 本发行(v1.11 调整轮)
     ({'scripts/agents.json': '24258be62f8e4d5fe260a1578fbda55c456a74a4a812bc154bdadcdcee48e396',
       'scripts/agm_core/user_entries.py': '5cff6dfb0f21dc24b21b41b0b815bf4570cec3f795b41d7771054e52a191f789'},
-     {'scripts/agents.json': '9501f64bcefa82585d536ef99bb339b39d7e97262a15d338c61061fe529b6ef9',
-      'scripts/agm_core/user_entries.py': 'b9c30258bc5659289dce22adc1ce07700b32271fe2ddbf24107825a63c6efea4'}),
+     {'scripts/agents.json': '50ca9e0e53bfc068a1b60efdf734a4be6e316a2ee3bffe4c4ceaa301700b4147',
+      'scripts/agm_core/user_entries.py': 'a8fad5f078b5ac32a33edf40b4be159ba7b59fd7d0c40d8e22a266d2c4af2586'}),
     # 显式批准的反向回退:本发行 → P(§12.2 主动回退仍须走精确转换表)
-    ({'scripts/agents.json': '9501f64bcefa82585d536ef99bb339b39d7e97262a15d338c61061fe529b6ef9',
-      'scripts/agm_core/user_entries.py': 'b9c30258bc5659289dce22adc1ce07700b32271fe2ddbf24107825a63c6efea4'},
+    ({'scripts/agents.json': '50ca9e0e53bfc068a1b60efdf734a4be6e316a2ee3bffe4c4ceaa301700b4147',
+      'scripts/agm_core/user_entries.py': 'a8fad5f078b5ac32a33edf40b4be159ba7b59fd7d0c40d8e22a266d2c4af2586'},
      {'scripts/agents.json': '24258be62f8e4d5fe260a1578fbda55c456a74a4a812bc154bdadcdcee48e396',
       'scripts/agm_core/user_entries.py': '5cff6dfb0f21dc24b21b41b0b815bf4570cec3f795b41d7771054e52a191f789'}),
 )
@@ -76,7 +76,7 @@ def _fail(message, code='upgrade_conflict'):
 
 
 def marker(runtime):
-    return runtime.home / '.agents-group-upgrade.json'
+    return runtime.home / '.mem-sharing-upgrade.json'
 
 
 def _seal(plan):
@@ -112,8 +112,35 @@ def _legacy_contract_load_paths(runtime, allowed):
         for entry in platform.values():
             if isinstance(entry, dict):
                 for template in entry.get('user_skill_roots', []):
-                    extra.add(paths.expand_path(template, home=str(runtime.home)) + '/' + PRODUCT)
+                    # 前驱投影名是改名前历史产品名(§23),不是当前 PRODUCT。
+                    extra.add(paths.expand_path(template, home=str(runtime.home)) + '/' + install.LEGACY_PRODUCT_ID)
     return sorted(set(allowed) | extra)
+
+
+def _predecessor_whitelisted(runtime, request_source):
+    """已装代码与请求源是否恰为白名单入口合同对(只读预判,供路由/装载)。"""
+    files = (request_source or {}).get('files')
+    if not isinstance(files, dict):
+        return False
+    try:
+        meta = migrate._json(runtime.code/'.agm-code-manifest.json')
+    except (OSError, ValueError):
+        return False
+    before = {x['path']: x['sha256'] for x in meta.get('files', []) if isinstance(x, dict)}
+    contract_before = {name: before.get(name) for name in _ENTRY_CONTRACT_NAMES}
+    contract_after = {name: files.get(name) for name in _ENTRY_CONTRACT_NAMES}
+    return contract_before != contract_after and (contract_before, contract_after) in _ENTRY_CONTRACT_WHITELIST
+
+
+def _load_whitelisted_predecessor(path, allowed):
+    """白名单前驱(P)台账装载:旧 product_id(agent-group-memory)按 §23 改名语义
+    在内存规范化后校验;磁盘 V 字节不动——product_id 迁移是本对白名单转换的
+    一部分,随升级提交落账。非白名单场景一律走常规装载(漂移即拒)。"""
+    raw = migrate._json(path)
+    if isinstance(raw.get('product'), dict) and raw['product'].get('product_id') == 'agent-group-memory':
+        raw = copy.deepcopy(raw)
+        raw['product']['product_id'] = PRODUCT
+    return registry.require_installed(registry.validate_registry(raw, allowed_user_paths=allowed))
 
 
 def _conversion(request, data, target, direction):
@@ -170,7 +197,7 @@ def _plan(request, *, allow_marker=False):
     runtime = install._runtime(request)
     if os.path.lexists(marker(runtime)) and not allow_marker:
         _fail('Unfinished machine upgrade requires explicit recovery', 'recovery_required')
-    for opdir in sorted(runtime.home.glob('.agents-group-install-*')):
+    for opdir in sorted(runtime.home.glob('.mem-sharing-install-*')):
         if opdir.is_symlink() or not opdir.is_dir(): _fail('Unsafe existing operation')
         saved=migrate._json(opdir/'journal.json')
         if saved.get('product_id')!=PRODUCT or saved.get('status') not in ('committed','rolled_back'):
@@ -181,7 +208,7 @@ def _plan(request, *, allow_marker=False):
     target = versions.descriptor(runtime, source, files)
     allowed = paths.allowed_user_paths(request['platform_config'], None, home=str(runtime.home))
     op = migrate._op(request.get('operation_id') or datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex)
-    bootstrap = runtime.home/('.agents-group-install-'+op)
+    bootstrap = runtime.home/('.mem-sharing-install-'+op)
     direction = request.get('direction', 'upgrade')
     if direction not in ('upgrade','rollback'): _fail('Unknown direction')
     current = read_snapshot(runtime.registry)
@@ -204,9 +231,12 @@ def _plan(request, *, allow_marker=False):
         contract_after = {name: source['files'].get(name) for name in _ENTRY_CONTRACT_NAMES}
         whitelisted = (contract_before != contract_after
                        and (contract_before, contract_after) in _ENTRY_CONTRACT_WHITELIST)
-        # v1.11 前驱账本可能登记旧投影对象;白名单命中时先按前驱自身投影位装载。
-        load_allowed = _legacy_contract_load_paths(runtime, allowed) if whitelisted and direction == 'upgrade' else allowed
-        data = registry.require_installed(registry.load_registry(runtime.registry, allowed_user_paths=load_allowed))
+        # v1.11 前驱账本可能登记旧投影对象;白名单命中时先按前驱自身投影位装载,
+        # 并按 §23 改名语义在内存规范化旧 product_id(提交时随转换落账)。
+        if whitelisted and direction == 'upgrade':
+            data = _load_whitelisted_predecessor(runtime.registry, _legacy_contract_load_paths(runtime, allowed))
+        else:
+            data = registry.require_installed(registry.load_registry(runtime.registry, allowed_user_paths=allowed))
         install._code_matches(runtime, data['product'])
         old_product = copy.deepcopy(data['product'])
         old_source = dict(old_product['source'], version=old_product['product_code_version'])
@@ -221,7 +251,11 @@ def _plan(request, *, allow_marker=False):
         # any other hash pair for these two files still has no handler.
         if contract_before != contract_after and not whitelisted:
             _fail('Conversion has no handler for changed entry contract')
-        if not noop: data['product'] = _product(source, op, old_product)
+        if not noop:
+            data['product'] = _product(source, op, old_product)
+            if whitelisted:
+                # §23:本对转换同时承载产品定名迁移(agent-group-memory → mem-sharing)。
+                data['product']['product_id'] = PRODUCT
     if not noop and os.path.lexists(bootstrap): _fail('Operation exists; use recovery')
     facts = _entry_facts(data)
     if whitelisted and not noop and direction == 'upgrade':
@@ -248,7 +282,7 @@ def _plan(request, *, allow_marker=False):
         p = Path(output['path']).parent
         while p != runtime.home:
             dirs.add(str(p)); p = p.parent
-    for path in (runtime.home/'.agents-group-install.lock', runtime.lock, runtime.transaction_lock):
+    for path in (runtime.home/'.mem-sharing-install.lock', runtime.lock, runtime.transaction_lock):
         if os.path.lexists(path): _fail('Existing writer lock', 'lock_conflict')
     # A still-regular legacy ledger cannot coexist with V; tombstones stay intact.
     if current.kind != 'absent':
@@ -297,7 +331,7 @@ def _validate(plan):
         _fail('Invalid upgrade plan')
     runtime = RuntimeLayout(Path(plan['layout']['root']).parent); runtime.validate_paths()
     install._real_chain(runtime.code, runtime.home)
-    op = migrate._op(plan['operation_id']); bootstrap = runtime.home/('.agents-group-install-'+op)
+    op = migrate._op(plan['operation_id']); bootstrap = runtime.home/('.mem-sharing-install-'+op)
     if (plan['layout']!=runtime.describe() or plan['bootstrap']!=str(bootstrap)
             or plan['journal']!=str(bootstrap/'journal.json') or plan['archive']!=str(runtime.backups/('upgrade-'+op))):
         _fail('Upgrade path scope mismatch')
@@ -549,7 +583,7 @@ def _lock_paths(runtime,plan):
     if not old:
         after=json.loads(bytes.fromhex(plan['after_registry_hex']))
         old=sorted((after.get('migration') or {}).get('tombstones',{}))
-    return [runtime.home/'.agents-group-install.lock']+[Path(p).parent/'.agm.lock' for p in old]+[runtime.lock,runtime.transaction_lock]
+    return [runtime.home/'.mem-sharing-install.lock']+[Path(p).parent/'.agm.lock' for p in old]+[runtime.lock,runtime.transaction_lock]
 
 
 def _open_locks(stack,runtime,plan):

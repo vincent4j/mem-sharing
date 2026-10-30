@@ -7,7 +7,7 @@ installed stops the whole request before any write.
 
 Templates reuse the existing M2/M3 semantics instead of a second dialect:
 - WorkBuddy 用户约定: enable.py 的既有 user_convention 文本与 BASE_MARKER(测试锁定
-  两处文本一致),机器级块在其后追加 v1.11 治理条款与 /agent-group 菜单;
+  两处文本一致),机器级块在其后追加 v1.11 治理条款与 /mem-sharing 菜单;
 - Codex 用户级公共源块(native): 同一 BASE_MARKER 机制,追加“开工先读公共记忆”指针块
   (DESIGN §4.8),指向本机公共源索引 R/memories/MEMORY.md,并携带治理条款与菜单;
 - Claude @import(import_agents): 复用 enable.py 的引用行语义,引用同一公共源索引;
@@ -60,7 +60,7 @@ def _installer_source(code, fingerprint, *, preview):
 # enable.py 的既有 WorkBuddy 用户约定文本(读它复用,不另造第二份);测试锁定一致。
 WORKBUDDY_CONVENTION_TEXT = "项目规则读取当前项目根 AGENTS.md。保留已有公共源与用户约定。"
 
-# v1.11/v1.12/§16(2026-10-30 用户裁定)用户规则治理条款与 /agent-group 会话菜单:
+# v1.11/v1.12/§16(2026-10-30 用户裁定)用户规则治理条款与 /mem-sharing 会话菜单:
 # 写入用户级入口文本与公共源模板;菜单逐项映射既有命令与安装器参数,零新机制。
 # 术语用“启用/停用”(用户裁定,装配不好理解),命令名 enable-memory 等保持不变。
 GOVERNANCE_RULES_TEXT = (
@@ -91,7 +91,7 @@ def agent_group_menu_text(code):
     cli = "python3 %s/scripts/agm.py" % code
     installer = "python3 %s/scripts/install.py" % code
     return (
-        "/agent-group 菜单:"
+        "/mem-sharing 菜单:"
         "给项目启用记忆→%s enable-memory --project <项目绝对路径> --memory;"
         "添加新的 Agent→%s --agent <执行器名>(安装器同版幂等通道,先核验安装事实);"
         "健康检查→%s check-memory --project <项目绝对路径>;"

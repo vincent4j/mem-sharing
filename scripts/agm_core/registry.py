@@ -424,7 +424,7 @@ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
     product = data["product"]
     if product is not None:
         _keys(product, "product_id installation_id product_structure_version product_code_version source installation_status last_operation_id", "product")
-        if product["product_id"] != "agent-group-memory":
+        if product["product_id"] != "mem-sharing":
             _fail("product identity mismatch")
         _text(product["installation_id"])
         if type(product["product_structure_version"]) is not int or product["product_structure_version"] != 1:
@@ -492,9 +492,9 @@ def migration_journal_path(migration):
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", op):
         _fail("invalid migration operation ID")
     archive = _path(migration["archive_root"])
-    if archive.name != "m2-migration-" + op or archive.parent.name != "backups" or archive.parent.parent.name != ".agents-group":
+    if archive.name != "m2-migration-" + op or archive.parent.name != "backups" or archive.parent.parent.name != ".mem-sharing":
         _fail("invalid migration archive layout")
-    return archive.parent.parent.parent / (".agents-group-install-" + op) / "journal.json"
+    return archive.parent.parent.parent / (".mem-sharing-install-" + op) / "journal.json"
 
 
 def verify_archived_references(migration):
@@ -536,7 +536,7 @@ def require_installed(data):
             state = json.loads(journal.read_text(encoding="utf-8"), object_pairs_hook=_no_duplicates)
         except (OSError, UnicodeError, ValueError) as exc:
             raise RegistryError("migration_scene=interrupted; migration journal unavailable") from exc
-        if (state.get("product_id") != "agent-group-memory" or state.get("operation_id") != migration["operation_id"]
+        if (state.get("product_id") != "mem-sharing" or state.get("operation_id") != migration["operation_id"]
                 or state.get("status") != "committed"):
             _fail("migration_scene=interrupted; explicit machine recovery required")
         import hashlib
@@ -550,7 +550,7 @@ def require_installed(data):
             _fail("migration_scene=conflict; migration plan/installation identity changed")
         home = journal.parent.parent
         runtime_root = Path(migration["archive_root"]).parent.parent
-        locks = ([home / ".agents-group-install.lock"]
+        locks = ([home / ".mem-sharing-install.lock"]
                  + [Path(source).parent / ".agm.lock" for source in migration["tombstones"]]
                  + [runtime_root / "var/.agm.lock", runtime_root / "var/.agm.lock/transaction"])
         for lock in locks:

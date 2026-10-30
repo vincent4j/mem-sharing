@@ -21,7 +21,7 @@ class LifecycleCliTests(CliHarness):
         self.assertEqual(json.loads(self.registry.read_text())['projects'][str(self.root)]['memory_authorization'], 'no')
         for path in (self.root/'AGENTS.md', self.root/'CLAUDE.md', self.root/'.workbuddy/memory/MEMORY.md'):
             self.assertNotIn(b'<!-- context-keeper:', path.read_bytes())
-        self.assertIn(b'agent-group-memory:memory-denied:start', (self.root/'AGENTS.md').read_bytes())
+        self.assertIn(b'mem-sharing:memory-denied:start', (self.root/'AGENTS.md').read_bytes())
         self.assertEqual(self.snapshot(store, self.keeper), before)
         rc, envelope = self.check(); self.assertEqual(rc, 1, envelope)
         self.assertTrue(all(f['status']=='blocked' for f in envelope['projects'][0]['states']['bridge_assembled'].values()))

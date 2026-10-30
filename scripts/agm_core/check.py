@@ -32,7 +32,7 @@ from .registry import RegistryError, load_registry, require_installed
 # 未登记现场的只读观察;已登记现场的权威标记来自 registry 对象。
 BRIDGE_MARKERS = {
     "context-keeper": ("<!-- context-keeper:start -->", "<!-- context-keeper:end -->"),
-    "agent-group-memory": ("<!-- context-keeper:workbuddy:start -->", "<!-- context-keeper:workbuddy:end -->"),
+    "mem-sharing": ("<!-- context-keeper:workbuddy:start -->", "<!-- context-keeper:workbuddy:end -->"),
 }
 ALL_MARKER_PAIRS = tuple(BRIDGE_MARKERS.values())
 IMPORT_REFERENCE_LINE = b"@AGENTS.md"

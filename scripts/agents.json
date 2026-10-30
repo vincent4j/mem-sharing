@@ -40,7 +40,7 @@
           {"kind": "macos_app_bundle", "bundle_name": "WorkBuddy.app", "product_name": "WorkBuddy", "require_bundle_version": true, "require_signature_identifier_match": true, "strength": "strong"}
         ],
         "rule_mode": "user_convention",
-        "bridge_owner": "agent-group-memory",
+        "bridge_owner": "mem-sharing",
         "runtime_status": "pending"
       }
     }

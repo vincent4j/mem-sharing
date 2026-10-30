@@ -46,9 +46,9 @@ class LayoutRegistryTests(unittest.TestCase):
     def test_layout_resolution_has_no_side_effects(self):
         before = self.tree()
         self.assertEqual(layout.from_request(self.request), self.runtime)
-        self.assertEqual(self.runtime.registry, self.home / ".agents-group/var/registry.json")
-        self.assertEqual(self.runtime.transaction_lock, self.home / ".agents-group/var/.agm.lock/transaction")
-        self.assertEqual(self.runtime.backups, self.home / ".agents-group/backups")
+        self.assertEqual(self.runtime.registry, self.home / ".mem-sharing/var/registry.json")
+        self.assertEqual(self.runtime.transaction_lock, self.home / ".mem-sharing/var/.agm.lock/transaction")
+        self.assertEqual(self.runtime.backups, self.home / ".mem-sharing/backups")
         self.assertEqual(self.tree(), before)
 
     def test_missing_request_home_never_falls_back_to_host(self):
@@ -79,7 +79,7 @@ class LayoutRegistryTests(unittest.TestCase):
         self.assertEqual(normal["status"], aliased["status"])
         self.assertEqual(normal["errors"], [])
         self.assertEqual(aliased["runtime_layout"]["registry"],
-                         str(aliased_home / ".agents-group/var/registry.json"))
+                         str(aliased_home / ".mem-sharing/var/registry.json"))
         self.assertEqual(before, self.tree())
 
     def test_symlink_leaves_below_aliased_home_still_conflict_without_writes(self):

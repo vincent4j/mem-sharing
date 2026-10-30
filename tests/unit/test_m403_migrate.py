@@ -171,7 +171,7 @@ class MigrationTests(MigrationFixture):
         self.assertEqual(migrate.inspect_migration(self.runtime, [self.old], allowed_user_paths=self.allowed)['scene'], 'migrated')
         self.assertFalse(self.runtime.lock.exists())
         self.assertFalse((self.old.parent / '.agm.lock').exists())
-        self.assertFalse((self.home / '.agents-group-install.lock').exists())
+        self.assertFalse((self.home / '.mem-sharing-install.lock').exists())
 
     def test_archived_materials_remain_usable_after_old_backup_and_evidence_removed(self):
         self.apply()

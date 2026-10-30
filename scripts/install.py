@@ -25,7 +25,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agm_core import detect, legacy_import as legacy, migrate, paths, registry
 from agm_core import upgrade, user_entries, user_install
 
-OFFICIAL = 'https://github.com/vincent4j/agent-group-memory'
+OFFICIAL = 'https://github.com/vincent4j/mem-sharing'
+LEGACY_OFFICIAL = 'https://github.com/vincent4j/agent-group-memory'  # 远程改名前的旧 URL,仍视作官方来源
 INPUT_KEYS = {'source', 'conversions', 'legacy_registries', 'legacy_source_commits',
               'evidence_files', 'legacy_identity'}
 
@@ -95,7 +96,7 @@ def checkout_source(root, commit, version):
                             capture_output=True, text=True).stdout.strip()
     # Never echo an arbitrary remote URL: it may contain credentials. A local
     # checkout without the official origin is explicitly recorded as local.
-    url = OFFICIAL if origin in (OFFICIAL, OFFICIAL+'.git') else 'local-checkout:' + root.as_uri()
+    url = OFFICIAL if origin in (OFFICIAL, OFFICIAL+'.git', LEGACY_OFFICIAL, LEGACY_OFFICIAL+'.git') else 'local-checkout:' + root.as_uri()
     source = {'root': str(root), 'url': url, 'commit': commit, 'version': version, 'files': files}
     user_install._source({'source': source})
     return source

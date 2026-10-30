@@ -10,7 +10,7 @@ from pathlib import Path
 from . import legacy_import as legacy, migrate, registry
 from .transaction import read_snapshot
 
-PRODUCT = 'agent-group-memory'
+PRODUCT = 'mem-sharing'
 
 
 def root(runtime):
@@ -215,7 +215,7 @@ def installed_before(runtime, item):
         if path.name!=receipt['operation_id']+'-'+receipt['phase']+'.json':raise ValueError('Activation filename mismatch')
         if receipt['release'] != item: continue
         journal = Path(receipt['journal'])
-        if journal != runtime.home/('.agents-group-install-'+receipt['operation_id'])/'journal.json':
+        if journal != runtime.home/('.mem-sharing-install-'+receipt['operation_id'])/'journal.json':
             raise ValueError('Activation journal scope conflict')
         _chain(journal, runtime.home)
         planned = _proof(runtime,receipt['proof'],receipt['operation_id'])

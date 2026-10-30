@@ -109,7 +109,7 @@ class InstallerTests(InstallFixture):
         self.assertEqual(done['status'],'completed',done)
         entry=self.home/'.codex/AGENTS.md'
         self.assertTrue(entry.is_file())
-        self.assertIn('/agent-group 菜单',entry.read_text())
+        self.assertIn('/mem-sharing 菜单',entry.read_text())
         self.assertFalse((self.home/'.codex/skills').exists())
 
     def test_v0_layered_index_and_original_bytes_preserved(self):
@@ -124,10 +124,10 @@ class InstallerTests(InstallFixture):
         # 指纹随模板由 manifest 绑定,v0 原文复制语义不变。
         self.assertIn(user_entries.GOVERNANCE_RULES_TEXT,index)
         self.assertIn(user_entries.CLAUDE_FALLBACK_TEXT,index)
-        self.assertIn('/agent-group 菜单',index)
+        self.assertIn('/mem-sharing 菜单',index)
         package=Path(plan['plan']['legacy_import']['package'])
         self.assertEqual((package/'memories/MEMORY.md').read_bytes(),original['memories/MEMORY.md'])
-        self.assertTrue((self.runtime.root/'skills/example.txt').is_file())
+        self.assertTrue((self.runtime.legacy_root/'skills/example.txt').is_file())
         self.assertFalse((package/'skills').exists())
         self.assertTrue(result['copies']);self.assertTrue(result['exclusions'])
 
@@ -139,7 +139,7 @@ class InstallerTests(InstallFixture):
         self.assertIn('使用约定：',index);self.assertIn('(topics/使用约定.md)',index)
         self.assertIn(user_entries.GOVERNANCE_RULES_TEXT,index)
         self.assertIn(user_entries.CLAUDE_FALLBACK_TEXT,index)
-        self.assertIn('/agent-group 菜单',index)
+        self.assertIn('/mem-sharing 菜单',index)
         self.assertIn('批量启用记忆',index)
         topic=(self.runtime.root/'memories/topics/使用约定.md').read_text()
         self.assertLess(topic.index('## L1 概要'),topic.index('## L2 正文'))

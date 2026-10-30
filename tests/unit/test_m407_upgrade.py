@@ -87,7 +87,7 @@ class UpgradeTests(UpgradeFixture):
             rollback_target={'version':'0.4.0','tree_sha256':old_source['tree_sha256']})
         self.req.pop('source');shutil.rmtree(self.source)
         # Persistent inventory is sufficient after historical recovery material cleanup.
-        for op in self.home.glob('.agents-group-install-*'):shutil.rmtree(op)
+        for op in self.home.glob('.mem-sharing-install-*'):shutil.rmtree(op)
         shutil.rmtree(self.runtime.backups)
         plan=self.plan_upgrade();result=self.execute_upgrade(plan)
         self.assertEqual(result['status'],'completed');self.assertEqual(self.product()['product_code_version'],'0.4.0')

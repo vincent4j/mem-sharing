@@ -23,7 +23,10 @@ from . import detect, legacy_import as legacy, migrate, paths, registry, user_en
 from .layout import RuntimeLayout
 from .transaction import Snapshot, TransactionError, _apply, _atomic_file, read_snapshot
 
-PRODUCT = 'agent-group-memory'
+PRODUCT = 'mem-sharing'
+# §23 改名前的历史 product_id:仅用于识别白名单前驱(P)现场 C 上的旧代码清单,
+# 不是当前产品身份;台账装载仍只接受当前 id(白名单转换经 upgrade 规范化)。
+LEGACY_PRODUCT_ID = 'agent-group-memory'
 SCHEMA = 1
 JOURNAL_KEYS = 'schema_version product_id operation_id plan approval status intent created_directories completed snapshot_complete snapshot_location entry_registry_sha256 final_registry_sha256'
 PLAN_KEYS = 'schema_version command operation_id channel layout source source_files tools versions requested_agents effective_agents entry_plan entry_inputs observations scene_sha256 legacy_identity legacy_import outputs directories bootstrap journal staged_registry metadata_scopes changes agent_facts source_tree_sha256 inventory plan_sha256'
@@ -144,7 +147,7 @@ def _code_matches(runtime, product):
     marker = runtime.code / '.agm-code-manifest.json'
     meta = migrate._json(marker)
     registry._keys(meta, 'product_id source files', 'code manifest')
-    if meta['product_id'] != PRODUCT or meta['source'] != product['source']:
+    if meta['product_id'] not in (PRODUCT, LEGACY_PRODUCT_ID) or meta['source'] != product['source']:
         _fail('Code/ledger identity mismatch')
     expected = {str(runtime.code):_node(runtime.code), str(marker):_node(marker)}
     for item in meta['files']:
@@ -168,7 +171,7 @@ def inspect_machine(request):
     try:
         runtime = _runtime(request)
         result['layout'] = runtime.describe()
-        guard=runtime.home/'.agents-group-upgrade.json'
+        guard=runtime.home/'.mem-sharing-upgrade.json'
         if os.path.lexists(guard):
             result.update(scene='interrupted',errors=['upgrade marker: '+str(guard)])
             return result
@@ -188,12 +191,12 @@ def inspect_machine(request):
             # 入口文件父链不得为符号链接;叶子本身的类型由场景枚举如实记录。
             _real_chain(p.parent, runtime.home)
             observations[str(p)] = _node(p)
-        locks = [old.parent/'.agm.lock' for old in known_old] + [runtime.home/'.agents-group-install.lock',runtime.lock,runtime.transaction_lock]
+        locks = [old.parent/'.agm.lock' for old in known_old] + [runtime.home/'.mem-sharing-install.lock',runtime.lock,runtime.transaction_lock]
         for lock in locks:
             if os.path.lexists(lock):
                 result.update(scene='interrupted', errors=['writer lock: '+str(lock)])
                 return result
-        for opdir in sorted(runtime.home.glob('.agents-group-install-*')):
+        for opdir in sorted(runtime.home.glob('.mem-sharing-install-*')):
             if opdir.is_symlink() or not opdir.is_dir():
                 _fail('Unknown bootstrap path')
             try:
@@ -233,6 +236,7 @@ def inspect_machine(request):
             # v1.11:已装前驱(P)代码的 agents.json 自带 user_skill_roots 时,其 machine
             # 账可能登记旧投影对象(当前收窄路径表已不含投影位)。只读路由装载并入
             # 前驱自身投影位;写入授权仍由 upgrade 的精确白名单把关,此处零写入。
+            from . import upgrade as upgrade_module
             try:
                 installed_table = migrate._json(runtime.code/'scripts/agents.json')
             except (OSError, ValueError):
@@ -241,9 +245,13 @@ def inspect_machine(request):
                     isinstance(entry, dict) and 'user_skill_roots' in entry
                     for platform in installed_table.get('platforms', {}).values()
                     if isinstance(platform, dict) for entry in platform.values()):
-                from . import upgrade as upgrade_module
                 allowed = upgrade_module._legacy_contract_load_paths(runtime, allowed)
-            data = registry.require_installed(registry.load_registry(runtime.registry,allowed_user_paths=allowed))
+            # §23:白名单前驱(P)台账的 product_id 是改名前旧值——路由装载按改名语义
+            # 内存规范化;精确写入授权仍由 upgrade 的白名单+转换表把关。
+            if upgrade_module._predecessor_whitelisted(runtime, request.get('source')):
+                data = upgrade_module._load_whitelisted_predecessor(runtime.registry, allowed)
+            else:
+                data = registry.require_installed(registry.load_registry(runtime.registry,allowed_user_paths=allowed))
             _code_matches(runtime,data['product'])
             # Simultaneous regular old ledger is never selected by mtime.
             for old in known_old:
@@ -280,10 +288,13 @@ def inspect_machine(request):
             scene=migrate.inspect_migration(runtime,existing,allowed_user_paths=allowed)
             result['legacy_product']=scene
             if scene['scene']=='legacy_only':
-                result.update(scene='valid_old',channel='upgrade',content_candidate=any((runtime.root/n).exists() for n in legacy.ROOTS))
+                result.update(scene='valid_old',channel='upgrade',content_candidate=any((runtime.legacy_root/n).exists() for n in legacy.ROOTS))
             else:
                 _fail('Legacy product state: '+scene['scene'])
             return result
+        # §23:v0 源与目标分离——历史位置 ~/.agents-group(legacy_root)只作只读
+        # v0 源,完整枚举进 observations 绑定 scene;产品自身永不写入该目录。
+        observations.update(_walk(runtime.legacy_root))
         if os.path.lexists(versions.root(runtime)):
             _fail('Persistent product inventory without active ledger; explicit recovery required')
         if _node(runtime.code)['kind']!='absent':
@@ -292,22 +303,28 @@ def inspect_machine(request):
             backup=old.parent/'backups'
             if backup.exists() and (not backup.is_dir() or any(backup.iterdir())):
                 _fail('Known source recovery evidence without ledger')
+        # v0 历史位置中的产品痕迹(历史产品名目录/var 台账)排除纯 v0 身份。
         for rel in ('var','skills/agent-group-memory'):
-            if os.path.lexists(runtime.root/rel):
-                _fail('Product/unknown state without ledger: '+rel)
+            if os.path.lexists(runtime.legacy_root/rel):
+                _fail('Product/unknown state without ledger: '+str(runtime.legacy_root/rel))
+        if runtime.root.exists() and any(runtime.root.iterdir()):
+            # R(新位置)在无台账时不应有任何内容;v0 内容只认历史位置。
+            _fail('Unexplained content without ledger: '+str(runtime.root))
         if (runtime.backups.exists() and any(runtime.backups.iterdir())):
             _fail('Unexplained backups without ledger')
         for key, meta in observations.items():
-            if meta['kind']=='file' and not Path(key).is_relative_to(runtime.root):
+            if (meta['kind']=='file' and not Path(key).is_relative_to(runtime.root)
+                    and not Path(key).is_relative_to(runtime.legacy_root)):
                 raw=Path(key).read_bytes()
-                if b'agent-group-memory:' in raw or str(runtime.root/'memories/MEMORY.md').encode() in raw:
+                if b'mem-sharing:' in raw or str(runtime.root/'memories/MEMORY.md').encode() in raw:
                     _fail('Product entry without ledger')
-        empty = not runtime.root.exists() or not any(runtime.root.iterdir())
-        if empty:
+        legacy_present = runtime.legacy_root.exists() and any(runtime.legacy_root.iterdir())
+        if not legacy_present:
             result.update(scene='empty',channel='fresh')
         else:
-            # Full enumeration already performed, no unexplained signals remain.
-            result.update(scene='v0',channel='legacy_copy',content_candidate=True)
+            # 历史位置完整枚举已进 observations,无未解释产品信号 → v0 候选。
+            result.update(scene='v0',channel='legacy_copy',
+                          content_candidate=any((runtime.legacy_root/n).exists() for n in legacy.ROOTS))
     except (ValueError,OSError,KeyError,TypeError) as exc:
         result.update(scene='bad_registry' if 'layout' in result and Path(result['layout']['registry']).exists() else 'abnormal', channel='stop')
         result['errors'].append(str(exc))
@@ -354,11 +371,13 @@ def plan_install(request):
         _fail('Machine scene '+scene['scene']+': '+str(scene['errors']), 'machine_route_'+scene['scene'])
     source,files=_source(request)
     op=migrate._op(request.get('operation_id') or datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex)
-    bootstrap=runtime.home/('.agents-group-install-'+op)
+    bootstrap=runtime.home/('.mem-sharing-install-'+op)
     if os.path.lexists(bootstrap): _fail('Existing operation requires recovery')
-    if Path(source['root']).is_relative_to(runtime.root) or Path(source['root']).is_relative_to(runtime.code):
+    if (Path(source['root']).is_relative_to(runtime.root) or Path(source['root']).is_relative_to(runtime.code)
+            or Path(source['root']).is_relative_to(runtime.legacy_root)):
         _fail('Source overlaps managed installation')
-    imported=legacy.plan_import(runtime.root,op) if scene['scene']=='v0' else None
+    # §23:v0 源(历史位置,只读)与目标 R 分离;阅读包/快照全部落在 R 下。
+    imported=legacy.plan_import(runtime.legacy_root,runtime.root,op) if scene['scene']=='v0' else None
     identity=request.get('legacy_identity')
     if imported and identity not in (None,'confirmed_v0'):
         _fail('Previous product/uncertain identity: stop and recover')
@@ -368,7 +387,7 @@ def plan_install(request):
     outputs=[]
     def output(path,after,origin=None,content=None):
         before=_node(path)
-        if before['kind']!='absent' and before!=after and path!=runtime.root/'memories/MEMORY.md':
+        if before['kind']!='absent' and before!=after:
             _fail('Different bytes/type at target: '+str(path))
         outputs.append({'path':str(path),'before':before,'after':after,'origin':origin,'content_hex':None if content is None else content.hex()})
     for item in files:
@@ -387,7 +406,7 @@ def plan_install(request):
                '[概要与全文](topics/使用约定.md)\n').encode()
         topic=('# 使用约定\n\n## L1 概要\n\n'
                '当前有效结论：公共记忆采用索引与主题文件，摘要由 Agent 手写，不自动生成。\n'
-               '用户规则治理条款、兜底接入条款与 /agent-group 菜单全文见索引头部。\n'
+               '用户规则治理条款、兜底接入条款与 /mem-sharing 菜单全文见索引头部。\n'
                '待办：有新事实且获准记录时，更新对应主题结论与索引行。\n\n'
                '## L2 正文\n\n'
                '主题文件全文及 references/ 手册仅在概要不足时读取。\n'
@@ -411,10 +430,9 @@ def plan_install(request):
     index=index.replace('# 公共记忆\n\n'.encode(),('# 公共记忆\n\n'+contract).encode(),1)
     if imported:
         imported['index_hex']=index.hex()
-        for item in imported['items']:
-            if item['disposition']=='legacy_index': item['after']=legacy.digest(index)
+    # v0 源侧零写入:原文(含旧 MEMORY.md)原地不动;新索引是 R 下的全新文件。
     index_path=runtime.root/'memories/MEMORY.md'
-    output(index_path,{'kind':'file','sha256':legacy.digest(index),'mode':_node(index_path).get('mode',0o600)},content=index)
+    output(index_path,{'kind':'file','sha256':legacy.digest(index),'mode':0o600},content=index)
     # v1.11(2026-10-30 裁定):R 不建 skills/、mcp/,首装结构仅内容两目录+台账+备份。
     directories={str(runtime.root/n) for n in ('memories','memories/topics','references','backups','var')}
     if imported:
@@ -452,7 +470,7 @@ def plan_install(request):
         + [{'path':plan['inventory']['slot'],'operation':'register_persistent_version','before':_node(plan['inventory']['slot'])}]
         + [{'path':scope,'operation':'operation_metadata','before':{'kind':'absent'}} for scope in plan['metadata_scopes']]
         + [{'path':str(p),'operation':'writer_lock','before':{'kind':'absent'}} for p in
-           (runtime.home/'.agents-group-install.lock',runtime.lock,runtime.transaction_lock)])
+           (runtime.home/'.mem-sharing-install.lock',runtime.lock,runtime.transaction_lock)])
     plan['plan_sha256']=legacy.digest(legacy.encoded(plan))
     return plan
 
@@ -469,7 +487,7 @@ def _validate(plan, *, historical=False):
         versions.validate(runtime,plan['inventory'])
         if plan['inventory']!=versions.descriptor(runtime,plan['source'],plan['source_files']):_fail('Inventory/source mismatch')
     op=migrate._op(plan['operation_id'])
-    bootstrap=runtime.home/('.agents-group-install-'+op)
+    bootstrap=runtime.home/('.mem-sharing-install-'+op)
     if plan['layout']!=runtime.describe() or plan['bootstrap']!=str(bootstrap) or plan['journal']!=str(bootstrap/'journal.json') or plan['staged_registry']!=str(bootstrap/'staged-registry.json'):
         _fail('Plan scope mismatch')
     if plan['legacy_import'] and (plan['legacy_identity']!='confirmed_v0' or plan['channel']!='legacy_copy'):
@@ -560,28 +578,9 @@ def _source_unchanged(plan):
 def _content_scene(plan):
     imported=plan['legacy_import']
     if not imported:return
+    # §23 源/目标分离后 v0 源侧零写入:任何相对批准清单的变化都是漂移。
     now=legacy.inventory(imported['source_root'])
-    original=imported['source']['nodes']
-    package=Path(imported['package']).relative_to(Path(imported['source_root'])).as_posix()
-    old={n['path']:n for n in original}
-    new={n['path']:n for n in now['nodes'] if not (n['path']==package or n['path'].startswith(package+'/'))}
-    # Only exact planned additions (new standard content roots/topics) are ours.
-    added={Path(p).relative_to(Path(imported['source_root'])).as_posix() for p in plan['directories'] if Path(p).is_relative_to(Path(imported['source_root']))}
-    for output in plan['outputs']:
-        path=Path(output['path'])
-        if path.is_relative_to(Path(imported['source_root'])):
-            rel=path.relative_to(Path(imported['source_root'])).as_posix()
-            if rel not in old and rel in new and _node(path)==output['after']:
-                new.pop(rel)
-    for rel in list(new):
-        if rel not in old and rel in added and new[rel]['type']=='directory':new.pop(rel)
-    for rel,item in old.items():
-        if rel=='memories/MEMORY.md':
-            target=next(v for v in plan['outputs'] if v['path']==str(Path(imported['source_root'])/rel))
-            node=new.get(rel)
-            if node and node['type']=='file' and node['sha256']==target['after']['sha256']:
-                new[rel]=item
-    if set(new)!=set(old) or any(new[k]!=old[k] for k in old):
+    if now['tree_sha256']!=imported['source_tree_sha256']:
         _fail('v0 content changed outside approved before/after','source_drift')
 
 
@@ -894,7 +893,7 @@ def execute_install(plan,approval,*,request=None,hook=None):
     journal={'schema_version':1,'product_id':PRODUCT,'operation_id':plan['operation_id'],'plan':plan,'approval':approval,
         'status':'prepared','intent':{'kind':'bootstrap','path':str(bootstrap)},'created_directories':[], 'completed':[],
         'snapshot_complete':False,'snapshot_location':None,'entry_registry_sha256':None,'final_registry_sha256':None}
-    with migrate._lock(runtime.home/'.agents-group-install.lock',plan):
+    with migrate._lock(runtime.home/'.mem-sharing-install.lock',plan):
         # Recheck while owning installation lock, excluding that transient lock.
         # Independently compare every bound observation while owning the lock.
         if any(_node(p)!=n for p,n in plan['observations'].items()):_fail('Locked before scene changed','source_drift')
@@ -993,7 +992,7 @@ def plan_recovery(journal_path,*,action):
     journal,runtime=_load_journal(journal_path);plan=journal['plan']
     if action not in ('continue','rollback'):_fail('Unknown recovery action')
     scene=_recovery_scene(journal)
-    lockpaths=[runtime.home/'.agents-group-install.lock',runtime.lock,runtime.transaction_lock]
+    lockpaths=[runtime.home/'.mem-sharing-install.lock',runtime.lock,runtime.transaction_lock]
     locks=[obs for obs in (migrate._stale_observation(p,plan) for p in lockpaths) if obs]
     staged=_StagedLayout(runtime.home,plan['bootstrap'])
     # The op-local child lock has no other legitimate writer. Still require a
@@ -1073,7 +1072,7 @@ def recover_install(recovery_plan,approval,*,request=None,hook=None):
         (p/'migration-owner.json').unlink();p.rmdir()
     if recovery_plan['cleanup_only']:return {'status':journal['status'],'cleanup_only':True}
     req=_request(plan,request)
-    with migrate._lock(runtime.home/'.agents-group-install.lock',plan):
+    with migrate._lock(runtime.home/'.mem-sharing-install.lock',plan):
         _mkdir(journal,runtime.var,hook)
         with migrate._lock(runtime.lock,plan),migrate._lock(runtime.transaction_lock,plan):
             _recovery_scene(journal)

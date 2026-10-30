@@ -26,9 +26,9 @@ class OrganizeTests(unittest.TestCase):
         self.files={};self.managed={};self.unique={}
         for agent,name in [('codex','AGENTS.md'),('claude','CLAUDE.md'),('workbuddy','MEMORY.md')]:
             p=self.home/('.'+agent)/name;p.parent.mkdir()
-            block=('<!-- agent-group-memory:rules:start -->\r\n'
+            block=('<!-- mem-sharing:rules:start -->\r\n'
                    '只读公共记忆：这行有公共规则关键词但不得整理。\r\n'
-                   '<!-- agent-group-memory:rules:end -->').encode()
+                   '<!-- mem-sharing:rules:end -->').encode()
             self.managed[agent]=block
             special=('- '+agent+' 专属：使用专用执行器路径。\r\n').encode()
             self.unique[agent]=special
@@ -129,7 +129,7 @@ class OrganizeTests(unittest.TestCase):
         self.assertEqual(result['errors'][0]['code'],'drift');self.assertEqual(before,self.snapshot())
 
     def test_symlink_incomplete_markers_bad_encoding_and_target_escape_reject(self):
-        plan=self.preview();self.files['codex'].write_bytes(b'<!-- agent-group-memory:rules:start -->\nuser')
+        plan=self.preview();self.files['codex'].write_bytes(b'<!-- mem-sharing:rules:start -->\nuser')
         self.assertEqual(org.plan_organize(self.request)['errors'][0]['code'],'entry_conflict')
         self.files['codex'].write_bytes(b'\xff')
         self.assertEqual(org.plan_organize(self.request)['errors'][0]['code'],'encoding_conflict')

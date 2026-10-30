@@ -59,7 +59,10 @@ class InstallProcessTests(InstallFixture):
                         if action=='continue':self.assertEqual(install.inspect_machine(fixture.request)['scene'],'same')
                         else:
                             self.assertFalse(fixture.runtime.registry.exists())
-                            for rel,raw in before.items():self.assertEqual((fixture.runtime.root/rel).read_bytes(),raw)
+                            # §23:v0 源在历史位置,rollback 后整体原样;R 侧复制产物
+                            # (新索引)已回退,v0 归档证据按 metadata_scopes 设计保留。
+                            for rel,raw in before.items():self.assertEqual((fixture.runtime.legacy_root/rel).read_bytes(),raw)
+                            self.assertFalse((fixture.runtime.root/'memories/MEMORY.md').exists())
                     finally:fixture.doCleanups()
 
     def test_fixed_toolkit_can_finish_after_commit_without_original_source(self):
