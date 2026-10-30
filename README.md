@@ -116,7 +116,7 @@ Agent 会完成克隆、在家目录创建用户级中枢 `~/.agents-group/`、�
 ```text
 你的项目/
 ├── AGENTS.md                # 规则唯一源(已有则只追加桥接块，其余内容一字不动)
-├── CLAUDE.md                # 仅一行对 AGENTS.md 的引用
+├── CLAUDE.md                # 仅一行对 AGENTS.md 的引用(本机装有 Claude Code 时才创建)
 ├── docs/context-keeper/     # 项目记忆库：进度、计划、日志、经验(提交进 Git)
 └── (各家 Agent 的 Skill 入口与桥接——本机装配，不进仓库)
 ```
