@@ -6,7 +6,7 @@
 
 **周一用 Codex,周二用 WorkBuddy,同一个项目,同一份记忆。**
 
-[为什么需要](#-为什么需要-agent-group-memory) ·
+[为什么需要](#-为什么需要-multi-agent-memory-fusion) ·
 [快速上手](#-快速上手) ·
 [三命令](#-三命令与退出码) ·
 [设计理念](#-设计理念)
@@ -16,7 +16,7 @@
 ---
 
 <a id="为什么需要"></a>
-## 💡 为什么需要 agent-group-memory?
+## 💡 为什么需要 Multi-Agent Memory Fusion?
 
 你同时使用多个 AI Agent 时,是不是也遇到过这些问题?
 
@@ -26,7 +26,7 @@
 
 **难道每次换工具,都得你来交接进度、同步规则、检查配置?**
 
-agent-group-memory 一条命令,把「**项目规则单一源 + [context-keeper](https://github.com/vincent4j/context-keeper) 记忆库**」装配到三个执行器:规则三家同读,记忆三方共写,谁来了都接着干。
+Multi-Agent Memory Fusion 一条命令,把「**项目规则单一源 + [context-keeper](https://github.com/vincent4j/context-keeper) 记忆库**」装配到三个执行器:规则三家同读,记忆三方共写,谁来了都接着干。
 
 ### ✅ 在你用之前,你可能想知道
 
@@ -43,7 +43,7 @@ agent-group-memory 一条命令,把「**项目规则单一源 + [context-keeper]
 <a id="能帮你做什么"></a>
 ## 🎯 能帮你做什么?
 
-| 你遇到的问题 | agent-group-memory 怎么处理 | 你得到什么 |
+| 你遇到的问题 | Multi-Agent Memory Fusion 怎么处理 | 你得到什么 |
 |---|---|---|
 | 换工具就失忆,交接全靠你 | 把 context-keeper 记录库装配到三个执行器,新会话自动续接 | 周一 Codex、周二 WorkBuddy 无缝接力 |
 | 规则三处各写一份 | 项目根 `AGENTS.md` 单一规则源;CLAUDE.md 放 `@AGENTS.md` 引用;WorkBuddy 桥接由上游接管 | 一份规则,三家同读 |
@@ -76,7 +76,7 @@ agent-group-memory 一条命令,把「**项目规则单一源 + [context-keeper]
 **方式一(推荐):对 Agent 说人话。** 把下面这段话复制给任一已装本工具的执行器:
 
 ```text
-请用 agent-group-memory 给这个项目装配跨执行器记忆:先预览,把精确计划给我确认后再执行。
+请用 Multi-Agent Memory Fusion 给这个项目装配跨执行器记忆:先预览,把精确计划给我确认后再执行。
 ```
 
 **方式二:直接 CLI。** 在目标项目里执行(路径填本仓库 checkout):
