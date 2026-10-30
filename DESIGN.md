@@ -2,9 +2,9 @@
 
 多 Agent 跨执行器共享记忆:**不重复造轮子**。项目规则统一到项目根 `AGENTS.md`,项目记忆直接复用 context-keeper;本仓库只做跨执行器的互通与编排,并定义清楚三套系统的分工边界。
 
-- 版本:v1.6(2026-10-30,按 M4 review 裁定:安装通道加第四出口"异常现场零写入停止";v0 并入走源快照+manifest、同名 MEMORY.md 保留 legacy 主题;新增机器级独立安装入口 INSTALL.md+scripts/install.py;升级通道 M4 交付可运行闭环;入口只为已验证安装的执行器创建(覆盖 M2 默认三家);§4.8 生命周期差异纳入 M4)
+- 版本:v1.7(2026-10-30,用户裁定:①产品代码独立落位 `~/.local/share/agent-group-memory`,版本化存放、支持回退,`~/.agents-group` 只保留公共记忆与台账,`~/.agents/skills`(v0 共享 Skills)原地不动不接管;②运行时前置=已有 Python≥3.9 与 Git,缺失只说明安装步骤,不自动安装系统运行时)
 - 覆盖执行器:**Codex、Claude Code、WorkBuddy**
-- 历史沿革:v0.1 自建项目记忆已废弃(能力归 context-keeper);v0.2 起定位编排层;v1.1 按评审修订(check 只读、状态文件更名、授权四态、三执行器接力验收、M1 收敛、跨平台收紧);v1.2 用户级层并入产品范围;v1.5 安装三分法;v1.6 M4 review 七项阻断裁定
+- 历史沿革:v0.1 自建项目记忆已废弃(能力归 context-keeper);v0.2 起定位编排层;v1.1 按评审修订(check 只读、状态文件更名、授权四态、三执行器接力验收、M1 收敛、跨平台收紧);v1.2 用户级层并入产品范围;v1.5 安装三分法;v1.6 M4 review 七项阻断裁定;v1.7 代码独立落位与运行时前置裁定
 - **本期范围不含 Skills/MCP 管理**(用户决定,留待后续;项目级 Skills/MCP 继续由 v0 旧版 `project_manage.py` 负责,后续由本产品接管)
 
 ---
@@ -158,7 +158,7 @@ group 不是常驻进程,不存在"装机即感知"。**check 类只读、可自
 
 - **内核**:跨平台 Python 脚本,仅标准库(≥3.9,零 pip 依赖);
 - **外壳**:SKILL.md 告诉 agent 何时、如何调用与验收——用户说人话,agent 负责翻译成命令;
-- **安装**:仓库 clone 到家目录为唯一源(落位 `~/.agents-group/skills/agent-group-memory/`);M4 起由本产品用户级层自身定义执行器 Skill 投影(用户级 Skill 根路径在路径表登记,不依赖 v0 旧同步体系),经 `scripts/install.py` 独立机器级入口安装,即装即建 `~/.agents-group` 全套结构;
+- **安装**:仓库获取后落位 `~/.local/share/agent-group-memory`(产品代码唯一源,版本化存放、支持回退;不占用记忆中枢);M4 起由本产品用户级层自身定义执行器 Skill 投影(用户级 Skill 根路径在路径表登记,不依赖 v0 旧同步体系;`~/.agents/skills` 为 v0 共享 Skills 位置,原地不动、不迁移不接管),经 `scripts/install.py` 独立机器级入口安装,即装即建 `~/.agents-group` 全套结构;
 - **跨平台承诺收紧**:**M1 限定 macOS**(当前唯一已验证平台)。Windows/Linux 依赖上游安装策略——context-keeper 安装器使用目录 symlink 且拒绝现有复制目录,本工具**不自建第二套降级安装逻辑**;平台矩阵(安装/重装/卸载/失败恢复)留到 M2 按真实验收扩展。通用编码纪律先行:路径 `pathlib` + `Path.home()`、执行器路径表(含安装信号)、文件 UTF-8、子进程只调 Python 解释器。
 
 ### 4.7 目录结构
@@ -189,17 +189,16 @@ agent-group-memory/
 │   ├── MEMORY.md             #   索引:一主题一行 + 链接,≤200 行/25KB(常驻注入)
 │   └── <主题>.md             #   规则细节,索引引用、按需读(记忆多了加文件不加行长)
 ├── references/               # 操作手册类长参考(operations.md 等)
-├── skills/                   # 共享 Skills 公共源(受管;投影到各执行器 Skill 目录)
-│   └── agent-group-memory/   #   本产品自身落位(唯一源)
+├── skills/                   # 共享 Skills 公共源(内容;投影到各执行器 Skill 目录)
 ├── mcp/                      # 无密钥 MCP 声明,一文件一 server(<name>.json)
 ├── backups/                  # 操作前时间戳备份(带保留期限,90 天提醒清理)
 └── var/                      # 本机状态:registry.json(项目纳管 + 用户级指针记账 + 产品结构版本)、进程锁
 ```
 
 - **内容四目录(memories/references/skills/mcp)是产品结构**;**安装通道判别**(以 `var/` 台账判别,判别全程只读、零写入):目录不存在→**全新安装**;目录存在但无产品台账且无任何产品痕迹(= v0 存量,本机现状,**仅此一次**)→按全新安装执行,**原目录内容复制一份**并入(只并内容,不并脚本与状态);已有产品台账→**升级**;**台账损坏/中断残留/版本未知/身份矛盾等异常现场→零写入停止并报告恢复路径**,不猜、不退回全新安装、不重复导入(判不清不是 v0);
-- **v0 内容并入走源快照**:同路径不能既当源又当目标——获批后先在明确位置建**不可变源快照与导入 manifest**,新结构从快照读入;原文逐文件字节保留,不自动蒸馏;v0 既有 `memories/MEMORY.md` **保留为 legacy 主题文件,新索引链接它**,不覆盖不改名;references/skills 同路径同字节复用,异字节冲突停并展示;符号链接不解引用到目录外;二次安装走已装通道,不重复拷贝;**"用户内容不动"不含受管产品代码**——`skills/agent-group-memory/` 下的产品自身代码随版本可换;
+- **v0 内容并入走源快照**:同路径不能既当源又当目标——获批后先在明确位置建**不可变源快照与导入 manifest**,新结构从快照读入;原文逐文件字节保留,不自动蒸馏;v0 既有 `memories/MEMORY.md` **保留为 legacy 主题文件,新索引链接它**,不覆盖不改名;references/skills 同路径同字节复用,异字节冲突停并展示;符号链接不解引用到目录外;二次安装走已装通道,不重复拷贝;**"用户内容不动"不含受管产品代码**——产品代码独立落位 `~/.local/share/agent-group-memory`(版本化存放、支持回退,用户裁定 2026-10-30),不占用户内容位;
 - **升级通道必须可运行**:同版重装=无漂移幂等;支持的旧版=备份→已知转换→代码/受管机制更新→读回→台账最后提交;未知未来版本=拒绝,禁止降级到首装;产品代码版本、结构版本、schema 版本分开记账;
-- **独立机器级安装入口**:仓库根 `INSTALL.md` + `scripts/install.py`(复用既有事务/指纹/路径内核),承接 README"一键安装"承诺——任意 Agent 在非项目、空白机器环境按一句话即可完成安装;既有三命令保持项目级,不把任意 cwd 隐式变成项目;运行时(Python/Git)缺失时诊断+引导,不静默安装系统依赖;
+- **独立机器级安装入口**:仓库根 `INSTALL.md` + `scripts/install.py`(复用既有事务/指纹/路径内核),承接 README"一键安装"承诺——任意 Agent 在非项目、空白机器环境按一句话即可完成安装;既有三命令保持项目级,不把任意 cwd 隐式变成项目;运行时前置(用户已确认):**Python ≥3.9 与 Git 需已存在,缺失时只说明安装步骤,不自动安装系统运行时**;
 - **今后版本更新走升级通道**:产品自身后续版本安装到已有台账的机器上即升级——用户数据保留、结构演进、台账更新,不推倒重建;
 - **状态收编**:v0 散落的多套状态文件不迁移,由 `var/registry.json` 从零记账;**M2/M3 的 `scripts/registry.json` 是本产品自己的账本,保真迁移**(授权选择、所有权、消费者、证据不可归零),锁随迁 `var/`、备份在顶层 `backups/`;仓库不再持有本机状态;
 - 各执行器的用户级入口文件(`~/.codex/AGENTS.md` 等)不在本目录——它们是装配产物,由 registry 记账;
@@ -292,7 +291,7 @@ M3 已将 WorkBuddy 桥接交由 context-keeper 安装器管理。AGM 从上游�
 | M1.5(独立) | 用户级全面整理;(如需)memories/ 升级为"索引 + 主题文件"结构 | 用户逐项确认的迁移报告 |
 | M2 工具化 | 单一 CLI + 执行器路径表 + registry;平台矩阵(安装/重装/卸载/失败恢复,macOS 优先) | knowwind、poster-fit 复制,幂等重装通过 |
 | M3 上游回传(工作区实现) | 上游已接管 WorkBuddy 模板/install/ensure;本仓库改读上游模板并调用安装器,私有模板已删除 | 旧块字节兼容、无双入口、三项目只读 check;证据见 docs/acceptance/m3。未 commit/push,真机新会话验收可选 |
-| M4 用户级层产品化 | **安装即建 `~/.agents-group`**(公共源结构:memories 索引+主题、references、skills、mcp)+ 用户级入口指针装配(只为已验证安装的执行器)+ **安装通道判别落地**(全新/v0 存量复制(源快照+manifest)/升级/异常停止)+ **独立机器级安装入口**(INSTALL.md + scripts/install.py)+ **可运行升级**(同版幂等/支持旧版/未来版拒绝)+ `scripts/registry.json` 保真迁移至 `var/` + §4.8 生命周期最小落地。任务书 [docs/plan/tasks-m4.md](docs/plan/tasks-m4.md),决策单 [docs/plan/decisions-m4.md](docs/plan/decisions-m4.md) | 隔离证据矩阵(docs/acceptance/m4/);三执行器用户级指针新会话验收;真机 v0 时机由用户定 |
+| M4 用户级层产品化 | **安装即建 `~/.agents-group`**(公共源结构:memories 索引+主题、references、skills、mcp)+ 用户级入口指针装配(只为已验证安装的执行器)+ **安装通道判别落地**(全新/v0 存量复制(源快照+manifest)/升级/异常停止)+ **独立机器级安装入口**(INSTALL.md + scripts/install.py)+ **产品代码独立版本化落位**(`~/.local/share/agent-group-memory`,支持回退)+ **可运行升级**(同版幂等/支持旧版/未来版拒绝)+ `scripts/registry.json` 保真迁移至 `var/` + §4.8 生命周期最小落地。任务书 [docs/plan/tasks-m4.md](docs/plan/tasks-m4.md),决策单 [docs/plan/decisions-m4.md](docs/plan/decisions-m4.md) | 隔离证据矩阵(docs/acceptance/m4/);三执行器用户级指针新会话验收;真机 v0 时机由用户定 |
 | 后续 | 项目级 Skills/MCP 管理纳入(旧 project_manage 职责);其余执行器按同模式逐家接入 | — |
 
 ## 9. 对既有 `~/.agents-group` 实现的借鉴与简化

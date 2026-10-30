@@ -29,7 +29,11 @@ class RuntimeLayout:
 
     @property
     def code(self):
-        return self.root / "skills/agent-group-memory"
+        # 用户裁定(2026-10-30):产品代码独立于记忆中枢落位并版本化(支持回退),
+        # R 只保留公共记忆与台账。本路径恒指"当前生效版本";版本切换布局(如
+        # versions/<semver> + 指针)由 M4-07 定稿,故 code 暂不纳入 validate_paths
+        # 的符号链接禁用清单。
+        return self.home / ".local" / "share" / "agent-group-memory"
 
     @property
     def var(self):
