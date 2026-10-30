@@ -1,78 +1,67 @@
 ---
-name: agent-group-memory
-description: 多 Agent 记忆融合——跨执行器规则与项目记忆编排。enable-memory/remove-memory/check-memory 三命令已实现并在 macOS 完成安装/重装/卸载/失败恢复验收;Windows/Linux 未验证;WorkBuddy 桥接已由 context-keeper 上游接管,真机新会话验收待做。
+name: mem-sharing
+description: memSharing，多 Agent 记忆共享与融合。提供用户记忆与项目规则的启用、检查、停用、主动接入与整理操作路由；项目经历交由 Context Keeper。
 ---
 
-# Agent Group Memory
+# memSharing 操作说明
 
-> 当前状态(M3 收官,M4 进行中):三命令全部接线,281 项测试通过;WorkBuddy 桥接已回传
-> context-keeper 上游接管(M3,证据见 [docs/acceptance/m3/](docs/acceptance/m3/))。macOS 四项
-> 平台操作已验收(安装/重装含 M2-08 两项目真实装配与新会话读回、卸载、失败恢复,见
-> [docs/acceptance/m2-platforms.md](docs/acceptance/m2-platforms.md));Windows/Linux not-run,
-> 不得声称支持。WorkBuddy 桥接**待运行时验收**;M4(用户级层产品化)按
-> [docs/plan/tasks-m4.md](docs/plan/tasks-m4.md) 推进。唯一设计依据:[DESIGN.md](DESIGN.md) v1.10;
-> 实现合同:[docs/plan/architecture.md](docs/plan/architecture.md) v2;用户文档:[README.md](README.md)。
+唯一设计依据：[DESIGN.md](DESIGN.md) v1.14；最新替代关系以 [M4 决策 §14—§24（后续替代见 §25—§26）](docs/plan/decisions-m4.md) 为准。本文是仓库内操作说明，菜单由用户级规则文本承载，不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 CK 集成已通过；当前案例见 [M4-09](docs/acceptance/m4/m4-09/cases.md)。
 
-## 操作路由
+## 会话入口与六项菜单
 
-`/agent-group` 是产品 Skill 的会话入口，不是第四个 CLI 子命令。用户只打开入口、未指定操作时，展示以下菜单；用户已说明操作则直接路由：
+用户输入 `/mem-sharing` 且未说明操作时展示以下六项；已表达明确意图时直接路由，不重复问菜单。菜单不是新增 CLI 子命令。
 
-1. 给项目装配记忆 → `agm.py enable-memory --project <实际Git根>`。
-2. 添加新的 Agent → 请用户输入执行器名字，映射为 `codex`、`claude` 或 `workbuddy`，核验安装事实后走安装器同版幂等通道：`python3 -B scripts/install.py --source-manifest <已核验源JSON绝对路径> --agent <名字>`；按精确计划批准执行。
-3. 健康检查 → `agm.py check-memory --project <实际Git根>`（或明确请求的 `--all`）。
-4. 撤销装配 → `agm.py remove-memory --project <实际Git根>`，只撤销指定项目装配，保留机器安装与用户级接入。
+| 选项 | 操作路由 |
+|---|---|
+| 给项目启用记忆 | `python3 -B scripts/agm.py enable-memory --project <实际Git主checkout根>`；按默认启用与当前授权执行，不初始化 CK 记录库。 |
+| 添加新的 Agent | 输入名字，映射到 `codex`、`claude` 或 `workbuddy`，核验 installed 后运行安装器同版通道，使用 `--agent <名字>` 与已核验来源。 |
+| 健康检查 | `python3 -B scripts/agm.py check-memory --project <实际项目根>`；明确请求全量时使用 `--all`。始终只读。 |
+| 停用记忆 | `python3 -B scripts/agm.py remove-memory --project <实际项目根>`，只撤允许撤销的受管单元，保留机器安装、用户级接入、规则正文与记录库。`enable-memory --no-memory` 的事后撤权沿 R1 语义。 |
+| 整理用户规则 | 只读扫描，逐条分类与提议，允许批准前调整 decisions，一次批准完整计划后执行。 |
+| 批量启用记忆 | 用户给目录，扫描 Git 主 checkout，每项目一行预览，一次批准后复用 enable 内核批量执行。 |
 
-后装 Agent 接入不做自动化：不自动发现、不自动提示，由用户主动选择“添加新的 Agent”。名字输入不替代 installed 核验或精确计划批准；未知名字不猜测路径，未安装者不创建入口。安装事实核验只服务于用户主动请求。
+<!-- TODO（与代码侧核对）： 整理向导、批量启用的可执行入口及参数尚待集成冻结；不得自造 CLI。默认启用如何绑定规则授权、批量批准封皮及 --no-memory 的返回字段需对照新实现。 -->
 
-- 产品未安装 → 先读 [INSTALL.md](INSTALL.md)，从已核验源运行 `python3 -B scripts/install.py` 安装入口，并按安装页补齐 `--source/--commit/--version` 或 `--source-manifest` 后预览；经匹配的批准文件执行机器安装。以下三命令不隐式安装或升级产品，check 始终只读。
+后装 Agent 不自动发现、不自动提示；仅用户主动选“添加新的 Agent”后核验安装事实。名字、残留目录或 hint 不能代替 installed。absent 不创建入口，unknown 只报告不写。机器台账中的事实记录不驱动自动接入。
 
-- 用户请求装配/接入 → `python3 scripts/agm.py enable-memory [--project <Git根>] [--agent codex|claude|workbuddy ...] [--memory|--no-memory] [--approval-file <JSON>]`。
-  - 未指定 --agent 时仅选择已验证 installed 的执行器；显式 --agent 也不能绕过安装事实。absent 不创建入口，unknown 只报告不写，残留 hint 不构成安装事实（M4 合同覆盖旧 M2 默认三家）。
-  - 预览返回 5 时,把 stdout `next_action` 的精确计划用说人话转述给用户;用户确认后落盘为
-    批准文件(补 `confirmed_at` UTC-`Z` 时间戳与 `reference` 确认出处),经 `--approval-file` 执行。
-    非交互运行不得自行批准;现场与登记一致的幂等补装免新批准(由内核判定)。
-- 用户请求检查/周期巡检 → `python3 scripts/agm.py check-memory [--project <Git根>|--all]`;
-  只读,changes 恒为空,候选修复放 next_action,退出码 1 表示有缺口。check 不修复;缺口处置走 enable(一致修复)或人工核对。
-- 用户请求撤销 → `python3 scripts/agm.py remove-memory [--project <Git根>] [--approval-file <JSON>]`;
-  仅拆本工具创建的对象(链接与受管块),reused 内容、记录库与 context-keeper.json 永不触碰;
-  精确计划预览需交互终端,非交互无批准只返回 5 门禁提示。
-- 用户主动选择添加执行器后才进行接入核验；目录存在只是安装线索（hint），不构成安装事实，也不授权写入。
-- 不存在第四个项目修复命令；没有 --force/--repair。机器安装中断使用独立安装器的 `--recover <journal绝对路径> --action continue|rollback --approval-file <批准文件绝对路径>`，详见 [INSTALL.md](INSTALL.md)。项目事务恢复仍是库级操作，不擅自清锁或对生产台账执行恢复。
+## 安装与项目默认启用
+
+产品未安装时读 [INSTALL.md](INSTALL.md)，从已核验源调用 `python3 -B scripts/install.py`，补齐来源参数。先检查 Python、Git、已适配执行器，汇总一次确认；正常安装静默，最后简报后征询是否安装 CK。项目三命令不隐式安装或升级机器产品，check 不修复。
+
+用户级规则驱动尚未启用的 Git 主 checkout 默认启用：建立 `AGENTS.md` 骨架与纯协议桥接，已有正文保留，不重复询问是否启用。非 Git 不触发，worktree 明确报告未支持，不自动启用。项目记忆是规则；项目经历的记录库按 CK 首次 `/context-keeper` 流程初始化，不由默认启用创建。
+
+项目入口按实际使用驱动：Claude 首次在已启用项目实际使用且缺引用时幂等补 `CLAUDE.md` 引用；仅本机安装 Claude 不足以创建该文件。WorkBuddy 原生目录出现后才补顶部协议块，不预建目录。Codex 使用 `AGENTS.md`，无额外兜底入口。已有用户字节保留，受管单元漂移停写。
+
+## 用户规则治理
+
+Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep。公共内容只写 `~/.mem-sharing/memories/` 的指定文件，不写入各家私有用户规则文件；独有内容留各自用户文件。
+
+整理向导批准的是完整逐条计划加 `confirmed_at/reference`，一次确认，不使用 `item_confirmations`。每项绑定原文指纹；decisions 在批准前允许逐项改判，改判后的完整计划须重新匹配批准。删除、修改冗余或过时项只能提议，不能自动执行；独有/未知归属锁定 keep。旧整文件记录入口进入 `blocked_entries`，不扩大所有权，不先改后问。
+
+## 三种记忆与 Context Keeper
+
+用户记忆是跨项目习惯，位于 `~/.mem-sharing/memories/`；项目记忆是 `AGENTS.md` 规则；项目经历是 CK 的进度、决策、日志与积累，记录库默认位于项目 `docs/context-keeper/`，具体由 CK 定义。
+
+装机尾步按安装页的固定正向问句征询 CK 用户级安装，回车同意，n 跳过。同意后由 CK 自有安装器为全部已接入执行器安装；其 Skill 落位由 CK 负责。未装 CK 不报产品错误，用户记忆和项目记忆照常工作。
+
+项目 enable 不再调用 CK 安装器，不安装项目级 CK Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 CK 首次命令，装后行为完全由 CK 定义，memSharing 不接管保存或查找流程。
 
 ## 检索与分层读取
 
-检索 = 索引精确查找（find），不做语义搜索。按 [DESIGN v1.9 §4.7](DESIGN.md) 的读取约定：
+检索＝索引精确查找（find），不做语义搜索。
 
-- L0 恒读：`memories/MEMORY.md` 每主题一行，包含“主题名 + 一句话当前结论 + 链接”，索引不超过 200 行 / 25KB。
-- 需要时读该主题 L1：`memories/<主题>.md` 开头几行概要，说明当前有效结论与待办。
-- 仍不足才读 L2：主题全文与 `references/` 手册；不全量注入所有主题。
+- L0 恒读：`memories/MEMORY.md` 每行包含主题名、一句话当前结论、链接，上限 200 行／25KB。
+- 需要时读 L1：主题文件开头几行概要，包含当前有效结论与待办。
+- 仍不足读 L2：主题全文与 `references/` 手册。
 
-分层沿用索引和主题文件，不新增文件类型；概要由 Agent 整理时手写，不自动生成摘要；预算是固定惯例，不新增配置项。
+沿用索引与主题文件，不新增文件类型，不自动生成摘要；Agent 整理时手写概要，固定预算不变成配置项。
 
-## 输出与退出码
+## 执行与报告边界
 
-以下为项目三命令合同；机器安装报告见 [INSTALL.md](INSTALL.md)。
+机器批准采用完整 `approval_plan` 加真实确认出处，来源和现场变化必须重核；项目显式写操作遵守匹配计划，不自造批准。机器恢复使用 `--recover <journal绝对路径> --action continue|rollback`，执行另需 `--approval-file`，不能与普通安装混用。无 `--force/--repair`，不擅自删锁。
 
-stdout 恒为单个 JSON envelope,字段固定:schema_version、command、status、projects、changes、
-warnings、errors、approval_required、next_action;errors[] 每项含 code、path、message、recovery。
-退出码(裁定 D-M2-05):0 完成、1 check 缺口、2 参数/schema/冲突/执行或恢复失败、
-3 Keeper 迁移门禁、5 待授权;多结果优先级 2 > 3 > 5 > 1 > 0。
+底层诊断保留状态、精确变化、错误和恢复位置；成功对话遵守安装页的极简报告，不倾倒路径或未安装名单，不添加新会话自检提示。失败或 partial 如实说明未完成，不能凭退出码 0 声称三家运行时均已生效。
 
-## 必须保留的边界
+<!-- TODO（与代码侧核对）： 新版项目 envelope、退出码与字段清单；CK 的内部状态不作为 memSharing 项目规则启用的成功标准。 -->
 
-基座零依赖;记忆默认推荐 context-keeper。明确拒绝须记账且不重复追问。
-第四态(记录库已授权可用)之前不得写记忆。迁移门禁返回 3 立即停读写。
-created 对象外部漂移时 enable 拒绝写入,批准不能越过;恢复靠人工还原或 remove 后重装,
-重装会有 §已知限制 所述连接符换行重排(README)。
-WorkBuddy 桥接待运行时验收;新会话三执行器接力才证明共享有效。
-registry/备份是本机记账文件,不随 git 分发;新 clone 须重新 enable。
-本期不做 Skills/MCP 管理;仅支持主 checkout(裁定 D-M2-01:worktree 明确报告未支持)。
-非交互不猜测批准;TTY 只影响能否提问,不扩大权限。
-
-## 验收证据与限制引用
-
-- 平台矩阵与四项操作证据:[docs/acceptance/m2-platforms.md](docs/acceptance/m2-platforms.md);
-  幂等/故障矩阵:[docs/acceptance/m2-matrix.md](docs/acceptance/m2-matrix.md);
-  两项目复制验收:[docs/acceptance/m2-08/](docs/acceptance/m2-08/)。
-- 向用户转述装配结果时,如实区分:装配完成(rc=0、四态 ready)与运行时验收(pending)是两回事;
-  不得把 CLI 退出码 0 说成"三执行器共享已生效"。
+`AGENTS.md` 永不整文件删除；新建纯 CLAUDE 入口只在 created 证据完备时可删，有正文只撤允许撤销的单元，旧 reused 不追认删除权。记录库、私有记忆与其他 Skills/MCP 不由本产品删除。本轮不交付完整机器卸载。

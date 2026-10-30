@@ -1,97 +1,106 @@
-# 安装多 Agent 记忆融合
+# 安装 memSharing
 
-把下面这段复制给正在使用的任意 AI Agent，与 README 的安装请求一致：
+memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在使用的 Agent，与 README 一致：
 
 ```text
-请从 https://github.com/vincent4j/agent-group-memory 安装「多 Agent 记忆融合」，
-安装完成后告诉我装在了哪里、怎么给项目装配记忆。
+请从 https://github.com/vincent4j/mem-sharing 安装 memSharing（多 Agent 记忆共享与融合）。
 ```
 
-本文是独立机器安装操作页，无须先装本产品、v0 工具、Context Keeper 或项目配置，也不要求当前目录是 Git 项目。合同依据为 [M4 决策 §4、§8.2、§12](docs/plan/decisions-m4.md)；M4 验收状态见 [案例清单](docs/acceptance/m4/m4-09/cases.md)，本文不代表实际安装或新会话验收已通过。
+本页供未安装产品的 Agent 直接使用，无须先有产品 Skill、v0 工具、Context Keeper 或项目配置。依据 [DESIGN v1.14](DESIGN.md) 与 [M4 决策](docs/plan/decisions-m4.md)，冲突时采用后续 §14—§24（后续替代见 §25—§26） 裁定。本页描述目标流程，执行状态以实际结果为准；[M4-09 案例](docs/acceptance/m4/m4-09/cases.md) 尚待执行。
 
-## 运行时与来源
+## 用户看到的安装对话
 
-受支持系统为 macOS，需已有 Python ≥3.9 和 Git。先检查 `python3 --version` 与 `git --version`。缺 Python 时由 Agent 或用户报告解释器无法启动，并说明手动安装 Python 3.9 或更高版本、重新打开终端再核对版本的步骤；缺 Git 时说明手动安装 Git、重新打开终端再核对版本的步骤，或提供已核验本地源的路径。安装器不自动安装系统运行时，缺必要依赖时不得报告完成；“零前置”不等于零系统依赖。Windows/Linux 不声明生产支持。
+先回复：“我来安装 memSharing，先检查运行环境和本机 Agent。”随即执行以下流程。
 
-来源限上述官方仓库或用户明确提供的已核验本地 checkout。获取前固定完整 commit，核验产品代码版本与逐文件清单，记录来源 URL、commit 和清单哈希；执行中不浮动跟随 HEAD，不对 dirty checkout 做 reset/pull。获取须在安装请求与批准涵盖的暂存范围内，并由 bootstrap manifest 追踪；普通 help/check/规划不 clone、不创建缓存。网络获取遵守当前环境的委派边界，不用远程脚本管道执行。外层获取和安装器只读预览分别报告。
+1. **先检查，集中确认。** 检查 Python、Git、本机已适配 Agent，汇总哪些环境就绪、哪些依赖待安装、检测到哪些 Agent，并明确将为这些 Agent 安装入口。一次确认，回车即开始；不把 unknown 或残留目录列为已安装。
+2. **确认后静默执行。** 准备依赖、获取固定来源、核验、安装和接入正常情况下不逐步播报、不重复询问。冲突、漂移、v0 身份不明或实际权限阻塞时停止，说明具体现场与所需处置；一次确认不授权覆盖未知内容。
+3. **完成后极简报告。** 例如：“已创建用户记忆中枢，已为 Codex、Claude Code 启用用户记忆入口。”名单必须来自实际结果。不报产品代码路径，不提未安装执行器，不加新会话自检提示，也不加“将来新装 Agent”提示句。后装接入说明在 [README](README.md)。失败或 partial 不套用成功句式。
+4. **紧接着询问 CK。** 使用以下固定正向话术，回车同意，输入 n 跳过：
 
-## 预览、批准与执行
+> 最后：为了让你的所有项目都能记住并续接工作经历，我们将为已接入的每个 Agent 安装项目经历引擎 Context Keeper（用户级）——它与本产品出自同一作者。同意吗？
 
-在已核验源中运行（从其他目录调用时使用脚本绝对路径）：
+同意后由安装器编排 CK 自有安装器，为**全部已接入执行器**完成用户级安装，Skill 落位由 CK 负责。只有明确的交互回车才算同意；无响应、非交互 EOF 不等于同意。装后只提醒：“在任意需要的项目里使用 `/context-keeper`。首次使用按它的流程创建项目记录库，记录库随 Git 走，各家 Agent 共用。”到此结束。
 
-```bash
+跳过 CK 不影响用户记忆与项目记忆。装 CK 不等于所有项目立即创建记录库；项目经历按项目首次命令激活。装后 CK 的命令、记录格式、保存与查找行为均由 CK 自行定义，memSharing 只保留桥接文本协议。
+
+## 运行时准备
+
+当前生产范围为 macOS。Python **≥3.9 的任意版本**直接放行，不强制替换为某个特定版本。Python 未安装或低于 3.9 时，经上述确认通过系统包管理器安装最新稳定版；Git 缺失同样安装，全部就绪后继续。检测、安装与重新核验属于外层安装编排，缺 Python 时不能声称 Python 安装器已运行。
+
+使用现场可用的系统包管理器，例如 Homebrew；不为本文自行固定版本或远程脚本管道。包管理器不存在、权限不足、安装失败或安全验证受阻时如实暂停，不把依赖安装失败报作 memSharing 完成。网络任务仍遵守环境委派边界。
+
+<!-- TODO（与代码侧核对）： 系统检查、一次确认、Python/Git 自动安装的外层执行入口、包管理器选择及不存在时的处理；不得把当前 Python CLI 的缺依赖诊断分支当作已实现自动安装。 -->
+
+## 来源与目录
+
+来源为 `https://github.com/vincent4j/mem-sharing`，或用户提供并核验的本地 clean Git checkout。固定完整 commit、代码版本与逐文件清单，执行中不浮动跟随 HEAD，不 reset/pull 用户 dirty checkout。获取必须在请求与批准范围内；help、check、预览不 clone、不建缓存。外层获取与机器安装分别保留操作证据。
+
+| 标识 | 路径或值 |
+|---|---|
+| R，用户记忆中枢 | `~/.mem-sharing` |
+| C，唯一活动代码 | `~/.local/share/mem-sharing` |
+| V，唯一活动台账 | `~/.mem-sharing/var/registry.json` |
+| 版本库存 | `~/.local/share/mem-sharing-versions` |
+| bootstrap 操作目录 | `~/.mem-sharing-install-<op>/` |
+| product_id | `mem-sharing` |
+| 受管标记前缀 | `mem-sharing:*` |
+| v0 历史源 | `~/.agents-group`，只读来源，原地保留 |
+
+中枢只包含 memories、references、backups、var，不建 skills/mcp，不创建 memSharing Skill 投影；菜单 `/mem-sharing` 由用户级规则块承载。旧标记与现网文件不能因改名被自动接管，按漂移处理，真实重建留 M4-10。运行中的本地 checkout 不在本次操作中改目录名。
+
+四通道仍为：全新、确认的 v0 内容复制、有效产品升级（同版幂等）、异常停止。v0 从历史源复制到新 R，只纳入 memories/references；skills、mcp、旧脚本与状态原地保留，不运行、不接管。源目标天然分离，不改写旧源索引；旧索引作为原文与链接上下文保留，新索引只索引它。保留清单、恢复材料、逐字节验证与一次导入约束；同路径夹具的快照语义不等于真机必须改写旧源。
+
+<!-- TODO（与代码侧核对）： 分离源/目标后的 v0 阅读包、索引与恢复材料实际路径，以及旧产品标记/旧台账到新 product_id 的拒绝或迁移识别；不把改名当作覆盖旧现场的授权。 -->
+
+## 给执行 Agent 的命令与批准合同
+
+以下为既有参数面，新版集成时复核；尖括号内容须替换为真实核验值。普通安装预览二选一：
+
+```text
 python3 -B scripts/install.py --source /absolute/path/clean-checkout --commit <完整SHA> --version <SemVer>
 python3 -B scripts/install.py --source-manifest /absolute/path/source.json --agent codex --agent claude
 ```
 
-示例中的 `<完整SHA>` 与 `<SemVer>` 必须替换为核验值，不直接粘贴尖括号占位符。`--source-manifest` 的 JSON 含 `root/url/commit/version/files`，与 `--source/--commit/--version` 二选一。无批准只输出 `approval_plan`。安装器先排异常，再按四通道处理：全新安装、明确确认的 v0 存量复制、有效产品升级（含同版幂等）、异常停止。没有台账不自动视为 v0；非空无痕迹目录仍需真实 v0 身份确认。坏台账、未来版、来源漂移、未知身份或中断现场均停止普通安装。
-
-计划明确来源、目标、执行器与精确写集后，由用户确认，再把确认承载于绝对路径批准文件：
+`source.json` 含 `root/url/commit/version/files`，不与 source/commit/version 混用。无批准输出 `approval_plan`，批准文件为完整计划加真实 `confirmed_at/reference`，一次用户确认由执行编排绑定到精确计划，不额外制造逐项确认，也不伪造确认。锁内重核，计划外变化停止。
 
 ```bash
 python3 -B scripts/install.py --approval-file /absolute/path/install-approval.json
 ```
 
-若预览显式选择执行器，执行时保持同一选择。`--agent` 可重复，不能绕过 installed 判定。默认只接入已验证 installed 者；absent 不预建目录，unknown 只报告不写。批准后安装器落位活动代码 `C = ~/.local/share/agent-group-memory`，建立公共中枢 `R = ~/.agents-group`、统一台账 `V = R/var/registry.json`，装配 installed 执行器用户入口与本产品 Skill，读回并报告。持久版本库存为 `~/.local/share/agent-group-memory-versions`，布局与回退遵守决策 §12，不自行改成 current 符号链接。
+`--operation-id` 可绑定操作，重复 `--agent` 限定目标，不豁免安装事实；`--request-file` 承载既有 conversions、legacy_registries、legacy_source_commits、evidence_files、legacy_identity 输入。批准 envelope 绑定来源、三版本、现场指纹、精确 changes、R/C/V、请求与有效执行器、恢复路径及旧证据映射。
 
-机器批准 envelope 使用独立 schema=1，绑定 command、op、R/C/V、来源与提交/清单、通道、三版本、请求/有效执行器、现场观察总指纹、精确 changes、快照/备份/暂存路径、旧账/证据映射、v0 身份确认（无则 null）、confirmed_at/reference。批准文件承载既有确认，不自证授权，不复用项目批准键。写前锁内重核，计划外变化即停。
+独立获取为 `--acquire --staging <绝对且不存在目录> --commit <完整SHA> --version <SemVer>`，先预览，批准后加 `--approval-file` 执行；不与普通安装或恢复参数混用。`acquired` 只表示获取完成，不表示产品安装完成。默认启用、整理向导、批量启用和 CK 安装的新接口未冻结部分不得自造参数。
 
-批准文件等于输出的完整 `approval_plan` 加 `confirmed_at` 与 `reference`，不得裁剪或重造计划。`--operation-id` 可显式绑定操作；执行可从批准中读取已保存请求，再重核现场。`--request-file <绝对JSON路径>` 承载 `conversions/legacy_registries/legacy_source_commits/evidence_files/legacy_identity`；这些是内核计划输入，不是绕过来源核验或现场授权的开关。安装中断或崩溃后的恢复走独立入口 `--recover`（见下文"故障恢复"）；本 CLI 不提供日常版本降级，主动版本回退由升级内核按版本库存另立新计划执行。
+## 诊断报告与用户简报
 
-独立源码获取模式为 `--acquire --staging <绝对且不存在的目录> --commit <完整SHA> --version <SemVer>`，先预览，获批后同参数加 `--approval-file` 才 clone。该模式不与普通安装/恢复参数混用；获取状态 `acquired` 只表示源码取得，`installation_complete` 仍为 false。执行网络获取仍须遵守环境委派边界。
+完整底层报告保留给执行 Agent 和验收使用，不在成功对话中逐项倾倒。至少保留：状态与通道，R/C/V，代码/结构/schema 三版本及升级前后值，URL/commit/清单哈希，op 与恢复位置，已接入/absent/unknown/未选事实，复制/排除/冲突项，实际项目下一步，以及运行时验证状态。
 
-v0 仅按批准清单快照并入 memories/references/skills，保留原文及相对链接上下文；旧索引另有快照与 legacy 阅读包。异字节冲突先停，外链不解引用复制，旧脚本/状态/mcp 不迁移、不运行。不得操作旧管理器或接管其他 Skills。
+既有字段包括 `status/layout/versions/source/operation_id/recovery/agents/copies/exclusions/project_commands/runtime_acceptance/connection_pending`，预览带 `approval_plan`。下载成功而入口失败必须 partial；无 installed 不得说各家已启用。静态入口读回与新会话表现分开记录，用户简报不添加自检要求。
 
-## 如何读结果报告
+<!-- TODO（与代码侧核对）： 新报告中的 CK 同意/跳过/失败、依赖准备结果、partial 成功子项、无 installed 分支及不再使用的历史字段清理。保留诊断完整性，不恢复已取消的用户路径播报。 -->
 
-以下是必报语义，不约定尚未冻结的 JSON 嵌套或字段别名。
+## 项目使用
 
-| 报告内容 | 含义与完成边界 |
-|---|---|
-| 状态与通道 | 区分预览、完成、partial、异常及恢复待办；下载或 clone 完成而接入失败必须报 partial，不能说安装完成。 |
-| R / C / V | 公共中枢、唯一活动代码、唯一活动台账的实际绝对路径；开发 checkout 仅为本次来源。 |
-| 三版本 | product_code_version、product_structure_version、schema_version 分开报告，升级列 before/after；DESIGN 版本不能代替代码版本。 |
-| 来源 | URL、本次固定 commit、代码清单哈希，用于核验实际安装字节。 |
-| op 与恢复位置 | 本次操作标识、manifest/journal、固定恢复工具包、快照/备份/暂存路径；恢复前仍需核验。 |
-| 执行器 | 分列已接入、absent、unknown、未选及接入失败者；无 installed 时只能报中枢已建、接入待办。 |
-| 复制与排除项 | 每项实际 copy/reuse/legacy_index/excluded/conflict 及原因；外链目标不能算已复制或审查。 |
-| 项目下一步 | 使用用户指定的实际项目绝对根路径给出装配命令，不把安装目录当项目。 |
-| runtime pending | 脚本、Skill、入口、台账读回只能证明静态安装；新会话读取公共记忆及项目接力需独立验收。 |
-
-代码侧报告字段对应：`status`、`layout`、`versions`、`source`、`operation_id`、`recovery`、`agents.connected/absent/unknown/unselected`、`copies`、`exclusions`、`project_commands`、`project_root_required`、`runtime_acceptance`、`connection_pending`、`result`、`entries`。预览另含 `approval_required/approval_plan`。退出码：待批准为 5，completed/acquired/rolled_back 为 0，partial/failed 为 2；必须同时读状态，不能仅凭退出码 0 推断安装完成。
-
-<!-- TODO(与代码侧核对): 集成时复核 partial 报告是否保留已成功接入子项、channel 与 before/after 三版本如何在最终报告呈现，以及备份/暂存/排除项能否由 recovery/result 精确追溯；这是 §4 报告完整性核对，不新增字段合同。 -->
-
-装完后要接入后来新装的 Agent：进入 `/agent-group` →“添加新的 Agent”→ 输入执行器名字，由安装事实核验及同版 `--agent` 计划完成接入；不自动发现或提示。
-
-## 给项目装配记忆
-
-将 `/absolute/path/to/project` 替换为用户明确指定的实际 Git 主 checkout 根，再预览：
+进入未启用的 Git 主 checkout 时，用户级规则默认启用项目记忆，保留原正文，只建立所需骨架与协议；非 Git 不触发。人工入口为 `/mem-sharing` 的“给项目启用记忆”，底层示例使用实际项目根：
 
 ```bash
-python3 -B "$HOME/.local/share/agent-group-memory/scripts/agm.py" enable-memory --project /absolute/path/to/project
+python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" enable-memory --project /absolute/path/to/project
+python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" check-memory --project /absolute/path/to/project
 ```
 
-按项目计划确认是否启用记忆及记录库位置，再使用该项目的批准文件执行：
+默认启用不初始化 CK 记录库、不调用 CK 安装器、不安装项目级 Skill。项目经历初始化由首次 `/context-keeper` 流程负责。CLAUDE 引用与 WorkBuddy 桥接按执行器在该项目实际使用创建，不因机器已装执行器而预创建。
 
-```bash
-python3 -B "$HOME/.local/share/agent-group-memory/scripts/agm.py" enable-memory --project /absolute/path/to/project --approval-file /absolute/path/project-approval.json
-python3 -B "$HOME/.local/share/agent-group-memory/scripts/agm.py" check-memory --project /absolute/path/to/project
-```
-
-机器安装不自动授权任意项目记录库。项目三命令不隐式安装/升级，check 始终只读。`remove-memory --project ...` 仅撤销指定项目的本工具装配，保留机器安装、用户级接入、记录库和规则正文；本期无完整产品卸载命令。
+`remove-memory --project ...` 只停用指定项目允许撤销的受管单元，保留机器入口、规则正文与记录库；没有完整机器卸载命令。项目命令不隐式安装或升级机器产品。
 
 ## 故障恢复
 
-普通安装发现未完成操作时停止并报告恢复位置，不自动删锁、不重新首装或重复导入。核对原 op、批准、固定工具包、快照/备份及现场 before/after；第三种字节或材料缺损即停。恢复是独立模式，必须有针对恢复计划的批准文件：
+中断现场停止普通安装，保留 journal、锁和材料，不自动删锁，不回到首装。独立预览和获批执行：
 
 ```bash
 python3 -B /absolute/path/verified-source/scripts/install.py --recover /absolute/path/journal.json --action continue
 python3 -B /absolute/path/verified-source/scripts/install.py --recover /absolute/path/journal.json --action continue --approval-file /absolute/path/recovery-approval.json
 ```
 
-不能与普通安装混用；本示例中的源须仍完整可用，活动 C 混版时应采用报告指向的固定恢复工具包。无批准的恢复命令只输出 `approval_plan`；批准等于该计划加真实 `confirmed_at/reference`。需要回滚时将 `--action` 明确选为 `rollback`，重新预览并批准。继续/回滚须按冻结恢复合同选择：V 已提交且输出全为 after 时只收尾，不能借故障恢复撤回已提交版本；主动回退另走 §12 的新计划。保留失败现场，不猜成功。
+选择回滚须改为 `--action rollback`，重新预览并批准。before/after 之外第三种字节、材料缺损或工具漂移即停；V 已提交且输出全 after 时只收尾。活动 C 混版时使用报告所指固定恢复工具，不依赖半替换的安装器。
 
-`--recover` 接受安装、升级或迁账 journal，不能混用普通安装/获取参数。活动 C 不完整时，固定升级工具包提供 `python3 -B <bootstrap>/recover.py preview <journal> continue` 与 `python3 -B <bootstrap>/recover.py apply <批准计划JSON>`；使用报告所指的已核验工具包，不能把两种入口参数混用。
-
-<!-- TODO(与代码侧核对): 集成时核对首装/迁账故障下固定恢复工具入口的可达性；升级工具包接口以 M4-07 交接为据，不将其泛化到所有恢复来源。 -->
+固定升级工具包沿用 `recover.py preview <journal> continue` 与 `recover.py apply <批准计划JSON>`；其他场景入口待集成核对。日常主动版本回退是版本库存的新计划，不等同于故障 rollback，本安装 CLI 不增加未冻结降级参数。

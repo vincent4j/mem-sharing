@@ -1,37 +1,39 @@
-# 多 Agent 记忆融合：文档地图
+# memSharing · 多 Agent 记忆共享与融合：文档地图
 
-根目录与 docs/ 下的 Markdown 文档逐项索引（不含 vendored Skill、代码及测试夹具）。验收目录内的快照是证据，不是当前操作指南；当前入口从 INSTALL.md 与 SKILL.md 开始。
+给你的每一个 AI Agent 同一份记忆。
+
+索引仓库根与 docs 的产品文档及记录库入口，不展开历史日志、计划和经验正文，不含 vendored Skill、代码及测试夹具。当前入口从 INSTALL.md、README.md 与 SKILL.md 开始。验收快照是历史证据，不是当前操作指南；旧标题保留文件原名，不代表沿用旧品牌或已替代合同。链接只按当前 checkout 核对，安装产物需另核发布清单。
 
 ## 安装
 
-- [安装多 Agent 记忆融合](INSTALL.md)：独立机器安装、批准、报告与恢复操作页。
+- [安装 memSharing](INSTALL.md)：独立安装剧本、一次环境确认、CK 尾步与故障恢复。
 
 ## 使用
 
-- [agent-group-memory 项目规则](AGENTS.md)：项目规则或使用记录；历史日志只作来源，不替代当前授权。
-- [CLAUDE](CLAUDE.md)：项目规则或使用记录；历史日志只作来源，不替代当前授权。
-- [多 Agent 记忆融合](README.md)：产品介绍与可复制的一句话安装请求。
-- [Agent Group Memory](SKILL.md)：/agent-group 会话菜单、主动接入与既有命令路由。
-- [自我进化索引](docs/context-keeper/evolution/index.md)：项目规则或使用记录；历史日志只作来源，不替代当前授权。
-- [项目记忆索引](docs/context-keeper/memory-keeper.md)：项目规则或使用记录；历史日志只作来源，不替代当前授权。
+- [agent-group-memory 项目规则](AGENTS.md)：项目规则或记录索引；历史记录不替代当前授权。
+- [CLAUDE](CLAUDE.md)：项目规则或记录索引；历史记录不替代当前授权。
+- [memSharing · 多 Agent 记忆共享与融合](README.md)：memSharing 介绍、三种记忆、安装请求与添加新 Agent FAQ。
+- [memSharing 操作说明](SKILL.md)：/mem-sharing 六项菜单、默认启用、实际使用兜底与用户规则治理。
+- [自我进化索引](docs/context-keeper/evolution/index.md)：项目规则或记录索引；历史记录不替代当前授权。
+- [项目记忆索引](docs/context-keeper/memory-keeper.md)：项目规则或记录索引；历史记录不替代当前授权。
 
 ## 设计
 
-- [agent-group-memory(多 Agent 记忆融合)设计方案](DESIGN.md)：当前产品设计、轻量化边界与 L0/L1/L2 读取约定。
-- [实现架构 v2（M2-01 定稿稿）](docs/plan/architecture.md)：设计合同、任务安排或历史裁定，采用前核对新裁定。
+- [agent-group-memory（多 Agent 记忆融合）设计方案](DESIGN.md)：设计与实现边界；历史条款须结合 M4 决策 §14—§24（后续替代见 §25—§26） 的替代关系阅读。
+- [实现架构 v2（M2-01 定稿稿）](docs/plan/architecture.md)：设计与实现边界；历史条款须结合 M4 决策 §14—§24（后续替代见 §25—§26） 的替代关系阅读。
 
 ## 验收
 
 - [M1-01 接口冻结与 dogfood 预检](docs/acceptance/m1-01/preflight.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [M1-02 规则基座装配 — 执行证据](docs/acceptance/m1-02/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-02 规则基座装配 — 装配方案(工作笔记)](docs/acceptance/m1-02/plan.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
+- [M1-02 规则基座装配 — 装配方案（工作笔记）](docs/acceptance/m1-02/plan.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [第三轮原始操作交付（不作验收判定）](docs/acceptance/m1-03/20261029T110112Z-round3/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [M1-03 执行失败与恢复证据](docs/acceptance/m1-03/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [M1-04 第三轮原始回执](docs/acceptance/m1-04/20261029T110112Z-round3/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [M1-04 未开始](docs/acceptance/m1-04/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-05 单份可公开存量样本搬运交付(不作验收判定)](docs/acceptance/m1-05/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-05 事实源原始对照(不作验收判定)](docs/acceptance/m1-05/fact-sources.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-05 格式符合性说明(对照 Keeper save.md 规范)](docs/acceptance/m1-05/format-compliance.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
+- [M1-05 单份可公开存量样本搬运交付（不作验收判定）](docs/acceptance/m1-05/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
+- [M1-05 事实源原始对照（不作验收判定）](docs/acceptance/m1-05/fact-sources.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
+- [M1-05 格式符合性说明（对照 Keeper save.md 规范）](docs/acceptance/m1-05/format-compliance.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [M1-05 样本可见性说明](docs/acceptance/m1-05/visibility.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [自我进化索引](docs/acceptance/m1-06/after-claude/evolution/index.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [项目记忆索引](docs/acceptance/m1-06/after-claude/memory-keeper.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
@@ -93,17 +95,21 @@
 - [M4-06 主 Agent 验收判定](docs/acceptance/m4/m4-06/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [M4-07 交接（待主 Agent 独立验收）](docs/acceptance/m4/m4-07/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [M4-07 主 Agent 验收判定](docs/acceptance/m4/m4-07/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-09 冻结案例清单（预备，未执行）](docs/acceptance/m4/m4-09/cases.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-08 文档与 M4-09 预备交接](docs/acceptance/m4/m4-09/documentation-handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
+- [M4-08 代码交接（供主 Agent 独立验收）](docs/acceptance/m4/m4-08/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
+- [用户规则整理向导：独立模块交接](docs/acceptance/m4/m4-08/organize/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
+- [M4-08 主 Agent 验收判定](docs/acceptance/m4/m4-08/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
+- [M4-09 memSharing 案例清单（修订，未执行）](docs/acceptance/m4/m4-09/cases.md)：按 §14—§24（后续替代见 §25—§26） 修订并追加 §24 场景的 62 案与接口 TODO，全部未执行。
+- [M4-08 文档与 M4-09 预备交接](docs/acceptance/m4/m4-09/documentation-handoff.md)：历次文档交接与本次 memSharing 续接增量，含代码侧核对项。
 - [R2/R3 修复 主 Agent 验收判定](docs/acceptance/m4/r2-r3/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 - [M1 验收执行清单（尚未执行）](docs/plan/m1-acceptance.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
 
 ## 决策
 
-- [v1.1 开工基线](docs/history/2026-10-29-design-baseline.md)：设计合同、任务安排或历史裁定，采用前核对新裁定。
-- [M2 身份与 schema 决策单](docs/plan/decisions-m2.md)：设计合同、任务安排或历史裁定，采用前核对新裁定。
-- [M4-01 机器级安装合同](docs/plan/decisions-m4.md)：设计合同、任务安排或历史裁定，采用前核对新裁定。
-- [DESIGN v1.5 review：M4 开工边界](docs/plan/m4-review.md)：设计合同、任务安排或历史裁定，采用前核对新裁定。
-- [2026-10-29 全提交 review](docs/plan/review-2026-10-29.md)：设计合同、任务安排或历史裁定，采用前核对新裁定。
-- [M4 用户级层产品化任务书](docs/plan/tasks-m4.md)：设计合同、任务安排或历史裁定，采用前核对新裁定。
-- [实现任务拆分](docs/plan/tasks.md)：设计合同、任务安排或历史裁定，采用前核对新裁定。
+- [v1.1 开工基线](docs/history/2026-10-29-design-baseline.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
+- [M2 身份与 schema 决策单](docs/plan/decisions-m2.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
+- [M4-01 机器级安装合同](docs/plan/decisions-m4.md)：M4 冻结合同与后续裁定；memSharing 当前文档以 §14—§24（后续替代见 §25—§26） 为准。
+- [DESIGN v1.5 review：M4 开工边界](docs/plan/m4-review.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
+- [2026-10-29 全提交 review](docs/plan/review-2026-10-29.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
+- [收工状态（2026-10-30 晚，手递手）](docs/plan/status-2026-10-30-eod.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
+- [M4 用户级层产品化任务书](docs/plan/tasks-m4.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
+- [实现任务拆分](docs/plan/tasks.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
