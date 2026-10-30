@@ -296,6 +296,34 @@ def _runtime(value):
         _fail("runtime evidence unavailable")
 
 
+def _validate_migration_record(migration):
+    """Strict v2 migration envelope and verified immutable evidence closure."""
+    if migration is not None:
+        _keys(migration, "operation_id source_registry source_sha256 archive_root reference_map tombstones status", "migration")
+        _text(migration["operation_id"])
+        _path(migration["source_registry"])
+        _digest(migration["source_sha256"])
+        _path(migration["archive_root"])
+        if migration["status"] not in ("prepared", "committed", "recovery_required", "rolled_back"):
+            _fail("unknown migration status")
+        if not isinstance(migration["reference_map"], dict):
+            _fail("invalid reference map")
+        for old, target in migration["reference_map"].items():
+            _path(old)
+            _keys(target, "path sha256 kind", "archived reference")
+            _path(target["path"])
+            _digest(target["sha256"])
+            if target["kind"] != "file":
+                _fail("unsupported archived evidence kind")
+        if not isinstance(migration["tombstones"], dict):
+            _fail("invalid tombstones")
+        for path, digest in migration["tombstones"].items():
+            _path(path)
+            _digest(digest)
+        if migration["status"] == "committed":
+            verify_archived_references(migration)
+
+
 def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
     """Active v2 only. Legacy v1 is available solely via explicit diagnostic APIs."""
     if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] == 1:
@@ -303,7 +331,24 @@ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
     _keys(data, "schema_version projects shared_objects product machine migration legacy_import", "registry")
     if type(data["schema_version"]) is not int or data["schema_version"] != 2:
         _fail("unsupported registry schema")
-    validate_registry_v1({"schema_version": 1, "projects": data["projects"],
+    migration = data["migration"]
+    _validate_migration_record(migration)
+    # Preserve recorded Evidence strings. Strict v1 validates a semantic view
+    # whose runtime receipt can resolve through a hash-verified v2 archive; the
+    # original v1 validator and the returned/persisted data are unchanged.
+    project_view = data["projects"]
+    if migration is not None and migration["status"] == "committed" and isinstance(project_view, dict):
+        project_view = copy.deepcopy(project_view)
+        for project in project_view.values():
+            if not isinstance(project, dict) or not isinstance(project.get("checkouts"), dict):
+                continue
+            for assembly in project["checkouts"].values():
+                runtime = assembly.get("runtime_acceptance") if isinstance(assembly, dict) else None
+                if isinstance(runtime, dict) and isinstance(runtime.get("evidence_path"), str):
+                    archived = migration["reference_map"].get(runtime["evidence_path"])
+                    if archived is not None:
+                        runtime["evidence_path"] = archived["path"]
+    validate_registry_v1({"schema_version": 1, "projects": project_view,
                           "shared_objects": data["shared_objects"]},
                          allowed_user_paths=allowed_user_paths, _pending_manifest=_pending_manifest)
     product = data["product"]
@@ -356,29 +401,6 @@ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
         if unit in units:
             _fail("duplicate machine unit; reference existing shared object instead")
         units.add(unit)
-    migration = data["migration"]
-    if migration is not None:
-        _keys(migration, "operation_id source_registry source_sha256 archive_root reference_map tombstones status", "migration")
-        _text(migration["operation_id"])
-        _path(migration["source_registry"])
-        _digest(migration["source_sha256"])
-        _path(migration["archive_root"])
-        if migration["status"] not in ("prepared", "committed", "recovery_required", "rolled_back"):
-            _fail("unknown migration status")
-        if not isinstance(migration["reference_map"], dict):
-            _fail("invalid reference map")
-        for old, target in migration["reference_map"].items():
-            _path(old)
-            _keys(target, "path sha256 kind", "archived reference")
-            _path(target["path"])
-            _digest(target["sha256"])
-            if target["kind"] != "file":
-                _fail("unsupported archived evidence kind")
-        if not isinstance(migration["tombstones"], dict):
-            _fail("invalid tombstones")
-        for path, digest in migration["tombstones"].items():
-            _path(path)
-            _digest(digest)
     imported = data["legacy_import"]
     if imported is not None:
         _keys(imported, "operation_id source_tree_sha256 manifest_path status", "legacy import")
@@ -394,6 +416,37 @@ class RegistryMigrationRequired(RegistryError):
     code = "registry_migration_required"
 
 
+def migration_journal_path(migration):
+    """Deterministic approved bootstrap location; never follow a stored redirect."""
+    op = migration["operation_id"]
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", op):
+        _fail("invalid migration operation ID")
+    archive = _path(migration["archive_root"])
+    if archive.name != "m2-migration-" + op or archive.parent.name != "backups" or archive.parent.parent.name != ".agents-group":
+        _fail("invalid migration archive layout")
+    return archive.parent.parent.parent / (".agents-group-install-" + op) / "journal.json"
+
+
+def verify_archived_references(migration):
+    """Read-only byte verification, also usable by recovery after source removal."""
+    import hashlib
+    migration_journal_path(migration)
+    archive = Path(migration["archive_root"])
+    for old, item in migration["reference_map"].items():
+        path = _path(item["path"])
+        if not _within(path, archive) or path.is_symlink() or path.parent.resolve() / path.name != path:
+            _fail("archive reference escapes or follows symlink")
+        try:
+            raw = path.read_bytes()
+        except OSError as exc:
+            raise RegistryError("archived recovery material unavailable: " + str(path)) from exc
+        if hashlib.sha256(raw).hexdigest() != item["sha256"]:
+            _fail("archived recovery material hash mismatch: " + str(path))
+    source = migration["reference_map"].get(migration["source_registry"])
+    if source is None or source["sha256"] != migration["source_sha256"]:
+        _fail("archived source registry identity mismatch")
+
+
 def require_installed(data):
     """Project writers cannot initialize or repair the machine installation."""
     if data["product"] is None:
@@ -404,6 +457,47 @@ def require_installed(data):
         state = data[name]
         if state is not None and state["status"] not in ("committed", "rolled_back"):
             raise RegistryError("Machine operation incomplete; explicit recovery required")
+    migration = data["migration"]
+    if migration is not None and migration["status"] == "committed":
+        journal = migration_journal_path(migration)
+        try:
+            if journal.is_symlink() or journal.parent.resolve() / journal.name != journal:
+                _fail("migration journal symlink conflict")
+            state = json.loads(journal.read_text(encoding="utf-8"), object_pairs_hook=_no_duplicates)
+        except (OSError, UnicodeError, ValueError) as exc:
+            raise RegistryError("migration_scene=interrupted; migration journal unavailable") from exc
+        if (state.get("product_id") != "agent-group-memory" or state.get("operation_id") != migration["operation_id"]
+                or state.get("status") != "committed"):
+            _fail("migration_scene=interrupted; explicit machine recovery required")
+        import hashlib
+        plan = state.get("plan", {})
+        plan_body = dict(plan)
+        plan_digest = plan_body.pop("plan_sha256", None)
+        encoded = (json.dumps(plan_body, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
+        if (hashlib.sha256(encoded).hexdigest() != plan_digest
+                or plan.get("after_registry", {}).get("migration") != migration
+                or plan.get("after_registry", {}).get("product", {}).get("installation_id") != data["product"]["installation_id"]):
+            _fail("migration_scene=conflict; migration plan/installation identity changed")
+        home = journal.parent.parent
+        runtime_root = Path(migration["archive_root"]).parent.parent
+        locks = ([home / ".agents-group-install.lock"]
+                 + [Path(source).parent / ".agm.lock" for source in migration["tombstones"]]
+                 + [runtime_root / "var/.agm.lock", runtime_root / "var/.agm.lock/transaction"])
+        for lock in locks:
+            owner = lock / "migration-owner.json"
+            if owner.exists() or owner.is_symlink():
+                _fail("migration_scene=interrupted; explicit migration lock handoff required")
+        for source, digest in migration["tombstones"].items():
+            path = Path(source)
+            marker = path / "redirect.json"
+            try:
+                if path.is_symlink() or path.parent.resolve() != path.parent or not path.is_dir() or {p.name for p in path.iterdir()} != {"redirect.json"} or marker.is_symlink():
+                    _fail("migration_scene=conflict; legacy tombstone missing or changed")
+                actual = hashlib.sha256(marker.read_bytes()).hexdigest()
+            except OSError as exc:
+                raise RegistryError("migration_scene=conflict; legacy tombstone unavailable") from exc
+            if actual != digest:
+                _fail("migration_scene=conflict; legacy tombstone fingerprint mismatch")
     return data
 
 def _no_duplicates(pairs):
