@@ -376,3 +376,11 @@ M4-09 原始证据至少覆盖七现场、同名/异字节/目录外链接、来
 
 1. **Python 最低版本 = 3.9**(内核语法兼容线,M4-04 冻结):≥3.9 的任意版本直接放行;低于 3.9 或未安装 → 用系统包管理器安装最新稳定版后继续,**不要求特定版本**;Git 同理(一般已有,缺失则装);
 2. **安装对话删除"将来新装了别的 Agent"提示句**(§21.3 该句作废);"如何添加新 Agent"的说明移至 README。
+
+## 23. 修订(2026-10-30,用户裁定):产品定名 memSharing,根目录改 .mem-sharing
+
+1. **命名套件**:品牌 **memSharing**;仓库/文件夹 `mem-sharing`;中文全称"多 Agent 记忆共享与融合";英文全称 Multi-Agent Memory Sharing & Fusion;标语"给你的每一个 AI Agent 同一份记忆。";口头简称即 memSharing,不另造中文短名;会话菜单更名 **/mem-sharing**(原 /agent-group);
+2. **根目录** R:`~/.agents-group` → **`~/.mem-sharing`**(记忆中枢家目录);C:`~/.local/share/agent-group-memory` → `~/.local/share/mem-sharing`;版本库存 → `~/.local/share/mem-sharing-versions`;bootstrap 操作目录 → `~/.mem-sharing-install-<op>/`;product_id → `mem-sharing`;受管标记串(agent-group-memory:*)随产品名全局更换(零用户窗口,现网文件按漂移处理,真机在 M4-10 重新建立);
+3. **v0 识别随之简化**:v0 源=历史位置 `~/.agents-group`(原地不动),新装目标=`~/.mem-sharing`,源/目标天然分离,M4-04 的同路径源快照舞蹈在真机路径上不再需要(夹具语义保留);
+4. **执行序**:远程仓库改名(github.com/vincent4j/mem-sharing,旧 URL 自动重定向,安装一句话同步更新)→ 代码标识符改名 → 文档全套换装;本地文件夹改名放到 M4-10 之后(运行中 Agent 的 cwd 在此,避免打断);
+5. 撞名(memfusion 等)用户明示不计。
