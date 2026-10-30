@@ -2,9 +2,9 @@
 
 多 Agent 跨执行器共享记忆:**不重复造轮子**。项目规则统一到项目根 `AGENTS.md`,项目记忆直接复用 context-keeper;本仓库只做跨执行器的互通与编排,并定义清楚三套系统的分工边界。
 
-- 版本:v1.1(2026-10-29,按评审修订)
+- 版本:v1.2(2026-10-30,边界修正:`~/.agents-group` 为本产品用户级层,随产品安装创建;旧手工实现由产品替代,新增 M4)
 - 覆盖执行器:**Codex、Claude Code、WorkBuddy**
-- 历史沿革:v0.1 自建项目记忆已废弃(能力归 context-keeper);v0.2 起定位编排层;v1.1 按评审修订:check 收敛为只读、状态文件更名、记录库授权四态、验收改为三执行器接力闭环、M1 范围收敛、跨平台收紧
+- 历史沿革:v0.1 自建项目记忆已废弃(能力归 context-keeper);v0.2 起定位编排层;v1.1 按评审修订;v1.2 用户级层并入产品范围;v1.1 按评审修订:check 收敛为只读、状态文件更名、记录库授权四态、验收改为三执行器接力闭环、M1 范围收敛、跨平台收紧
 - **本期范围不含 Skills/MCP 管理**(用户决定,留待后续;项目级 Skills/MCP 继续由旧 `project_manage.py` 负责)
 
 ---
@@ -24,17 +24,17 @@
 | 用户级 | `~/.codex/AGENTS.md` + `~/.codex/memories/`(自动) | `~/.claude/CLAUDE.md` + `~/.claude/projects/*/memory/`(自动) | `~/.workbuddy/MEMORY.md` + 云端画像(自动) |
 | 项目级 | 项目根 `AGENTS.md`(根→cwd 逐级链) | `CLAUDE.md` 系列(根常驻、子目录按需) | `<项目根>/.workbuddy/memory/` |
 
-用户级互通已由 `~/.agents-group` 解决;项目级是本方案的范围。
+本产品覆盖**用户级与项目级两层**:用户级公共源落位 `~/.agents-group`(安装本产品时自动创建);项目级为编排层。本机既有的 `~/.agents-group` 手工实现是先行的自制品,**将被本产品替代**(内容迁移保留,脚本体系换代,见 §8 M4)。
 
 ### 1.2 三套系统分工边界(核心)
 
 | 系统 | 职责 | 不做什么 |
 |---|---|---|
-| `~/.agents-group`(已建成) | 跨项目、跨执行器的用户级公共规则、共享 Skills/MCP;**项目级 Skills/MCP 由其 `project_manage.py` 管理,继续保留** | 不做规则/记忆装配(本仓库职责) |
+| `~/.agents-group`(**本产品用户级层**,随产品安装创建) | 跨项目、跨执行器的用户级公共规则、共享 Skills/MCP 的公共源与入口装配 | 本机旧手工实现(manage/sync/project_manage)将被产品替代(M4 迁移);替代完成前过渡期并存 |
 | **context-keeper**([github.com/vincent4j/context-keeper](https://github.com/vincent4j/context-keeper),项目记忆运行时,独立产品) | 项目记忆的一切:记录库(默认 `docs/context-keeper/`,支持自定义)、保存/继续/查找、按证据自我进化、Skill 安装器、Codex/Claude 已验收 bridge、迁移门禁 | 不感知 Group、不做跨执行器编排、不管用户级 |
 | **agent-group-memory**(本仓库) | 编排:规则装配(基座)、记忆装配(安装/桥接/记录库授权/验收)、存量整理、联动 | 不存记忆、不定义记忆结构、不做蒸馏/进化/历史回溯、**不做 Skills/MCP(本期不做)**、不反向写私有记忆库 |
 
-**边界判据**:记忆的*内容与结构*归 context-keeper;*谁在什么时机被装上、被触发*归本仓库;*跨项目用户规则*与*项目级 Skills/MCP*归 `~/.agents-group`。
+**边界判据**:记忆的*内容与结构*归 context-keeper;*谁在什么时机被装上、被触发*归本产品;*跨项目用户规则与用户级装配*归本产品的 `~/.agents-group` 层。
 
 **耦合关系**:context-keeper 是项目记忆的**默认 provider,不是硬依赖**——规则基座完全不依赖它;不装只是没有记忆功能,随时可补装。"默认 provider"仅指 context-keeper,**不做通用 provider 插件框架**。历史回溯(装它之前的会话回填)若要做,属 context-keeper 的可选功能,不在本仓库。
 
@@ -158,7 +158,7 @@ group 不是常驻进程,不存在"装机即感知"。**check 类只读、可自
 
 - **内核**:跨平台 Python 脚本,仅标准库(≥3.9,零 pip 依赖);
 - **外壳**:SKILL.md 告诉 agent 何时、如何调用与验收——用户说人话,agent 负责翻译成命令;
-- **安装**:仓库 clone 到家目录为唯一源(经现有 `manage.py install-skill` 纳入公共源,落位 `~/.agents-group/skills/agent-group-memory/`),首次运行自装用户级指针;
+- **安装**:仓库 clone 到家目录为唯一源(落位 `~/.agents-group/skills/agent-group-memory/`;过渡期沿用旧同步体系投影到各执行器 Skill 目录,M4 后由本产品用户级层自身承担),首次运行自装用户级指针;M4 起安装即创建 `~/.agents-group` 全套结构;
 - **跨平台承诺收紧**:**M1 限定 macOS**(当前唯一已验证平台)。Windows/Linux 依赖上游安装策略——context-keeper 安装器使用目录 symlink 且拒绝现有复制目录,本工具**不自建第二套降级安装逻辑**;平台矩阵(安装/重装/卸载/失败恢复)留到 M2 按真实验收扩展。通用编码纪律先行:路径 `pathlib` + `Path.home()`、执行器路径表(含安装信号)、文件 UTF-8、子进程只调 Python 解释器。
 
 ### 4.7 目录结构
@@ -250,7 +250,8 @@ M3 已将 WorkBuddy 桥接交由 context-keeper 安装器管理。AGM 从上游�
 | M1.5(独立) | 用户级全面整理;(如需)memories/ 升级为"索引 + 主题文件"结构 | 用户逐项确认的迁移报告 |
 | M2 工具化 | 单一 CLI + 执行器路径表 + registry;平台矩阵(安装/重装/卸载/失败恢复,macOS 优先) | knowwind、poster-fit 复制,幂等重装通过 |
 | M3 上游回传(工作区实现) | 上游已接管 WorkBuddy 模板/install/ensure;本仓库改读上游模板并调用安装器,私有模板已删除 | 旧块字节兼容、无双入口、三项目只读 check;证据见 docs/acceptance/m3。未 commit/push,真机新会话验收可选 |
-| 后续 | Skills/MCP 纳入本工具(用户待定);其余执行器按同模式逐家接入 | — |
+| M4 用户级层产品化 | **安装即建 `~/.agents-group`**(公共源结构:memories 索引+主题、references、skills、mcp)+ 用户级入口指针装配 + **旧手工实现迁移替代**:内容(memories/references/skills/mcp)原样迁入,旧脚本(manage/sync/project_manage)退役归档;替代期间新旧并存、逐项切换 | 迁移报告逐项确认;三执行器用户级指针新会话验收 |
+| 后续 | 项目级 Skills/MCP 管理纳入(旧 project_manage 职责);其余执行器按同模式逐家接入 | — |
 
 ## 9. 对既有 `~/.agents-group` 实现的借鉴与简化
 
