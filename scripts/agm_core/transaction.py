@@ -3,6 +3,9 @@
 Atomic replacement is per file, not across files. Registry commits last. A mkdir
 lock is deliberately never stolen: crashes require explicit operator recovery.
 No fcntl dependency and no untested cross-platform durability claim.
+The mkdir lock excludes cooperating AGM writers only. Last-moment snapshot
+checks preserve observed foreign edits, but are not OS compare-and-swap:
+noncooperating writers can still race the final check and replace/unlink.
 """
 import hashlib
 import json
@@ -139,7 +142,12 @@ def write_lock(path):
             raise TransactionError("writer lock cannot be released; inspect transaction scene", code="recovery_required") from exc
 
 
-def _atomic_file(path, data, mode):
+def _expect(path, expected):
+    if expected is not None and read_snapshot(path) != expected:
+        raise TransactionError("output changed immediately before mutation: " + str(path), code="drift")
+
+
+def _atomic_file(path, data, mode, *, expected=None):
     _safe_path(path)
     if path.is_symlink():
         raise TransactionError("refusing symlink file output", code="path_conflict")
@@ -150,26 +158,30 @@ def _atomic_file(path, data, mode):
             stream.flush()
             os.fsync(stream.fileno())
         os.chmod(name, mode)
+        _expect(path, expected)
         os.replace(name, path)
     finally:
         if os.path.lexists(name):
             os.unlink(name)
 
 
-def _apply(path, snapshot):
+def _apply(path, snapshot, *, expected=None):
     _safe_path(path)
     if snapshot.kind == "file":
         if path.is_symlink():
             raise TransactionError("symlink appeared at file output", code="path_conflict")
-        _atomic_file(path, snapshot.data, snapshot.mode)
+        _atomic_file(path, snapshot.data, snapshot.mode, expected=expected)
     elif snapshot.kind == "absent":
+        _expect(path, expected)
         if os.path.lexists(path):
             path.unlink()
     elif snapshot.kind == "symlink":
+        _expect(path, expected)
         if os.path.lexists(path):
             if not path.is_symlink():
                 raise TransactionError("nonlink appeared at symlink output", code="path_conflict")
             path.unlink()
+            _expect(path, Snapshot("absent"))
         path.symlink_to(snapshot.target, target_is_directory=True)
     else:
         raise TransactionError("unknown snapshot kind")
@@ -288,7 +300,12 @@ class Transaction:
                     attempted.append((change, entry))
                     self._save()  # Crash recovery knows which outputs may have changed.
                     self.hook("before_write", change.path)
-                    _apply(change.path, change.after)
+                    _expect(change.path, change.expected)
+                    # Slow hooks may have changed previously staged configs too.
+                    if registry_change is not None and change is registry_change:
+                        for prior, _ in attempted[:-1]:
+                            self._verify(prior.path, prior.after)
+                    _apply(change.path, change.after, expected=change.expected)
                     self.hook("after_write", change.path)
                     self._verify(change.path, change.after)
                 # Recheck every config before committing/returning. Registry is
@@ -305,7 +322,7 @@ class Transaction:
                         current = read_snapshot(change.path)
                         if current not in (change.expected, change.after):
                             raise TransactionError("foreign edit during rollback; preserving output")
-                        _apply(change.path, change.expected)
+                        _apply(change.path, change.expected, expected=current)
                         self._verify(change.path, change.expected, restore=True)
                         entry["restoration"] = "restored"
                     except BaseException as recovery:
@@ -331,7 +348,7 @@ class Transaction:
                     "changed": [str(c.path) for c in active]}
 
 
-def _recover_manifest(manifest_path, *, lock_path, allowed_roots):
+def _recover_manifest(manifest_path, *, lock_path, allowed_roots, hook=None):
     """Explicit crash rollback under a fresh writer lock; never steals stale locks.
 
     Operator must inspect and remove a confirmed stale lock first. Only before/
@@ -343,7 +360,7 @@ def _recover_manifest(manifest_path, *, lock_path, allowed_roots):
     if manifest_path.is_symlink():
         raise TransactionError("recovery manifest is a symlink", code="recovery_required", manifest=manifest_path)
     transaction = Transaction(lock_path=lock_path, backup_root=manifest_path.parent.parent,
-                              allowed_roots=allowed_roots, operation="recover")
+                              allowed_roots=allowed_roots, operation="recover", hook=hook)
     with write_lock(transaction.lock_path):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if manifest.get("schema_version") != 1 or manifest.get("status") not in ("prepared", "applying", "recovery_required"):
@@ -374,13 +391,15 @@ def _recover_manifest(manifest_path, *, lock_path, allowed_roots):
             if current != before and actual != after:
                 raise TransactionError("recovery output drifted: " + str(path), code="recovery_required", manifest=manifest_path)
             if entry["attempted"]:
-                planned.append((path, before, entry))
+                planned.append((path, before, entry, current))
         for raw in manifest["created_directories"]:
             transaction._scope(Path(raw))
         errors = []
-        for path, before, entry in reversed(planned):
+        for path, before, entry, expected in reversed(planned):
             try:
-                _apply(path, before)
+                transaction.hook("before_restore", path)
+                _expect(path, expected)
+                _apply(path, before, expected=expected)
                 if read_snapshot(path) != before:
                     raise TransactionError("recovery readback mismatch")
                 entry["restoration"] = "restored"
@@ -402,14 +421,14 @@ def _recover_manifest(manifest_path, *, lock_path, allowed_roots):
         return manifest
 
 
-def recover_manifest(manifest_path, *, lock_path, allowed_roots):
+def recover_manifest(manifest_path, *, lock_path, allowed_roots, hook=None):
     """Explicit verified crash rollback; see _recover_manifest for policy.
 
     Malformed/unreadable recovery material is reported as recovery_required,
     with its path, and left intact. No stale lock is removed automatically.
     """
     try:
-        return _recover_manifest(manifest_path, lock_path=lock_path, allowed_roots=allowed_roots)
+        return _recover_manifest(manifest_path, lock_path=lock_path, allowed_roots=allowed_roots, hook=hook)
     except TransactionError as exc:
         if exc.code == "lock_conflict":
             raise

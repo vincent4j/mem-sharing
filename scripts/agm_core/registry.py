@@ -5,6 +5,7 @@ Atomic writes are delegated to transaction.Transaction; a registry must be its
 last change. Missing/corrupt registries are never silently defaulted on load.
 """
 import copy
+import hashlib
 import json
 import os
 import re
@@ -533,6 +534,54 @@ def load_legacy_registry(path, *, allowed_user_paths=None):
     return _load_registry(path, allowed_user_paths=allowed_user_paths, legacy=True)
 
 
+def plan_registry_rebuild(expected, *, allowed_user_paths=None):
+    """Explicit project-index reset only; machine/migration identity must be valid.
+
+    Unparseable bytes, unknown schemas/fields and unidentifiable project keys
+    cannot produce a safe global-impact preview. Never infer an installation.
+    The original bytes remain the transaction's before backup, not authority
+    to recover prior deletion rights.
+    """
+    if expected.kind != "file":
+        _fail("registry rebuild requires a regular file")
+    try:
+        raw = json.loads(expected.data.decode("utf-8"), object_pairs_hook=_no_duplicates,
+                         parse_constant=lambda x: _fail("nonfinite JSON value"))
+    except (ValueError, UnicodeError) as exc:
+        raise RegistryError("registry_unreadable: cannot safely enumerate rebuild impact") from exc
+    if not isinstance(raw, dict) or type(raw.get("schema_version")) is not int or raw["schema_version"] != 2:
+        raise RegistryMigrationRequired("registry_schema_unsupported: explicit migration/recovery required")
+    _keys(raw, "schema_version projects shared_objects product machine migration legacy_import", "registry")
+    if not isinstance(raw["projects"], dict) or not isinstance(raw["shared_objects"], dict):
+        _fail("registry_unidentifiable: project/shared maps cannot be enumerated")
+    removed = []
+    for key, record in sorted(raw["projects"].items()):
+        _path(key, resolve=True)
+        if not isinstance(record, dict) or record.get("main_checkout") != key:
+            _fail("registry_unidentifiable: project identity cannot be enumerated")
+        removed.append({"main_checkout": key, "record_sha256": hashlib.sha256(
+            json.dumps(record, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()})
+    for oid in raw["shared_objects"]:
+        _text(oid)
+    base = copy.deepcopy(raw)
+    base["projects"], base["shared_objects"] = {}, {}
+    # Includes installed status, archive hashes, journal, tombstones and lock handoff.
+    require_installed(validate_registry(base, allowed_user_paths=allowed_user_paths))
+    try:
+        validate_registry(raw, allowed_user_paths=allowed_user_paths)
+    except RegistryError as exc:
+        reason = str(exc)
+    else:
+        _fail("valid registry does not require rebuilding")
+    category = "registry_evidence_unavailable" if any(v in reason for v in
+        ("unavailable", "evidence file", "evidence path")) else "registry_project_corrupt"
+    return base, {"classification": category, "reason": reason,
+                  "registry_sha256": hashlib.sha256(expected.data).hexdigest(),
+                  "registry_bytes": len(expected.data), "project_count": len(removed),
+                  "removed_projects": removed, "removed_shared_objects": sorted(raw["shared_objects"]),
+                  "scope": "reset all project registrations and shared consumer indexes; preserve machine identity and all user files"}
+
+
 def serialize_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
     validate_registry(data, allowed_user_paths=allowed_user_paths, _pending_manifest=_pending_manifest)
     result = copy.deepcopy(data)
@@ -605,12 +654,13 @@ def _objects(data):
 
 
 def commit_registry(path, data, *, transaction, expected, changes=(),
-                    allowed_user_paths=None, previous=None, rebuild=False):
+                    allowed_user_paths=None, previous=None, rebuild=False, rebuild_confirmation=None):
     """Validate and commit registry last, including evidence for new created units.
 
     expected is the exact registry snapshot read by the caller. Existing valid
-    ownership cannot be promoted by omitting previous. Corrupt/legacy active
-    state is never rebuilt, including when an old caller passes rebuild=True.
+    ownership cannot be promoted by omitting previous. A project-index rebuild
+    requires its exact global-impact descriptor and separate confirmation;
+    the legacy boolean rebuild=True never authorizes anything.
     New created records must bind to an absent unit in this transaction's write
     set and to its actual manifest path, including when the manifest is pending.
     """
@@ -624,7 +674,17 @@ def commit_registry(path, data, *, transaction, expected, changes=(),
             observed = json.loads(expected.data.decode("utf-8"), object_pairs_hook=_no_duplicates)
             validate_registry(observed, allowed_user_paths=allowed_user_paths)
         except (ValueError, UnicodeError) as exc:
-            raise RegistryError("Active registry invalid; explicit machine recovery required") from exc
+            if not isinstance(rebuild, dict) or rebuild_confirmation is None:
+                raise RegistryError("Active registry invalid; explicit machine recovery required") from exc
+            observed, descriptor = plan_registry_rebuild(expected, allowed_user_paths=allowed_user_paths)
+            if rebuild != descriptor:
+                _fail("registry rebuild impact differs from approved snapshot")
+            _keys(rebuild_confirmation, "registry_sha256 confirmed_at reference", "rebuild confirmation")
+            if rebuild_confirmation["registry_sha256"] != descriptor["registry_sha256"]:
+                _fail("registry rebuild confirmation hash mismatch")
+            _evidence({k: rebuild_confirmation[k] for k in ("confirmed_at", "reference")})
+            if any(data[k] != observed[k] for k in observed if k not in ("projects", "shared_objects")):
+                _fail("project rebuild cannot replace machine/migration metadata")
     elif expected.kind == "absent":
         observed = empty_registry()
     else:

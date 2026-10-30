@@ -360,8 +360,12 @@ def _run_locked(request, runtime, result, *, locked=True):
     expected_registry = read_snapshot(registry_path)
     if expected_registry.kind == "absent":
         raise EnableError("machine_not_installed", "Machine registry missing: " + str(registry_path) + "; use INSTALL.md and scripts/install.py")
-    previous_registry = registry.require_installed(registry.load_registry(registry_path, allowed_user_paths=allowed))
     rebuild = False
+    try:
+        previous_registry = registry.load_registry(registry_path, allowed_user_paths=allowed)
+    except registry.RegistryError:
+        previous_registry, rebuild = registry.plan_registry_rebuild(expected_registry, allowed_user_paths=allowed)
+    previous_registry = registry.require_installed(previous_registry)
     data = copy.deepcopy(previous_registry)
     previous = copy.deepcopy(data["projects"].get(key))
     p = data["projects"].setdefault(key, registry.new_project(identity, agents))
@@ -478,6 +482,14 @@ def _run_locked(request, runtime, result, *, locked=True):
                    "memory_authorization": choice, "store_path": str(store) if store else None,
                    "provider_source": str(source) if source else None, "provider_fingerprints": fingerprints,
                    "changes": plan.description()}
+    if rebuild:
+        actual_plan["rebuild"] = rebuild
+    def approval_template():
+        template = dict(actual_plan, confirmed_at="<UTC timestamp>", reference="<user confirmation reference>")
+        if rebuild:
+            template["rebuild_confirmation"] = {"registry_sha256": rebuild["registry_sha256"],
+                "confirmed_at": "<separate UTC timestamp>", "reference": "<separate global registry rebuild confirmation>"}
+        return json.dumps(template, ensure_ascii=False)
     observed = copy.deepcopy(assembly["states"])
     if choice == "yes":
         observed["source_available"] = _fact("ready" if source else "missing", str(source) if source else "No confirmed Keeper checkout")
@@ -496,22 +508,34 @@ def _run_locked(request, runtime, result, *, locked=True):
     # Its exact before Snapshot is independently checked by commit_registry under this same lock.
     consistent = _consistent_repair(previous, assembly, plan, choice, str(source) if source else None, str(store) if store else None, previous_registry["shared_objects"], fingerprints)
     if approval:
-        if (set(approval) != set(actual_plan) | {"confirmed_at", "reference"}
+        if (set(approval) != set(actual_plan) | {"confirmed_at", "reference"} | ({"rebuild_confirmation"} if rebuild else set())
                 or any(approval.get(k) != value for k, value in actual_plan.items())):
             result.update(status="approval_required", approval_required=True,
-                          next_action=json.dumps(dict(actual_plan, confirmed_at="<UTC timestamp>", reference="<user confirmation reference>"), ensure_ascii=False))
+                          next_action=approval_template())
             result["errors"].append({"code": "approval_mismatch", "path": None,
                                     "message": "Approved plan differs from locked identity/source/store/write fingerprints", "recovery": "Review and confirm the new exact plan"})
             return result
         evidence = {"confirmed_at": approval["confirmed_at"], "reference": approval["reference"]}
         registry._evidence(evidence)
+        if rebuild:
+            confirmation = approval["rebuild_confirmation"]
+            registry._keys(confirmation, "registry_sha256 confirmed_at reference", "rebuild confirmation")
+            if confirmation["registry_sha256"] != rebuild["registry_sha256"]:
+                raise EnableError("approval_mismatch", "Separate rebuild confirmation binds a different registry")
+            registry._evidence({k: confirmation[k] for k in ("confirmed_at", "reference")})
     elif consistent and not rebuild:
         evidence = p["authorization_evidence"]
     elif choice is not None and _confirm(request, actual_plan):
         evidence = {"confirmed_at": _now(), "reference": "interactive exact enable plan confirmation"}
+        if rebuild:
+            if not _confirm(request, {"command": "rebuild-global-registry", "rebuild": rebuild}):
+                result.update(status="approval_required", approval_required=True, next_action=approval_template())
+                return result
+            confirmation = dict(evidence, registry_sha256=rebuild["registry_sha256"],
+                                reference="interactive separate global registry rebuild confirmation")
     else:
         result.update(status="approval_required", approval_required=True,
-                      next_action=json.dumps(dict(actual_plan, confirmed_at="<UTC timestamp>", reference="<user confirmation reference>"), ensure_ascii=False))
+                      next_action=approval_template())
         return result
     if choice == "yes" and source is None:
         raise EnableError("provider_source_missing", "Confirm an existing Keeper checkout; no source download/fallback is permitted")
@@ -519,6 +543,8 @@ def _run_locked(request, runtime, result, *, locked=True):
         # Inspection is write-free; only an authorized execution takes the shared lock.
         # Replan under that lock so approval and machine state cannot race.
         approved_request = dict(request, approval=dict(actual_plan, **evidence))
+        if rebuild:
+            approved_request["approval"]["rebuild_confirmation"] = confirmation
         with write_lock(runtime.lock):
             return _run_locked(approved_request, runtime, result, locked=True)
     p["memory_authorization"], p["authorization_evidence"] = choice, evidence
@@ -585,7 +611,8 @@ def _run_locked(request, runtime, result, *, locked=True):
     try:
         committed = registry.commit_registry(registry_path, data, transaction=tx, expected=expected_registry,
                           changes=plan.changes(), allowed_user_paths=allowed,
-                          previous=previous_registry, rebuild=rebuild)
+                          previous=previous_registry, rebuild=rebuild,
+                          rebuild_confirmation=confirmation if rebuild else None)
     except TransactionError as exc:
         # Preserve semantic provider error across the shared transaction's rollback wrapper.
         cause = exc.__cause__
