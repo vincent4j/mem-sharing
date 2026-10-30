@@ -66,8 +66,11 @@ class InstallTests(InstallFixture):
 
     def test_fresh_structure_code_C_and_no_fake_project_consumers(self):
         result=self.execute();self.assertEqual(result['status'],'completed')
-        for rel in ('memories/topics','references','skills','mcp','backups','var'):
+        for rel in ('memories/topics','references','backups','var'):
             self.assertTrue((self.runtime.root/rel).is_dir(),rel)
+        # v1.11:R 不建 skills/、mcp/。
+        for rel in ('skills','mcp'):
+            self.assertFalse((self.runtime.root/rel).exists(),rel)
         self.assertEqual((self.runtime.code/'SKILL.md').read_bytes(),(self.source/'SKILL.md').read_bytes())
         data=registry.require_installed(registry.load_registry(self.runtime.registry,allowed_user_paths=[]))
         self.assertEqual(data['projects'],{});self.assertEqual(data['machine'],{'agents':{},'objects':{}})
@@ -82,8 +85,13 @@ class InstallTests(InstallFixture):
         self.assertEqual(plan['effective_agents'],['codex'])
         self.assertIn('verified_product_source',plan['entry_plan'])
         self.execute(plan)
-        self.assertTrue((self.home/'.codex/AGENTS.md').is_file())
-        self.assertEqual((self.home/'.codex/skills/agent-group-memory').resolve(),self.runtime.code)
+        entry=self.home/'.codex/AGENTS.md'
+        self.assertTrue(entry.is_file())
+        # v1.11:入口含治理条款与菜单;无 Skill 投影落点。
+        body=entry.read_text()
+        self.assertIn(user_entries.GOVERNANCE_RULES_TEXT,body)
+        self.assertIn('/agent-group 菜单',body)
+        self.assertFalse((self.home/'.codex/skills').exists())
         self.assertFalse((self.home/'.claude').exists());self.assertFalse((self.home/'.workbuddy').exists())
         data=registry.load_registry(self.runtime.registry,allowed_user_paths=paths.allowed_user_paths(self.config,None,home=str(self.home)))
         self.assertTrue(data['machine']['objects'])
@@ -103,6 +111,11 @@ class InstallTests(InstallFixture):
                 self.assertEqual((snapshot/rel).read_bytes(),raw)
                 if rel!='memories/MEMORY.md':self.assertEqual((self.runtime.root/rel).read_bytes(),raw)
             else:self.assertEqual((self.runtime.root/rel).read_bytes(),raw)
+        # v1.11:v0 skills/mcp 原地不动,不进阅读包/快照,只登记排除。
+        self.assertTrue((self.runtime.root/'skills/example.txt').is_file())
+        self.assertFalse((package/'skills').exists());self.assertFalse((snapshot/'skills').exists())
+        preserved={e['path'] for e in plan['legacy_import']['excluded'] if e.get('disposition')=='preserved_in_place'}
+        self.assertEqual(preserved,{'skills','mcp'})
         self.assertIn(b'legacy-v0-fixture-m404/memories/MEMORY.md',(self.runtime.root/'memories/MEMORY.md').read_bytes())
         manifest=json.loads(Path(plan['legacy_import']['manifest']).read_bytes())
         self.assertEqual(manifest['status'],'committed')
@@ -150,16 +163,22 @@ class InstallTests(InstallFixture):
 
     def test_external_symlink_recorded_not_dereferenced_or_activated(self):
         self.v0();outside=self.area/'outside';outside.write_bytes(b'not copied')
-        link=self.runtime.root/'skills/external';link.symlink_to(outside)
-        internal=self.runtime.root/'skills/internal';internal.symlink_to('../references/ops.md')
-        plan=self.plan();self.assertEqual(len(plan['legacy_import']['excluded']),1)
+        link=self.runtime.root/'references/external';link.symlink_to(outside)
+        internal=self.runtime.root/'references/internal';internal.symlink_to('../references/ops.md')
+        plan=self.plan()
+        preserved={e['path'] for e in plan['legacy_import']['excluded'] if e.get('disposition')=='preserved_in_place'}
+        self.assertEqual(preserved,{'skills','mcp'})
+        self.assertEqual(len([e for e in plan['legacy_import']['excluded'] if e.get('disposition')=='excluded_link']),1)
         self.execute(plan);package=Path(plan['legacy_import']['package'])
-        self.assertTrue(link.is_symlink());self.assertFalse((package/'skills/external').exists())
-        self.assertEqual(os.readlink(package/'skills/internal'),'../references/ops.md')
+        self.assertTrue(link.is_symlink());self.assertFalse((package/'references/external').exists())
+        self.assertEqual(os.readlink(package/'references/internal'),'../references/ops.md')
         self.assertNotIn(b'not copied',Path(plan['legacy_import']['manifest']).read_bytes())
+        # v0 skills 原文/链接原地保留,不复制不镜像。
+        self.assertTrue((self.runtime.root/'skills/example.txt').is_file())
+        self.assertFalse((package/'skills').exists())
 
     def test_cyclic_special_collisions_and_new_broken_link_stop_readonly(self):
-        self.v0();link=self.runtime.root/'skills/loop';link.symlink_to('loop')
+        self.v0();link=self.runtime.root/'references/loop';link.symlink_to('loop')
         with self.assertRaises(ValueError):self.plan()
         link.unlink();(self.runtime.root/'memories/new.md').write_text('[bad](../manage.py)')
         with self.assertRaises(ValueError):self.plan()

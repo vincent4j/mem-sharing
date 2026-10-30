@@ -192,7 +192,7 @@ class LifecycleTests(EnableFixture):
         self.apply('yes',True)
         self.assertEqual(self.remove_project()['status'],'completed')
         self.assertEqual(self.load()['machine'],machine);self.assertEqual((self.runtime.code/'SKILL.md').read_bytes(),code)
-        self.assertTrue((self.home/'.codex/skills/agent-group-memory').is_symlink())
+        self.assertTrue((self.home/'.codex/AGENTS.md').is_file())
         self.assertTrue(all(obj['consumers']==[] for obj in self.load()['machine']['objects'].values()))
 
     def test_R4_missing_source_scripts_is_readonly_gap_not_ready(self):

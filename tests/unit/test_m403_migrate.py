@@ -62,10 +62,7 @@ class MigrationFixture(unittest.TestCase):
         subprocess.run(['git', 'init', '-q', str(self.repo)], check=True, capture_output=True)
         self.identity = resolve_project(self.repo)
         self.config = json.loads(legacy_code()['scripts/agents.json'])['platforms']['darwin']
-        # Local fixture metadata for M4-05's additive path-table field; do not
-        # depend on or edit that worker's live table while it is being written.
-        for agent in ('codex', 'claude', 'workbuddy'):
-            self.config[agent]['user_skill_roots'] = ['{home}/.' + agent + '/skills']
+        # v1.11:路径表不再有用户级 Skill 根字段;旧 agents.json 直接可用。
         self.allowed = [str(self.home / path) for path in ('.codex/AGENTS.md', '.claude/CLAUDE.md', '.workbuddy/MEMORY.md')]
         self.user = self.home / '.workbuddy/MEMORY.md'
         self.user.parent.mkdir(parents=True)

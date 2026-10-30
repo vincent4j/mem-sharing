@@ -28,6 +28,27 @@ JOURNAL_KEYS = ('schema_version product_id operation_id plan approval status int
                 'final_registry_sha256 phase')
 PHASES = ('prepare', 'archive', 'inventory', 'code', 'verify', 'commit')
 
+# v1.11(2026-10-30)入口合同变更的唯一精确转换白名单(主 Agent 批准,仅此一对哈希,
+# 不开"文件变了就放行"的通用口子):本发行同时变更 agents.json(移除 user_skill_roots)
+# 与 user_entries.py(移除产品 Skill 投影、入口模板加治理条款与 /agent-group 菜单)。
+# before = P(27d6e26)两文件字节 SHA256,after = 本发行两文件字节 SHA256;两向各一条
+# (P→T 升级与 §12.2 显式批准的 T→P 回退)。任何其他哈希组合仍按无处理器拒绝。
+# 升级语义:entries:'preserve' 照旧——旧 machine 账中的 skill_symlink 对象退化为惰性
+# (链接原地保留、不再受管、不再校验),本发行不清理;旧入口块指纹不变、零改写。
+_ENTRY_CONTRACT_NAMES = ('scripts/agents.json', 'scripts/agm_core/user_entries.py')
+_ENTRY_CONTRACT_WHITELIST = (
+    # P(27d6e26) → 本发行(v1.11 调整轮)
+    ({'scripts/agents.json': '24258be62f8e4d5fe260a1578fbda55c456a74a4a812bc154bdadcdcee48e396',
+      'scripts/agm_core/user_entries.py': '5cff6dfb0f21dc24b21b41b0b815bf4570cec3f795b41d7771054e52a191f789'},
+     {'scripts/agents.json': '9501f64bcefa82585d536ef99bb339b39d7e97262a15d338c61061fe529b6ef9',
+      'scripts/agm_core/user_entries.py': 'b9c30258bc5659289dce22adc1ce07700b32271fe2ddbf24107825a63c6efea4'}),
+    # 显式批准的反向回退:本发行 → P(§12.2 主动回退仍须走精确转换表)
+    ({'scripts/agents.json': '9501f64bcefa82585d536ef99bb339b39d7e97262a15d338c61061fe529b6ef9',
+      'scripts/agm_core/user_entries.py': 'b9c30258bc5659289dce22adc1ce07700b32271fe2ddbf24107825a63c6efea4'},
+     {'scripts/agents.json': '24258be62f8e4d5fe260a1578fbda55c456a74a4a812bc154bdadcdcee48e396',
+      'scripts/agm_core/user_entries.py': '5cff6dfb0f21dc24b21b41b0b815bf4570cec3f795b41d7771054e52a191f789'}),
+)
+
 
 LAUNCHER = b'''import json, sys
 from pathlib import Path
@@ -74,6 +95,25 @@ def _entry_facts(data):
     """Exact observed machine objects; release conversions cannot broaden ownership."""
     user_entries._preflight_machine_units(data)
     return {obj['path']:install._node(obj['path']) for obj in data['machine']['objects'].values()}
+
+
+def _legacy_contract_load_paths(runtime, allowed):
+    """白名单前驱(P)账本的读侧装载辅助:并入前驱自身 agents.json 展开的投影位。
+
+    仅用于装载仍含旧 machine skill_symlink 对象的前驱账本(当前收窄路径表已不含
+    投影位,直接装载会被 registry 合同拒绝);计划的 allowed_user_paths 仍为当前表,
+    写入授权仍由 _ENTRY_CONTRACT_WHITELIST 精确把关,本函数不授权任何写入。
+    """
+    table = migrate._json(runtime.code/'scripts/agents.json')
+    extra = set()
+    for platform in table.get('platforms', {}).values():
+        if not isinstance(platform, dict):
+            continue
+        for entry in platform.values():
+            if isinstance(entry, dict):
+                for template in entry.get('user_skill_roots', []):
+                    extra.add(paths.expand_path(template, home=str(runtime.home)) + '/' + PRODUCT)
+    return sorted(set(allowed) | extra)
 
 
 def _conversion(request, data, target, direction):
@@ -145,7 +185,7 @@ def _plan(request, *, allow_marker=False):
     direction = request.get('direction', 'upgrade')
     if direction not in ('upgrade','rollback'): _fail('Unknown direction')
     current = read_snapshot(runtime.registry)
-    migration_plan = None; old_inventory = None; old_product = None; noop = False
+    migration_plan = None; old_inventory = None; old_product = None; noop = False; whitelisted = False
     if current.kind == 'absent':
         if direction != 'upgrade': _fail('Cannot roll back an uninstalled machine')
         legacy_sources = request.get('legacy_registries', [])
@@ -158,10 +198,17 @@ def _plan(request, *, allow_marker=False):
         data = copy.deepcopy(migration_plan['after_registry'])
         conversion = {'source_version':'m2-schema1', 'entries':'preserve'}
     else:
-        data = registry.require_installed(registry.load_registry(runtime.registry, allowed_user_paths=allowed))
+        meta = migrate._json(runtime.code/'.agm-code-manifest.json')
+        contract_files = {x['path']:x['sha256'] for x in meta['files']}
+        contract_before = {name: contract_files.get(name) for name in _ENTRY_CONTRACT_NAMES}
+        contract_after = {name: source['files'].get(name) for name in _ENTRY_CONTRACT_NAMES}
+        whitelisted = (contract_before != contract_after
+                       and (contract_before, contract_after) in _ENTRY_CONTRACT_WHITELIST)
+        # v1.11 前驱账本可能登记旧投影对象;白名单命中时先按前驱自身投影位装载。
+        load_allowed = _legacy_contract_load_paths(runtime, allowed) if whitelisted and direction == 'upgrade' else allowed
+        data = registry.require_installed(registry.load_registry(runtime.registry, allowed_user_paths=load_allowed))
         install._code_matches(runtime, data['product'])
         old_product = copy.deepcopy(data['product'])
-        meta = migrate._json(runtime.code/'.agm-code-manifest.json')
         old_source = dict(old_product['source'], version=old_product['product_code_version'])
         old_inventory = versions.descriptor(runtime, old_source, meta['files'])
         noop = old_inventory == target
@@ -169,15 +216,21 @@ def _plan(request, *, allow_marker=False):
         if direction == 'rollback' and not versions.installed_before(runtime, target):
             _fail('Rollback target has no verified successful installation receipt')
         conversion = None if noop else _conversion(request, data, target, direction)
-        # Current templates must remain compatible. This release supports code-only
-        # conversions, not silently changing native discovery or user entry policy.
-        old_files = {x['path']:x['sha256'] for x in meta['files']}
-        for name in ('scripts/agents.json','scripts/agm_core/user_entries.py'):
-            if old_files.get(name) != source['files'].get(name):
-                _fail('Conversion has no handler for changed entry contract')
+        # Current templates must remain compatible; the single exception is the
+        # exact whitelisted v1.11 entry-contract conversion (see whitelist above):
+        # any other hash pair for these two files still has no handler.
+        if contract_before != contract_after and not whitelisted:
+            _fail('Conversion has no handler for changed entry contract')
         if not noop: data['product'] = _product(source, op, old_product)
     if not noop and os.path.lexists(bootstrap): _fail('Operation exists; use recovery')
     facts = _entry_facts(data)
+    if whitelisted and not noop and direction == 'upgrade':
+        # 旧产品 Skill 投影退化为惰性:磁盘链接原地保留(已记入 entry_facts,升级
+        # 期间不触碰);此处仅注销 machine 账中的对象登记——当前收窄路径表(仅
+        # 用户级入口文件)不再容纳投影位,保留登记会使账本无法加载/序列化。
+        # 回退到 P 后,P 的装配器会把同目标链接按 reused 重新登记。
+        data['machine']['objects'] = {oid: obj for oid, obj in data['machine']['objects'].items()
+                                      if obj['kind'] != 'skill_symlink'}
     outputs = []
     old_files = {} if old_inventory is None else {x['path']:x for x in old_inventory['release']['files']}
     new_files = {x['path']:x for x in files}

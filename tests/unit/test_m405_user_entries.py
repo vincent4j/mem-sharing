@@ -1,8 +1,6 @@
 """M4-05 regressions: user-entry planning/approved assembly on synthetic HOME."""
 import copy
 import json
-import os
-import shutil
 import sys
 import tempfile
 import unittest
@@ -153,7 +151,7 @@ class UserEntryFixture(unittest.TestCase):
 
     # ---- approved execution -------------------------------------------------
 
-    def test_execute_writes_entries_projection_and_ledger(self):
+    def test_execute_writes_entries_and_ledger_without_skill_projection(self):
         self.seed_codex_package()
         result = self.execute()
         self.assertEqual(result["status"], "completed", result)
@@ -162,14 +160,15 @@ class UserEntryFixture(unittest.TestCase):
         data = entry.read_bytes()
         self.assertIn(BASE_MARKER["start"].encode(), data)
         self.assertIn(str(self.memory_index).encode(), data)
-        projection = self.home / ".codex" / "skills" / "agent-group-memory"
-        self.assertTrue(projection.is_symlink())
-        self.assertEqual(str(projection.resolve()), str(self.runtime.code.resolve()))
+        # v1.11:入口文本携带治理条款与 /agent-group 菜单;无任何 Skill 投影落点。
+        self.assertIn(user_entries.GOVERNANCE_RULES_TEXT.encode(), data)
+        self.assertIn("/agent-group 菜单".encode(), data)
+        self.assertIn("enable-memory".encode(), data)
+        self.assertFalse((self.home / ".codex" / "skills").exists())
         ledger = self.load_ledger()
         self.assertEqual(ledger["machine"]["agents"]["codex"]["installation"]["status"], "installed")
         objects = ledger["machine"]["objects"]
-        self.assertEqual(sorted(objects),
-                         [str(entry) + "#public-source", str(projection) + "#skill"])
+        self.assertEqual(sorted(objects), [str(entry) + "#public-source"])
         for obj in objects.values():
             self.assertEqual(obj["scope"], "machine")
             self.assertEqual(obj["consumers"], [])
@@ -208,28 +207,29 @@ class UserEntryFixture(unittest.TestCase):
         self.assertEqual(self.tree(), before)
         self.assertEqual(self.runtime.registry.read_bytes(), registry_bytes)
 
-    def test_foreign_skill_link_and_copied_directory_conflicts_stop(self):
+    def test_projection_targets_are_never_touched_by_entry_planning(self):
+        # v1.11:产品 Skill 投影取消——预置的投影位(链接/目录)不再是受管对象,
+        # 规划与执行都不触碰它们,也不再因占用而整单停写。
         self.seed_codex_package()
-        for mutation in ("foreign-link", "copied-dir"):
-            with self.subTest(scene=mutation):
-                self.runtime.code.mkdir(parents=True, exist_ok=True)
-                (self.home / ".codex").mkdir(exist_ok=True)
-                target = self.home / ".codex" / "skills" / "agent-group-memory"
-                target.parent.mkdir(parents=True, exist_ok=True)
-                if os.path.lexists(target):
-                    # 前一子场景留下的链接/目录先清掉,两个场景互不共享现场
-                    if target.is_symlink() or not target.is_dir():
-                        os.unlink(target)
-                    else:
-                        shutil.rmtree(target)
-                if mutation == "foreign-link":
-                    target.symlink_to(self.area / "somewhere-else", target_is_directory=True)
-                else:
-                    target.mkdir()
-                result = self.preview()
-                self.assertEqual(result["status"], "failed", result)
-                self.assertEqual(result["errors"][0]["code"], "entry_conflict")
-                self.assertTrue(target.exists() or target.is_symlink())
+        target = self.home / ".codex" / "skills" / "agent-group-memory"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.mkdir()
+        (target / "foreign").write_bytes(b"keep me")
+
+        def skills_tree():
+            root = self.home / ".codex" / "skills"
+            return {str(p.relative_to(root)): (p.read_bytes(), p.stat().st_mtime_ns)
+                    if p.is_file() and not p.is_symlink() else (None, None)
+                    for p in root.rglob("*")} if root.exists() else {}
+        before = skills_tree()
+        result = self.execute()
+        self.assertEqual(result["status"], "completed", result)
+        self.assertTrue((self.home / ".codex" / "AGENTS.md").is_file())
+        self.assertTrue((target / "foreign").is_file())
+        self.assertEqual(skills_tree(), before)
+        ledger = self.load_ledger()
+        self.assertFalse(any(obj["kind"] == "skill_symlink"
+                             for obj in ledger["machine"]["objects"].values()))
 
     def test_symlinked_agent_dir_is_a_conflict(self):
         self.seed_codex_package()
@@ -312,8 +312,19 @@ class UserEntryFixture(unittest.TestCase):
         ledger = self.load_ledger()
         self.assertNotIn(str(entry) + "#convention", ledger["machine"]["objects"])
         self.assertEqual(ledger["machine"]["agents"]["workbuddy"]["installation"]["status"], "installed")
-        projection = self.home / ".workbuddy" / "skills" / "agent-group-memory"
-        self.assertTrue(projection.is_symlink())
+        self.assertFalse((self.home / ".workbuddy" / "skills").exists())
+
+    def test_workbuddy_machine_convention_carries_governance_and_menu(self):
+        self.seed_workbuddy_bundle()
+        result = self.execute(detect_runner=self.workbuddy_runner())
+        self.assertEqual(result["status"], "completed", result)
+        entry = self.home / ".workbuddy" / "MEMORY.md"
+        data = entry.read_bytes()
+        self.assertIn(user_entries.WORKBUDDY_CONVENTION_TEXT.encode(), data)
+        self.assertIn(user_entries.GOVERNANCE_RULES_TEXT.encode(), data)
+        self.assertIn(user_entries.WORKBUDDY_FALLBACK_TEXT.encode(), data)
+        self.assertIn("/agent-group 菜单".encode(), data)
+        self.assertIn("批量启用记忆".encode(), data)
 
     def test_workbuddy_existing_entry_without_block_is_preserved(self):
         self.seed_workbuddy_bundle()

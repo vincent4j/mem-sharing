@@ -1,18 +1,17 @@
 """M4-05: machine-level user entry planning and approved assembly.
 
 One planner serves both first install and later agent accession (决策单 §7.2):
-only executors detected as installed get user entries and the product Skill
-projection; absent/unknown agents are reported and never written; an explicitly
-requested agent that is not installed stops the whole request before any write.
+only executors detected as installed get user entries; absent/unknown agents
+are reported and never written; an explicitly requested agent that is not
+installed stops the whole request before any write.
 
 Templates reuse the existing M2/M3 semantics instead of a second dialect:
 - WorkBuddy 用户约定: enable.py 的既有 user_convention 文本与 BASE_MARKER(测试锁定
-  两处文本一致);
+  两处文本一致),机器级块在其后追加 v1.11 治理条款与 /agent-group 菜单;
 - Codex 用户级公共源块(native): 同一 BASE_MARKER 机制,追加“开工先读公共记忆”指针块
-  (DESIGN §4.8),指向本机公共源索引 R/memories/MEMORY.md;
+  (DESIGN §4.8),指向本机公共源索引 R/memories/MEMORY.md,并携带治理条款与菜单;
 - Claude @import(import_agents): 复用 enable.py 的引用行语义,引用同一公共源索引;
-- 产品自身 Skill 投影: H/<agent>/skills/agent-group-memory → C(layout.code),
-  已有同目标链接复用,异目标链接/复制目录冲突整单停写,不 repoint。
+  治理条款与菜单由公共源文本承载(v1.11:产品自身 Skill 投影取消,无任何 Skill 落点)。
 
 Managed-block semantics for registered machine units: on-disk bytes differing
 from the registered fingerprint is drift and stops the whole order (no template
@@ -42,8 +41,7 @@ from . import layout as layout_module
 from . import paths as agm_paths
 from . import registry as registry_module
 from .enable import BASE_MARKER
-from .entries import (EntryConflict, block_fingerprint, link_fingerprint,
-                      sha256, verify_link)
+from .entries import EntryConflict, block_fingerprint, sha256
 from .transaction import (Change, Snapshot, Transaction, TransactionError,
                           read_snapshot, write_lock)
 
@@ -61,6 +59,48 @@ def _installer_source(code, fingerprint, *, preview):
         _INSTALLER_SOURCE.reset(token)
 # enable.py 的既有 WorkBuddy 用户约定文本(读它复用,不另造第二份);测试锁定一致。
 WORKBUDDY_CONVENTION_TEXT = "项目规则读取当前项目根 AGENTS.md。保留已有公共源与用户约定。"
+
+# v1.11/v1.12/§16(2026-10-30 用户裁定)用户规则治理条款与 /agent-group 会话菜单:
+# 写入用户级入口文本与公共源模板;菜单逐项映射既有命令与安装器参数,零新机制。
+# 术语用“启用/停用”(用户裁定,装配不好理解),命令名 enable-memory 等保持不变。
+GOVERNANCE_RULES_TEXT = (
+    "用户规则治理:"
+    "①写入纪律——公共内容只写公共指定文件(R/memories),禁止写进自己 Agent 的用户文件;"
+    "Agent 独有内容才写各自用户文件;"
+    "②Agent 独有内容永不并入公共、永不删除;"
+    "③新项目默认启用——进入尚未启用记忆的 Git 主 checkout 项目时,自动创建项目规则骨架"
+    "(AGENTS.md 骨架+桥接块,不创建 CLAUDE.md)并默认启用记忆"
+    "(记录库默认位置 docs/context-keeper/,不询问);非 Git 目录不触发;用户显式 --no-memory 可事后停用。"
+    "旧项目同走此通道,差异只在已有文件的处理:已有 AGENTS.md 的项目保留全文,只追加桥接块;"
+    "已有 CLAUDE.md 保留全文,只补 @AGENTS.md 引用行;"
+    "已有 WorkBuddy MEMORY.md 顶部补桥接块,原文字节下移;"
+    "不回溯项目历史,项目经历从启用时刻开始记。"
+)
+# §16 兜底接入条款:项目级入口按实际使用驱动,各执行器用户级规则各含一条幂等条款;
+# Claude 的经 @import 由公共源文本承载(DESIGN §4.8、decisions-m4 §15/§16)。
+CLAUDE_FALLBACK_TEXT = (
+    "项目级入口按实际使用驱动:首次在本项目实际使用且项目已启用但缺 CLAUDE.md 引用时,"
+    "创建仅含 @AGENTS.md 引用的 CLAUDE.md(幂等,唯一创建路径)。"
+)
+WORKBUDDY_FALLBACK_TEXT = "项目级入口按实际使用驱动:首次实际使用产生原生记忆目录后,补顶部桥接块(幂等)。"
+CODEX_FALLBACK_TEXT = "项目级入口按实际使用驱动:首次实际使用时 AGENTS.md 若缺,按默认启用条款创建。"
+
+
+def agent_group_menu_text(code):
+    """菜单文本;命令基路径为受管产品代码 C(layout.code),逐项映射既有 CLI。"""
+    cli = "python3 %s/scripts/agm.py" % code
+    installer = "python3 %s/scripts/install.py" % code
+    return (
+        "/agent-group 菜单:"
+        "给项目启用记忆→%s enable-memory --project <项目绝对路径> --memory;"
+        "添加新的 Agent→%s --agent <执行器名>(安装器同版幂等通道,先核验安装事实);"
+        "健康检查→%s check-memory --project <项目绝对路径>;"
+        "停用记忆→%s remove-memory --project <项目绝对路径>;"
+        "整理用户规则→只读扫描各家用户规则,分类公共/独有,公共项经批准迁入公共源,"
+        "冗余/过时项逐项批准删除或修改,永不自动删除;"
+        "批量启用记忆→给定目录,扫描其下未启用记忆的项目,汇总预览,一次批准后批量执行。"
+        % (cli, installer, cli, cli)
+    )
 
 
 class UserEntryError(ValueError):
@@ -96,8 +136,8 @@ def _confirm(request, approval_plan):
 
 
 def _require_real_parents(path, home):
-    # 与 layout.validate_paths 同口径,但只检查父目录链:叶子本身允许是受管符号链接
-    # (Skill 投影)或普通文件;入口文件的叶子类型由 read_snapshot 的冲突检查把关。
+    # 与 layout.validate_paths 同口径,但只检查父目录链:叶子本身允许是普通文件,
+    # 入口文件的叶子类型由 read_snapshot 的冲突检查把关。
     path = Path(path)
     component = Path(home)
     for part in path.relative_to(Path(home)).parts[:-1]:
@@ -123,44 +163,37 @@ def _preflight_machine_units(ledger):
 
     Mirrors enable's preflight: absent units are check-reportable gaps and are
     skipped (the planner may legitimately recreate units in this request's
-    scope); a drifted managed block or a foreign Skill link stops everything.
+    scope); a drifted managed block stops everything.
     """
     problems = []
     for obj in ledger["machine"]["objects"].values():
+        if obj["kind"] not in ("block", "user_convention"):
+            continue
         snap = read_snapshot(obj["path"])
-        if obj["kind"] in ("block", "user_convention"):
-            if snap.kind == "absent":
-                continue
-            if snap.kind != "file":
-                problems.append("%s: 承载文件不是普通文件" % obj["path"])
-                continue
-            try:
-                actual = block_fingerprint(snap.data, **_marker_args(obj["marker"]))
-            except EntryConflict as exc:
-                problems.append("%s: 标记异常 %s" % (obj["path"], exc))
-                continue
-            if actual is None:
-                continue
-            expected = (obj.get("fingerprint") or {}).get("value")
-            if expected is not None and actual != expected:
-                problems.append("%s: 受管块指纹漂移" % obj["path"])
-        elif obj["kind"] == "skill_symlink":
-            if not Path(obj["path"]).exists() and not Path(obj["path"]).is_symlink():
-                continue
-            try:
-                verify_link(obj["path"], obj["link_target"])
-            except EntryConflict as exc:
-                problems.append("%s: %s" % (obj["path"], exc))
+        if snap.kind == "absent":
+            continue
+        if snap.kind != "file":
+            problems.append("%s: 承载文件不是普通文件" % obj["path"])
+            continue
+        try:
+            actual = block_fingerprint(snap.data, **_marker_args(obj["marker"]))
+        except EntryConflict as exc:
+            problems.append("%s: 标记异常 %s" % (obj["path"], exc))
+            continue
+        if actual is None:
+            continue
+        expected = (obj.get("fingerprint") or {}).get("value")
+        if expected is not None and actual != expected:
+            problems.append("%s: 受管块指纹漂移" % obj["path"])
     if problems:
         raise UserEntryError("drift", "登记的机器级受管单元漂移,整单停写: " + "; ".join(problems))
 
 
 class _Planner:
-    def __init__(self, *, config, runtime, ledger, detection, effective, transaction, verified_preview=False):
+    def __init__(self, *, config, runtime, ledger, detection, effective, transaction):
         self.config, self.runtime = config, runtime
         self.ledger, self.detection, self.effective = ledger, detection, effective
         self.transaction = transaction
-        self.verified_preview = verified_preview
         self.before, self.after = {}, {}
         self.objects = {}  # oid -> planned machine object (upsert)
         self.notes = []
@@ -177,13 +210,8 @@ class _Planner:
         return self.after[path]
 
     def _new_object(self, oid, kind, path, agent, ownership, *, marker=None, value=None,
-                    target=None, original_existed=None):
-        if kind == "skill_symlink":
-            basis = "link_target"
-        elif kind in ("block", "user_convention"):
-            basis = "block_bytes"
-        else:
-            basis = "file_bytes"
+                    original_existed=None):
+        basis = "block_bytes" if kind in ("block", "user_convention") else "file_bytes"
         created = ownership == "created"
         if original_existed is None:
             original_existed = not created
@@ -193,7 +221,7 @@ class _Planner:
             "fingerprint": None if value is None else
                 {"algorithm": "sha256", "basis": basis, "value": value},
             "original_existed": original_existed,
-            "link_target": str(target) if target else None,
+            "link_target": None,
             "backup_manifest": str(self.transaction.manifest_path) if (created and self.transaction) else None,
             "consumers": [],
         }
@@ -273,7 +301,7 @@ class _Planner:
             if snap.kind == "absent" or (snap.kind == "file" and not any(
                     l.strip() == line for l in (snap.data or b"").split(b"\n"))):
                 raise UserEntryError(
-                    "drift", "已登记共享引用单元缺失引用行: %s;修复属项目层,机器装配不代写" % path)
+                    "drift", "已登记共享引用单元缺失引用行: %s;修复属项目层,机器启用不代写" % path)
             self.notes.append("referenced shared import unit: " + str(path))
             return
         snap = self.snapshot(path)
@@ -300,66 +328,10 @@ class _Planner:
             raise UserEntryError("drift", "共享受管块标记异常,整单停写: %s (%s)" % (path, exc)) from exc
         if snap.kind == "absent" or actual is None:
             raise UserEntryError(
-                "drift", "已登记共享用户约定缺失: %s;修复属项目 enable/check,机器装配不代写" % path)
+                "drift", "已登记共享用户约定缺失: %s;修复属项目 enable/check,机器启用不代写" % path)
         trusted = (obj.get("fingerprint") or {}).get("value")
         if trusted is not None and actual != trusted:
             raise UserEntryError("drift", "共享受管块漂移,整单停写: " + str(path))
-
-    def skill_projection(self, agent):
-        code = self.runtime.code
-        if not (code / "SKILL.md").is_file() and not self.verified_preview:
-            raise UserEntryError(
-                "product_code_missing",
-                "产品代码源缺失,无法投影 Skill: %s;先完成/修复机器安装" % code)
-        for raw in agm_paths.user_skill_paths(self.config, [agent], home=str(self.runtime.home)):
-            path = Path(raw)
-            _require_real_parents(path, self.runtime.home)
-            oid = str(path) + "#skill"
-            registered = None
-            for obj in self.units.values():
-                if obj["kind"] == "skill_symlink" and obj["path"] == str(path):
-                    registered = obj
-                    break
-            # read_snapshot 对目录抛 path_conflict,先给出投影位专属的明确冲突语义
-            if path.is_dir() and not path.is_symlink():
-                raise UserEntryError(
-                    "entry_conflict",
-                    "Skill 投影位被复制目录/文件占用: " + str(path) + ";整单停写")
-            snap = self.snapshot(path)
-            if registered is not None and registered["scope"] == "user":
-                self._verify_shared_link(registered, path)
-                continue
-            if registered is not None:
-                self._verify_shared_link(registered, path)  # machine unit: same strictness
-                self._adopt_existing(oid, registered, agent=agent)
-                continue
-            if snap.kind == "symlink":
-                resolved = str(path.resolve())
-                if resolved != str(code.resolve()):
-                    raise UserEntryError(
-                        "entry_conflict",
-                        "Skill 投影位已有异目标链接: %s -> %s(预期 %s);整单停写"
-                        % (path, resolved, code))
-                self.objects[oid] = self._new_object(oid, "skill_symlink", path, agent, "reused",
-                                                     target=code.resolve(),
-                                                     value=link_fingerprint(code.resolve()))
-                self.notes.append("reused existing same-target skill link: " + str(path))
-                continue
-            if snap.kind != "absent":
-                raise UserEntryError(
-                    "entry_conflict",
-                    "Skill 投影位被复制目录/文件占用: " + str(path) + ";整单停写")
-            self.after[path] = Change.symlink(path, code, expected=snap).after
-            self.objects[oid] = self._new_object(oid, "skill_symlink", path, agent, "created",
-                                                 target=code.resolve(),
-                                                 value=link_fingerprint(code.resolve()))
-
-    @staticmethod
-    def _verify_shared_link(obj, path):
-        try:
-            verify_link(path, obj["link_target"])
-        except EntryConflict as exc:
-            raise UserEntryError("drift", "已登记 Skill 链接漂移/冲突,整单停写: %s (%s)" % (path, exc)) from exc
 
     # ---- outputs -----------------------------------------------------------
 
@@ -369,10 +341,7 @@ class _Planner:
             after = self.after[path]
             if after == snap:
                 continue
-            if after.kind == "symlink":
-                result.append(Change.symlink(path, after.target, expected=snap))
-            else:
-                result.append(Change.file(path, after.data, expected=snap))
+            result.append(Change.file(path, after.data, expected=snap))
         return result
 
     @staticmethod
@@ -431,7 +400,6 @@ def _plan(request, runtime, detection, effective, *, transaction):
     allowed = agm_paths.allowed_user_paths(config, None, home=home)
     context = _INSTALLER_SOURCE.get()
     verified = request.get("verified_product_source")
-    verified_preview = False
     if verified is not None:
         if context is None or context[0] != str(runtime.code):
             raise UserEntryError("installer_context_required", "verified_product_source is installer-only")
@@ -444,30 +412,34 @@ def _plan(request, runtime, detection, effective, *, transaction):
                 raise UserEntryError("product_code_drift", "C differs from the approved product source")
         elif not context[2] or code_skill.is_symlink():
             raise UserEntryError("product_code_missing", "Installer execution requires verified code at C")
-        verified_preview = context[2] and transaction is None
     ledger, registry_snap = _load_ledger(runtime, allowed)
     if ledger is not None:
         _preflight_machine_units(ledger)
     planner = _Planner(config=config, runtime=runtime, ledger=ledger,
-                       detection=detection, effective=effective, transaction=transaction,
-                       verified_preview=verified_preview)
+                       detection=detection, effective=effective, transaction=transaction)
+    governance = GOVERNANCE_RULES_TEXT
+    menu = agent_group_menu_text(runtime.code)
     for agent in effective:
         entry = config[agent]
         user_path = Path(agm_paths.expand_path(entry["user_entry"], home=home))
         _require_real_parents(user_path, runtime.home)
         if entry["rule_mode"] == "user_convention":
             planner.marker_block(agent, user_path,
-                                 _wrap_block(BASE_MARKER, WORKBUDDY_CONVENTION_TEXT),
+                                 _wrap_block(BASE_MARKER, "\n".join(
+                                     [WORKBUDDY_CONVENTION_TEXT, governance,
+                                      WORKBUDDY_FALLBACK_TEXT, menu])),
                                  "#convention", append_to_unblocked=False, note_label="user convention")
         elif entry["rule_mode"] == "native":
-            body = "开始任务前读取并遵守 %s;读不到就说明。" % planner.memory_index
+            body = "\n".join([
+                "开始任务前读取并遵守 %s;读不到就说明。" % planner.memory_index,
+                governance, CODEX_FALLBACK_TEXT, menu])
             planner.marker_block(agent, user_path, _wrap_block(BASE_MARKER, body),
                                  "#public-source", append_to_unblocked=True, note_label="public-source block")
         elif entry["rule_mode"] == "import_agents":
+            # Claude 经 @import 读公共源;治理条款与菜单由公共源文本承载。
             planner.import_line(agent, user_path, ("@" + str(planner.memory_index)).encode("utf-8"))
         else:  # pragma: no cover - 路径表枚举已限定 rule_mode
             raise UserEntryError("agents_table_invalid", "未知 rule_mode: %r" % entry["rule_mode"])
-        planner.skill_projection(agent)
     requested = agm_paths.resolve_agents(request.get("agents"))
     agent_records = planner.machine_agent_records()
     machine_agents = sorted(a for a, record in agent_records.items() if record is not None)
@@ -502,7 +474,7 @@ def _apply_registry(plan, runtime):
     if plan["ledger"] is None:
         raise UserEntryError(
             "machine_not_installed",
-            "机器台账缺失: %s;用户级装配由安装器在机器安装完成后执行" % runtime.registry)
+            "机器台账缺失: %s;用户级启用由安装器在机器安装完成后执行" % runtime.registry)
     data = copy.deepcopy(plan["ledger"])
     for agent, record in plan["agent_records"].items():
         if record is not None:
@@ -568,7 +540,7 @@ def _run(request, runtime, *, locked):
             and not plan["approval_plan"]["machine_agents"]:
         return _result(status="completed", agents=agents, detection=detection,
                        changes=[], warnings=list(plan["notes"]) + [
-                           "无待装配差异:请求的 installed 执行器均已接入,零写入"])
+                           "无待启用差异:请求的 installed 执行器均已接入,零写入"])
     elif _confirm(request, plan["approval_plan"]):
         evidence = {"confirmed_at": _now(), "reference": "interactive exact user-entry plan confirmation"}
     else:
@@ -603,7 +575,7 @@ def _run(request, runtime, *, locked):
         allowed_user_paths=allowed, previous=fresh["ledger"])
     result = _result(status="completed", agents=agents, detection=detection,
                      changes=fresh["approval_plan"]["changes"], warnings=list(fresh["notes"]))
-    result["warnings"].append("runtime acceptance pending: 用户级指针/Skill 是否被新会话读取未验证")
+    result["warnings"].append("runtime acceptance pending: 用户级入口是否被新会话读取未验证")
     return result
 
 

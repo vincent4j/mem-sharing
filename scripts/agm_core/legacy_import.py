@@ -9,7 +9,10 @@ import unicodedata
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-ROOTS = ('memories', 'references', 'skills')
+# v1.11(2026-10-30 裁定):R 不建 skills/、mcp/,v0 复制范围收窄为内容两目录;
+# skills/mcp 原地不动、不复制、不镜像,仅登记进导入计划的排除清单。
+ROOTS = ('memories', 'references')
+PRESERVED_IN_PLACE = ('skills', 'mcp')
 
 
 class LegacyError(ValueError):
@@ -160,8 +163,13 @@ def plan_import(root, operation_id):
     for item in items:
         if item['target']==str(root/'memories/MEMORY.md'):
             item['disposition']='legacy_index';item['after']=digest(index)
+    excluded = [n for n in tree['nodes'] if n.get('disposition') == 'excluded_link']
+    for name in PRESERVED_IN_PLACE:
+        # 原地保留登记:不在 ROOTS 内、不复制不镜像,只进排除清单供批准与报告展示。
+        if os.path.lexists(root / name):
+            excluded.append({'path': name, 'type': 'directory', 'disposition': 'preserved_in_place'})
     return {'identity_warning':'未发现可核验产品痕迹,不能排除历史台账被删。仅在确认这是 v0 手工目录后批准 confirmed_v0;否则停止恢复。禁止并发旧同步/管理写操作。', 'source': tree, 'source_root': str(root), 'source_tree_sha256': tree['tree_sha256'],
             'snapshot': str(archive / 'source'), 'manifest': str(archive / 'import-manifest.json'),
             'package': str(package), 'items': items, 'links': links,
-            'excluded': [n for n in tree['nodes'] if n.get('disposition') == 'excluded_link'],
+            'excluded': excluded,
             'index_hex': index.hex(), 'index_before_sha256': old_index['sha256'] if old_index else None}

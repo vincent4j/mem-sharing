@@ -1,8 +1,8 @@
-"""agents.json 路径表合同实现(M2-03;M4-05 扩展用户级 Skill 根与强安装信号)。
+"""agents.json 路径表合同实现(M2-03;M4-05 扩展强安装信号;v1.11 移除用户级 Skill 投影面)。
 
 加载并严格校验 scripts/agents.json,展开 {home}/{project} 占位符,选择平台与执行器目标,
 并把目标映射为用户级受管路径(allowed_user_paths,交内核做 user/machine 对象校验):
-用户级入口文件 + 各家用户级 Skill 根下的本产品 Skill 投影位。
+仅用户级入口文件(2026-10-30 裁定:产品自身 Skill 投影取消,R 不建 skills/mcp)。
 
 安装信号(installation_signals)分两级:
 - hint(directory_exists):目录存在只是线索,可能是残留目录,不证明已安装;目录缺失
@@ -30,7 +30,6 @@ AGENT_FIELDS = (
     "project_rule_entry",
     "project_bridge_entry",
     "project_skill_roots",
-    "user_skill_roots",
     "installation_signals",
     "rule_mode",
     "bridge_owner",
@@ -53,9 +52,6 @@ _SIGNAL_FIELD_SETS = {
         "require_signature_identifier_match", "strength")),
     "user_receipt": frozenset(("kind", "product_name", "strength")),
 }
-# 本产品 Skill 名:与 layout.RuntimeLayout.code(skills/agent-group-memory)成对出现;
-# 用户级投影目标路径由此展开,layout 属共享文件不可在此 import,故重复字面量。
-PRODUCT_SKILL_NAME = "agent-group-memory"
 
 _PLACEHOLDER_RE = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 _ALLOWED_PLACEHOLDERS = frozenset(("home", "project"))
@@ -183,9 +179,6 @@ def _validate_agent(platform_name, agent, entry):
     _check_string_list(entry["project_skill_roots"], "%s.project_skill_roots" % label)
     for root in entry["project_skill_roots"]:
         _check_placeholders(root, "%s.project_skill_roots 项" % label)
-    _check_string_list(entry["user_skill_roots"], "%s.user_skill_roots" % label)
-    for root in entry["user_skill_roots"]:
-        _check_placeholders(root, "%s.user_skill_roots 项" % label)
     signals = entry["installation_signals"]
     if not isinstance(signals, list) or not signals:
         _fail("agents_table_invalid", "%s.installation_signals 必须是非空数组" % label)
@@ -341,37 +334,16 @@ def installation_hints(platform_config, agents=None, *, home, project=None):
     return hints
 
 
-def user_skill_paths(platform_config, agents, *, home, name=PRODUCT_SKILL_NAME):
-    """把目标执行器的用户级 Skill 根展开为 <root>/<name> 投影位(唯一、按 AGENT_ORDER)。
-
-    M4-05 合同:仅本产品 Skill 投影使用该函数;name 缺省为本产品 Skill 名。
-    """
-    if not isinstance(name, str) or not name or os.sep in name or name in (".", ".."):
-        raise PathsError("agents_table_invalid", "Skill 名必须是单个路径分量: %r" % (name,))
-    collected = []
-    for agent in resolve_agents(agents):
-        for template in platform_config[agent]["user_skill_roots"]:
-            root = expand_path(template, home=home)
-            expanded = os.path.join(root, name)
-            if expanded not in collected:
-                collected.append(expanded)
-    return collected
-
-
 def allowed_user_paths(platform_config, agents, *, home):
     """把目标执行器映射为用户级受管路径(唯一、按 AGENT_ORDER 排序)。
 
     M2-02 内核合同:凡涉及 user/machine 对象的 registry load/validate/serialize/commit
-    必须传该列表,不在表内的用户级路径一律拒绝;CLI 层不得自行放宽。M4-05 起列表在
-    用户级入口之外,还包含各家用户级 Skill 根下的本产品 Skill 投影位(仅此一个名字,
-    不放开整个 Skill 根)。
+    必须传该列表,不在表内的用户级路径一律拒绝;CLI 层不得自行放宽。v1.11(2026-10-30
+    裁定)起列表仅含用户级入口文件——产品自身 Skill 投影取消,不再包含任何 Skill 位。
     """
     collected = []
     for agent in resolve_agents(agents):
         expanded = expand_path(platform_config[agent]["user_entry"], home=home)
         if expanded not in collected:
             collected.append(expanded)
-        for path in user_skill_paths(platform_config, [agent], home=home):
-            if path not in collected:
-                collected.append(path)
     return collected

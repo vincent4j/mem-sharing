@@ -10,14 +10,24 @@ description: 多 Agent 记忆融合——跨执行器规则与项目记忆编排
 > 平台操作已验收(安装/重装含 M2-08 两项目真实装配与新会话读回、卸载、失败恢复,见
 > [docs/acceptance/m2-platforms.md](docs/acceptance/m2-platforms.md));Windows/Linux not-run,
 > 不得声称支持。WorkBuddy 桥接**待运行时验收**;M4(用户级层产品化)按
-> [docs/plan/tasks-m4.md](docs/plan/tasks-m4.md) 推进。唯一设计依据:[DESIGN.md](DESIGN.md) v1.6;
+> [docs/plan/tasks-m4.md](docs/plan/tasks-m4.md) 推进。唯一设计依据:[DESIGN.md](DESIGN.md) v1.10;
 > 实现合同:[docs/plan/architecture.md](docs/plan/architecture.md) v2;用户文档:[README.md](README.md)。
 
 ## 操作路由
 
+`/agent-group` 是产品 Skill 的会话入口，不是第四个 CLI 子命令。用户只打开入口、未指定操作时，展示以下菜单；用户已说明操作则直接路由：
+
+1. 给项目装配记忆 → `agm.py enable-memory --project <实际Git根>`。
+2. 添加新的 Agent → 请用户输入执行器名字，映射为 `codex`、`claude` 或 `workbuddy`，核验安装事实后走安装器同版幂等通道：`python3 -B scripts/install.py --source-manifest <已核验源JSON绝对路径> --agent <名字>`；按精确计划批准执行。
+3. 健康检查 → `agm.py check-memory --project <实际Git根>`（或明确请求的 `--all`）。
+4. 撤销装配 → `agm.py remove-memory --project <实际Git根>`，只撤销指定项目装配，保留机器安装与用户级接入。
+
+后装 Agent 接入不做自动化：不自动发现、不自动提示，由用户主动选择“添加新的 Agent”。名字输入不替代 installed 核验或精确计划批准；未知名字不猜测路径，未安装者不创建入口。安装事实核验只服务于用户主动请求。
+
+- 产品未安装 → 先读 [INSTALL.md](INSTALL.md)，从已核验源运行 `python3 -B scripts/install.py` 安装入口，并按安装页补齐 `--source/--commit/--version` 或 `--source-manifest` 后预览；经匹配的批准文件执行机器安装。以下三命令不隐式安装或升级产品，check 始终只读。
+
 - 用户请求装配/接入 → `python3 scripts/agm.py enable-memory [--project <Git根>] [--agent codex|claude|workbuddy ...] [--memory|--no-memory] [--approval-file <JSON>]`。
-  - 未指定 --agent 时目标固定三家(codex、claude、workbuddy),不按残留目录缩减(现行 M2 裁定;
-    DESIGN v1.6 已裁定改为仅"已验证安装"的执行器,残留 hint 不构成安装事实,M4-05 落地)。
+  - 未指定 --agent 时仅选择已验证 installed 的执行器；显式 --agent 也不能绕过安装事实。absent 不创建入口，unknown 只报告不写，残留 hint 不构成安装事实（M4 合同覆盖旧 M2 默认三家）。
   - 预览返回 5 时,把 stdout `next_action` 的精确计划用说人话转述给用户;用户确认后落盘为
     批准文件(补 `confirmed_at` UTC-`Z` 时间戳与 `reference` 确认出处),经 `--approval-file` 执行。
     非交互运行不得自行批准;现场与登记一致的幂等补装免新批准(由内核判定)。
@@ -26,13 +36,22 @@ description: 多 Agent 记忆融合——跨执行器规则与项目记忆编排
 - 用户请求撤销 → `python3 scripts/agm.py remove-memory [--project <Git根>] [--approval-file <JSON>]`;
   仅拆本工具创建的对象(链接与受管块),reused 内容、记录库与 context-keeper.json 永不触碰;
   精确计划预览需交互终端,非交互无批准只返回 5 门禁提示。
-- 用户提及未接入执行器:建议接入,不自动安装;目录存在只是安装线索(hint),可能是残留,
-  不构成安装事实,也不授权写入。
-- 不存在第四个修复命令;没有 --force/--repair。进程崩溃后的显式恢复是库级
-  `agm_core.transaction.recover_manifest`(操作员核对现场、确认并移除陈旧锁后执行),
-  不是 CLI 子命令,不得擅自对生产 registry 使用。
+- 用户主动选择添加执行器后才进行接入核验；目录存在只是安装线索（hint），不构成安装事实，也不授权写入。
+- 不存在第四个项目修复命令；没有 --force/--repair。机器安装中断使用独立安装器的 `--recover <journal绝对路径> --action continue|rollback --approval-file <批准文件绝对路径>`，详见 [INSTALL.md](INSTALL.md)。项目事务恢复仍是库级操作，不擅自清锁或对生产台账执行恢复。
+
+## 检索与分层读取
+
+检索 = 索引精确查找（find），不做语义搜索。按 [DESIGN v1.9 §4.7](DESIGN.md) 的读取约定：
+
+- L0 恒读：`memories/MEMORY.md` 每主题一行，包含“主题名 + 一句话当前结论 + 链接”，索引不超过 200 行 / 25KB。
+- 需要时读该主题 L1：`memories/<主题>.md` 开头几行概要，说明当前有效结论与待办。
+- 仍不足才读 L2：主题全文与 `references/` 手册；不全量注入所有主题。
+
+分层沿用索引和主题文件，不新增文件类型；概要由 Agent 整理时手写，不自动生成摘要；预算是固定惯例，不新增配置项。
 
 ## 输出与退出码
+
+以下为项目三命令合同；机器安装报告见 [INSTALL.md](INSTALL.md)。
 
 stdout 恒为单个 JSON envelope,字段固定:schema_version、command、status、projects、changes、
 warnings、errors、approval_required、next_action;errors[] 每项含 code、path、message、recovery。

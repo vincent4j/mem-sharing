@@ -185,7 +185,7 @@ def inspect_machine(request):
             observations[str(old.parent/'.agm.lock')] = _node(old.parent/'.agm.lock')
         for key in paths.allowed_user_paths(request['platform_config'], None, home=str(runtime.home)):
             p = Path(key)
-            # Projection leaves may be links; their parents may not be links.
+            # 入口文件父链不得为符号链接;叶子本身的类型由场景枚举如实记录。
             _real_chain(p.parent, runtime.home)
             observations[str(p)] = _node(p)
         locks = [old.parent/'.agm.lock' for old in known_old] + [runtime.home/'.agents-group-install.lock',runtime.lock,runtime.transaction_lock]
@@ -230,6 +230,19 @@ def inspect_machine(request):
             if version == 1:
                 _fail('schema1 at V is not a supported legacy source')
             allowed = paths.allowed_user_paths(request['platform_config'],None,home=str(runtime.home))
+            # v1.11:已装前驱(P)代码的 agents.json 自带 user_skill_roots 时,其 machine
+            # 账可能登记旧投影对象(当前收窄路径表已不含投影位)。只读路由装载并入
+            # 前驱自身投影位;写入授权仍由 upgrade 的精确白名单把关,此处零写入。
+            try:
+                installed_table = migrate._json(runtime.code/'scripts/agents.json')
+            except (OSError, ValueError):
+                installed_table = None
+            if isinstance(installed_table, dict) and any(
+                    isinstance(entry, dict) and 'user_skill_roots' in entry
+                    for platform in installed_table.get('platforms', {}).values()
+                    if isinstance(platform, dict) for entry in platform.values()):
+                from . import upgrade as upgrade_module
+                allowed = upgrade_module._legacy_contract_load_paths(runtime, allowed)
             data = registry.require_installed(registry.load_registry(runtime.registry,allowed_user_paths=allowed))
             _code_matches(runtime,data['product'])
             # Simultaneous regular old ledger is never selected by mtime.
@@ -289,8 +302,6 @@ def inspect_machine(request):
                 raw=Path(key).read_bytes()
                 if b'agent-group-memory:' in raw or str(runtime.root/'memories/MEMORY.md').encode() in raw:
                     _fail('Product entry without ledger')
-            if meta['kind']=='symlink' and Path(key).name==PRODUCT:
-                _fail('Product projection without ledger')
         empty = not runtime.root.exists() or not any(runtime.root.iterdir())
         if empty:
             result.update(scene='empty',channel='fresh')
@@ -371,10 +382,41 @@ def plan_install(request):
             output(Path(item['target']),after,origin='v0:'+item['path'])
         index=bytes.fromhex(imported['index_hex'])
     else:
-        index='# 公共记忆\n\n- [主题目录](topics/)\n'.encode()
+        index=('# 公共记忆\n\n'
+               '- 使用约定：中枢已初始化，主题结论由 Agent 经确认后手写维护。'
+               '[概要与全文](topics/使用约定.md)\n').encode()
+        topic=('# 使用约定\n\n## L1 概要\n\n'
+               '当前有效结论：公共记忆采用索引与主题文件，摘要由 Agent 手写，不自动生成。\n'
+               '用户规则治理条款、兜底接入条款与 /agent-group 菜单全文见索引头部。\n'
+               '待办：有新事实且获准记录时，更新对应主题结论与索引行。\n\n'
+               '## L2 正文\n\n'
+               '主题文件全文及 references/ 手册仅在概要不足时读取。\n'
+               + user_entries.GOVERNANCE_RULES_TEXT + '\n'
+               + user_entries.CLAUDE_FALLBACK_TEXT + '\n'
+               + user_entries.agent_group_menu_text(runtime.code) + '\n').encode()
+        output(runtime.root/'memories/topics/使用约定.md',
+               {'kind':'file','sha256':legacy.digest(topic),'mode':0o600},content=topic)
+    contract=('读取契约：L0 恒读 → 需要时读该主题 L1 概要段 → 仍不足才读 L2 全文。\n'
+              'L0 一主题一行：主题名 + 一句话当前结论 + 链接；索引 ≤200 行 / 25KB。\n'
+              'L1 位于主题文件开头，简列当前有效结论与待办；L2 为全文及 references/ 手册。\n'
+              '摘要在记忆整理时手写，不自动生成；增加主题文件，不加长索引。\n'
+              + user_entries.GOVERNANCE_RULES_TEXT + '\n'
+              + user_entries.CLAUDE_FALLBACK_TEXT + '\n'
+              + user_entries.agent_group_menu_text(runtime.code) + '\n\n')
+    if imported:
+        # Keep legacy bytes and relative targets intact; only the new index is ours.
+        index=index.replace(b'- [v0 ', '- v0 原文：历史字节已保存在只读阅读包，按需深读。 [v0 '.encode(),1)
+        index=index.replace('- [主题目录](topics/)'.encode(),
+                            '- 主题目录：新增主题按需维护，当前请先查看既有原文。[目录](topics/)'.encode())
+    index=index.replace('# 公共记忆\n\n'.encode(),('# 公共记忆\n\n'+contract).encode(),1)
+    if imported:
+        imported['index_hex']=index.hex()
+        for item in imported['items']:
+            if item['disposition']=='legacy_index': item['after']=legacy.digest(index)
     index_path=runtime.root/'memories/MEMORY.md'
     output(index_path,{'kind':'file','sha256':legacy.digest(index),'mode':_node(index_path).get('mode',0o600)},content=index)
-    directories={str(runtime.root/n) for n in ('memories','memories/topics','references','skills','mcp','backups','var')}
+    # v1.11(2026-10-30 裁定):R 不建 skills/、mcp/,首装结构仅内容两目录+台账+备份。
+    directories={str(runtime.root/n) for n in ('memories','memories/topics','references','backups','var')}
     if imported:
         directories.add(imported['package'])
         for item in imported['items']:

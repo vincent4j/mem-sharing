@@ -313,11 +313,11 @@ class SignalTableTests(unittest.TestCase):
                          ["directory_exists", "path_executable", "macos_app_bundle"])
         self.assertTrue(all(s["strength"] == "strong" for s in codex[1:]))
 
-    def test_repo_table_user_skill_roots_present(self):
+    def test_repo_table_has_no_user_skill_roots(self):
+        # v1.11:产品 Skill 投影取消,路径表不再携带用户级 Skill 根字段。
         table = paths.load_agents_table()
         for agent, entry in table["platforms"]["darwin"].items():
-            self.assertTrue(entry["user_skill_roots"], agent)
-            self.assertIn("{home}", entry["user_skill_roots"][0])
+            self.assertNotIn("user_skill_roots", entry, agent)
 
     def _invalid(self, mutate):
         table = json.loads((REPO / "scripts" / "agents.json").read_text(encoding="utf-8"))
@@ -327,8 +327,8 @@ class SignalTableTests(unittest.TestCase):
             paths.load_agents_table(path)
         self.assertEqual(ctx.exception.code, "agents_table_invalid")
 
-    def test_missing_user_skill_roots_rejected(self):
-        self._invalid(lambda entry: entry.pop("user_skill_roots"))
+    def test_user_skill_roots_field_rejected(self):
+        self._invalid(lambda entry: entry.update(user_skill_roots=["{home}/.codex/skills"]))
 
     def test_strong_kind_with_hint_strength_rejected(self):
         self._invalid(lambda entry: entry["installation_signals"][1].update(strength="hint"))
@@ -356,13 +356,12 @@ class SignalTableTests(unittest.TestCase):
         self.assertEqual(hints[0]["strength"], "hint")
         self.assertEqual(hints[0]["path"], "/TestHome/.codex")
 
-    def test_user_skill_paths_and_allowed_user_paths_include_projection(self):
+    def test_allowed_user_paths_contain_entries_only(self):
+        # v1.11:产品 Skill 投影取消,用户级受管路径仅含入口文件。
         config = paths.select_platform(paths.load_agents_table(), "darwin")
-        self.assertEqual(paths.user_skill_paths(config, ["claude"], home="/TestHome"),
-                         ["/TestHome/.claude/skills/agent-group-memory"])
-        allowed = paths.allowed_user_paths(config, ["claude"], home="/TestHome")
-        self.assertIn("/TestHome/.claude/skills/agent-group-memory", allowed)
-        self.assertIn("/TestHome/.claude/CLAUDE.md", allowed)
+        self.assertEqual(paths.allowed_user_paths(config, ["claude"], home="/TestHome"),
+                         ["/TestHome/.claude/CLAUDE.md"])
+        self.assertFalse(hasattr(paths, "user_skill_paths"))
 
 
 if __name__ == "__main__":

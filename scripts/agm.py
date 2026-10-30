@@ -47,6 +47,7 @@ from agm_core import layout as agm_layout
 SCHEMA_VERSION = 1
 KNOWN_COMMANDS = ("enable-memory", "remove-memory", "check-memory")
 WRITE_COMMANDS = ("enable-memory", "remove-memory")
+INSTALL_NEXT_ACTION = "先阅读 INSTALL.md，运行 python3 -B <已核验源>/scripts/install.py 预览机器安装；确认后用 --approval-file 执行。"
 
 STATUS_COMPLETED = "completed"
 STATUS_GAPS = "gaps"
@@ -504,6 +505,9 @@ def _envelope_from_result(command, result):
             STATUS_FAILED,
             errors=[error_item("command_result_invalid", "命令模块 errors[] 项缺少 code")],
         )
+    next_action=result.get("next_action")
+    if any(item.get("code") == "machine_not_installed" for item in errors):
+        next_action=INSTALL_NEXT_ACTION
     return make_envelope(
         command,
         result["status"],
@@ -512,7 +516,7 @@ def _envelope_from_result(command, result):
         warnings=result.get("warnings"),
         errors=errors,
         approval_required=result.get("approval_required", False),
-        next_action=result.get("next_action"),
+        next_action=next_action,
         runtime_layout=result.get("runtime_layout"),
     )
 
@@ -639,7 +643,7 @@ def _execute(argv, *, platform, interactive, table_path, home):
             approval_required=True,
             runtime_layout=agm_layout.resolve_layout(home).describe(),
             warnings=["非交互环境(非 TTY)无法提问;不从 stdin 猜测 yes,不因环境变量自动批准"],
-            next_action=(
+            next_action=INSTALL_NEXT_ACTION if not os.path.lexists(agm_layout.resolve_layout(home).registry) else (
                 "非交互写命令需 --approval-file <JSON> 绑定用户已确认的执行计划"
                 "(裁定 D-M2-04),或在交互终端运行"
             ),
@@ -657,7 +661,10 @@ def _execute(argv, *, platform, interactive, table_path, home):
         interactive=interactive,
         home=home or str(Path.home()),
     )
-    return dispatch(command, request)
+    result = dispatch(command, request)
+    if not os.path.lexists(agm_layout.resolve_layout(request['home']).registry):
+        result['next_action'] = INSTALL_NEXT_ACTION
+    return result
 
 
 def _detect_interactive(stdin, stdout):
