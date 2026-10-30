@@ -1,8 +1,6 @@
 <div align="center">
 
-# agent-group-memory
-
-**多 Agent 记忆融合 · Multi-Agent Memory Fusion**
+# 多 Agent 记忆融合 · Multi-Agent Memory Fusion
 
 给多个 AI 编程 Agent 装上同一份项目记忆。
 
