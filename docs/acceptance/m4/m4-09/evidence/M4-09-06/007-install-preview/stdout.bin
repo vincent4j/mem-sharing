@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "machine_route_future", "message": "Machine scene future: ['no supported source conversion']"}], "schema_version": 1, "status": "failed"}

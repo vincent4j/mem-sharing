@@ -1,4 +1,0 @@
---- before/source/scripts/new-file.py
-+++ after/source/scripts/new-file.py
-@@ -0,0 +1 @@
-+print("unlisted")

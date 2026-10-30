@@ -1,4 +1,0 @@
---- before/source/scripts/registry.json
-+++ after/source/scripts/registry.json
-@@ -0,0 +1 @@
-+{"schema_version":1,"projects":{},"shared_objects":{}}

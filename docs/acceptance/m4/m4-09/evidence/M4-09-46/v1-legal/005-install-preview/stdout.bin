@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "machine_route_unsupported", "message": "Machine scene unsupported: ['Old development ledger is diagnostic-only; preserve and reinstall']"}], "schema_version": 1, "status": "failed"}

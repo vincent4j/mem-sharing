@@ -1,9 +1,0 @@
---- before/home/.mem-sharing/var/registry.json
-+++ after/home/.mem-sharing/var/registry.json
-@@ -1,5 +1,5 @@
- {
--  "schema_version": 3,
-+  "schema_version": 3, "schema_version": 3,
-   "projects": {},
-   "shared_objects": {},
-   "product": {

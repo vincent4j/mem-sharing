@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "machine_route_interrupted", "message": "Machine scene interrupted: ['upgrade marker: /private/tmp/M4-09-10-1rjjqpn9/home/.mem-sharing-upgrade.json']"}], "schema_version": 1, "status": "failed"}

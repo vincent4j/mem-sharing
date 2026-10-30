@@ -1,6 +1,0 @@
---- before/unconfirmed-ck.json
-+++ after/unconfirmed-ck.json
-@@ -0,0 +1,3 @@
-+{
-+  "command": "install-context-keeper"
-+}

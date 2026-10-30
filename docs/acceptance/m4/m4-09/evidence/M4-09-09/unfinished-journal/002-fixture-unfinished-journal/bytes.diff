@@ -1,7 +1,0 @@
---- before/home/.mem-sharing-install-pending/journal.json
-+++ after/home/.mem-sharing-install-pending/journal.json
-@@ -0,0 +1,4 @@
-+{
-+  "status": "running",
-+  "product_id": "mem-sharing"
-+}

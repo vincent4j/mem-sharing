@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "source_drift", "message": "Source manifest drift: scripts/agm.py"}], "schema_version": 1, "status": "failed"}

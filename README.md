@@ -85,7 +85,7 @@ Agent 先回复“我来安装 memSharing，先检查运行环境和本机 Agent
 
 整理用户规则会先只读扫描，将公共、独有与归属不明内容分开。你可以调整逐条提议，再一次批准完整计划；不会自动删除冗余或过时内容。批量启用则由你指定目录，扫描 Git 主 checkout，每项目一行预览，一次批准后执行。批量入口为 `enable-memory-batch --directory <目录>`，已启用项目跳过，disabled 项目须单独显式恢复。两项操作的接口及证据边界见 [SKILL.md](SKILL.md)。
 
-进阶操作 `enable-memory --no-memory` 保留规则入口，只禁止自动项目经历记录与初始化；解除 disabled 须显式 `enable-memory --memory` 并批准精确计划。该保护由 Agent 遵守项目政策，不能视为 CK 脚本的硬拒写接口。
+进阶操作 `enable-memory --no-memory` 保留规则入口，只禁止自动项目经历记录与初始化；解除 disabled 须显式 `enable-memory --memory` 并批准精确计划。该保护由 Agent 遵守项目政策，不能视为 keeper 脚本的硬拒写接口。
 
 ## 用户记忆中枢
 

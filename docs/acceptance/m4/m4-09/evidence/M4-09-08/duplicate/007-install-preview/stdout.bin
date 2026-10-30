@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "machine_route_bad_registry", "message": "Machine scene bad_registry: ['duplicate JSON key: schema_version']"}], "schema_version": 1, "status": "failed"}

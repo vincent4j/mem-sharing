@@ -1,130 +1,24 @@
-# memSharing · 多 Agent 记忆共享与融合：文档地图
+# memSharing 文档地图
 
-给你的每一个 AI Agent 同一份记忆。
+memSharing(多 Agent 记忆共享与融合):纯文件、零服务、一句话安装的跨执行器记忆共享层。一行一文档:标题 + 一句话 + 相对链接。
 
-索引仓库根与 docs 的产品文档及记录库入口，不展开历史日志、计划和经验正文，不含 vendored Skill、代码及测试夹具。当前操作基线为 de9cc4f；入口从 INSTALL.md、README.md 与 SKILL.md 开始。验收快照是历史证据，不是当前操作指南；旧标题保留文件原名，不代表沿用旧品牌或已替代合同。链接只按当前 checkout 核对，安装产物需另核发布清单。
+## 入口文档
 
-## 安装
+- [README](README.md):产品门面——是什么、三记忆模型、快速上手、FAQ。
+- [INSTALL](INSTALL.md):安装操作页——五拍安装剧本、环境要求、keeper 尾步。
+- [SKILL](SKILL.md):会话内操作路由——/mem-sharing 六项短菜单与读取契约。
+- [DESIGN](DESIGN.md):设计总纲——定位、轻量化原则、概念模型与全部裁定的集成表述。
 
-- [安装 memSharing](INSTALL.md)：独立安装剧本、一次环境确认、CK 尾步与故障恢复。
+## 体系文档
 
-## 使用
+- [系统架构](docs/architecture.md):R/C/V 布局、台账 schema=3、事务与恢复、接入与升级机制。
+- [操作手册](docs/operations.md):安装/启用/批量/停用/整理/健康检查/排查的完整操作说明。
+- [验收门禁总览](docs/acceptance/index.md):各里程碑结论索引;原始证据在 Git 历史。
 
-- [agent-group-memory 项目规则](AGENTS.md)：项目规则或记录索引；历史记录不替代当前授权。
-- [memSharing · 多 Agent 记忆共享与融合](README.md)：memSharing 介绍、三种记忆、安装请求与添加新 Agent FAQ。
-- [memSharing 操作说明](SKILL.md)：/mem-sharing 六项菜单、短菜单路由、批量 CLI、实际使用兜底、停用三层与 L0/L1/L2 读取。
-- [自我进化索引](docs/context-keeper/evolution/index.md)：项目规则或记录索引；历史记录不替代当前授权。
-- [项目经历索引（CK 原文件标题为“项目记忆索引”）](docs/context-keeper/memory-keeper.md)：项目经历记录索引；历史记录不替代当前授权。
+## 决策记录
 
-## 设计
+- [M4 决策单](docs/plan/decisions-m4.md):§1~§28 全部裁定——现行合同的事实来源,含替代关系标注;更早决策见 Git 历史。
 
-- [agent-group-memory（多 Agent 记忆融合）设计方案](DESIGN.md)：设计与实现边界；历史条款须结合 M4 决策 §14—§26（后续裁定优先） 的替代关系阅读。
-- [实现架构 v2（M2-01 定稿稿）](docs/plan/architecture.md)：设计与实现边界；历史条款须结合 M4 决策 §14—§26（后续裁定优先） 的替代关系阅读。
+## 项目经历(由 keeper 管理)
 
-## 验收
-
-- [M1-01 接口冻结与 dogfood 预检](docs/acceptance/m1-01/preflight.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-02 规则基座装配 — 执行证据](docs/acceptance/m1-02/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-02 规则基座装配 — 装配方案（工作笔记）](docs/acceptance/m1-02/plan.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [第三轮原始操作交付（不作验收判定）](docs/acceptance/m1-03/20261029T110112Z-round3/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-03 执行失败与恢复证据](docs/acceptance/m1-03/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-04 第三轮原始回执](docs/acceptance/m1-04/20261029T110112Z-round3/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-04 未开始](docs/acceptance/m1-04/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-05 单份可公开存量样本搬运交付（不作验收判定）](docs/acceptance/m1-05/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-05 事实源原始对照（不作验收判定）](docs/acceptance/m1-05/fact-sources.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-05 格式符合性说明（对照 Keeper save.md 规范）](docs/acceptance/m1-05/format-compliance.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-05 样本可见性说明](docs/acceptance/m1-05/visibility.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [自我进化索引](docs/acceptance/m1-06/after-claude/evolution/index.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [项目记忆索引](docs/acceptance/m1-06/after-claude/memory-keeper.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [自我进化索引](docs/acceptance/m1-06/after-codex/evolution/index.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [项目记忆索引](docs/acceptance/m1-06/after-codex/memory-keeper.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [自我进化索引](docs/acceptance/m1-06/before/evolution/index.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [项目记忆索引](docs/acceptance/m1-06/before/memory-keeper.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-06 前两环运行证据](docs/acceptance/m1-06/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-06 UTC 时间线](docs/acceptance/m1-06/timeline.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [WorkBuddy 第三环用户操作单](docs/acceptance/m1-06/workbuddy-user-script.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [项目记忆索引](docs/acceptance/m1-07/before-closeout-memory-keeper.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1-07 负向验证与 M1 收口](docs/acceptance/m1-07/evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [N2 隔离 fixture 构造与观察边界](docs/acceptance/m1-07/fixture-method.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [隔离旧记忆](docs/acceptance/m1-07/fixture-old/docs/memory-keeper.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [手动收口入库的格式与验证边界](docs/acceptance/m1-07/format-compliance.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [负向会话原始运行索引](docs/acceptance/m1-07/runtime-index.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [WorkBuddy 负向验证用户操作单](docs/acceptance/m1-07/workbuddy-user-script.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M2-08 两项目复制验收](docs/acceptance/m2-08/README.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [knowwind 盘点与装配结果](docs/acceptance/m2-08/knowwind/report.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [approval-basis](docs/acceptance/m2-08/knowwind/second-run/approval-basis.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [knowwind 当前进度与未完成工作](docs/acceptance/m2-08/knowwind/second-run/claude-response.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [codex-response](docs/acceptance/m2-08/knowwind/second-run/codex-response.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [MEMORY](docs/acceptance/m2-08/knowwind/second-run/managed-output/.workbuddy/memory/MEMORY.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [AGENTS.md](docs/acceptance/m2-08/knowwind/second-run/managed-output/AGENTS.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [CLAUDE.md](docs/acceptance/m2-08/knowwind/second-run/managed-output/CLAUDE.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [knowwind M2-08 second-run](docs/acceptance/m2-08/knowwind/second-run/report.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [新会话证据](docs/acceptance/m2-08/knowwind/second-run/session-evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [WorkBuddy 新会话验收操作单（未执行）](docs/acceptance/m2-08/knowwind/second-run/workbuddy-user-script.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [WorkBuddy 只读新会话操作单（当前未执行）](docs/acceptance/m2-08/knowwind/workbuddy-user-script.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [poster-fit 盘点与停止报告](docs/acceptance/m2-08/poster-fit/report.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [approval-basis](docs/acceptance/m2-08/poster-fit/second-run/approval-basis.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [claude-response](docs/acceptance/m2-08/poster-fit/second-run/claude-response.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [codex-response](docs/acceptance/m2-08/poster-fit/second-run/codex-response.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [Poster Fit 项目规则（精简版）](docs/acceptance/m2-08/poster-fit/second-run/dirty-byte-snapshot/AGENTS.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [MEMORY](docs/acceptance/m2-08/poster-fit/second-run/managed-output/.workbuddy/memory/MEMORY.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [Poster Fit 项目规则（精简版）](docs/acceptance/m2-08/poster-fit/second-run/managed-output/AGENTS.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [CLAUDE](docs/acceptance/m2-08/poster-fit/second-run/managed-output/CLAUDE.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [poster-fit M2-08 second-run](docs/acceptance/m2-08/poster-fit/second-run/report.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [新会话证据](docs/acceptance/m2-08/poster-fit/second-run/session-evidence.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [WorkBuddy 新会话验收操作单（未执行）](docs/acceptance/m2-08/poster-fit/second-run/workbuddy-user-script.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [WorkBuddy 只读新会话操作单（当前未执行）](docs/acceptance/m2-08/poster-fit/workbuddy-user-script.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M2-07 幂等与故障矩阵验收](docs/acceptance/m2-matrix.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M2-09 平台矩阵验收](docs/acceptance/m2-platforms.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [a](docs/acceptance/m2-platforms/recover-scene/a.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M3 WorkBuddy 上游接管验收](docs/acceptance/m3/README.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [agent-group-memory.after.block](docs/acceptance/m3/agent-group-memory.after.block.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [agent-group-memory.before.block](docs/acceptance/m3/agent-group-memory.before.block.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [knowwind.after.block](docs/acceptance/m3/knowwind.after.block.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [knowwind.before.block](docs/acceptance/m3/knowwind.before.block.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [poster-fit.after.block](docs/acceptance/m3/poster-fit.after.block.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [poster-fit.before.block](docs/acceptance/m3/poster-fit.before.block.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-02 主 Agent 验收判定](docs/acceptance/m4/m4-02/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-03 实施交接（不含验收判定）](docs/acceptance/m4/m4-03/implementation.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-03 主 Agent 验收判定](docs/acceptance/m4/m4-03/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-04 实施交接（不是验收判定）](docs/acceptance/m4/m4-04/implementation.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-04 主 Agent 验收判定](docs/acceptance/m4/m4-04/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-05 主 Agent 验收判定](docs/acceptance/m4/m4-05-verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-06 交接（待主 Agent 独立验收）](docs/acceptance/m4/m4-06/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-06 主 Agent 验收判定](docs/acceptance/m4/m4-06/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-07 交接（待主 Agent 独立验收）](docs/acceptance/m4/m4-07/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-07 主 Agent 验收判定](docs/acceptance/m4/m4-07/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-08 代码交接（供主 Agent 独立验收）](docs/acceptance/m4/m4-08/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [用户规则整理向导：独立模块交接](docs/acceptance/m4/m4-08/organize/handoff.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-08 主 Agent 验收判定](docs/acceptance/m4/m4-08/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M4-09 memSharing 案例清单（修订，未执行）](docs/acceptance/m4/m4-09/cases.md)：按 §14—§26（后续裁定优先） 修订并追加 §24 场景的 62 案与接口 TODO，全部未执行。
-- [M4-08 文档与 M4-09 预备交接](docs/acceptance/m4/m4-09/documentation-handoff.md)：历次文档交接与本次 memSharing 续接增量，含代码侧核对项。
-- [R2/R3 修复 主 Agent 验收判定](docs/acceptance/m4/r2-r3/verdict.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [M1 验收执行清单（尚未执行）](docs/plan/m1-acceptance.md)：历史或当前验收材料，结论以该文范围与主 Agent 判定为准。
-- [批量启用 CLI 交接](docs/acceptance/m4/batch-enable/HANDOFF.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [批量启用 CLI 验收判定(集成者)](docs/acceptance/m4/batch-enable/verdict.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [CK 集成重构实施交接](docs/acceptance/m4/ck-refactor/HANDOFF.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [CK 装机尾步实施交接](docs/acceptance/m4/ck-refactor/ck-installer.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [CK 重构：机器合同与删除轮交接](docs/acceptance/m4/ck-refactor/machine-contract.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [CK 集成重构：项目侧实施交接](docs/acceptance/m4/ck-refactor/project-side-handoff.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [CK 集成重构验收判定(集成者)](docs/acceptance/m4/ck-refactor/verdict.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [M4-10 隔离首装执行清单（预备，未执行）](docs/acceptance/m4/m4-10-prep/isolated-install-checklist.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [M4-10 三家新会话验证脚本（预备，未执行）](docs/acceptance/m4/m4-10-prep/new-session-verification.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [M4-10 tag 前发布清单（预备，未执行）](docs/acceptance/m4/m4-10-prep/release-checklist.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [M4-10 合成项目物料规格（预备，未构造）](docs/acceptance/m4/m4-10-prep/synthetic-projects.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [memSharing 全库代码改名交接(§23,基线 98af5d6+bb6066a;§26 范围缩减后)](docs/acceptance/m4/rename/handoff.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-- [M4 改名包验收判定(集成者)](docs/acceptance/m4/rename/verdict.md)：实现交接或验收材料；仅采用其明确证据范围，不代替当前运行时验收。
-
-## 决策
-
-- [v1.1 开工基线](docs/history/2026-10-29-design-baseline.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
-- [M2 身份与 schema 决策单](docs/plan/decisions-m2.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
-- [M4-01 机器级安装合同](docs/plan/decisions-m4.md)：M4 冻结合同与后续裁定；memSharing 当前文档以 §14—§26（后续裁定优先） 为准。
-- [DESIGN v1.5 review：M4 开工边界](docs/plan/m4-review.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
-- [2026-10-29 全提交 review](docs/plan/review-2026-10-29.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
-- [收工状态（2026-10-30 晚，手递手）](docs/plan/status-2026-10-30-eod.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
-- [M4 用户级层产品化任务书](docs/plan/tasks-m4.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
-- [实现任务拆分](docs/plan/tasks.md)：设计合同、任务安排或历史裁定，采用前核对后续裁定。
-- [裁定链一致性审计与 M4-10 真机门禁预备方案](docs/plan/audit-rulings-20261030.md)：审计与规划；采用前核对后续裁定和当前实现。
-- [Skills 方案合理性与复杂度审计](docs/plan/audit-skills-20261030.md)：审计与规划；采用前核对后续裁定和当前实现。
-- [CK 上游接口只读核验（2026-10-30）](docs/plan/ck-upstream-verification-20261030.md)：审计与规划；采用前核对后续裁定和当前实现。
+- [docs/context-keeper/](docs/context-keeper/):本仓库自身的工作记录库,随 Git 走,三家执行器共写。

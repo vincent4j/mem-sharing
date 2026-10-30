@@ -1,1 +1,0 @@
-{"command": "install-context-keeper", "context_keeper": {"status": "failed"}, "errors": [{"code": "invalid_arguments", "message": "CK requires a separate install-context-keeper approval"}], "schema_version": 1, "status": "failed"}

@@ -1,5 +1,0 @@
---- before/home/.codex/AGENTS.md
-+++ after/home/.codex/AGENTS.md
-@@ -0,0 +1,2 @@
-+<!-- mem-sharing:public-source:start -->
-+ambiguous

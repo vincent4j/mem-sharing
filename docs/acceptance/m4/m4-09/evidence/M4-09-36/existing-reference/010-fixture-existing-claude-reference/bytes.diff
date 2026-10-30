@@ -1,5 +1,0 @@
---- before/project/CLAUDE.md
-+++ after/project/CLAUDE.md
-@@ -0,0 +1,2 @@
-+custom body
-+@AGENTS.md

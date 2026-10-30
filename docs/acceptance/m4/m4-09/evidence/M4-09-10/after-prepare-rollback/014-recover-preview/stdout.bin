@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "install_failed", "message": "[Errno 2] No such file or directory: '/private/tmp/M4-09-10-klh3vftr/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json'"}], "schema_version": 1, "status": "failed"}

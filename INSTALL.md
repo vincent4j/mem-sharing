@@ -10,18 +10,18 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 
 ## 用户看到的安装对话（五拍）
 
-第一拍：用户发出上面的一句安装请求。Agent 回复：“我来安装 memSharing，先检查运行环境和本机 Agent。”随后第二拍检查汇总与回车确认，第三拍静默安装并给结论，第四拍正向询问 CK，第五拍只提醒 CK 用法。具体如下。
+第一拍：用户发出上面的一句安装请求。Agent 回复：“我来安装 memSharing，先检查运行环境和本机 Agent。”随后第二拍检查汇总与回车确认，第三拍静默安装并给结论，第四拍正向询问 keeper，第五拍只提醒 keeper 用法。具体如下。
 
 1. **先检查，集中确认。** 检查 Python、Git、本机已适配 Agent，汇总哪些环境就绪、哪些依赖待安装、检测到哪些 Agent，并明确将为这些 Agent 安装入口。一次确认，回车即开始；不把 unknown 或残留目录列为已安装。
 2. **确认后静默执行。** 准备依赖、获取固定来源、核验、安装和接入正常情况下不逐步播报、不重复询问。冲突、漂移、v0 身份不明或实际权限阻塞时停止，说明具体现场与所需处置；一次确认不授权覆盖未知内容。
 3. **完成后极简报告。** 例如：“已创建用户记忆中枢，已为 Codex、Claude Code 启用用户记忆入口。”名单必须来自实际结果。不报产品代码路径，不提未安装执行器，不加新会话自检提示，也不加“将来新装 Agent”提示句。后装接入说明在 [README](README.md)。失败或 partial 不套用成功句式。
-4. **紧接着询问 CK。** 使用以下固定正向话术，回车同意，输入 n 跳过：
+4. **紧接着询问 keeper。** 使用以下固定正向话术，回车同意，输入 n 跳过：
 
 > 最后：为了让你的所有项目都能记住并续接工作经历，我们将为已接入的每个 Agent 安装项目经历引擎 Context Keeper（用户级）——它与本产品出自同一作者。同意吗？
 
-同意后由安装器编排 CK 自有安装器，为**全部已接入执行器**完成用户级安装，Skill 落位由 CK 负责。只有明确的交互回车才算同意；无响应、非交互 EOF 不等于同意。装后只提醒：“在任意需要的项目里使用 `/context-keeper`。首次使用按它的流程创建项目记录库，记录库随 Git 走，各家 Agent 共用。”到此结束。
+同意后由安装器编排 keeper 自有安装器，为**全部已接入执行器**完成用户级安装，Skill 落位由 keeper 负责。只有明确的交互回车才算同意；无响应、非交互 EOF 不等于同意。装后只提醒：“在任意需要的项目里使用 `/context-keeper`。首次使用按它的流程创建项目记录库，记录库随 Git 走，各家 Agent 共用。”到此结束。
 
-跳过 CK 不影响用户记忆与项目记忆。装 CK 不等于所有项目立即创建记录库；项目经历按项目首次命令激活。装后 CK 的命令、记录格式、保存与查找行为均由 CK 自行定义，memSharing 只保留桥接文本协议。
+跳过 keeper 不影响用户记忆与项目记忆。装 keeper 不等于所有项目立即创建记录库；项目经历按项目首次命令激活。装后 keeper 的命令、记录格式、保存与查找行为均由 keeper 自行定义，memSharing 只保留桥接文本协议。
 
 ## 运行时准备
 
@@ -69,9 +69,9 @@ python3 -B scripts/install.py --approval-file /absolute/path/install-approval.js
 
 `--operation-id` 可绑定操作，重复 `--agent` 限定目标，不豁免安装事实；`--request-file` 承载 conversions、legacy_registries、legacy_source_commits、evidence_files、legacy_identity；隔离演练还可显式传入 search_paths、app_directories、user_candidates，不能把合成探测结果当作本机安装事实。批准 envelope 绑定来源、三版本、现场指纹、精确 changes、R/C/V、请求与有效执行器、恢复路径及旧证据映射。
 
-独立获取为 `--acquire --staging <绝对且不存在目录> --commit <完整SHA> --version <SemVer>`，先预览，批准后加 `--approval-file` 执行；不与普通安装或恢复参数混用。`acquired` 只表示获取完成，不表示产品安装完成。批量启用与 CK 独立入口见下文；整理向导目前提供模块 API，不得自造 CLI 子命令。
+独立获取为 `--acquire --staging <绝对且不存在目录> --commit <完整SHA> --version <SemVer>`，先预览，批准后加 `--approval-file` 执行；不与普通安装或恢复参数混用。`acquired` 只表示获取完成，不表示产品安装完成。批量启用与 keeper 独立入口见下文；整理向导目前提供模块 API，不得自造 CLI 子命令。
 
-## CK 独立尾步
+## keeper 独立尾步
 
 主安装完成后才生成独立 `command=install-context-keeper` 封皮，不在主批准中预填未来同意。交互中仅真实回车同意，空格、EOF 或非交互输入均不算同意。独立预览与执行为：
 
@@ -80,7 +80,7 @@ python3 -B scripts/install.py --context-keeper --ck-source /absolute/durable/con
 python3 -B scripts/install.py --context-keeper --approval-file /absolute/ck-approval.json
 ```
 
-可用 `--operation-id <已完成主操作>` 绑定主操作；此路由与普通安装、获取、恢复互斥。封皮绑定已 committed 主日志、台账、全部实际接入者、CK pin、执行内容与目标指纹；主产品待恢复时拒绝。CK 来源须为既存、干净、固定 pin 的持久独立 checkout，可从唯一用户级别名发现或显式提供，目前不自动下载；缺源独立报告 unavailable，主产品保留成功。结果不明不自动重放，CK 自身回滚不由 memSharing 提供。
+可用 `--operation-id <已完成主操作>` 绑定主操作；此路由与普通安装、获取、恢复互斥。封皮绑定已 committed 主日志、台账、全部实际接入者、keeper pin、执行内容与目标指纹；主产品待恢复时拒绝。keeper 来源须为既存、干净、固定 pin 的持久独立 checkout，可从唯一用户级别名发现或显式提供，目前不自动下载；缺源独立报告 unavailable，主产品保留成功。结果不明不自动重放，keeper 自身回滚不由 memSharing 提供。
 
 ## 诊断报告与用户简报
 
@@ -88,7 +88,7 @@ python3 -B scripts/install.py --context-keeper --approval-file /absolute/ck-appr
 
 既有字段包括 `status/layout/versions/source/operation_id/recovery/agents/copies/exclusions/project_commands/runtime_acceptance/connection_pending`，预览带 `approval_plan`。下载成功而入口失败必须 partial；无 installed 不得说各家已启用。静态入口读回与新会话表现分开记录，用户简报不添加自检要求。
 
-主产品与 CK 分层报告：主产品完成后，CK 可为跳过、unavailable、失败或 configured；CK 失败不回滚主产品，也不能合报全成功。configured 仅证明安装与字节读回，不证明执行器新会话已加载。
+主产品与 keeper 分层报告：主产品完成后，keeper 可为跳过、unavailable、失败或 configured；keeper 失败不回滚主产品，也不能合报全成功。configured 仅证明安装与字节读回，不证明执行器新会话已加载。
 
 ## 项目使用
 
@@ -99,11 +99,11 @@ python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" enable-memory --proje
 python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" check-memory --project /absolute/path/to/project
 ```
 
-默认启用不初始化 CK 记录库、不调用 CK 安装器、不安装项目级 Skill。项目经历初始化由首次 `/context-keeper` 流程负责。默认不触碰 `CLAUDE.md`，包括已有文件；引用由 Claude 实际使用时兜底创建或显式 `enable-memory --agent claude` 接入，不因机器已装执行器而预创建。WorkBuddy 仅在原生目录存在时补桥接，不预建目录。
+默认启用不初始化 keeper 记录库、不调用 keeper 安装器、不安装项目级 Skill。项目经历初始化由首次 `/context-keeper` 流程负责。默认不触碰 `CLAUDE.md`，包括已有文件；引用由 Claude 实际使用时兜底创建或显式 `enable-memory --agent claude` 接入，不因机器已装执行器而预创建。WorkBuddy 仅在原生目录存在时补桥接，不预建目录。
 
 `remove-memory --project ...` 撤销指定项目允许撤销的受管入口与桥接，保留机器安装、用户级接入、规则正文和全部数据；项目登记 disabled，默认流程不会重新启用。重新启用须显式 `enable-memory --project ... --memory` 并批准精确计划。没有完整机器卸载命令，项目命令不隐式安装或升级机器产品。
 
-进阶 `enable-memory --project ... --no-memory` 保留规则入口，登记 disabled，禁止自动项目经历记录与初始化；它与菜单“停用记忆”的撤入口结果不同。已有 CK 自动规则不能覆盖该政策；这是 Agent 遵守的规则，不是 CK 脚本硬拒写接口。
+进阶 `enable-memory --project ... --no-memory` 保留规则入口，登记 disabled，禁止自动项目经历记录与初始化；它与菜单“停用记忆”的撤入口结果不同。已有 keeper 自动规则不能覆盖该政策；这是 Agent 遵守的规则，不是 keeper 脚本硬拒写接口。
 
 批量入口先只读预览，待批准退出码为 5；一次批准完整清单后执行：
 

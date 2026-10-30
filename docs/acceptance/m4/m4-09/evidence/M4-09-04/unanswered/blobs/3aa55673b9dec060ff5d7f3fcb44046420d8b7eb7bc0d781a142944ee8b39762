@@ -1,7 +1,0 @@
-........
-----------------------------------------------------------------------
-Ran 8 tests in 4.221s
-
-OK
-REBUILD {"projects_before": 2, "preview_rebuild": {"classification": "registry_project_corrupt", "reason": "unknown fact status", "registry_sha256": "0803ee91ff5028b0964a6b736e924e4542ce06cbefa1094a9b3103c148695b0f", "registry_bytes": 7839, "project_count": 2, "removed_projects": [{"main_checkout": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmp9bv3hy58/project with spaces", "record_sha256": "ef911be979a8c5e29e3cd54f8495da629a31f6a8ee35db1b7047eb5a2aab0658"}, {"main_checkout": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmp9bv3hy58/second-project", "record_sha256": "a0dd79f627e2ddf11856c34a5ce6e930001206e4ffe4240a3567939d1d9717ce"}], "removed_shared_objects": ["/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmp9bv3hy58/home/.workbuddy/MEMORY.md#rules"], "scope": "reset all project registrations and shared consumer indexes; preserve machine identity and all user files"}, "without_separate_approval": "approval_required", "result": "completed", "projects_after": 1}
-RACE recovery_required external edit

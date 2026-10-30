@@ -1,4 +1,0 @@
---- before/home/.mem-sharing-install-staging/target/file
-+++ after/home/.mem-sharing-install-staging/target/file
-@@ -0,0 +1 @@
-+pending

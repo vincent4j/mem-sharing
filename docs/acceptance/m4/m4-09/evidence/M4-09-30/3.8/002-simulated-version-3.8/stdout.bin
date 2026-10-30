@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "runtime_missing", "message": "Install Python >=3.9 manually, then rerun with that interpreter"}], "schema_version": 1, "status": "failed"}

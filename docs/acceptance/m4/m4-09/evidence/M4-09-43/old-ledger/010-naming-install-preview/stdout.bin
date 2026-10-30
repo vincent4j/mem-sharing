@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "machine_route_bad_registry", "message": "Machine scene bad_registry: ['dual active ledgers require explicit migration recovery']"}], "schema_version": 1, "status": "failed"}

@@ -1,1 +1,0 @@
-{"command": "install-context-keeper", "context_keeper": {"status": "unavailable"}, "errors": [{"code": "ck_source_unavailable", "message": "CK source must be a durable independent checkout"}], "schema_version": 1, "status": "failed"}

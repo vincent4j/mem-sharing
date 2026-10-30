@@ -1,7 +1,0 @@
-docs/acceptance/m4/m4-07/frozen/T.bundle is okay
-The bundle contains this ref:
-f5d3add71e7cf35039c0907728ec883151a9f6f6 HEAD
-The bundle requires this ref:
-27d6e264496184a85dc015039885ebdae174f89d 
-The bundle uses this hash algorithm: sha1
-f5d3add71e7cf35039c0907728ec883151a9f6f6 HEAD

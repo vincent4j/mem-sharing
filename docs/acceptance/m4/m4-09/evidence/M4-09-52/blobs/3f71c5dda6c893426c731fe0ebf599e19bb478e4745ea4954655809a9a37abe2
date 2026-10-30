@@ -1,8 +1,0 @@
-{
-  "command": "install-context-keeper",
-  "agents": [
-    "claude"
-  ],
-  "confirmed_at": "2026-10-30T16:25:08.362896Z",
-  "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
-}

@@ -1,1 +1,0 @@
-{"command": "organize-user-rules", "status": "failed", "approval_required": false, "next_action": null, "errors": [{"code": "stale_decision", "message": "Decision item absent or changed since scan"}], "changes": [], "blocked_entries": []}

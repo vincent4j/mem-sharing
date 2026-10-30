@@ -1,5 +1,0 @@
-{
-  "error": "snap treated marker string references inside registry JSON as entry blocks; rollback hit same assertion before restoration",
-  "observed_at": "2026-10-29T10:58:41.120669+00:00",
-  "policy": "only failure records and recovery after detection; no further business/probe commands"
-}

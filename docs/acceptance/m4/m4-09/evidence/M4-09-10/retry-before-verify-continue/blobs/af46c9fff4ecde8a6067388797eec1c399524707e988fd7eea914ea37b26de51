@@ -1,6 +1,0 @@
-{
-  "journal": "/private/tmp/M4-09-10-8_sni_cc/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
-  "operation_id": "synthetic-fault-upgrade",
-  "plan_sha256": "14c53ac89cb8d8d8277e901a918e0d2fb1087acf1c4f1983c37f49215eb5f43b",
-  "product_id": "mem-sharing"
-}

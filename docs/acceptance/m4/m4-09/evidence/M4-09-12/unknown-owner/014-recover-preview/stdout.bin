@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "registry_invalid", "message": "lock owner: missing or unknown fields"}], "schema_version": 1, "status": "failed"}

@@ -1,4 +1,0 @@
---- before/home/.mem-sharing/var/registry.json
-+++ after/home/.mem-sharing/var/registry.json
-@@ -0,0 +1 @@
-+{"schema_version": 2, "projects": {}, "shared_objects": {}, "product": {"product_id": "agent-group-memory", "installation_id": "old-development-machine", "product_structure_version": 1, "product_code_version": "0.4.0", "source": {"url": "fixture://old-development", "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "tree_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}, "installation_status": "complete", "last_operation_id": "old-op"}, "machine": {"agents": {}, "objects": {}}, "migration": null, "legacy_import": null}

@@ -1,7 +1,0 @@
-{
-  "name": "@openai/codex",
-  "version": "1.0.0",
-  "bin": {
-    "codex": "bin/codex"
-  }
-}

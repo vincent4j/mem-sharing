@@ -1,1 +1,0 @@
-批准文件从 preview-exact.json 的 next_action 原样构造，仅替换 confirmed_at/reference。原消息授权装配与默认记录库；654e071a-980e-45e3-b834-98b56cf21c81 明确允许仅追加桥接块，旧 AGENTS.md 完整字节必须为新文件前缀，其余 dirty 字节不变。写集已人工核对：四个项目 Skill 链接、项目 WorkBuddy 桥接、AGENTS.md 与 CLAUDE.md，无用户级文件与业务代码。源码定位提案不是完整批准。

@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "machine_route_interrupted", "message": "Machine scene interrupted: ['unfinished/unknown bootstrap: /private/tmp/M4-09-09-o84gpnew/home/.mem-sharing-install-20261030T161732Z-77ad91ebb7dc41edae534c996aebb2cc']"}], "schema_version": 1, "status": "failed"}

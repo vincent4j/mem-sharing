@@ -1,7 +1,0 @@
---- before/scan/not-git/readme
-+++ after/scan/not-git/readme
-@@ -0,0 +1 @@
-+not git--- before/unselected/sentinel
-+++ after/unselected/sentinel
-@@ -0,0 +1 @@
-+outside scan

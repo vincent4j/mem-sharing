@@ -1,1 +1,0 @@
-批准依据：本轮派工消息 29740901-4bc0-4bcd-9383-c3f58b9bdd19 明确授权从 next_action 构造批准文件并执行。approval.json 精确复制 preview-exact.json 的 next_action，仅替换 confirmed_at 与 reference。source-proposal.json 仅用于选择源码与已授权默认库路径，未作为完整批准。写集已人工核对：四个项目 Skill 链接、项目 WorkBuddy 桥接、AGENTS.md 与 CLAUDE.md；无用户级文件、无业务代码。初次提案时间格式错误返回 2，保留原件；改为 Z 格式后正常取得精确计划。

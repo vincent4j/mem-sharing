@@ -1,1 +1,0 @@
-{"command": "install-context-keeper", "context_keeper": {"status": "unavailable"}, "errors": [{"code": "ck_source_unavailable", "message": "Provide --ck-source /absolute/durable/context-keeper (clean checkout at 695074ee4b6ddb9999be858093f833d6377bd641); no source is downloaded automatically"}], "schema_version": 1, "status": "failed"}

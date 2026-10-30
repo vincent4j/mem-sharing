@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "approval_mismatch", "message": "Approval differs from the current exact plan; preview again"}], "schema_version": 1, "status": "failed"}

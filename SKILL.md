@@ -5,7 +5,7 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 # memSharing 操作说明
 
-唯一设计依据：[DESIGN.md](DESIGN.md) v1.14；最新替代关系以 [M4 决策 §14—§26（后续裁定优先）](docs/plan/decisions-m4.md) 为准。本文是仓库内操作说明，菜单由用户级规则文本承载，不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 CK 集成已通过；当前案例见 [M4-09](docs/acceptance/m4/m4-09/cases.md)。
+唯一设计依据：[DESIGN.md](DESIGN.md) v1.14；最新替代关系以 [M4 决策 §14—§26（后续裁定优先）](docs/plan/decisions-m4.md) 为准。本文是仓库内操作说明，菜单由用户级规则文本承载，不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 keeper 集成已通过；当前案例见 [M4-09](docs/acceptance/m4/m4-09/cases.md)。
 
 ## 会话入口与六项菜单
 
@@ -28,9 +28,9 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 ## 安装与项目默认启用
 
-产品未安装时读 [INSTALL.md](INSTALL.md)，从已核验源调用 `python3 -B scripts/install.py`，补齐来源参数。先检查 Python、Git、已适配执行器，汇总一次确认；正常安装静默，最后简报后征询是否安装 CK。项目命令不隐式安装或升级机器产品，check 不修复。
+产品未安装时读 [INSTALL.md](INSTALL.md)，从已核验源调用 `python3 -B scripts/install.py`，补齐来源参数。先检查 Python、Git、已适配执行器，汇总一次确认；正常安装静默，最后简报后征询是否安装 keeper。项目命令不隐式安装或升级机器产品，check 不修复。
 
-用户级规则驱动未登记的 Git 主 checkout 默认启用：建立 `AGENTS.md` 骨架与纯协议桥接，已有正文保留，不重复询问是否启用。非 Git 不触发，worktree 明确报告未支持，不自动启用。项目记忆是规则；项目经历的记录库按 CK 首次 `/context-keeper` 流程初始化，不由默认启用创建。
+用户级规则驱动未登记的 Git 主 checkout 默认启用：建立 `AGENTS.md` 骨架与纯协议桥接，已有正文保留，不重复询问是否启用。非 Git 不触发，worktree 明确报告未支持，不自动启用。项目记忆是规则；项目经历的记录库按 keeper 首次 `/context-keeper` 流程初始化，不由默认启用创建。
 
 项目缺省启用不创建或补写 `CLAUDE.md`，已有文件原样保留；显式 `enable-memory --agent claude` 可接入。项目兜底入口按实际使用驱动：Claude 首次在已启用项目实际使用且缺引用时幂等补 `CLAUDE.md` 引用；仅本机安装 Claude 不足以创建该文件。WorkBuddy 原生目录出现后才补顶部协议块，不预建目录。Codex 使用 `AGENTS.md`，无额外兜底入口。已有用户字节保留，受管单元漂移停写。
 
@@ -44,11 +44,11 @@ Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep
 
 ## 三种记忆与 Context Keeper
 
-用户记忆是跨项目习惯，位于 `~/.mem-sharing/memories/`；项目记忆是 `AGENTS.md` 规则；项目经历是 CK 的进度、决策、日志与积累，记录库默认位于项目 `docs/context-keeper/`，具体由 CK 定义。
+用户记忆是跨项目习惯，位于 `~/.mem-sharing/memories/`；项目记忆是 `AGENTS.md` 规则；项目经历是 keeper 的进度、决策、日志与积累，记录库默认位于项目 `docs/context-keeper/`，具体由 keeper 定义。
 
-装机尾步按安装页的固定正向问句征询 CK 用户级安装，回车同意，n 跳过。同意后走 `scripts/install.py --context-keeper` 独立路由与 `install-context-keeper` 封皮，由 CK 自有安装器为全部已接入执行器安装；其 Skill 落位由 CK 负责。EOF、非交互或空格不视为同意；CK 缺源或失败独立报告，不回滚主产品。来源与批准细节按需读 INSTALL。未装 CK 不报产品错误，用户记忆和项目记忆照常工作。
+装机尾步按安装页的固定正向问句征询 keeper 用户级安装，回车同意，n 跳过。同意后走 `scripts/install.py --context-keeper` 独立路由与 `install-context-keeper` 封皮，由 keeper 自有安装器为全部已接入执行器安装；其 Skill 落位由 keeper 负责。EOF、非交互或空格不视为同意；keeper 缺源或失败独立报告，不回滚主产品。来源与批准细节按需读 INSTALL。未装 keeper 不报产品错误，用户记忆和项目记忆照常工作。
 
-项目 enable 不再调用 CK 安装器，不安装项目级 CK Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 CK 首次命令，memSharing 不接管保存或查找流程。disabled 优先禁止自动经历，已有 CK 自动规则不得覆盖；CK 脚本本身不读取该政策，不能宣称硬拒写。手动 CK 操作仍按明确请求与 CK 自身门禁处理。
+项目 enable 不再调用 keeper 安装器，不安装项目级 keeper Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 keeper 首次命令，memSharing 不接管保存或查找流程。disabled 优先禁止自动经历，已有 keeper 自动规则不得覆盖；keeper 脚本本身不读取该政策，不能宣称硬拒写。手动 keeper 操作仍按明确请求与 keeper 自身门禁处理。
 
 ## 检索与分层读取
 

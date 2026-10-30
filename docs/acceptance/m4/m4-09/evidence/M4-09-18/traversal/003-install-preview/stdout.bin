@@ -1,1 +1,0 @@
-{"command": "install-machine", "errors": [{"code": "install_conflict", "message": "Unsafe source manifest path"}], "schema_version": 1, "status": "failed"}
