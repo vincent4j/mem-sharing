@@ -79,7 +79,7 @@
 | 维度 | Codex | Claude Code | WorkBuddy |
 |---|---|---|---|
 | 项目 Skill 目录 | `.agents/skills`、`.codex/skills` | `.claude/skills` | `.workbuddy/skills`(context-keeper 安装器均支持) |
-| 自动入口落点 | 项目 `AGENTS.md`(bridge 已验收) | 项目 `CLAUDE.md`(bridge 已验收) | `.workbuddy/memory/MEMORY.md` 顶部(本仓库桥接,**待运行时验收**) |
+| 自动入口落点 | 项目 `AGENTS.md`(骨架+桥接) | `CLAUDE.md` 仅一行 `@AGENTS.md` 引用——由实际使用兜底创建或显式 `--agent claude`,默认不预建 | `.workbuddy/memory/MEMORY.md` 顶部指针(实际使用产生原生目录后补,**待运行时验收**) |
 | 项目模型 | CLI:cwd 为中心,根→cwd 逐级拼接 AGENTS.md | CLI:根常驻、子目录按需加载 | 工作台应用:**打开哪个文件夹哪个就是项目**,记忆只挂根、应用注入,无子目录概念 |
 | 嵌套(子目录)规则 | 逐级链,近者优先 | 按需加载 | **盲区**:子目录文件不感知 |
 | 指令预算 | 沿途 AGENTS.md 共享 32KiB | CLAUDE.md 建议 <200 行 | 未见公开上限 |
@@ -94,22 +94,17 @@ remove-memory [--project <Git根>]
 check-memory  [--project <Git根>|--all]
 ```
 
-### 4.1 两档安装、缺省行为与所有权
+### 4.1 启用语义与所有权(现行;四态/provider 模型已由 §17/§24 退役)
 
-- **基座(规则互通,总是执行)**:项目根 `AGENTS.md` 骨架;CLAUDE.md 含 `@AGENTS.md` 引用;核对 WorkBuddy 用户级约定(§5)。零依赖。【其中预建 CLAUDE.md 已被决策 §16 替代，2026-10-30】
-- **记忆档(仅 `--memory`)**,按序四步,并区分四个状态(**源码可用 / Skill 已安装 / bridge 已启用 / 记录库已授权可用**):【本项及下列四步的项目级安装与四态模型已被决策 §17、§24 替代，2026-10-30；keeper 承载项目经历，项目记忆为 AGENTS.md】
-  1. 调 context-keeper `install.py` 装 Skill(漂移检查在调用安装器**之前**由本工具完成——安装器只认标记块不认指纹);安装器预览返回 `approval_required` 时,即使退出码为 0 也不算安装完成;
-  2. Codex/Claude 执行已验收 `--ensure-bridge`;
-  3. WorkBuddy 桥接块(§5);
-  4. **记录库授权**:走 context-keeper init 流程由用户确认记录库位置(默认 `docs/context-keeper/`,支持自定义),实际路径写入状态文件——**没有第四态,不得向记录库写入任何内容**(§4.2 存量整理也以此为前置)。
-- **缺省 = 询问推荐**:检测 context-keeper 未就绪时,先说明必要性(不装就没有项目记忆/跨 Agent 接力),**用户同意即装,明确说不装才跳过**;`--no-memory` 是非交互的显式退出;**已就绪则直接启用,不再询问**。【已被决策 §14、§17、§24 替代，2026-10-30；缺 keeper 不影响项目记忆，停用政策缺省不翻转】
-- **用户选择持久化**:状态文件记录本项目记忆授权(yes/no);区分"检测到 provider 可用"与"本项目已授权启用记忆"——曾明确拒绝的项目,巡检只提示不反复追问。【旧 yes／no 与 provider 模型已被决策 §24 替代，2026-10-30】
-- **所有权记账**:状态文件逐项记录每个入口/Skill 是**本工具创建**还是**复用已有**;`remove-memory` 只撤销本工具创建的对象,记录库本体永不触碰(记忆是项目资产,删除必须用户显式做)。
-- 全部幂等:操作前查 Git 状态、备份、指纹漂移检测;读回校验;提示新会话验收。
+- **默认启用(不询问)**:进入未启用的 Git 主 checkout 即自动执行——`AGENTS.md` 骨架+桥接块(已有则保留全文只追加);项目政策记 `follow_ck`。不预建、不触碰 `CLAUDE.md`;WorkBuddy 原生目录不存在则标记待实际使用后兜底。
+- **keeper 与启用解耦**:enable 不装 keeper、不建记录库;项目经历由 keeper 首次 `/` 命令按需激活(装机尾步另行独立询问与封皮,见 §2)。
+- **停用政策**:`--no-memory` 写 `disabled`(禁自动经历记录,数据与安装全保留,缺省永不翻转,`--memory` 显式解除);remove 后同样 disabled,重启用须显式(§4.8 停用三层)。
+- **所有权记账**:台账逐项记录每个受管单元是**本工具创建**还是**复用已有**;`remove-memory` 只撤销本工具创建的对象,记录库与用户正文永不触碰。
+- 全部幂等:操作前 Git 身份核验、备份、指纹漂移检测;读回校验;漂移即停零写入。
 
 ### 4.2 存量整理(只搬运不加工,前置四态)
 
-不做任何内容加工——不蒸馏、不改写;后续消化若需要,由 context-keeper 自身功能处理。**前置条件:§4.1 四态满足且记录库实际路径已知**;搬运目标是**实际路径**下的 `worklogs/`(遵守 Keeper 日志格式),不是假设的固定路径。
+不做任何内容加工——不蒸馏、不改写;后续消化若需要,由 keeper 自身功能处理。**前置条件:项目已启用且经历库已由 keeper 首次 `/` 命令初始化(实际路径为准)**;搬运目标是实际路径下的 `worklogs/`(遵守 keeper 日志格式),不是假设的固定路径。
 
 **项目维度**(根与子目录的 AGENTS.md、CLAUDE.md、CLAUDE.local.md):预览 → 用户逐类确认 → 执行。
 
@@ -133,12 +128,13 @@ check-memory  [--project <Git根>|--all]
 
 ### 4.4 Group 与 context-keeper 的安装顺序联动
 
-原则:**单向编排**——Group 检测并编排 Keeper,Keeper 不感知 Group;所有命令幂等,缺什么补什么。
+原则:**纯协议耦合**——两产品各自独立安装演进,唯一交点是桥接短协议文本;keeper 不感知 memSharing。
 
-- **先 Group 后 Keeper**:周一只装基座;此后 `check` 检测到 Keeper 已就绪时**只报告"可启用"**;实际启用由用户运行 `enable-memory` 完成(同意即装,不再重复询问要不要装 Keeper 本身);基座不动;
-- **先 Keeper 后 Group**:检测到项目已有 Keeper 痕迹(记录库/已装 Skill/bridge)→ 不重装,**接管纳管**:逐项校验并把已有对象记账为"复用"(非本工具创建),只补缺口(WorkBuddy 桥接、AGENTS.md 基座、`@AGENTS.md` 引用),提示存量整理;
-- **纳管状态(项目内零新增文件)**:全部状态集中 `~/.agents-group/var/registry.json`(M2/M3 过渡期位于本仓库 `scripts/registry.json`,M4 保真迁移,见 §4.7;键:项目主 checkout 绝对路径;值:记忆授权 yes/no、四态、执行器清单、入口指纹、所有权记账)。**项目内不建任何状态文件**——`.agents-group/` 项目目录归 v0 的 `project_manage.py`,本工具完全不碰,状态互踩风险随之消除。registry 损坏时 `check` 可从现场(入口块、Skill、记录库)重建启用事实;记忆授权选择无法从现场重建,重新询问一次即可;【其中现场重建与重询授权已作废，以决策 §2.3 的坏台账零写停止为准，2026-10-30】
-- **迁移门禁联动**:Keeper 命令返回"需要迁移"(退出码 3)时,本工具立即停止相关读写并转告用户走 Keeper 迁移流程,不绕过门禁。
+- **装机尾步(独立封皮)**:主安装 completed 后正向询问一次(固定话术+同作者背书),真回车才同意;同意后由 keeper 自己的安装器对全部已接入执行器做用户级安装(独立 `install-context-keeper` 封皮与 `--context-keeper` 路由,可单独重试);失败不回滚主产品。
+- **项目侧**:启用只写规则骨架+短协议(`mem-sharing:project-experience`,仅位置/入口/职责三行);项目经历库由 keeper 首次 `/` 命令激活;旧 keeper 全文块迁移走显式计划(created 退役重建/reused 展示确认/漂移整停)。
+- **巡检边界**:check 不核验 keeper 源码与记录库;未装 keeper、无记录库、主动停用都不是健康缺口。
+- **纳管状态(项目内零新增文件)**:全部状态集中 `~/.mem-sharing/var/registry.json`(schema=3;键:项目主 checkout 绝对路径;值:政策 follow_ck/disabled、执行器清单、受管单元指纹与所有权)。坏台账零写停止(§2.3),不现场重建、不重询。
+- **迁移门禁联动**:keeper 报"需要迁移"(退出码 3)时立即停止相关读写,不绕门禁。
 
 ### 4.5 后装 Agent 的纳入与触发链
 
@@ -147,20 +143,9 @@ check-memory  [--project <Git根>|--all]
 - 用户级(一次性):核对原生入口(WorkBuddy:`~/.workbuddy/MEMORY.md`)→ 写两条约定(公共源指针 +"项目规则读 AGENTS.md")→ 对其自带存量做用户维度整理 → 新会话验收。复用 `~/.agents-group` 既有的"新执行器接入"约定;
 - 项目级(逐项目):`enable-memory --agent <name>` 补装 Skill 与入口;`check-memory --all` 维护"已纳管项目 × 已接入执行器"矩阵,发现缺口**只提示**。
 
-**触发链(根只有两个,不无限递归)**:
+**触发链(零自动化,全部显式)**:不做自动发现、不做定时巡检、不做 OS 级监听——一切由用户在会话中发起(`/mem-sharing` 菜单或自然语言);后装执行器经菜单"添加新的 Agent"报名字接入(§4.8)。**check 类只读;enable/remove 类有写入,永远经精确批准执行。**
 
-```
-根 1:用户说话 —— 对任意已接入 Agent 说"装/检查/接入";
-     用户随口提到未接入执行器 → SKILL.md 规则让 agent 主动建议
-根 2:定时器 —— 任意调度机制(系统 cron 或用户已有调度器)每周跑
-     check-memory --all(只读巡检)→ 发现缺口 → 通知用户 → enable 修复
-```
-
-group 不是常驻进程,不存在"装机即感知"。**check 类只读、可自动运行(D7);enable 类有写入,永远由用户发起或经确认执行。**不做 OS 级安装监听。
-
-**项目发现**:`--all` 直接基于 `registry.json`(它同时是纳管状态本身,见 §4.4——项目内不放状态,巡检依据天然在项目外);巡检核对登记与实际,项目移动/删除/重 clone 失配即报告,记忆随 Git 在,启用须重新 enable。
-
-**继承旧体系的自动覆盖**:本工具 Skill 外壳经现有同步体系投影到共享 Skill 目录(`~/.agents/skills` 等),任何读这些目录的新执行器自动获得工具能力;用户级入口与项目入口的写入保持一次确认。
+**项目发现**:`--all` 直接基于 `registry.json`(纳管状态本身,见 §4.4);巡检核对登记与实际,项目移动/删除/重 clone 失配即报告,记忆随 Git 在,启用须重新 enable。
 
 ### 4.6 形态、分发与跨平台
 
@@ -168,7 +153,7 @@ group 不是常驻进程,不存在"装机即感知"。**check 类只读、可自
 
 - **内核**:跨平台 Python 脚本,仅标准库(≥3.9,零 pip 依赖);
 - **外壳**:SKILL.md 告诉 agent 何时、如何调用与验收——用户说人话,agent 负责翻译成命令;
-- **安装**:仓库获取后落位 `~/.local/share/agent-group-memory`(产品代码唯一源,版本化存放、支持回退;不占用记忆中枢);M4 起由本产品用户级层自身定义执行器 Skill 投影(用户级 Skill 根路径在路径表登记,不依赖 v0 旧同步体系;`~/.agents/skills` 为 v0 共享 Skills 位置,原地不动、不迁移不接管),经 `scripts/install.py` 独立机器级入口安装,即装即建 `~/.agents-group` 全套结构;
+- **安装**:仓库获取后产品代码落位 `~/.local/share/mem-sharing`(版本化存放、支持回退,不占记忆中枢),经 `scripts/install.py` 独立机器级入口安装,即装即建 `~/.mem-sharing` 全套结构;不做任何 Skill 投影(`~/.agents/skills` 为 v0 共享位置,原地不动不接管),会话入口由用户级规则块文本承载;
 - **跨平台承诺收紧**:**M1 限定 macOS**(当前唯一已验证平台)。Windows/Linux 依赖上游安装策略——context-keeper 安装器使用目录 symlink 且拒绝现有复制目录,本工具**不自建第二套降级安装逻辑**;平台矩阵(安装/重装/卸载/失败恢复)留到 M2 按真实验收扩展。通用编码纪律先行:路径 `pathlib` + `Path.home()`、执行器路径表(含安装信号)、文件 UTF-8、子进程只调 Python 解释器。
 
 ### 4.7 目录结构
@@ -176,26 +161,25 @@ group 不是常驻进程,不存在"装机即感知"。**check 类只读、可自
 **仓库(即安装源)**:
 
 ```
-agent-group-memory/
-  README.md                # 现行规则,简短,不堆历史
-  DESIGN.md                # 本设计
-  SKILL.md                 # Skill 外壳:agent 何时、如何调用与验收
+mem-sharing/
+  README.md / INSTALL.md / SKILL.md / DESIGN.md / llms.txt
   scripts/
-    agm.py                 # 单一 CLI(enable-memory / remove-memory / check-memory)
+    agm.py                 # 项目级 CLI(enable-memory / enable-memory-batch / remove-memory / check-memory)
+    install.py             # 机器级安装入口(含 --context-keeper 尾步路由)
     agents.json            # 执行器路径表:各 OS 入口路径 + 安装信号
-    registry.json          # 运行时生成:项目登记 + 纳管状态(集中项目外,--all 巡检依据)
+    agm_core/              # 内核模块(布局/台账/事务/探测/启用/停用/检查/升级/keeper 尾步/批量/整理)
   docs/
-    architecture.md         # 系统架构(机制细节)
-    operations.md           # 操作手册(完整操作说明)
+    architecture.md        # 系统架构(机制细节)
+    operations.md          # 操作手册(完整操作说明)
+    acceptance/            # 验收总览与 M4-10 预备物料
+    context-keeper/        # 本仓库自身的项目经历库(keeper 管理)
   tests/
 ```
 
-**家目录(安装后)**:落位 `~/.agents-group/skills/agent-group-memory/`,由现有同步体系投影到各执行器 Skill 目录;不另建顶层目录。
-
-**用户级层 `~/.agents-group` 的目录结构**(本产品组件,安装时创建;与代码仓库结构是两回事):
+**安装后落位**:产品代码在 `~/.local/share/mem-sharing`(版本库存同级,支持回退);用户记忆中枢为 `~/.mem-sharing`(结构如下);本机状态(台账/锁)在 `var/`,仓库不持有本机状态。
 
 ```
-~/.agents-group/
+~/.mem-sharing/
 ├── memories/                 # 用户级公共规则
 │   ├── MEMORY.md             #   索引:一主题一行 + 链接,≤200 行/25KB(常驻注入)
 │   └── <主题>.md             #   规则细节,索引引用、按需读(记忆多了加文件不加行长)
@@ -257,16 +241,16 @@ agent-group-memory/
 
 ## 5. WorkBuddy 桥接(上游已接管配置,待运行时验收)
 
-M3 已将 WorkBuddy 桥接交由 context-keeper 安装器管理。AGM 从上游安装器读取模板,在事务内完成漂移检查与预写,再调用上游 install 和 `--ensure-bridge --workbuddy` 验证不变:
+现行(§24 短协议;provider 时代的模板抽取与上游调用已退役):
 
-- **落点**:项目 `.workbuddy/memory/MEMORY.md` 顶部(WorkBuddy 唯一原生项目级挂载点;其每日日志机制照旧);
-- **内容**:复用 context-keeper BRIDGE 规则语义(无项目聊天边界、限量历史检索触发、自然节点记录、追加式日志、事实边界、**迁移门禁:退出码 3 即停止读写**),以 `<!-- context-keeper:workbuddy:start/end -->` 标记块写入;
-- **单一真源**:上游 `scripts/install.py` 持有模板;本仓库已删除私有模板。三处既有块与上游模板字节级兼容,marker 识别支持幂等更新,不新增重复块;接管证据见 `docs/acceptance/m3/`。WorkBuddy 真机新会话验收仍由用户选择,不以配置接管代替;
-- **用户级配合**:`~/.workbuddy/MEMORY.md` 现行"项目规则唯一来源是 AGENTS.md"约定**保留**(它是 D1 可达性的一环),只**追加**记忆条款:"项目记忆用 context-keeper 记录库,由项目桥接块驱动"。
+- **落点**:项目 `.workbuddy/memory/MEMORY.md` 顶部——由 WorkBuddy 实际使用产生原生目录后兜底补写(不预建目录,原文字节下移);
+- **内容**:mem-sharing 自有指针块,只说两件事——读项目根 `AGENTS.md`;项目经历经 `/context-keeper` 入口由 keeper 管理。不复制 keeper 行为规则;
+- **keeper 自有块**(`context-keeper:workbuddy` 标记)归 keeper 自己写入与维护,memSharing 不接管;旧全文块按 §4.4 显式迁移;
+- **用户级配合**:`~/.workbuddy/MEMORY.md` 顶部约定块(公共源指针+读 AGENTS.md)由装机写入;真机新会话验收归 M4-10。
 
 ## 6. 验收协议(三执行器接力闭环)
 
-前置:记录库已授权(§4.1 第四态)。目标是**证明"换执行器不失忆"**,不是各入口各自为政的可达性:
+前置:项目已启用且经历库已由 keeper 首次 `/` 命令初始化。目标是**证明"换执行器不失忆"**,不是各入口各自为政的可达性:
 
 **正向闭环(在获授权的测试记录库上)**:
 
@@ -291,12 +275,12 @@ M3 已将 WorkBuddy 桥接交由 context-keeper 安装器管理。AGM 从上游�
 | 风险 | 对策 |
 |---|---|
 | `AGENTS.override.md` 劫持 Codex 整链 | 禁用;check 检测存在即告警 |
-| Claude 有 CLAUDE.md 不读 AGENTS.md | 入口必进 CLAUDE.md;`@AGENTS.md` 引用 check 校验、enable 幂等补装 |
+| Claude 有 CLAUDE.md 不读 AGENTS.md | 引用行由实际使用兜底创建或显式 `--agent claude`;check 只报告不代写 |
 | WorkBuddy"重置记忆"清空入口 | 入口块带标记块与指纹;check 报告丢失,**enable 幂等重装**(check 不写) |
 | registry 单点丢失/损坏 | 状态集中本机 `registry.json`(项目内零新增文件,不碰旧管理器目录);check 可从现场重建启用事实,授权选择重询一次 【现场重建与重询授权已作废，以决策 §2.3 为准，2026-10-30】|
-| bridge 块漂移/手改 | 本工具调用安装器**之前**自做指纹漂移检查(安装器只认标记块);漂移即停,人工核对 |
+| 受管块漂移/手改 | 台账指纹核验,漂移即停零写入,人工核对 |
 | 卸载误伤 | 所有权记账;remove 只撤销本工具创建的对象 |
-| 项目规则双写漂移 | 规则唯一源 AGENTS.md;CLAUDE.md 只放引用+bridge;check 对非引用规则增长告警 |
+| 项目规则双写漂移 | 规则唯一源 AGENTS.md;CLAUDE.md 用户内容保留、工具只管引用行;check 对漂移告警 |
 | 32KiB / 200 行预算 | 入口块体积由模板控制;记忆永不进规则文件 |
 | WorkBuddy 子目录盲区 | M1 明确接受;根 AGENTS.md 摘要重要子目录要求 |
 | 子目录薄入口是否可删未证明 | 先保留仅含 @AGENTS.md 的薄入口;实测后决定 |
