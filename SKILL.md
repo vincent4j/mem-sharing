@@ -5,17 +5,19 @@ description: 多 Agent 记忆融合——跨执行器规则与项目记忆编排
 
 # Agent Group Memory
 
-> 当前状态(M2 收官):三命令全部接线(M2-04/05/06),281 项测试通过。macOS 四项平台操作
-> 已验收(安装/重装含 M2-08 两项目真实装配与新会话读回、卸载、失败恢复,见
+> 当前状态(M3 收官,M4 进行中):三命令全部接线,281 项测试通过;WorkBuddy 桥接已回传
+> context-keeper 上游接管(M3,证据见 [docs/acceptance/m3/](docs/acceptance/m3/))。macOS 四项
+> 平台操作已验收(安装/重装含 M2-08 两项目真实装配与新会话读回、卸载、失败恢复,见
 > [docs/acceptance/m2-platforms.md](docs/acceptance/m2-platforms.md));Windows/Linux not-run,
-> 不得声称支持。WorkBuddy 桥接装配静态就绪但**待运行时验收**;Claude 读回已验证但未显式走
-> Skill/resume。唯一设计依据:[DESIGN.md](DESIGN.md) v1.1;实现合同:
-> [docs/plan/architecture.md](docs/plan/architecture.md) v2;用户文档:[README.md](README.md)。
+> 不得声称支持。WorkBuddy 桥接**待运行时验收**;M4(用户级层产品化)按
+> [docs/plan/tasks-m4.md](docs/plan/tasks-m4.md) 推进。唯一设计依据:[DESIGN.md](DESIGN.md) v1.6;
+> 实现合同:[docs/plan/architecture.md](docs/plan/architecture.md) v2;用户文档:[README.md](README.md)。
 
 ## 操作路由
 
 - 用户请求装配/接入 → `python3 scripts/agm.py enable-memory [--project <Git根>] [--agent codex|claude|workbuddy ...] [--memory|--no-memory] [--approval-file <JSON>]`。
-  - 未指定 --agent 时目标固定三家(codex、claude、workbuddy),不按残留目录缩减。
+  - 未指定 --agent 时目标固定三家(codex、claude、workbuddy),不按残留目录缩减(现行 M2 裁定;
+    DESIGN v1.6 已裁定改为仅"已验证安装"的执行器,残留 hint 不构成安装事实,M4-05 落地)。
   - 预览返回 5 时,把 stdout `next_action` 的精确计划用说人话转述给用户;用户确认后落盘为
     批准文件(补 `confirmed_at` UTC-`Z` 时间戳与 `reference` 确认出处),经 `--approval-file` 执行。
     非交互运行不得自行批准;现场与登记一致的幂等补装免新批准(由内核判定)。

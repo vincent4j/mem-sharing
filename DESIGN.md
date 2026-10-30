@@ -158,7 +158,7 @@ group 不是常驻进程,不存在"装机即感知"。**check 类只读、可自
 
 - **内核**:跨平台 Python 脚本,仅标准库(≥3.9,零 pip 依赖);
 - **外壳**:SKILL.md 告诉 agent 何时、如何调用与验收——用户说人话,agent 负责翻译成命令;
-- **安装**:仓库 clone 到家目录为唯一源(落位 `~/.agents-group/skills/agent-group-memory/`;过渡期沿用旧同步体系投影到各执行器 Skill 目录,M4 后由本产品用户级层自身承担),首次运行自装用户级指针;M4 起安装即创建 `~/.agents-group` 全套结构;
+- **安装**:仓库 clone 到家目录为唯一源(落位 `~/.agents-group/skills/agent-group-memory/`);M4 起由本产品用户级层自身定义执行器 Skill 投影(用户级 Skill 根路径在路径表登记,不依赖 v0 旧同步体系),经 `scripts/install.py` 独立机器级入口安装,即装即建 `~/.agents-group` 全套结构;
 - **跨平台承诺收紧**:**M1 限定 macOS**(当前唯一已验证平台)。Windows/Linux 依赖上游安装策略——context-keeper 安装器使用目录 symlink 且拒绝现有复制目录,本工具**不自建第二套降级安装逻辑**;平台矩阵(安装/重装/卸载/失败恢复)留到 M2 按真实验收扩展。通用编码纪律先行:路径 `pathlib` + `Path.home()`、执行器路径表(含安装信号)、文件 UTF-8、子进程只调 Python 解释器。
 
 ### 4.7 目录结构
