@@ -181,6 +181,28 @@ agent-group-memory/
 
 **家目录(安装后)**:落位 `~/.agents-group/skills/agent-group-memory/`,由现有同步体系投影到各执行器 Skill 目录;不另建顶层目录。
 
+**用户级层 `~/.agents-group` 的目录结构**(本产品组件,安装时创建;与代码仓库结构是两回事):
+
+```
+~/.agents-group/
+├── memories/                 # 用户级公共规则
+│   ├── MEMORY.md             #   索引:一主题一行 + 链接,≤200 行/25KB(常驻注入)
+│   └── <主题>.md             #   规则细节,索引引用、按需读(记忆多了加文件不加行长)
+├── references/               # 操作手册类长参考(operations.md 等)
+├── skills/                   # 共享 Skills 公共源(受管;投影到各执行器 Skill 目录)
+│   └── agent-group-memory/   #   本产品自身落位(唯一源)
+├── mcp/                      # 无密钥 MCP 声明,一文件一 server(<name>.json)
+├── backups/                  # 操作前时间戳备份(带保留期限,90 天提醒清理)
+├── var/                      # 本机状态:registry.json(项目纳管 + 用户级指针记账)、进程锁
+└── legacy/                   # 旧手工实现迁移归档(只读):manage.py/sync.py/project_manage.py
+                              #   及 .sync-state.json 等旧状态文件;内容目录迁走后脚体退役于此
+```
+
+- **内容四目录(memories/references/skills/mcp)从旧实现原样迁入**,语义不变;
+- **状态收编**:旧实现散落的五套状态文件由 `var/registry.json` 统一替代(代码仓库内的 `scripts/registry.json` 随 M4 迁移至此,仓库不再持有本机状态);
+- 各执行器的用户级入口文件(`~/.codex/AGENTS.md` 等)不在本目录——它们是装配产物,由 registry 记账;
+- 确切迁移与并存切换策略由 M4 任务书定,本结构为目标态。
+
 **项目内产物(每个纳管项目)**:
 
 ```
