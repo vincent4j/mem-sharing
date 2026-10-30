@@ -32,6 +32,8 @@ from __future__ import annotations
 import copy
 import json
 import sys
+from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -46,6 +48,17 @@ from .transaction import (Change, Snapshot, Transaction, TransactionError,
                           read_snapshot, write_lock)
 
 COMMAND = "assemble-user-entries"
+_INSTALLER_SOURCE = ContextVar("agm_installer_verified_source", default=None)
+
+
+@contextmanager
+def _installer_source(code, fingerprint, *, preview):
+    """Internal installer capability, never deserialized from an approval/CLI."""
+    token = _INSTALLER_SOURCE.set((str(code), fingerprint, preview))
+    try:
+        yield
+    finally:
+        _INSTALLER_SOURCE.reset(token)
 # enable.py 的既有 WorkBuddy 用户约定文本(读它复用,不另造第二份);测试锁定一致。
 WORKBUDDY_CONVENTION_TEXT = "项目规则读取当前项目根 AGENTS.md。保留已有公共源与用户约定。"
 
@@ -143,10 +156,11 @@ def _preflight_machine_units(ledger):
 
 
 class _Planner:
-    def __init__(self, *, config, runtime, ledger, detection, effective, transaction):
+    def __init__(self, *, config, runtime, ledger, detection, effective, transaction, verified_preview=False):
         self.config, self.runtime = config, runtime
         self.ledger, self.detection, self.effective = ledger, detection, effective
         self.transaction = transaction
+        self.verified_preview = verified_preview
         self.before, self.after = {}, {}
         self.objects = {}  # oid -> planned machine object (upsert)
         self.notes = []
@@ -293,7 +307,7 @@ class _Planner:
 
     def skill_projection(self, agent):
         code = self.runtime.code
-        if not (code / "SKILL.md").is_file():
+        if not (code / "SKILL.md").is_file() and not self.verified_preview:
             raise UserEntryError(
                 "product_code_missing",
                 "产品代码源缺失,无法投影 Skill: %s;先完成/修复机器安装" % code)
@@ -415,11 +429,28 @@ def _plan(request, runtime, detection, effective, *, transaction):
     config = request["platform_config"]
     home = request["home"]
     allowed = agm_paths.allowed_user_paths(config, None, home=home)
+    context = _INSTALLER_SOURCE.get()
+    verified = request.get("verified_product_source")
+    verified_preview = False
+    if verified is not None:
+        if context is None or context[0] != str(runtime.code):
+            raise UserEntryError("installer_context_required", "verified_product_source is installer-only")
+        source_skill = Path(verified) / "SKILL.md"
+        if source_skill.is_symlink() or not source_skill.is_file() or sha256(source_skill.read_bytes()) != context[1]:
+            raise UserEntryError("product_code_drift", "Verified product source fingerprint changed")
+        code_skill = runtime.code / "SKILL.md"
+        if code_skill.is_file() and not code_skill.is_symlink():
+            if sha256(code_skill.read_bytes()) != context[1]:
+                raise UserEntryError("product_code_drift", "C differs from the approved product source")
+        elif not context[2] or code_skill.is_symlink():
+            raise UserEntryError("product_code_missing", "Installer execution requires verified code at C")
+        verified_preview = context[2] and transaction is None
     ledger, registry_snap = _load_ledger(runtime, allowed)
     if ledger is not None:
         _preflight_machine_units(ledger)
     planner = _Planner(config=config, runtime=runtime, ledger=ledger,
-                       detection=detection, effective=effective, transaction=transaction)
+                       detection=detection, effective=effective, transaction=transaction,
+                       verified_preview=verified_preview)
     for agent in effective:
         entry = config[agent]
         user_path = Path(agm_paths.expand_path(entry["user_entry"], home=home))
@@ -454,6 +485,8 @@ def _plan(request, runtime, detection, effective, *, transaction):
         "machine_objects": planner.machine_object_updates(),
         "machine_agents": machine_agents,
     }
+    if verified is not None:
+        approval_plan["verified_product_source"] = {"skill_sha256": context[1], "target": str(runtime.code)}
     return {
         "approval_plan": approval_plan,
         "planner": planner,
