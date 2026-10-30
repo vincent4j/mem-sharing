@@ -1,0 +1,29 @@
+{
+  "label": "read-tree-local-frozen-object",
+  "argv": [
+    "/usr/bin/git",
+    "-C",
+    "/private/tmp/M4-09-35-bmbf2vo1/worktree-scan/linked-main",
+    "reset",
+    "--quiet",
+    "--hard",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/private/tmp/M4-09-35-bmbf2vo1/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-35-bmbf2vo1/home",
+    "PATH": "/private/tmp/M4-09-35-bmbf2vo1/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-35-bmbf2vo1/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:24:16.434266Z",
+  "ended_utc": "2026-10-30T16:24:16.860167Z",
+  "duration_seconds": 0.4258947499911301,
+  "exit_code": 0,
+  "stdin_base64": ""
+}

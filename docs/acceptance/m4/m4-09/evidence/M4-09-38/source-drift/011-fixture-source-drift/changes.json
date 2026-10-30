@@ -1,0 +1,21 @@
+[
+  {
+    "path": "home/.codex/AGENTS.md",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377429756307795,
+      "size": 2366,
+      "kind": "file",
+      "sha256": "9aa30d847c5bf0cd17735caadc8b97e5441ea6bc70093561cf63eddfba66e6a2"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377430024374824,
+      "size": 2382,
+      "kind": "file",
+      "sha256": "1c1be1182efcaf553018a60c2fadbbface597b4497fe24fa7dcb8772199ed86d"
+    }
+  }
+]

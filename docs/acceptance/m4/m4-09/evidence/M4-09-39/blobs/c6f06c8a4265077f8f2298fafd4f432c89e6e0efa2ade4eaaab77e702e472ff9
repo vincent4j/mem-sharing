@@ -1,0 +1,8 @@
+# new-b
+
+## 项目规则
+<!-- mem-sharing:project-experience:start -->
+位置：项目经历记录库由 Context Keeper 管理，默认位于 docs/context-keeper/。
+入口：使用 /context-keeper，首次保存按 CK 流程确认位置并初始化。
+职责：命令、记录格式、保存与查找流程由 Context Keeper 自行定义。
+<!-- mem-sharing:project-experience:end -->

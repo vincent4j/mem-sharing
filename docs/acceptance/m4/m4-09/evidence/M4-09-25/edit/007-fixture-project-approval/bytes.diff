@@ -1,0 +1,39 @@
+--- before/project-approval-6.json
++++ after/project-approval-6.json
+@@ -0,0 +1,36 @@
++{
++  "schema_version": 1,
++  "command": "enable-memory",
++  "main_checkout": "/private/tmp/M4-09-25-alre5fvg/project",
++  "checkout": "/private/tmp/M4-09-25-alre5fvg/project",
++  "git_common_dir": "/private/tmp/M4-09-25-alre5fvg/project/.git",
++  "agents": [
++    "codex"
++  ],
++  "memory_policy": "follow_ck",
++  "changes": [
++    {
++      "path": "/private/tmp/M4-09-25-alre5fvg/project/AGENTS.md",
++      "operation": "create",
++      "before_fingerprint": null,
++      "after_fingerprint": "85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406"
++    }
++  ],
++  "installation": {
++    "codex": {
++      "status": "installed",
++      "fingerprint": "b3b1376bfae5c1668131e3372280cfef8cfcab226adf726c9251677c8b368f2a"
++    },
++    "claude": {
++      "status": "absent",
++      "fingerprint": "955c363298a9d59c62f495e21296ac61eae7aba97140e501187673ad3e031223"
++    },
++    "workbuddy": {
++      "status": "absent",
++      "fingerprint": "73bb207ddab677abc9ab31b33c8a4abf69ea5d50407f309f978e6b0937f81034"
++    }
++  },
++  "native_pending": [],
++  "confirmed_at": "2026-10-30T16:21:58.571242Z",
++  "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
++}

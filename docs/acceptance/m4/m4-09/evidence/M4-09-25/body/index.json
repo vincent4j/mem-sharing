@@ -1,0 +1,94 @@
+{
+  "case": "M4-09-25",
+  "name": "AGENTS 生命周期",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-25-56x83qu1",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "007-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "008-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "009-fixture-agents-body",
+      "label": "fixture-agents-body",
+      "exit_code": null
+    },
+    {
+      "path": "010-check",
+      "label": "check",
+      "exit_code": 0
+    },
+    {
+      "path": "011-remove-preview",
+      "label": "remove-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "012-remove-kernel-preview",
+      "label": "remove-kernel-preview",
+      "exit_code": 0
+    },
+    {
+      "path": "013-fixture-remove-approval",
+      "label": "fixture-remove-approval",
+      "exit_code": null
+    },
+    {
+      "path": "014-remove-execute",
+      "label": "remove-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "015-post-remove-check",
+      "label": "post-remove-check",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:21:56.634512Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing-install-20261030T162152Z-de189cf61b7840fcaebeac1d1aeda0da/journal.json",
+    "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing/backups/20261030T162154Z-0e127184ac5d45e6b92aae762af11e82/manifest.json",
+    "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing/backups/20261030T162156Z-c24d7c9f07114c2bad89bdec948f24de/manifest.json",
+    "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing-install-20261030T162152Z-de189cf61b7840fcaebeac1d1aeda0da/entry-backups/20261030T162153Z-faa3ad84a23b4b70bfd13cc228c2c77c/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

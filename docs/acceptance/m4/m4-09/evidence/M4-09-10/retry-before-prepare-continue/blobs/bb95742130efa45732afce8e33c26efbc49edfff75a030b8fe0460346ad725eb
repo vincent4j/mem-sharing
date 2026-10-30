@@ -1,0 +1,5 @@
+需要迁移：发现旧版 Context Keeper 记录；新版已停止读取和写入旧结构。
+- docs/memory-keeper.md → memory-keeper.md
+- docs/plans → plans
+- docs/worklogs → worklogs
+请先运行 migrate 查看迁移范围，并询问用户是否确认。只有用户明确确认后，才运行 migrate --approved；未确认或拒绝时停止本 Skill。

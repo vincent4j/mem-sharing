@@ -1,0 +1,40 @@
+{
+  "label": "install-preview",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "/private/tmp/M4-09-15-wnaoowy5/source/scripts/install.py",
+    "--source-manifest",
+    "/private/tmp/M4-09-15-wnaoowy5/source.json",
+    "--request-file",
+    "/private/tmp/M4-09-15-wnaoowy5/request.json"
+  ],
+  "cwd": "/private/tmp/M4-09-15-wnaoowy5/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-15-wnaoowy5/home",
+    "PATH": "/private/tmp/M4-09-15-wnaoowy5/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-15-wnaoowy5/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:17:30.544075Z",
+  "ended_utc": "2026-10-30T16:17:30.766636Z",
+  "duration_seconds": 0.2225627499865368,
+  "exit_code": 2,
+  "stdin_base64": "",
+  "json": {
+    "command": "install-machine",
+    "errors": [
+      {
+        "code": "machine_route_abnormal",
+        "message": "Machine scene abnormal: ['Unexplained content without ledger: /private/tmp/M4-09-15-wnaoowy5/home/.mem-sharing']"
+      }
+    ],
+    "schema_version": 1,
+    "status": "failed"
+  }
+}

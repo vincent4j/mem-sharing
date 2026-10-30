@@ -1,0 +1,21 @@
+# 使用约定
+
+## L1 概要
+
+当前有效结论：公共记忆采用索引与主题文件，摘要由 Agent 手写，不自动生成。
+用户规则治理条款、兜底接入条款与 /mem-sharing 菜单全文见索引头部。
+待办：有新事实且获准记录时，更新对应主题结论与索引行。
+
+## L2 正文
+
+主题文件全文及 references/ 手册仅在概要不足时读取。
+用户规则治理:公共内容只写公共指定文件(R/memories)，Agent 独有内容保留于各自用户文件，永不并入公共或自动删除。进入 Git 主 checkout 时，未登记项目默认启用项目规则：创建缺失的 AGENTS.md 骨架并追加项目经历短协议，已有全文保留。默认启用不创建 CK 记录库、不调用 CK 安装或初始化；首次 /context-keeper 进入 CK 流程，首次保存按其流程确认位置。项目政策已为 disabled 时，默认流程不得重新启用入口、自动记录经历或初始化；已有 CK 自动规则也不能覆盖此政策。重新启用须用户显式执行 enable-memory；解除 disabled 须显式 enable-memory --memory 并批准精确计划。Claude 和 WorkBuddy 项目入口只由各自实际使用时补齐，其他执行器不得预建；非 Git 目录和 linked worktree 不触发。
+仅 Claude Code 在本项目实际使用且项目已启用、政策非 disabled 时补引用：CLAUDE.md 不存在才创建仅含 @AGENTS.md 的文件；已有正文必须完整保留，仅追加缺失的 @AGENTS.md 引用行，重复执行不改字节。
+/mem-sharing 菜单:
+给项目启用记忆：为当前项目建立共享规则入口 → python3 /private/tmp/M4-09-12-50e661ug/home/.local/share/mem-sharing/scripts/agm.py enable-memory --project <项目绝对路径> --memory
+添加新的 Agent：接入已安装的执行器 → python3 /private/tmp/M4-09-12-50e661ug/home/.local/share/mem-sharing/scripts/install.py --agent <执行器名>
+健康检查：只读检查已登记入口 → python3 /private/tmp/M4-09-12-50e661ug/home/.local/share/mem-sharing/scripts/agm.py check-memory --project <项目绝对路径>
+停用记忆：撤入口并保留数据 → python3 /private/tmp/M4-09-12-50e661ug/home/.local/share/mem-sharing/scripts/agm.py remove-memory --project <项目绝对路径>；仅禁自动项目经历记录、保留入口用 enable-memory --no-memory
+整理用户规则：公共与独有分开，逐条计划后一次批准 → 按 SKILL.md 治理流程执行
+批量启用记忆：扫描给定目录，汇总预览后一次批准 → 各项目 enable-memory
+

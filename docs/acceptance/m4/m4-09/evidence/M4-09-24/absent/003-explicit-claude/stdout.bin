@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "install_conflict", "message": "User-entry preflight: [{\"code\": \"agent_not_installed\", \"path\": null, \"message\": \"显式指定的执行器未核验为 installed({\\\"claude\\\": \\\"absent\\\"});整单停止,零写入。下一步:安装该执行器或提供可核验安装证据后重试\", \"recovery\": \"保持现场零写入;按错误码处理后重新预览\"}]"}], "schema_version": 1, "status": "failed"}

@@ -1,0 +1,142 @@
+{
+  "/Users/vincent4j/.claude/CLAUDE.md": {
+    "kind": "file",
+    "sha256": "186018d21b872984f42d20f7da3dcd8f241662b59a849d295f50157488ab6e2f",
+    "mtime_ns": 1792460996643861602
+  },
+  "/Users/vincent4j/.codex/AGENTS.md": {
+    "kind": "file",
+    "sha256": "97995e9d0b5e3438685d52212d80e3b8a5efe68287231184850f3cbb9070b642",
+    "mtime_ns": 1792460996613414124
+  },
+  "/Users/vincent4j/.workbuddy/MEMORY.md": {
+    "kind": "file",
+    "sha256": "c539a3141a139d29a67807e2a223024e53bac2806a29b19f2eb29add9039909a",
+    "mtime_ns": 1793271760180582554
+  },
+  "/Users/vincent4j/Tools/Source/agent-group-memory/.agents/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793282838903745854
+  },
+  "/Users/vincent4j/Tools/Source/agent-group-memory/.claude/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793282838904399772
+  },
+  "/Users/vincent4j/Tools/Source/agent-group-memory/.codex/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793282838904052980
+  },
+  "/Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/memory/MEMORY.md": {
+    "kind": "file",
+    "sha256": "639727e944730c7550a9ce7cfaa62362eb67cd46f2c8ee4611b9fe0ac92bbe0c",
+    "mtime_ns": 1793282838905173899
+  },
+  "/Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793282838904803273
+  },
+  "/Users/vincent4j/Tools/Source/agent-group-memory/AGENTS.md": {
+    "kind": "file",
+    "sha256": "7682bc62fb1e7b9e8b4c48828c993fd281034411d39bc4163cbf765e539b6ede",
+    "mtime_ns": 1793283629561142677
+  },
+  "/Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md": {
+    "kind": "file",
+    "sha256": "c2e99a8533e215ab6dbbd6dc974189373b4339c3bf0059273b301b7709bdafb6",
+    "mtime_ns": 1793282838903325561
+  },
+  "/Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper": {
+    "kind": "tree",
+    "entry_count": 12,
+    "aggregate_sha256": "023d9b317996312f8b354f420ad08b8c56e9c6cb805e4b2183d953fe188d1c6d"
+  },
+  "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/registry.json": {
+    "kind": "file",
+    "sha256": "4a9d689c95e75646c359db1851319bd34d6f4d5b773cde616adb132026488804",
+    "mtime_ns": 1793282890584297134
+  },
+  "/Users/vincent4j/Tools/Source/knowwind/.agents/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793281915615377139
+  },
+  "/Users/vincent4j/Tools/Source/knowwind/.claude/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793281915616941768
+  },
+  "/Users/vincent4j/Tools/Source/knowwind/.codex/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793281915616226308
+  },
+  "/Users/vincent4j/Tools/Source/knowwind/.workbuddy/memory/MEMORY.md": {
+    "kind": "file",
+    "sha256": "5d464acc40d0bf2b30fc02dcffda1fdbf1cee80c5e3e742da9e85a1c871a8315",
+    "mtime_ns": 1793281915617945812
+  },
+  "/Users/vincent4j/Tools/Source/knowwind/.workbuddy/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793281915617525019
+  },
+  "/Users/vincent4j/Tools/Source/knowwind/AGENTS.md": {
+    "kind": "file",
+    "sha256": "6258f7c70147f79ba7faf41aee73f80ee2a2e2aa54d24ce6f5e470ec98662c2b",
+    "mtime_ns": 1793281915613070176
+  },
+  "/Users/vincent4j/Tools/Source/knowwind/CLAUDE.md": {
+    "kind": "file",
+    "sha256": "ada96f0b9db80e75cbd3493b60ab29576819a76debdd51bc8b2231a1cf036ac1",
+    "mtime_ns": 1793281915614346429
+  },
+  "/Users/vincent4j/Tools/Source/knowwind/docs/context-keeper": {
+    "kind": "tree",
+    "entry_count": 231,
+    "aggregate_sha256": "d584ae3b91874bc0048e4c947e48018960036463e14b105dfcaca3b909eb7a88"
+  },
+  "/Users/vincent4j/Tools/Source/poster-fit/.agents/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793281976013869126
+  },
+  "/Users/vincent4j/Tools/Source/poster-fit/.claude/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793281976015421796
+  },
+  "/Users/vincent4j/Tools/Source/poster-fit/.codex/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793281976014542794
+  },
+  "/Users/vincent4j/Tools/Source/poster-fit/.workbuddy/memory/MEMORY.md": {
+    "kind": "file",
+    "sha256": "5d464acc40d0bf2b30fc02dcffda1fdbf1cee80c5e3e742da9e85a1c871a8315",
+    "mtime_ns": 1793281976016108923
+  },
+  "/Users/vincent4j/Tools/Source/poster-fit/.workbuddy/skills/context-keeper": {
+    "kind": "symlink",
+    "target_sha256": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+    "mtime_ns": 1793281976015717839
+  },
+  "/Users/vincent4j/Tools/Source/poster-fit/AGENTS.md": {
+    "kind": "file",
+    "sha256": "09067905d39f89392e373af0861b9e9b225aee547dfa3cd678fb636b4273fea6",
+    "mtime_ns": 1793281976012147539
+  },
+  "/Users/vincent4j/Tools/Source/poster-fit/CLAUDE.md": {
+    "kind": "file",
+    "sha256": "de341baaa31993aa7e8e58a7ff3417de5c8debc4c89c2b68c1684a6ebcc6319c",
+    "mtime_ns": 1793281976012942707
+  },
+  "/Users/vincent4j/Tools/Source/poster-fit/docs/context-keeper": {
+    "kind": "tree",
+    "entry_count": 135,
+    "aggregate_sha256": "d5f3a560c0f075c36a826d7c746b227b81b2141efdd4df61084bb9d08478afde"
+  }
+}

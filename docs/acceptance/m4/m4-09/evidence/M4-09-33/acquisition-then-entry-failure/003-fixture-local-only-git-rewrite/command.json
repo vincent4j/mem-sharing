@@ -1,0 +1,24 @@
+{
+  "label": "fixture-local-only-git-rewrite",
+  "argv": [
+    "fixture-operation",
+    "local-only-git-rewrite"
+  ],
+  "cwd": "/private/tmp/M4-09-33-qmzwtkpy/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-33-qmzwtkpy/home",
+    "PATH": "/private/tmp/M4-09-33-qmzwtkpy/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-33-qmzwtkpy/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:26:32.224956Z",
+  "ended_utc": "2026-10-30T16:26:32.231153Z",
+  "duration_seconds": 0.006195124995429069,
+  "fixture_operation": "local-only-git-rewrite",
+  "returned": "None"
+}

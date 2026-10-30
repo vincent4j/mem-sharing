@@ -1,0 +1,94 @@
+{
+  "case": "M4-09-26",
+  "name": "CLAUDE 生命周期",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-26-x6cg8emb",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-fixture-synthetic-claude-package",
+      "label": "fixture-synthetic-claude-package",
+      "exit_code": null
+    },
+    {
+      "path": "004-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "005-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "006-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "007-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "008-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "009-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "010-fixture-claude-user-body",
+      "label": "fixture-claude-user-body",
+      "exit_code": null
+    },
+    {
+      "path": "011-remove-preview",
+      "label": "remove-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "012-remove-kernel-preview",
+      "label": "remove-kernel-preview",
+      "exit_code": 0
+    },
+    {
+      "path": "013-fixture-remove-approval",
+      "label": "fixture-remove-approval",
+      "exit_code": null
+    },
+    {
+      "path": "014-remove-execute",
+      "label": "remove-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "015-check",
+      "label": "check",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:22:14.108171Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing-install-20261030T162210Z-9f4b04d5f0554a73bae69a75e7db63e1/journal.json",
+    "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing-install-20261030T162210Z-9f4b04d5f0554a73bae69a75e7db63e1/entry-backups/20261030T162211Z-5b00f91973af4062b24dd8128c5c76fb/manifest.json",
+    "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing/backups/20261030T162213Z-dc66b6ab62724f628d6a740e5545fd27/manifest.json",
+    "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing/backups/20261030T162212Z-151c0faf82564189880d1a7cb0435140/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

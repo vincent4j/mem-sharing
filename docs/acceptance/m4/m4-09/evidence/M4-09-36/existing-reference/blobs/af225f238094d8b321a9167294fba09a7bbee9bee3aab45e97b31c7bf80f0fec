@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "operation": "enable-memory",
+  "status": "committed",
+  "registry_path": "/private/tmp/M4-09-36-f0ae2igz/home/.mem-sharing/var/registry.json",
+  "created_directories": [],
+  "entries": [
+    {
+      "path": "/private/tmp/M4-09-36-f0ae2igz/home/.mem-sharing/var/registry.json",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "ccbb3032e3f72273d25f504a24af8b80e17c55d0685bb0b210935c3a652cf5a2",
+        "backup": "0.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "660cadc199c80f2ab7c38c6a2ae66411a2739e64c33c7cbafd9a18dd5859d728",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    }
+  ],
+  "error": null
+}

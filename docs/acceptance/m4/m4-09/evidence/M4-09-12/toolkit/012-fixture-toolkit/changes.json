@@ -1,0 +1,21 @@
+[
+  {
+    "path": "home/.mem-sharing-install-synthetic-fault-upgrade/tools/agm_core/upgrade.py",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377434767144584,
+      "size": 34926,
+      "kind": "file",
+      "sha256": "f1c555229c0f9036dc0e3f00d7769d6b38a4c1068cf23cee3744df8024f44fab"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377435414442279,
+      "size": 16,
+      "kind": "file",
+      "sha256": "03189c8a63cd43bd5a71a108e25d00e02b3dfb821ceadd7466e9eb5f0881ae1d"
+    }
+  }
+]

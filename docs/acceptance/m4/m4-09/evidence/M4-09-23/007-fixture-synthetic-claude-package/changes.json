@@ -1,0 +1,94 @@
+[
+  {
+    "path": "bin",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377302319756428,
+      "size": 128,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377303878247851,
+      "size": 160,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "bin/claude",
+    "before": null,
+    "after": {
+      "mode": 41453,
+      "permissions": "0o755",
+      "mtime_ns": 1793377303878244185,
+      "size": 57,
+      "kind": "symlink",
+      "target": "/private/tmp/M4-09-23-bl6cu4kq/packages/claude/bin/claude"
+    }
+  },
+  {
+    "path": "packages",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377302319354591,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377303877890515,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "packages/claude",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377303878146809,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "packages/claude/bin",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377303878002599,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "packages/claude/bin/claude",
+    "before": null,
+    "after": {
+      "mode": 33261,
+      "permissions": "0o755",
+      "mtime_ns": 1793377303878052558,
+      "size": 17,
+      "kind": "file",
+      "sha256": "306c6ca7407560340797866e077e053627ad409277d1b9da58106fce4cf717cb"
+    }
+  },
+  {
+    "path": "packages/claude/package.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377303878194893,
+      "size": 107,
+      "kind": "file",
+      "sha256": "6aa498d8fa5675f24aaa25db63c0084da5dfd24c5cba2409ec1b5d545443750a"
+    }
+  }
+]

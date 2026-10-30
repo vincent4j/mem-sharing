@@ -1,0 +1,10 @@
+{
+  "utc": "2026-10-29T13:54:44.200096+00:00",
+  "old_agents_bytes": 12889,
+  "new_agents_bytes": 15191,
+  "old_equals_new_prefix": true,
+  "appended_bytes": 2302,
+  "other_dirty_changed": [],
+  "agents_before_sha256": "67223927eeb4916e9c00e42a8f2247f7a8743d59a9dd9bbb03b57ae6e91596a7",
+  "agents_after_sha256": "09067905d39f89392e373af0861b9e9b225aee547dfa3cd678fb636b4273fea6"
+}

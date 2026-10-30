@@ -1,0 +1,1684 @@
+[
+  {
+    "path": "home",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377389947976822,
+      "size": 64,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377392259890868,
+      "size": 192,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.codex",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391950165001,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.codex/AGENTS.md",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391950027750,
+      "size": 2211,
+      "kind": "file",
+      "sha256": "832f256dd37dd457e4cb0ca68c4fad0d79ae2ba683ad6ec73d05145c81eedcce"
+    }
+  },
+  {
+    "path": "home/.local",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391673276351,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391802511071,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391912818119,
+      "size": 256,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377392254293442,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391778782813,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391754589301,
+      "size": 160,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391751007810,
+      "size": 256,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/.agm-code-manifest.json",
+    "before": null,
+    "after": {
+      "mode": 33024,
+      "permissions": "0o400",
+      "mtime_ns": 1793377391750891559,
+      "size": 4521,
+      "kind": "file",
+      "sha256": "f57e2abb43dbbb85fb9b5f92a1bbdff725683e8b63aedc1b2ef681338730c1d2"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/INSTALL.md",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391688891868,
+      "size": 10201,
+      "kind": "file",
+      "sha256": "5e60b946328fbe1c1c25aba8b8d84dcd0d7d71f75fa46965f6305ed975c70947"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/README.md",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391690868803,
+      "size": 6749,
+      "kind": "file",
+      "sha256": "ba5bfb4bed8e84dec69b79a729af0adac33d38c3cd388bdb98b196fb68144071"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/SKILL.md",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391693191407,
+      "size": 6635,
+      "kind": "file",
+      "sha256": "6abb35bc6b68ab7e855ce6d11ab7d70fc8f276b65b588a09083d768db7135416"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/llms.txt",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391695099966,
+      "size": 15940,
+      "kind": "file",
+      "sha256": "96adc0c815b777755ef83d13e96411c15e3505e0e1ce3ff8e639c6f7d1867d18"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391749045458,
+      "size": 192,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agents.json",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391699881593,
+      "size": 2313,
+      "kind": "file",
+      "sha256": "9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391701911945,
+      "size": 31744,
+      "kind": "file",
+      "sha256": "9ffcc2bf09294dca1ac62e2b1c5d5e15fcfce455844055d5046051ec03ad2dbf"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391746558436,
+      "size": 704,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/__init__.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391707057325,
+      "size": 0,
+      "kind": "file",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/batch_enable.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391709370472,
+      "size": 11397,
+      "kind": "file",
+      "sha256": "78369ad55edf8d7f3cec42bb8dc707cd8602dbff1e7a2b09be4587f4b7b4f099"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/check.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391711353073,
+      "size": 27018,
+      "kind": "file",
+      "sha256": "407870efb31dba4f4c2764367bb485871902a20a99b69fde448722bc7cebe7da"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/ck_install.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391713315466,
+      "size": 22231,
+      "kind": "file",
+      "sha256": "1c386f310851c5934fd4dd62cd40d7b7cc88e8ddcf4c804f88722d36c8485314"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/detect.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391715350609,
+      "size": 20978,
+      "kind": "file",
+      "sha256": "97119e4d2b63b0539d45f674a8a7301c2d7ac65a7d73b664d3616ac6ac8932c1"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/enable.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391717310211,
+      "size": 30460,
+      "kind": "file",
+      "sha256": "8918808b8c0df60032249d512cecdbe9906aee26a87c9135111977a4f01db978"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/entries.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391719602315,
+      "size": 5435,
+      "kind": "file",
+      "sha256": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/layout.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391721494457,
+      "size": 3870,
+      "kind": "file",
+      "sha256": "254f28dca67b0277480eb2001ec98f52102989cdaa4ee97a0d7e2540333ecb44"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/legacy_import.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391723712519,
+      "size": 9243,
+      "kind": "file",
+      "sha256": "cf77248dbe8c2fd844a29a8c95c99dfaa772e31408d32b68f0ae9ff3adaad73c"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/migrate.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391725919456,
+      "size": 8252,
+      "kind": "file",
+      "sha256": "e8d6685897bf47603666ef31fea0d1fd0593a0845362efc8b32722aa0af7c46b"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/paths.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391727940933,
+      "size": 15880,
+      "kind": "file",
+      "sha256": "fbf958ddf6608d8c284c96f29263f67614831ff04b6c709c499a57f2ace0dcb0"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/project.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391729872867,
+      "size": 3330,
+      "kind": "file",
+      "sha256": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/registry.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391732140054,
+      "size": 46453,
+      "kind": "file",
+      "sha256": "128e828b2f44c54efb39cfb844e01da1238f86789decd7f562bfc5f4cfe534f6"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/remove.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391734584160,
+      "size": 15474,
+      "kind": "file",
+      "sha256": "f67fa93aa24dfbbca3183714a6facbf89a479e79eacd6271a82e0a3ba3867283"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/transaction.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391736515386,
+      "size": 21661,
+      "kind": "file",
+      "sha256": "78eca6cc3e43c47e531a4f734cb4b94d306b0738c4a3a0a8b6ccf0c4a184c40a"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/upgrade.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391738436070,
+      "size": 34926,
+      "kind": "file",
+      "sha256": "f1c555229c0f9036dc0e3f00d7769d6b38a4c1068cf23cee3744df8024f44fab"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/user_entries.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391740418213,
+      "size": 31502,
+      "kind": "file",
+      "sha256": "499ab8153a1ede8c758ceb634a557e440802c81f034d63939151a686ef41e322"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/user_install.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391742357231,
+      "size": 64652,
+      "kind": "file",
+      "sha256": "ee436b098180db9c54b7b9640fa16d8397bbc3424f5298b0f2880ad49e2c6214"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/user_rules_organize.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391744298082,
+      "size": 20751,
+      "kind": "file",
+      "sha256": "b752974c662a715efe96da40929ad2219e997f4d8986094534c0b88166e43d4f"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/agm_core/versions.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391746445351,
+      "size": 12051,
+      "kind": "file",
+      "sha256": "74b611283e393450dd77a10afeab76b415144d0ba49d296b4e0a92a637bcbe7b"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/code/scripts/install.py",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377391748922874,
+      "size": 24493,
+      "kind": "file",
+      "sha256": "52c3a3e381ce06904aea2e7d8fe0e0900df7cd281b811ef95874a8dc2f815b6f"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/complete.json",
+    "before": null,
+    "after": {
+      "mode": 33024,
+      "permissions": "0o400",
+      "mtime_ns": 1793377391754482175,
+      "size": 114,
+      "kind": "file",
+      "sha256": "c236ba0eaff6309c3e2a463b82c320f4767904286295cceed6ce0aa1e1702aaa"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/0.4.0/772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872/release.json",
+    "before": null,
+    "after": {
+      "mode": 33024,
+      "permissions": "0o400",
+      "mtime_ns": 1793377391752745242,
+      "size": 4662,
+      "kind": "file",
+      "sha256": "1b9b4539fdd7e8aedfc4d187856499fe91d22daef914bed1434a5b6be19aed7c"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/activations",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377392257889225,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing-versions/activations/20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06-after.json",
+    "before": null,
+    "after": {
+      "mode": 33024,
+      "permissions": "0o400",
+      "mtime_ns": 1793377392257709306,
+      "size": 186586,
+      "kind": "file",
+      "sha256": "fcbb55028312df77f96f7a309c5c1c2be04f9f4e5cde9f72ca13f06d6ab301fc"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/.agm-code-manifest.json",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391912666451,
+      "size": 4521,
+      "kind": "file",
+      "sha256": "f57e2abb43dbbb85fb9b5f92a1bbdff725683e8b63aedc1b2ef681338730c1d2"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/INSTALL.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391817142704,
+      "size": 10201,
+      "kind": "file",
+      "sha256": "5e60b946328fbe1c1c25aba8b8d84dcd0d7d71f75fa46965f6305ed975c70947"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/README.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391820906947,
+      "size": 6749,
+      "kind": "file",
+      "sha256": "ba5bfb4bed8e84dec69b79a729af0adac33d38c3cd388bdb98b196fb68144071"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/SKILL.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391824504063,
+      "size": 6635,
+      "kind": "file",
+      "sha256": "6abb35bc6b68ab7e855ce6d11ab7d70fc8f276b65b588a09083d768db7135416"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/llms.txt",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391827905344,
+      "size": 15940,
+      "kind": "file",
+      "sha256": "96adc0c815b777755ef83d13e96411c15e3505e0e1ce3ff8e639c6f7d1867d18"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391909616798,
+      "size": 192,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agents.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391831643045,
+      "size": 2313,
+      "kind": "file",
+      "sha256": "9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391834942367,
+      "size": 31744,
+      "kind": "file",
+      "sha256": "9ffcc2bf09294dca1ac62e2b1c5d5e15fcfce455844055d5046051ec03ad2dbf"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391906230892,
+      "size": 704,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/__init__.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391838349565,
+      "size": 0,
+      "kind": "file",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/batch_enable.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391842191225,
+      "size": 11397,
+      "kind": "file",
+      "sha256": "78369ad55edf8d7f3cec42bb8dc707cd8602dbff1e7a2b09be4587f4b7b4f099"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/check.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391846027801,
+      "size": 27018,
+      "kind": "file",
+      "sha256": "407870efb31dba4f4c2764367bb485871902a20a99b69fde448722bc7cebe7da"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/ck_install.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391849452708,
+      "size": 22231,
+      "kind": "file",
+      "sha256": "1c386f310851c5934fd4dd62cd40d7b7cc88e8ddcf4c804f88722d36c8485314"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/detect.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391852785363,
+      "size": 20978,
+      "kind": "file",
+      "sha256": "97119e4d2b63b0539d45f674a8a7301c2d7ac65a7d73b664d3616ac6ac8932c1"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/enable.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391856540231,
+      "size": 30460,
+      "kind": "file",
+      "sha256": "8918808b8c0df60032249d512cecdbe9906aee26a87c9135111977a4f01db978"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/entries.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391860045887,
+      "size": 5435,
+      "kind": "file",
+      "sha256": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/layout.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391863497169,
+      "size": 3870,
+      "kind": "file",
+      "sha256": "254f28dca67b0277480eb2001ec98f52102989cdaa4ee97a0d7e2540333ecb44"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/legacy_import.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391867186994,
+      "size": 9243,
+      "kind": "file",
+      "sha256": "cf77248dbe8c2fd844a29a8c95c99dfaa772e31408d32b68f0ae9ff3adaad73c"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/migrate.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391871307365,
+      "size": 8252,
+      "kind": "file",
+      "sha256": "e8d6685897bf47603666ef31fea0d1fd0593a0845362efc8b32722aa0af7c46b"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/paths.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391874714021,
+      "size": 15880,
+      "kind": "file",
+      "sha256": "fbf958ddf6608d8c284c96f29263f67614831ff04b6c709c499a57f2ace0dcb0"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/project.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391877949592,
+      "size": 3330,
+      "kind": "file",
+      "sha256": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/registry.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391881599167,
+      "size": 46453,
+      "kind": "file",
+      "sha256": "128e828b2f44c54efb39cfb844e01da1238f86789decd7f562bfc5f4cfe534f6"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/remove.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391885078782,
+      "size": 15474,
+      "kind": "file",
+      "sha256": "f67fa93aa24dfbbca3183714a6facbf89a479e79eacd6271a82e0a3ba3867283"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/transaction.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391888374521,
+      "size": 21661,
+      "kind": "file",
+      "sha256": "78eca6cc3e43c47e531a4f734cb4b94d306b0738c4a3a0a8b6ccf0c4a184c40a"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/upgrade.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391892122847,
+      "size": 34926,
+      "kind": "file",
+      "sha256": "f1c555229c0f9036dc0e3f00d7769d6b38a4c1068cf23cee3744df8024f44fab"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/user_entries.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391895455377,
+      "size": 31502,
+      "kind": "file",
+      "sha256": "499ab8153a1ede8c758ceb634a557e440802c81f034d63939151a686ef41e322"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/user_install.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391898909992,
+      "size": 64652,
+      "kind": "file",
+      "sha256": "ee436b098180db9c54b7b9640fa16d8397bbc3424f5298b0f2880ad49e2c6214"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/user_rules_organize.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391902260147,
+      "size": 20751,
+      "kind": "file",
+      "sha256": "b752974c662a715efe96da40929ad2219e997f4d8986094534c0b88166e43d4f"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/agm_core/versions.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391906074141,
+      "size": 12051,
+      "kind": "file",
+      "sha256": "74b611283e393450dd77a10afeab76b415144d0ba49d296b4e0a92a637bcbe7b"
+    }
+  },
+  {
+    "path": "home/.local/share/mem-sharing/scripts/install.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377391909463505,
+      "size": 24493,
+      "kind": "file",
+      "sha256": "52c3a3e381ce06904aea2e7d8fe0e0900df7cd281b811ef95874a8dc2f815b6f"
+    }
+  },
+  {
+    "path": "home/.mem-sharing",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391799526710,
+      "size": 192,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377392259406738,
+      "size": 224,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391618273099,
+      "size": 224,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/INSTALL.md",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391610964741,
+      "size": 10201,
+      "kind": "file",
+      "sha256": "5e60b946328fbe1c1c25aba8b8d84dcd0d7d71f75fa46965f6305ed975c70947"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/README.md",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391612698798,
+      "size": 6749,
+      "kind": "file",
+      "sha256": "ba5bfb4bed8e84dec69b79a729af0adac33d38c3cd388bdb98b196fb68144071"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/SKILL.md",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391614445397,
+      "size": 6635,
+      "kind": "file",
+      "sha256": "6abb35bc6b68ab7e855ce6d11ab7d70fc8f276b65b588a09083d768db7135416"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/llms.txt",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391616648792,
+      "size": 15940,
+      "kind": "file",
+      "sha256": "96adc0c815b777755ef83d13e96411c15e3505e0e1ce3ff8e639c6f7d1867d18"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391667776717,
+      "size": 192,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agents.json",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391621473545,
+      "size": 2313,
+      "kind": "file",
+      "sha256": "9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391623353395,
+      "size": 31744,
+      "kind": "file",
+      "sha256": "9ffcc2bf09294dca1ac62e2b1c5d5e15fcfce455844055d5046051ec03ad2dbf"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391665970826,
+      "size": 704,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/__init__.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391627902770,
+      "size": 0,
+      "kind": "file",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/batch_enable.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391629940747,
+      "size": 11397,
+      "kind": "file",
+      "sha256": "78369ad55edf8d7f3cec42bb8dc707cd8602dbff1e7a2b09be4587f4b7b4f099"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/check.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391632074017,
+      "size": 27018,
+      "kind": "file",
+      "sha256": "407870efb31dba4f4c2764367bb485871902a20a99b69fde448722bc7cebe7da"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/ck_install.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391633841741,
+      "size": 22231,
+      "kind": "file",
+      "sha256": "1c386f310851c5934fd4dd62cd40d7b7cc88e8ddcf4c804f88722d36c8485314"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/detect.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391635594424,
+      "size": 20978,
+      "kind": "file",
+      "sha256": "97119e4d2b63b0539d45f674a8a7301c2d7ac65a7d73b664d3616ac6ac8932c1"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/enable.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391637764193,
+      "size": 30460,
+      "kind": "file",
+      "sha256": "8918808b8c0df60032249d512cecdbe9906aee26a87c9135111977a4f01db978"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/entries.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391639550376,
+      "size": 5435,
+      "kind": "file",
+      "sha256": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/layout.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391641574686,
+      "size": 3870,
+      "kind": "file",
+      "sha256": "254f28dca67b0277480eb2001ec98f52102989cdaa4ee97a0d7e2540333ecb44"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/legacy_import.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391643574246,
+      "size": 9243,
+      "kind": "file",
+      "sha256": "cf77248dbe8c2fd844a29a8c95c99dfaa772e31408d32b68f0ae9ff3adaad73c"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/migrate.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391645583515,
+      "size": 8252,
+      "kind": "file",
+      "sha256": "e8d6685897bf47603666ef31fea0d1fd0593a0845362efc8b32722aa0af7c46b"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/paths.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391647704076,
+      "size": 15880,
+      "kind": "file",
+      "sha256": "fbf958ddf6608d8c284c96f29263f67614831ff04b6c709c499a57f2ace0dcb0"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/project.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391650092306,
+      "size": 3330,
+      "kind": "file",
+      "sha256": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/registry.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391652058491,
+      "size": 46453,
+      "kind": "file",
+      "sha256": "128e828b2f44c54efb39cfb844e01da1238f86789decd7f562bfc5f4cfe534f6"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/remove.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391653990425,
+      "size": 15474,
+      "kind": "file",
+      "sha256": "f67fa93aa24dfbbca3183714a6facbf89a479e79eacd6271a82e0a3ba3867283"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/transaction.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391655959818,
+      "size": 21661,
+      "kind": "file",
+      "sha256": "78eca6cc3e43c47e531a4f734cb4b94d306b0738c4a3a0a8b6ccf0c4a184c40a"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/upgrade.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391657943419,
+      "size": 34926,
+      "kind": "file",
+      "sha256": "f1c555229c0f9036dc0e3f00d7769d6b38a4c1068cf23cee3744df8024f44fab"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/user_entries.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391659765311,
+      "size": 31502,
+      "kind": "file",
+      "sha256": "499ab8153a1ede8c758ceb634a557e440802c81f034d63939151a686ef41e322"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/user_install.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391661677703,
+      "size": 64652,
+      "kind": "file",
+      "sha256": "ee436b098180db9c54b7b9640fa16d8397bbc3424f5298b0f2880ad49e2c6214"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/user_rules_organize.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391663610221,
+      "size": 20751,
+      "kind": "file",
+      "sha256": "b752974c662a715efe96da40929ad2219e997f4d8986094534c0b88166e43d4f"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/agm_core/versions.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391665862075,
+      "size": 12051,
+      "kind": "file",
+      "sha256": "74b611283e393450dd77a10afeab76b415144d0ba49d296b4e0a92a637bcbe7b"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/code-source/scripts/install.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391667658716,
+      "size": 24493,
+      "kind": "file",
+      "sha256": "52c3a3e381ce06904aea2e7d8fe0e0900df7cd281b811ef95874a8dc2f815b6f"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/entry-backups",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377391947616145,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/entry-backups/20261030T162311Z-cb7e598703244ed9a1ca72759a74f600",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391951687098,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/entry-backups/20261030T162311Z-cb7e598703244ed9a1ca72759a74f600/1.before",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391947820980,
+      "size": 716,
+      "kind": "file",
+      "sha256": "9cff48c564772e8b7cab1a40f3a2112a75a6ddb0ff3da069106ce37de3ef360e"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/entry-backups/20261030T162311Z-cb7e598703244ed9a1ca72759a74f600/manifest.json",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391951564514,
+      "size": 1623,
+      "kind": "file",
+      "sha256": "a670ca11d722e75b8643feb82f898faba28d35d31f6ca46df6ff3d7a37637624"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/journal.json",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377392259213612,
+      "size": 171216,
+      "kind": "file",
+      "sha256": "e0a7dfeebca03162a2b92d38e1b79745c6b5154e1f19ab63a88a5cca6726fe3a"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/staged-registry.json",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391950991967,
+      "size": 2131,
+      "kind": "file",
+      "sha256": "8e80f54339b8e6979013f831bcc3d588415393f3309610a95513c0a42fc8f798"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391566045956,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391605727526,
+      "size": 704,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/__init__.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391569336278,
+      "size": 0,
+      "kind": "file",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/batch_enable.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391571323254,
+      "size": 11397,
+      "kind": "file",
+      "sha256": "78369ad55edf8d7f3cec42bb8dc707cd8602dbff1e7a2b09be4587f4b7b4f099"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/check.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391573095062,
+      "size": 27018,
+      "kind": "file",
+      "sha256": "407870efb31dba4f4c2764367bb485871902a20a99b69fde448722bc7cebe7da"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/ck_install.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391575089538,
+      "size": 22231,
+      "kind": "file",
+      "sha256": "1c386f310851c5934fd4dd62cd40d7b7cc88e8ddcf4c804f88722d36c8485314"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/detect.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391576900055,
+      "size": 20978,
+      "kind": "file",
+      "sha256": "97119e4d2b63b0539d45f674a8a7301c2d7ac65a7d73b664d3616ac6ac8932c1"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/enable.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391578678571,
+      "size": 30460,
+      "kind": "file",
+      "sha256": "8918808b8c0df60032249d512cecdbe9906aee26a87c9135111977a4f01db978"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/entries.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391580432504,
+      "size": 5435,
+      "kind": "file",
+      "sha256": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/layout.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391582666441,
+      "size": 3870,
+      "kind": "file",
+      "sha256": "254f28dca67b0277480eb2001ec98f52102989cdaa4ee97a0d7e2540333ecb44"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/legacy_import.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391584785419,
+      "size": 9243,
+      "kind": "file",
+      "sha256": "cf77248dbe8c2fd844a29a8c95c99dfaa772e31408d32b68f0ae9ff3adaad73c"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/migrate.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391586701728,
+      "size": 8252,
+      "kind": "file",
+      "sha256": "e8d6685897bf47603666ef31fea0d1fd0593a0845362efc8b32722aa0af7c46b"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/paths.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391588718704,
+      "size": 15880,
+      "kind": "file",
+      "sha256": "fbf958ddf6608d8c284c96f29263f67614831ff04b6c709c499a57f2ace0dcb0"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/project.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391590624222,
+      "size": 3330,
+      "kind": "file",
+      "sha256": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/registry.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391592461072,
+      "size": 46453,
+      "kind": "file",
+      "sha256": "128e828b2f44c54efb39cfb844e01da1238f86789decd7f562bfc5f4cfe534f6"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/remove.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391594313589,
+      "size": 15474,
+      "kind": "file",
+      "sha256": "f67fa93aa24dfbbca3183714a6facbf89a479e79eacd6271a82e0a3ba3867283"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/transaction.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391596352982,
+      "size": 21661,
+      "kind": "file",
+      "sha256": "78eca6cc3e43c47e531a4f734cb4b94d306b0738c4a3a0a8b6ccf0c4a184c40a"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/upgrade.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391598146790,
+      "size": 34926,
+      "kind": "file",
+      "sha256": "f1c555229c0f9036dc0e3f00d7769d6b38a4c1068cf23cee3744df8024f44fab"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/user_entries.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391600079808,
+      "size": 31502,
+      "kind": "file",
+      "sha256": "499ab8153a1ede8c758ceb634a557e440802c81f034d63939151a686ef41e322"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/user_install.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391601869283,
+      "size": 64652,
+      "kind": "file",
+      "sha256": "ee436b098180db9c54b7b9640fa16d8397bbc3424f5298b0f2880ad49e2c6214"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/user_rules_organize.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391603640132,
+      "size": 20751,
+      "kind": "file",
+      "sha256": "b752974c662a715efe96da40929ad2219e997f4d8986094534c0b88166e43d4f"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-20261030T162310Z-302ecdf7c3e744928c48ac7c108f4a06/tools/agm_core/versions.py",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391605622109,
+      "size": 12051,
+      "kind": "file",
+      "sha256": "74b611283e393450dd77a10afeab76b415144d0ba49d296b4e0a92a637bcbe7b"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/backups",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391793059401,
+      "size": 64,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/memories",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391919682931,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/memories/MEMORY.md",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391919544514,
+      "size": 2700,
+      "kind": "file",
+      "sha256": "11770727655d098b2dde7b78b55f29f56410eef9b521a91156215187e575f3ef"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/memories/topics",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391916530861,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/memories/topics/使用约定.md",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377391916384693,
+      "size": 2566,
+      "kind": "file",
+      "sha256": "8ff65fc34b89c402d5775dcc31f6cc95e59adeefa016a524b66a832b5d5aa084"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/references",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377391799523794,
+      "size": 64,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/var",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377392259773992,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/var/registry.json",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377392215428212,
+      "size": 2131,
+      "kind": "file",
+      "sha256": "8e80f54339b8e6979013f831bcc3d588415393f3309610a95513c0a42fc8f798"
+    }
+  }
+]

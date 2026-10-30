@@ -1,0 +1,69 @@
+{
+  "case": "M4-09-35",
+  "name": "默认启用合成内核与真实触发边界",
+  "status": "not_in_scope",
+  "area": "/private/tmp/M4-09-35-2anihs_5",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "007-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "008-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "009-reenter",
+      "label": "reenter",
+      "exit_code": 0
+    },
+    {
+      "path": "010-check",
+      "label": "check",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "Synthetic explicit kernel calls captured; automatic default-enable trigger in real Agent session is M4-10 scope. No new Agent session was started."
+  ],
+  "ended_utc": "2026-10-30T16:24:09.012846Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-35-2anihs_5/home/.mem-sharing-install-20261030T162406Z-67bd5641e28f46f0a683640ee5a347d2/journal.json",
+    "/private/tmp/M4-09-35-2anihs_5/home/.mem-sharing-install-20261030T162406Z-67bd5641e28f46f0a683640ee5a347d2/entry-backups/20261030T162407Z-797f1d73740e45709c700d64d6fe4b0e/manifest.json",
+    "/private/tmp/M4-09-35-2anihs_5/home/.mem-sharing/backups/20261030T162408Z-85dadf33a9c44641ae63b912a3c3c721/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

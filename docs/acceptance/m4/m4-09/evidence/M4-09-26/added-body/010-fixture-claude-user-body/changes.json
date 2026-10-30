@@ -1,0 +1,21 @@
+[
+  {
+    "path": "project/CLAUDE.md",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377332568169161,
+      "size": 11,
+      "kind": "file",
+      "sha256": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377332624309089,
+      "size": 21,
+      "kind": "file",
+      "sha256": "87ab3efae513e8f31e17ae69dbb9d4936dcbeb23c408577c2483c963bc2cdab6"
+    }
+  }
+]

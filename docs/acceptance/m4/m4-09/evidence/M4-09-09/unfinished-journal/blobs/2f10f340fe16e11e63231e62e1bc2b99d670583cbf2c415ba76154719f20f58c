@@ -1,0 +1,10 @@
+{
+  "scripts/agm_core/registry.py": "37b80fa226cfbf33f51c12216275b0887c95c85c5e1763277ed53d2b5cfb24f8",
+  "scripts/agm_core/migrate.py": "3bb06df4c24bdc84c6eb44e905f3fdbe2ba974747f1c6f769f42329b0b262ae5",
+  "tests/unit/test_m403_migrate.py": "bbbe10426f20276669906a8f28a70e560ddd110a5dc37d7cacc9914d5656a89f",
+  "tests/integration/test_m403_migration.py": "fe7de726e8ad8204d506f1508e24bdc97f248a758957914d2f1e00039f4b0913",
+  "scripts/agents.json": "24258be62f8e4d5fe260a1578fbda55c456a74a4a812bc154bdadcdcee48e396",
+  "scripts/agm_core/paths.py": "790731a632a72bee79e2e1c409294fc6986bf4a8decd10675979ad786645790b",
+  "scripts/agm_core/detect.py": "e0d5ee823c66dc97ab38b099dda17faaf34249e919439fdf9bcfd143e8096a45",
+  "scripts/agm_core/user_entries.py": "510d32db4cdbfdde9021b4a9032d3db6dc698ecdb0572e68fb643edb192ed3a4"
+}

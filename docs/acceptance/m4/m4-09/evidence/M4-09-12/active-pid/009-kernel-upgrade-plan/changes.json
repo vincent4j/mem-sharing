@@ -1,0 +1,43 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377437855897257,
+      "size": 448,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377438215668705,
+      "size": 512,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "upgrade-plan.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377438215754830,
+      "size": 60278,
+      "kind": "file",
+      "sha256": "9770cbd6b6797561dbc84336dc56a4f5c6aa56bf48eb2a4b084caede145fb14f"
+    }
+  },
+  {
+    "path": "upgrade-request.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377438215212951,
+      "size": 5613,
+      "kind": "file",
+      "sha256": "d16c99067e94ba032fb02ced5995a9dad76b63a4f7273ae0fbcf059f73e726b1"
+    }
+  }
+]

@@ -1,0 +1,98 @@
+{
+  "label": "recover-preview",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "/private/tmp/M4-09-10-6si82ebj/source/scripts/install.py",
+    "--recover",
+    "/private/tmp/M4-09-10-6si82ebj/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
+    "--action",
+    "rollback"
+  ],
+  "cwd": "/private/tmp/M4-09-10-6si82ebj/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-10-6si82ebj/home",
+    "PATH": "/private/tmp/M4-09-10-6si82ebj/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-10-6si82ebj/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:21:05.926916Z",
+  "ended_utc": "2026-10-30T16:21:06.594116Z",
+  "duration_seconds": 0.667191874992568,
+  "exit_code": 5,
+  "stdin_base64": "",
+  "json": {
+    "approval_plan": {
+      "action": "rollback",
+      "command": "recover-machine-upgrade",
+      "installation_plan_sha256": "28dd010711003453790d014930aede225cc69e91b3a096bbcc28e7368ab5a13a",
+      "journal": "/private/tmp/M4-09-10-6si82ebj/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
+      "journal_sha256": "29c6ed22632ac0da1b69b1d375f03f5db28e657ad9692d6a8410fe6307249ff7",
+      "migration_recovery": null,
+      "operation_id": "synthetic-fault-upgrade",
+      "plan_sha256": "c9c3e83496eb856767e341b81417aab62bccc4fc573f07338ea266aa7b5d3a5b",
+      "scene": {
+        "outputs": [
+          "before",
+          "after",
+          "before",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "before",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after",
+          "after"
+        ],
+        "target": "before"
+      },
+      "schema_version": 1,
+      "stale_locks": [
+        {
+          "device": 16777234,
+          "inode": 159674991,
+          "owner_sha256": "553ae53304407d3979e27236e440e27d6da6ea54b2d31d29192124d5a718a3e4",
+          "path": "/private/tmp/M4-09-10-6si82ebj/home/.mem-sharing-install.lock"
+        },
+        {
+          "device": 16777234,
+          "inode": 159674993,
+          "owner_sha256": "553ae53304407d3979e27236e440e27d6da6ea54b2d31d29192124d5a718a3e4",
+          "path": "/private/tmp/M4-09-10-6si82ebj/home/.mem-sharing/var/.agm.lock"
+        },
+        {
+          "device": 16777234,
+          "inode": 159674995,
+          "owner_sha256": "553ae53304407d3979e27236e440e27d6da6ea54b2d31d29192124d5a718a3e4",
+          "path": "/private/tmp/M4-09-10-6si82ebj/home/.mem-sharing/var/.agm.lock/transaction"
+        }
+      ]
+    },
+    "approval_required": true,
+    "status": "approval_required"
+  }
+}

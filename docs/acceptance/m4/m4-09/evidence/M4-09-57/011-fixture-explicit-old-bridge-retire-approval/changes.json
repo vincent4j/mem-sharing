@@ -1,0 +1,31 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377375976639179,
+      "size": 416,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377376816852926,
+      "size": 448,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "explicit-old-bridge-retire-approval-10.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377376816916218,
+      "size": 1715,
+      "kind": "file",
+      "sha256": "89a0ca82add021dbf76c4a1fb6aa48012f295b933d156da4c69108acb695cdeb"
+    }
+  }
+]

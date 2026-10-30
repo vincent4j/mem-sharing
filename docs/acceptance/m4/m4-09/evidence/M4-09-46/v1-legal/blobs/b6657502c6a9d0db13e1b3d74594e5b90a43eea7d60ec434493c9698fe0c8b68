@@ -1,0 +1,1488 @@
+diff --git a/docs/context-keeper/memory-keeper.md b/docs/context-keeper/memory-keeper.md
+index 96a8928..854783b 100644
+--- a/docs/context-keeper/memory-keeper.md
++++ b/docs/context-keeper/memory-keeper.md
+@@ -2,6 +2,8 @@
+ 
+ ## 未完成事项
+ 
++- M4-02 runtime layout 与产品台账；状态：进行中（实现与回归已交付，待主 Agent 验收）；触发：主 Agent 审核本轮 diff 和原始证据；完成：独立确认路径/schema/授权保真后进入 M4-03；证据：[本轮日志](worklogs/2026-10-30-M4-02统一运行态与产品台账.md)。
++
+ - M2-08 两项目复制与新会话验收；状态：进行中（部分通过）；触发：用户按操作单执行两项目 WorkBuddy 新会话；完成：审核 WorkBuddy 实际读回证据后关闭三家验收；证据：[重跑日志](worklogs/2026-10-29-M2-08重跑装配与新会话验收.md)。
+ 
+ - M2 收官遗留（M2-09 后）；状态：待办；触发：后续迭代或用户要求；范围：Claude 显式走 Skill/resume 的程序化验证、卸载/重装周期换行重排的可选打磨（AGENTS/CLAUDE 块尾换行迁移、WorkBuddy MEMORY.md 每周期 +1 换行）、AGENTS.md 构建/测试占位文案补充、Windows/Linux 环境具备后的平台扩展；证据：[M2-09 日志](worklogs/2026-10-29-M2-09平台矩阵与发布前文档.md)、[平台矩阵](../acceptance/m2-platforms.md)。
+@@ -12,6 +14,8 @@
+ 
+ ## 主题摘要（按类型）
+ 
++- **M4-02 运行态与台账（当前）：** fb980d6 上统一 HOME 下 var 台账/锁与顶层 backups；活动 schema=2，旧 schema=1 仅显式诊断，机器缺账/坏账不自动初始化。单元 250、集成 53 exit=0；含 18 项新增定向回归。只完成隔离夹具下实现与测试，未运行真实安装/迁移/升级或新会话，待主 Agent 验收。来源：[日志](worklogs/2026-10-30-M4-02统一运行态与产品台账.md)、[原始命令](../acceptance/m4/m4-02/raw/commands.txt)。
++
+ - **M2-09 平台矩阵与发布文档（当前）：** M2 收官已完成。macOS 四项 passed（安装/重装引 M2-08 与 m2-matrix，卸载/失败恢复为本仓库真实演练：remove/enable 全周期 rc=0、真实 Transaction 硬崩溃后 recover_manifest 字节复原）；Windows/Linux not-run。README 重写为用户文档、SKILL 过时表述清零、agents.json 维持不动（runtime_status 枚举无合法扩展值）。281 项测试基线与终态全绿。已知限制入 README：created 漂移需人工/remove 重装、周期换行重排、WorkBuddy 待运行时验收、registry 为本机文件。来源：[M2-09 日志](worklogs/2026-10-29-M2-09平台矩阵与发布前文档.md)、[平台矩阵](../acceptance/m2-platforms.md)。
+ 
+ - **M2-08 复制验收：** 0919ec9 后两项目装配与幂等通过，四个 Codex/Claude 新会话实际读回记录；poster-fit 原 AGENTS 完整字节为新文件前缀，其他 dirty 字节/mtime 不变。WorkBuddy 未运行，Claude 未显式走 Skill/resume；整体部分通过。来源：[重跑日志](worklogs/2026-10-29-M2-08重跑装配与新会话验收.md)、[旧阻断日志](worklogs/2026-10-29-M2-08两项目盘点与装配阻断.md)。
+@@ -29,6 +33,10 @@
+ 
+ ## 时间线（最新在前）
+ 
++## 2026-10-30 - M4-02 统一运行态与产品台账 `implementation`
++- **任务：** 路径解耦、schema=2 兼容模型及三命令接线；隔离回归单元 250 / 集成 53。
++- **详见：** [日志](worklogs/2026-10-30-M4-02统一运行态与产品台账.md)
++
+ ## 2026-10-29 - M2-09 平台矩阵与发布前文档 `milestone`
+ - **任务：** M2 收官——平台矩阵、本仓库真实卸载/重装/失败恢复演练、README/SKILL 发布文档、281 项测试全绿。
+ - **详见：** [日志](worklogs/2026-10-29-M2-09平台矩阵与发布前文档.md)
+diff --git a/scripts/agm.py b/scripts/agm.py
+index 8a20eee..d966557 100644
+--- a/scripts/agm.py
++++ b/scripts/agm.py
+@@ -39,6 +39,7 @@ if _HERE not in sys.path:
+ sys.dont_write_bytecode = True
+ 
+ from agm_core import paths as agm_paths
++from agm_core import layout as agm_layout
+ 
+ SCHEMA_VERSION = 1
+ KNOWN_COMMANDS = ("enable-memory", "remove-memory", "check-memory")
+@@ -95,10 +96,12 @@ def make_envelope(
+     errors=None,
+     approval_required=False,
+     next_action=None,
++    runtime_layout=None,
+ ):
+     """构造输出合同要求的唯一 JSON envelope(architecture §4)。"""
+     return {
+         "schema_version": SCHEMA_VERSION,
++        "runtime_layout": runtime_layout,
+         "command": command,
+         "status": status,
+         "projects": list(projects or []),
+@@ -412,6 +415,7 @@ def _envelope_from_result(command, result):
+         errors=errors,
+         approval_required=result.get("approval_required", False),
+         next_action=result.get("next_action"),
++        runtime_layout=result.get("runtime_layout"),
+     )
+ 
+ 
+@@ -489,6 +493,7 @@ def build_request(
+         "platform_config": platform_config,
+         "agents_table_path": table_path,
+         "home": home,
++        "runtime_layout": agm_layout.resolve_layout(home),
+         "allowed_user_paths": allowed,
+     }
+ 
+@@ -534,6 +539,7 @@ def _execute(argv, *, platform, interactive, table_path, home):
+             command,
+             STATUS_APPROVAL_REQUIRED,
+             approval_required=True,
++            runtime_layout=agm_layout.resolve_layout(home).describe(),
+             warnings=["非交互环境(非 TTY)无法提问;不从 stdin 猜测 yes,不因环境变量自动批准"],
+             next_action=(
+                 "非交互写命令需 --approval-file <JSON> 绑定用户已确认的执行计划"
+diff --git a/scripts/agm_core/check.py b/scripts/agm_core/check.py
+index f64bdcd..ba611ce 100644
+--- a/scripts/agm_core/check.py
++++ b/scripts/agm_core/check.py
+@@ -18,6 +18,7 @@ changes 恒为空(候选修复放 next_action),projects[] 每项含本模块定
+ from __future__ import annotations
+ 
+ import os
++from . import layout
+ import stat as stat_module
+ from datetime import datetime, timezone
+ from pathlib import Path
+@@ -25,7 +26,7 @@ from pathlib import Path
+ from . import paths as agm_paths
+ from .entries import EntryConflict, block_fingerprint, managed_span, sha256, verify_link
+ from .project import ProjectError, resolve_project
+-from .registry import RegistryError, load_registry
++from .registry import RegistryError, load_registry, require_installed
+ 
+ # 两对桥接标记与上游 install.py / templates/workbuddy-bridge.md 一致,仅用于
+ # 未登记现场的只读观察;已登记现场的权威标记来自 registry 对象。
+@@ -37,7 +38,6 @@ ALL_MARKER_PAIRS = tuple(BRIDGE_MARKERS.values())
+ IMPORT_REFERENCE_LINE = b"@AGENTS.md"
+ OVERRIDE_BASENAME = "AGENTS.override.md"
+ SKILL_NAME = "context-keeper"
+-REGISTRY_BASENAME = "registry.json"
+ 
+ STATUS_COMPLETED = "completed"
+ STATUS_GAPS = "gaps"
+@@ -101,7 +101,7 @@ def _load_registry_state(registry_path, allowed_user_paths):
+     if not os.path.isfile(registry_path):
+         return None, "registry 文件不存在: %s" % registry_path
+     try:
+-        return load_registry(registry_path, allowed_user_paths=allowed_user_paths), None
++        return require_installed(load_registry(registry_path, allowed_user_paths=allowed_user_paths)), None
+     except RegistryError as exc:
+         return None, "registry 校验失败(损坏或含越界对象): %s" % exc
+ 
+@@ -648,8 +648,13 @@ def run(request):
+     """check-memory 命令体入口;合同与零写入边界见模块 docstring。"""
+     platform_config = request["platform_config"]
+     home = request["home"]
+-    table_path = request.get("agents_table_path") or agm_paths.default_table_path()
+-    registry_path = Path(table_path).parent / REGISTRY_BASENAME
++    try:
++        runtime = layout.from_request(request)
++    except ValueError as exc:
++        return {"status": STATUS_FAILED, "projects": [], "changes": [], "warnings": [],
++                "errors": [{"code": getattr(exc, "code", "runtime_layout_invalid"), "path": None,
++                            "message": str(exc), "recovery": None}], "approval_required": False, "next_action": None}
++    registry_path = runtime.registry
+     allowed = agm_paths.allowed_user_paths(platform_config, None, home=home)
+     registry, registry_problem = _load_registry_state(registry_path, allowed)
+ 
+@@ -677,6 +682,7 @@ def run(request):
+             identity = resolve_project(Path(raw_project) if raw_project else None, allow_worktree=True)
+         except ProjectError as exc:
+             return {
++                "runtime_layout": runtime.describe(),
+                 "status": STATUS_FAILED,
+                 "projects": [],
+                 "changes": [],
+@@ -715,6 +721,7 @@ def run(request):
+             "drifted/conflict/manual 项先人工核对;缺口清单见 projects[].gaps"
+         )
+     return {
++        "runtime_layout": runtime.describe(),
+         "status": STATUS_GAPS if any_gap else STATUS_COMPLETED,
+         "projects": projects,
+         "changes": [],
+diff --git a/scripts/agm_core/enable.py b/scripts/agm_core/enable.py
+index 9c58597..f7e3293 100644
+--- a/scripts/agm_core/enable.py
++++ b/scripts/agm_core/enable.py
+@@ -8,7 +8,7 @@ scope and leave those bytes unchanged. Store init remains Keeper-owned: on any
+ failure its assets are preserved, never rolled back or read as memory content.
+ 
+ run(request) is the CLI dispatch entry. Private request injection points
+-install_dir, runner, confirm and transaction_hook support isolated tests only;
++runtime_layout, runner, confirm and transaction_hook support isolated tests only;
+ they are not CLI options. No source download, fallback, or global installation.
+ """
+ import ast
+@@ -20,7 +20,7 @@ import sys
+ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+-from . import entries, paths, project, registry
++from . import entries, paths, project, registry, layout
+ from .transaction import Change, Snapshot, Transaction, TransactionError, read_snapshot, write_lock
+ 
+ KEEPER_MARKER = {"start": "<!-- context-keeper:start -->", "end": "<!-- context-keeper:end -->"}
+@@ -328,10 +328,11 @@ def run(request):
+     result = {"status": "failed", "projects": [], "changes": [], "warnings": [], "errors": [],
+               "approval_required": False, "next_action": None}
+     try:
+-        install = Path(request.get("install_dir", Path(__file__).resolve().parents[1])).resolve()
+-        # install_dir already exists; do not create it just to acquire a lock.
+-        with write_lock(install / ".agm.lock"):
+-            return _run_locked(request, install, result)
++        runtime = layout.from_request(request)
++        result["runtime_layout"] = runtime.describe()
++        if runtime.lock.exists():
++            raise TransactionError("writer lock exists; do not steal a stale lock", code="lock_conflict")
++        return _run_locked(request, runtime, result, locked=False)
+     except (ValueError, OSError, EOFError, SyntaxError) as exc:
+         result["status"] = getattr(exc, "status", "recovery_required" if getattr(exc, "code", None) == "recovery_required" else "failed")
+         result["approval_required"] = result["status"] == "approval_required"
+@@ -349,24 +350,18 @@ def run(request):
+         return result
+ 
+ 
+-def _run_locked(request, install, result):
++def _run_locked(request, runtime, result, *, locked=True):
+     identity = project.resolve_project(request.get("project"))
+     root, key = identity.checkout, str(identity.main_checkout)
+     agents = paths.resolve_agents(request.get("agents"))
+     config, home = request["platform_config"], request["home"]
+     allowed = paths.allowed_user_paths(config, None, home=home)
+-    registry_path = install / "registry.json"
++    registry_path = runtime.registry
+     expected_registry = read_snapshot(registry_path)
+-    rebuild = False
+     if expected_registry.kind == "absent":
+-        previous_registry = registry.empty_registry()
+-    else:
+-        try:
+-            previous_registry = registry.load_registry(registry_path, allowed_user_paths=allowed)
+-        except registry.RegistryError:
+-            if expected_registry.kind != "file":
+-                raise
+-            previous_registry, rebuild = registry.empty_registry(), True
++        raise EnableError("machine_not_installed", "Machine registry missing: " + str(registry_path) + "; use INSTALL.md and scripts/install.py")
++    previous_registry = registry.require_installed(registry.load_registry(registry_path, allowed_user_paths=allowed))
++    rebuild = False
+     data = copy.deepcopy(previous_registry)
+     previous = copy.deepcopy(data["projects"].get(key))
+     p = data["projects"].setdefault(key, registry.new_project(identity, agents))
+@@ -426,7 +421,7 @@ def _run_locked(request, install, result):
+             store = approved_store
+         if previous and assembly["store"]["location_approved"] and str(store) != assembly["store"]["path"]:
+             raise EnableError("approval_mismatch", "Keeper store location changed; re-confirm location explicitly")
+-    tx = Transaction(lock_path=install / ".agm.lock/transaction", backup_root=install / "backups",
++    tx = Transaction(lock_path=runtime.transaction_lock, backup_root=runtime.backups,
+                      allowed_roots=[root, registry_path] + [Path(v) for v in allowed])
+     plan = _Plan(assembly, data["shared_objects"], root, tx)
+     base = root / "AGENTS.md"
+@@ -520,6 +515,12 @@ def _run_locked(request, install, result):
+         return result
+     if choice == "yes" and source is None:
+         raise EnableError("provider_source_missing", "Confirm an existing Keeper checkout; no source download/fallback is permitted")
++    if not locked:
++        # Inspection is write-free; only an authorized execution takes the shared lock.
++        # Replan under that lock so approval and machine state cannot race.
++        approved_request = dict(request, approval=dict(actual_plan, **evidence))
++        with write_lock(runtime.lock):
++            return _run_locked(approved_request, runtime, result, locked=True)
+     p["memory_authorization"], p["authorization_evidence"] = choice, evidence
+     if choice == "yes":
+         p["provider_source"] = str(source)
+diff --git a/scripts/agm_core/registry.py b/scripts/agm_core/registry.py
+index a53e251..9b03909 100644
+--- a/scripts/agm_core/registry.py
++++ b/scripts/agm_core/registry.py
+@@ -1,4 +1,4 @@
+-"""Strict schema-v1 registry validation; reads never create state or locks.
++"""Strict versioned registry validation; reads never create state or locks.
+ 
+ User paths are supplied by the validated platform path table, not inferred here.
+ Atomic writes are delegated to transaction.Transaction; a registry must be its
+@@ -153,7 +153,10 @@ def _object(obj, scope, checkout, allowed_user_paths, pending_manifest=None):
+ 
+ 
+ def empty_registry():
+-    return {"schema_version": 1, "projects": {}, "shared_objects": {}}
++    """An explicit uninstalled schema-v2 model, never an on-disk initializer."""
++    return {"schema_version": 2, "projects": {}, "shared_objects": {},
++            "product": None, "machine": {"agents": {}, "objects": {}},
++            "migration": None, "legacy_import": None}
+ 
+ 
+ def unknown_fact():
+@@ -178,7 +181,7 @@ def new_project(identity, agents):
+             "checkouts": {str(identity.checkout): assembly}}
+ 
+ 
+-def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
++def validate_registry_v1(data, *, allowed_user_paths=None, _pending_manifest=None):
+     """Validate exact schema and cross-references, without changing data or disk.
+ 
+     allowed_user_paths must be provided when user-scoped objects exist.
+@@ -277,6 +280,132 @@ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
+     return data
+ 
+ 
++
++def _digest(value):
++    if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
++        _fail("expected SHA-256 digest")
++
++
++def _runtime(value):
++    _keys(value, "status evidence_path", "runtime")
++    if value["status"] not in ("pending", "passed", "failed"):
++        _fail("unknown runtime status")
++    if value["evidence_path"] is not None:
++        _path(value["evidence_path"])
++    if value["status"] != "pending" and (value["evidence_path"] is None or not Path(value["evidence_path"]).is_file()):
++        _fail("runtime evidence unavailable")
++
++
++def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
++    """Active v2 only. Legacy v1 is available solely via explicit diagnostic APIs."""
++    if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] == 1:
++        raise RegistryMigrationRequired("schema=1 requires explicit machine migration; no fallback/rebuild")
++    _keys(data, "schema_version projects shared_objects product machine migration legacy_import", "registry")
++    if type(data["schema_version"]) is not int or data["schema_version"] != 2:
++        _fail("unsupported registry schema")
++    validate_registry_v1({"schema_version": 1, "projects": data["projects"],
++                          "shared_objects": data["shared_objects"]},
++                         allowed_user_paths=allowed_user_paths, _pending_manifest=_pending_manifest)
++    product = data["product"]
++    if product is not None:
++        _keys(product, "product_id installation_id product_structure_version product_code_version source installation_status last_operation_id", "product")
++        if product["product_id"] != "agent-group-memory":
++            _fail("product identity mismatch")
++        _text(product["installation_id"])
++        if type(product["product_structure_version"]) is not int or product["product_structure_version"] != 1:
++            _fail("unsupported product structure version")
++        if not isinstance(product["product_code_version"], str) or not re.fullmatch(
++                r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?", product["product_code_version"]):
++            _fail("invalid product code SemVer")
++        _keys(product["source"], "url commit tree_sha256", "product source")
++        _text(product["source"]["url"])
++        if not isinstance(product["source"]["commit"], str) or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", product["source"]["commit"]):
++            _fail("invalid source commit")
++        _digest(product["source"]["tree_sha256"])
++        if product["installation_status"] not in ("complete", "installing", "recovery_required"):
++            _fail("unknown installation status")
++        _text(product["last_operation_id"])
++    machine = data["machine"]
++    _keys(machine, "agents objects", "machine")
++    if not isinstance(machine["agents"], dict) or not set(machine["agents"]) <= set(AGENTS):
++        _fail("invalid machine agents")
++    for record in machine["agents"].values():
++        _keys(record, "installation static runtime_acceptance", "machine agent")
++        installation = record["installation"]
++        _keys(installation, "status observed_at evidence", "agent installation")
++        if installation["status"] not in ("installed", "absent", "unknown"):
++            _fail("invalid installation fact")
++        _fact(dict(installation, status={"installed": "ready", "absent": "missing", "unknown": "unknown"}[installation["status"]]))
++        _fact(record["static"])
++        _runtime(record["runtime_acceptance"])
++    if not isinstance(machine["objects"], dict):
++        _fail("invalid machine objects")
++    existing = _objects(dict(data, machine={"objects": {}}))
++    units = {(o["path"], json.dumps(o["marker"], sort_keys=True)) for o in existing.values()}
++    for oid, obj in machine["objects"].items():
++        _text(oid)
++        if oid in existing or not isinstance(obj, dict) or obj.get("scope") != "machine":
++            _fail("machine object identity collision/scope mismatch")
++        _object(dict(obj, scope="user"), "user", None,
++                None if allowed_user_paths is None else set(allowed_user_paths), _pending_manifest)
++        if obj["consumers"] != []:
++            _fail("machine objects cannot use project consumers")
++        if not set(obj["agents"]) <= set(machine["agents"]):
++            _fail("machine object has no agent installation record")
++        unit = (obj["path"], json.dumps(obj["marker"], sort_keys=True))
++        if unit in units:
++            _fail("duplicate machine unit; reference existing shared object instead")
++        units.add(unit)
++    migration = data["migration"]
++    if migration is not None:
++        _keys(migration, "operation_id source_registry source_sha256 archive_root reference_map tombstones status", "migration")
++        _text(migration["operation_id"])
++        _path(migration["source_registry"])
++        _digest(migration["source_sha256"])
++        _path(migration["archive_root"])
++        if migration["status"] not in ("prepared", "committed", "recovery_required", "rolled_back"):
++            _fail("unknown migration status")
++        if not isinstance(migration["reference_map"], dict):
++            _fail("invalid reference map")
++        for old, target in migration["reference_map"].items():
++            _path(old)
++            _keys(target, "path sha256 kind", "archived reference")
++            _path(target["path"])
++            _digest(target["sha256"])
++            if target["kind"] != "file":
++                _fail("unsupported archived evidence kind")
++        if not isinstance(migration["tombstones"], dict):
++            _fail("invalid tombstones")
++        for path, digest in migration["tombstones"].items():
++            _path(path)
++            _digest(digest)
++    imported = data["legacy_import"]
++    if imported is not None:
++        _keys(imported, "operation_id source_tree_sha256 manifest_path status", "legacy import")
++        _text(imported["operation_id"])
++        _digest(imported["source_tree_sha256"])
++        _path(imported["manifest_path"])
++        if imported["status"] not in ("prepared", "snapshot_complete", "applying", "outputs_verified", "committed", "recovery_required", "rolled_back"):
++            _fail("unknown legacy import status")
++    return data
++
++
++class RegistryMigrationRequired(RegistryError):
++    code = "registry_migration_required"
++
++
++def require_installed(data):
++    """Project writers cannot initialize or repair the machine installation."""
++    if data["product"] is None:
++        raise RegistryError("Machine product missing; use INSTALL.md and scripts/install.py")
++    if data["product"]["installation_status"] != "complete":
++        raise RegistryError("Machine installation incomplete; explicit recovery required")
++    for name in ("migration", "legacy_import"):
++        state = data[name]
++        if state is not None and state["status"] not in ("committed", "rolled_back"):
++            raise RegistryError("Machine operation incomplete; explicit recovery required")
++    return data
++
+ def _no_duplicates(pairs):
+     obj = {}
+     for key, value in pairs:
+@@ -286,7 +415,7 @@ def _no_duplicates(pairs):
+     return obj
+ 
+ 
+-def load_registry(path, *, allowed_user_paths=None):
++def _load_registry(path, *, allowed_user_paths=None, legacy=False):
+     path = Path(path)
+     if path.is_symlink() or str(path.parent.resolve() / path.name) != str(path.absolute()):
+         _fail("registry path is a symlink or has a symlink parent")
+@@ -297,7 +426,17 @@ def load_registry(path, *, allowed_user_paths=None):
+         if isinstance(exc, RegistryError):
+             raise
+         raise RegistryError("cannot read registry: " + str(exc)) from exc
+-    return validate_registry(data, allowed_user_paths=allowed_user_paths)
++    validator = validate_registry_v1 if legacy else validate_registry
++    return validator(data, allowed_user_paths=allowed_user_paths)
++
++
++def load_registry(path, *, allowed_user_paths=None):
++    return _load_registry(path, allowed_user_paths=allowed_user_paths)
++
++
++def load_legacy_registry(path, *, allowed_user_paths=None):
++    """Explicit strict v1 diagnostic/migration input; never used by project writers."""
++    return _load_registry(path, allowed_user_paths=allowed_user_paths, legacy=True)
+ 
+ 
+ def serialize_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
+@@ -308,7 +447,7 @@ def serialize_registry(data, *, allowed_user_paths=None, _pending_manifest=None)
+             assembly["agents"].sort(key=AGENTS.index)
+             for obj in assembly["objects"].values():
+                 obj["agents"].sort(key=AGENTS.index)
+-    for obj in result["shared_objects"].values():
++    for obj in list(result["shared_objects"].values()) + list(result["machine"]["objects"].values()):
+         obj["agents"].sort(key=AGENTS.index)
+     return (json.dumps(result, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+ 
+@@ -364,6 +503,7 @@ def validate_ownership_transition(previous, current, *, changes=()):
+ 
+ def _objects(data):
+     result = dict(data["shared_objects"])
++    result.update(data.get("machine", {}).get("objects", {}))
+     for project in data["projects"].values():
+         for assembly in project["checkouts"].values():
+             result.update(assembly["objects"])
+@@ -375,8 +515,8 @@ def commit_registry(path, data, *, transaction, expected, changes=(),
+     """Validate and commit registry last, including evidence for new created units.
+ 
+     expected is the exact registry snapshot read by the caller. Existing valid
+-    ownership cannot be promoted by omitting previous. Explicit rebuild=True is
+-    required for corrupt/missing history; its old objects cannot become created.
++    ownership cannot be promoted by omitting previous. Corrupt/legacy active
++    state is never rebuilt, including when an old caller passes rebuild=True.
+     New created records must bind to an absent unit in this transaction's write
+     set and to its actual manifest path, including when the manifest is pending.
+     """
+@@ -390,9 +530,7 @@ def commit_registry(path, data, *, transaction, expected, changes=(),
+             observed = json.loads(expected.data.decode("utf-8"), object_pairs_hook=_no_duplicates)
+             validate_registry(observed, allowed_user_paths=allowed_user_paths)
+         except (ValueError, UnicodeError) as exc:
+-            if not rebuild:
+-                raise RegistryError("corrupt registry requires explicit authorized rebuild") from exc
+-            observed = empty_registry()
++            raise RegistryError("Active registry invalid; explicit machine recovery required") from exc
+     elif expected.kind == "absent":
+         observed = empty_registry()
+     else:
+diff --git a/scripts/agm_core/remove.py b/scripts/agm_core/remove.py
+index e766162..9231e05 100644
+--- a/scripts/agm_core/remove.py
++++ b/scripts/agm_core/remove.py
+@@ -5,13 +5,14 @@ creation evidence even with zero consumers. Plans are read-only; execution uses
+ exact approved snapshots, registry-last commit and Transaction recovery.
+ """
+ import copy
++from . import layout
+ from pathlib import Path
+ 
+ from .entries import block_fingerprint, link_fingerprint, remove_block, sha256
+ from .paths import allowed_user_paths
+ from .project import resolve_project
+-from .registry import load_registry, commit_registry, serialize_registry
+-from .transaction import Change, Transaction, read_snapshot
++from .registry import load_registry, commit_registry, serialize_registry, require_installed
++from .transaction import Change, Transaction, read_snapshot, write_lock
+ 
+ 
+ class RemoveError(ValueError):
+@@ -158,15 +159,19 @@ def _check_approval(approval, identity, project, changes):
+             raise RemoveError('approval_mismatch', '批准的源码指纹已变化', str(path))
+ 
+ 
+-def run(request, *, registry_path=None, transaction_factory=Transaction):
++def run(request, *, registry_path=None, transaction_factory=Transaction, _locked=False):
+     """CLI dispatch entry. Missing approval returns a concrete read-only preview.
+ 
+-    Optional Python-only injection points isolate tests from the installation's
+-    registry/backups; they are not additional CLI flags.
++    HOME/runtime_layout isolate tests. The legacy registry_path Python argument
++    is accepted only when equal to that layout; it cannot redirect active state.
+     """
+     result = {'status': 'failed', 'projects': [], 'changes': [], 'warnings': [],
+               'errors': [], 'approval_required': False, 'next_action': None}
+     try:
++        runtime = layout.from_request(request)
++        result['runtime_layout'] = runtime.describe()
++        if registry_path is not None and Path(registry_path) != runtime.registry:
++            raise RemoveError('runtime_layout_invalid', 'registry_path must match the injected HOME/layout')
+         identity = resolve_project(request.get('project'))
+         main, checkout = str(identity.main_checkout), str(identity.checkout)
+         approval = request.get('approval')
+@@ -175,13 +180,20 @@ def run(request, *, registry_path=None, transaction_factory=Transaction):
+                                   ('checkout', checkout), ('git_common_dir', str(identity.git_common_dir))):
+                 if approval.get(key) != expected:
+                     raise RemoveError('approval_mismatch', '批准目标不符：' + key)
+-        path = Path(registry_path) if registry_path else Path(__file__).resolve().parents[1] / 'registry.json'
++        # An approved call replans with the same product writer lock as enable.
++        if request.get('approval') is not None and not _locked:
++            require_installed(load_registry(runtime.registry,
++                allowed_user_paths=allowed_user_paths(request['platform_config'], None, home=str(request['home']))))
++            with write_lock(runtime.lock):
++                return run(request, registry_path=registry_path, transaction_factory=transaction_factory, _locked=True)
++        path = runtime.registry
+         allowed = allowed_user_paths(request['platform_config'], None, home=str(request['home']))
+         before = read_snapshot(path)
+         if before.kind == 'absent':
+-            result.update(status='completed', warnings=['registry 不存在；不推断任何删除权'])
++            result.update(status='failed', errors=[{'code': 'machine_not_installed', 'path': str(path),
++                'message': 'Machine registry missing; use INSTALL.md and scripts/install.py', 'recovery': None}])
+             return result
+-        data = load_registry(path, allowed_user_paths=allowed)
++        data = require_installed(load_registry(path, allowed_user_paths=allowed))
+         updated, changes, warnings = plan_remove(data, identity)
+         result['warnings'] = warnings
+         project = data['projects'].get(main)
+@@ -210,7 +222,7 @@ def run(request, *, registry_path=None, transaction_factory=Transaction):
+                     raise RemoveError('project_identity_mismatch', '锁内 Git 身份变化')
+                 _check_approval(approval, identity, project, summaries)
+ 
+-        tx = transaction_factory(lock_path=path.parent / '.agm.lock', backup_root=path.parent / 'backups',
++        tx = transaction_factory(lock_path=runtime.transaction_lock, backup_root=runtime.backups,
+                                  allowed_roots=[identity.checkout, path], operation='remove-memory', hook=verify)
+         receipt = commit_registry(path, updated, transaction=tx, expected=before, changes=changes,
+                                   allowed_user_paths=allowed, previous=data)
+diff --git a/tests/integration/test_m204_subprocess.py b/tests/integration/test_m204_subprocess.py
+index 42d7ee8..47e2e68 100644
+--- a/tests/integration/test_m204_subprocess.py
++++ b/tests/integration/test_m204_subprocess.py
+@@ -79,7 +79,7 @@ class SubprocessTests(EnableFixture):
+         self.assertEqual(writes[-1], self.install / 'registry.json')
+         self.assertTrue((self.install / '.agm.lock').exists() is False)
+         self.assertFalse(list(self.source.rglob('__pycache__')))
+-        manifests = list((self.install / 'backups').rglob('manifest.json'))
++        manifests = list((self.runtime.backups).rglob('manifest.json'))
+         self.assertEqual(len(manifests), 1)
+         self.assertEqual(json.loads(manifests[0].read_text())['status'], 'committed')
+         self.request['approval'] = None
+@@ -93,8 +93,8 @@ class SubprocessTests(EnableFixture):
+         self.assertEqual(result['status'], 'failed', result)
+         self.assertTrue((self.root / 'docs/context-keeper/memory-keeper.md').exists())
+         self.assertFalse((self.root / 'AGENTS.md').exists())
+-        self.assertFalse((self.install / 'registry.json').exists())
+-        manifest = json.loads(next((self.install / 'backups').rglob('manifest.json')).read_text())
++        self.assertEqual(self.load()['projects'], {})
++        manifest = json.loads(next((self.runtime.backups).rglob('manifest.json')).read_text())
+         self.assertEqual(manifest['status'], 'rolled_back')
+ 
+     def test_migration_no_record_readback_or_extra_provider_call(self):
+@@ -104,7 +104,7 @@ class SubprocessTests(EnableFixture):
+         result = enable.run(self.request)
+         self.assertEqual(result['status'], 'migration_required', result)
+         self.assertFalse((self.root / 'docs').exists())
+-        self.assertFalse((self.install / 'backups').exists())
++        self.assertFalse((self.runtime.backups).exists())
+ 
+     def test_config_fault_rolls_back_and_preserves_old_registry(self):
+         self.apply()
+@@ -133,7 +133,7 @@ class SubprocessTests(EnableFixture):
+         result = enable.run(self.request)
+         self.assertEqual(result['status'], 'recovery_required', result)
+         self.assertTrue(Path(result['errors'][0]['recovery']).is_file())
+-        self.assertFalse((self.install / 'registry.json').exists())
++        self.assertEqual(self.load()['projects'], {})
+ 
+     def test_source_changed_before_transaction_is_rejected(self):
+         plan = self.preview('yes', True)
+@@ -146,7 +146,7 @@ class SubprocessTests(EnableFixture):
+         self.request['transaction_hook'] = mutate
+         result = enable.run(self.request)
+         self.assertEqual(result['status'], 'approval_required', result)
+-        self.assertFalse((self.install / 'registry.json').exists())
++        self.assertEqual(self.load()['projects'], {})
+ 
+     def test_group_then_keeper_existing_objects_reused(self):
+         self.apply()
+diff --git a/tests/integration/test_m206_remove_integration.py b/tests/integration/test_m206_remove_integration.py
+index 7eb8139..85adf53 100644
+--- a/tests/integration/test_m206_remove_integration.py
++++ b/tests/integration/test_m206_remove_integration.py
+@@ -37,13 +37,14 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
+ 
+     def test_corrupt_missing_registry_and_unknown_project_never_infer_ownership(self):
+         original = self.entry.read_bytes()
+-        self.assertEqual(self.call()['status'], 'completed')
++        self.registry.unlink()
++        self.assertEqual(self.call()['errors'][0]['code'], 'machine_not_installed')
+         self.registry.write_bytes(b'{bad')
+         self.assertEqual(self.call()['errors'][0]['code'], 'registry_invalid')
+-        self.registry.write_bytes(fixtures.serialize_registry(fixtures.empty_registry()))
++        self.registry.write_bytes(fixtures.serialize_registry(fixtures.installed_registry()))
+         self.assertEqual(self.call()['status'], 'completed')
+         self.assertEqual(self.entry.read_bytes(), original)
+-        self.assertFalse((self.install / 'backups').exists())
++        self.assertFalse((self.runtime.backups).exists())
+ 
+     def test_approval_target_rejected_before_registry_read(self):
+         from unittest.mock import patch
+@@ -123,11 +124,11 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
+         original = self.entry.read_bytes()
+         self.approve()
+         self.assertEqual(self.entry.read_bytes(), original)
+-        self.assertFalse((self.install / 'backups').exists())
++        self.assertFalse((self.runtime.backups).exists())
+         self.entry.write_bytes(original + b'new outside')
+         result = self.call()
+         self.assertEqual(result['errors'][0]['code'], 'approval_mismatch', result)
+-        self.assertFalse((self.install / 'backups').exists())
++        self.assertFalse((self.runtime.backups).exists())
+ 
+     def test_created_relative_symlink_removed_source_survives(self):
+         source = self.repo / 'source'
+@@ -173,7 +174,7 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
+         self.assertEqual(result['errors'][0]['code'], 'drift', result)
+         self.assertEqual(self.entry.read_bytes(), b'external edit')
+         self.assertEqual(self.registry.read_bytes(), before)
+-        self.assertFalse((self.install / 'backups').exists())
++        self.assertFalse((self.runtime.backups).exists())
+ 
+     def test_drift_blocks_all_created_removals(self):
+         path = self.repo / 'owned.md'
+@@ -184,7 +185,7 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
+         result = self.call()
+         self.assertEqual(result['errors'][0]['code'], 'drift', result)
+         self.assertEqual(path.read_bytes(), b'owned')
+-        self.assertFalse((self.install / 'backups').exists())
++        self.assertFalse((self.runtime.backups).exists())
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/tests/integration/test_m207_cli_cycle.py b/tests/integration/test_m207_cli_cycle.py
+index ab631f4..6f65a9c 100644
+--- a/tests/integration/test_m207_cli_cycle.py
++++ b/tests/integration/test_m207_cli_cycle.py
+@@ -20,6 +20,10 @@ from pathlib import Path
+ 
+ REPO = Path(__file__).resolve().parents[2]
+ 
++sys.path.insert(0, str(REPO / "scripts"))
++sys.path.insert(0, str(REPO / "tests/unit"))
++from runtime_fixture import seed_runtime
++
+ INSTALL_STUB = r'''import json, sys, traceback
+ from pathlib import Path
+ BRIDGE_START = "<!-- context-keeper:start -->"
+@@ -117,6 +121,8 @@ class CliHarness(unittest.TestCase):
+         self.registry = self.install / "registry.json"
+         self.home = self.area / "home"
+         self.home.mkdir()
++        self.runtime = seed_runtime(self.home)
++        self.registry = self.runtime.registry
+         self.root = self.area / "project"
+         self.root.mkdir()
+         self.git("init", "-q", str(self.root))
+@@ -236,7 +242,7 @@ class CliHarness(unittest.TestCase):
+         """幂等断言口径:项目 + HOME + 安装树。排除设计上会刷新的 registry/备份,
+         以及 git 自身会触碰 mtime 的 .git 元数据(非 AGM 输出)。"""
+         return self.snapshot(self.root, self.home, self.install.parent,
+-                             exclude=[self.registry, self.install / "backups",
++                             exclude=[self.registry, self.runtime.backups,
+                                       self.root / ".git", *exclude])
+ 
+ 
+@@ -387,7 +393,7 @@ class BoundaryTests(CliHarness):
+         self.assertEqual(envelope["errors"][0]["code"], "path_conflict")
+         self.assertEqual(self.snapshot(self.root, exclude=[self.root / ".git"]), before,
+                          "复制目录冲突时现场字节不得被改动")
+-        self.assertFalse(self.registry.exists())
++        self.assertEqual(json.loads(self.registry.read_bytes())["projects"], {})
+         self.assertFalse((self.root / "AGENTS.md").exists())
+ 
+     def test_corrupt_registry_conservative_across_cli_commands(self):
+@@ -421,22 +427,11 @@ class BoundaryTests(CliHarness):
+         self.assertTrue((self.root / "AGENTS.md").exists(), "损坏登记下 remove 不得删除任何输出")
+ 
+         rc, envelope = self.cli(["enable-memory", "--project", str(self.root), "--no-memory"])
+-        self.assertEqual(rc, 5, envelope)
+-        rc, envelope = self.approve(["enable-memory", "--project", str(self.root), "--no-memory"])
+-        self.assertEqual(rc, 0, envelope)
+-        self.assertTrue(any("Corrupt registry backed up" in w for w in envelope["warnings"]),
+-                        envelope["warnings"])
+-        backups = list((self.install / "backups").rglob("*.before"))
+-        self.assertTrue(any(p.read_bytes() == corrupt for p in backups),
+-                        "损坏字节必须留存在备份中")
+-        ledger = json.loads(self.registry.read_bytes())
+-        objects = ledger["projects"][str(self.root)]["checkouts"][str(self.root)]["objects"]
+-        self.assertTrue(objects and all(o["ownership"] != "created" for o in objects.values()),
+-                        "重建后不得恢复 created 删除权")
+-        self.assertNotEqual(self.registry.read_bytes(), healthy)
+-
++        self.assertEqual(rc, 2, envelope)
++        self.assertEqual(envelope["errors"][0]["code"], "registry_invalid")
++        self.assertEqual(self.registry.read_bytes(), corrupt)
++        self.assertFalse(self.runtime.lock.exists())
+ 
+-class CycleTests(CliHarness):
+     def test_remove_twice_then_reenable_full_cycle(self):
+         rc, _ = self.enable_memory()
+         self.assertEqual(rc, 0)
+@@ -537,7 +532,7 @@ class CycleTests(CliHarness):
+         self.assertEqual(rc, 0)
+         residues = [p for p in self.area.rglob("__pycache__")]
+         self.assertEqual(residues, [], "CLI 冷启动与全周期不得留下字节码缓存")
+-        self.assertFalse((self.install / ".agm.lock").exists(), "锁必须正常释放")
++        self.assertFalse((self.runtime.lock).exists(), "锁必须正常释放")
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/tests/unit/test_cli.py b/tests/unit/test_cli.py
+index d7ae915..545146c 100644
+--- a/tests/unit/test_cli.py
++++ b/tests/unit/test_cli.py
+@@ -358,6 +358,7 @@ class CliParseTests(CliTestCase):
+                 "errors",
+                 "next_action",
+                 "projects",
++                "runtime_layout",
+                 "schema_version",
+                 "status",
+                 "warnings",
+diff --git a/tests/unit/test_m202_entries_project_registry.py b/tests/unit/test_m202_entries_project_registry.py
+index 8029fda..b4a06d1 100644
+--- a/tests/unit/test_m202_entries_project_registry.py
++++ b/tests/unit/test_m202_entries_project_registry.py
+@@ -169,7 +169,7 @@ class RegistryTests(unittest.TestCase):
+         self.assertEqual(load_registry(path), self.data)
+ 
+     def test_missing_unknown_fields_and_boolean_version(self):
+-        for mutate in (lambda d: d.pop("shared_objects"), lambda d: d.update(extra=1), lambda d: d.update(schema_version=True), lambda d: d.update(schema_version=2)):
++        for mutate in (lambda d: d.pop("shared_objects"), lambda d: d.update(extra=1), lambda d: d.update(schema_version=True), lambda d: d.update(schema_version=3)):
+             data = copy.deepcopy(self.data)
+             mutate(data)
+             with self.assertRaises(RegistryError):
+@@ -327,10 +327,10 @@ class RegistryTests(unittest.TestCase):
+         tx = lambda: Transaction(lock_path=self.root / ".agm.lock", backup_root=self.root / "backups", allowed_roots=[self.root])
+         with self.assertRaises(RegistryError):
+             commit_registry(registry, self.data, transaction=tx(), expected=read_snapshot(registry))
+-        result = commit_registry(registry, self.data, transaction=tx(), expected=read_snapshot(registry), rebuild=True)
+-        manifest = Path(result["manifest"])
+-        entry = json.loads(manifest.read_bytes())["entries"][0]
+-        self.assertEqual((manifest.parent / entry["before"]["backup"]).read_bytes(), b"corrupt original")
++        with self.assertRaises(RegistryError):
++            commit_registry(registry, self.data, transaction=tx(), expected=read_snapshot(registry), rebuild=True)
++        self.assertEqual(registry.read_bytes(), b"corrupt original")
++        self.assertFalse((self.root / "backups").exists())
+ 
+     def test_commit_cannot_skip_existing_ownership_transition_check(self):
+         obj = self.add(self.obj(ownership="reused"))
+diff --git a/tests/unit/test_m204_enable.py b/tests/unit/test_m204_enable.py
+index 1b7226c..d4a53cd 100644
+--- a/tests/unit/test_m204_enable.py
++++ b/tests/unit/test_m204_enable.py
+@@ -9,6 +9,8 @@ from pathlib import Path
+ 
+ SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
+ sys.path.insert(0, str(SCRIPTS))
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
++from runtime_fixture import seed_runtime, installed_registry
+ from agm_core import enable, paths, registry
+ from agm_core.entries import sha256
+ 
+@@ -25,6 +27,8 @@ class EnableFixture(unittest.TestCase):
+         self.install.mkdir(parents=True)
+         self.home = self.area / "home"
+         self.home.mkdir()
++        self.runtime = seed_runtime(self.home)
++        self.install = self.runtime.var
+         self.source = self.area / "keeper"
+         (self.source / "scripts").mkdir(parents=True)
+         subprocess.run(["git", "init", "-q", str(self.source)], check=True)
+@@ -48,7 +52,7 @@ WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\\nUpstream WorkBuddy rules\\n{WORK
+         self.request = {"project": str(self.root), "agents": ["codex", "claude", "workbuddy"],
+                         "memory_choice": "no", "approval": None, "interactive": False,
+                         "home": str(self.home), "platform_config": self.config,
+-                        "install_dir": str(self.install), "runner": self.runner}
++                        "runtime_layout": self.runtime, "runner": self.runner}
+ 
+     def runner(self, argv, **kwargs):
+         self.calls.append(argv)
+@@ -231,8 +235,8 @@ class EnableTests(EnableFixture):
+         plan = self.preview()
+         self.assertEqual(plan["memory_authorization"], "no")
+         self.assertFalse((self.root / "AGENTS.md").exists())
+-        self.assertFalse((self.install / "registry.json").exists())
+-        self.assertFalse((self.install / "backups").exists())
++        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
++        self.assertFalse((self.runtime.backups).exists())
+         self.assertFalse((self.install / ".agm.lock").exists())
+         self.assertEqual(self.calls, [])
+         self.assertTrue(all(c["after_fingerprint"] for c in plan["changes"]))
+@@ -357,7 +361,7 @@ class EnableTests(EnableFixture):
+         self.install_preview_only = True
+         result = enable.run(self.request)
+         self.assertEqual(result["status"], "approval_required", result)
+-        self.assertFalse((self.install / "registry.json").exists())
++        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
+         self.assertFalse((self.root / "AGENTS.md").exists())
+ 
+     def test_scope_mismatch_preview_stops_before_writes(self):
+@@ -374,7 +378,7 @@ class EnableTests(EnableFixture):
+         self.bad_ensure = True
+         result = enable.run(self.request)
+         self.assertEqual(result["errors"][0]["code"], "provider_scope_mismatch")
+-        self.assertFalse((self.install / "registry.json").exists())
++        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
+         self.assertFalse((self.root / "AGENTS.md").exists())
+ 
+     def test_migration_preview_stops_immediately(self):
+@@ -385,7 +389,7 @@ class EnableTests(EnableFixture):
+         self.assertEqual(result["status"], "migration_required", result)
+         self.assertEqual(len(self.calls), 2)
+         self.assertFalse((self.root / "AGENTS.md").exists())
+-        self.assertFalse((self.install / "registry.json").exists())
++        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
+ 
+     def test_init_preview_five_then_approved_success(self):
+         self.init_rc = 5
+@@ -407,7 +411,7 @@ class EnableTests(EnableFixture):
+         result = enable.run(self.request)
+         self.assertEqual(result["status"], "failed", result)
+         self.assertTrue((self.root / "docs/context-keeper/memory-keeper.md").exists())
+-        self.assertFalse((self.install / "registry.json").exists())
++        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
+         self.assertFalse((self.root / "AGENTS.md").exists())
+ 
+     def test_workbuddy_top_preserves_raw_native_bytes(self):
+@@ -426,7 +430,7 @@ class EnableTests(EnableFixture):
+         self.request["project"] = str(tree)
+         result = enable.run(self.request)
+         self.assertEqual(result["errors"][0]["code"], "worktree_unsupported")
+-        self.assertFalse((self.install / "registry.json").exists())
++        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
+ 
+     def test_lock_is_not_stolen(self):
+         (self.install / ".agm.lock").mkdir()
+@@ -434,13 +438,15 @@ class EnableTests(EnableFixture):
+         self.assertEqual(result["errors"][0]["code"], "lock_conflict")
+         self.assertTrue((self.install / ".agm.lock").exists())
+ 
+-    def test_corrupt_registry_requires_exact_approval_and_backup(self):
+-        (self.install / "registry.json").write_bytes(b"{broken")
+-        plan = self.preview()
+-        self.request["approval"] = plan
++    def test_corrupt_registry_cannot_be_rebuilt_by_project_enable(self):
++        path = self.install / "registry.json"
++        path.write_bytes(b"{broken")
+         result = enable.run(self.request)
+-        self.assertEqual(result["status"], "completed", result)
+-        self.assertTrue(any(p.read_bytes() == b"{broken" for p in (self.install / "backups").rglob("*.before")))
++        self.assertEqual(result["status"], "failed", result)
++        self.assertEqual(result["errors"][0]["code"], "registry_invalid")
++        self.assertEqual(path.read_bytes(), b"{broken")
++        self.assertFalse(self.runtime.backups.exists())
++        self.assertFalse(self.runtime.lock.exists())
+ 
+     def test_source_update_requires_new_approval_without_recorded_fingerprint_refresh(self):
+         self.apply("yes", True)
+@@ -496,7 +502,7 @@ class EnableTests(EnableFixture):
+         self.init_approved_rc = 5
+         result = enable.run(self.request)
+         self.assertEqual(result["status"], "approval_required", result)
+-        self.assertFalse((self.install / "registry.json").exists())
++        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
+         self.assertNotEqual(result["projects"][0]["states"]["store_authorized_ready"]["status"], "ready")
+ 
+     def test_unknown_provider_failure_is_failure(self):
+@@ -535,7 +541,7 @@ class EnableTests(EnableFixture):
+         self.assertEqual(self.calls[-1][1], str(self.source / "scripts/context_keeper_probe.py"))
+         self.assertIn("--approved", self.calls[-1])
+         self.assertEqual(result["projects"][0]["states"]["store_authorized_ready"]["status"], "blocked")
+-        self.assertFalse((self.install / "registry.json").exists())
++        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
+         self.assertFalse((self.root / "AGENTS.md").exists())
+ 
+ 
+diff --git a/tests/unit/test_m205_check.py b/tests/unit/test_m205_check.py
+index 394c09b..f713bbd 100644
+--- a/tests/unit/test_m205_check.py
++++ b/tests/unit/test_m205_check.py
+@@ -28,6 +28,8 @@ if SCRIPTS_DIR not in sys.path:
+     sys.path.insert(0, SCRIPTS_DIR)
+ 
+ import agm  # noqa: E402
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
++from runtime_fixture import seed_runtime, installed_registry
+ from agm_core import check as check_mod  # noqa: E402
+ from agm_core import paths as agm_paths  # noqa: E402
+ from agm_core import registry as reg  # noqa: E402
+@@ -74,6 +76,7 @@ class Sandbox:
+         self.provider = self.root / "provider" / "context-keeper"
+         self.table_dir = self.root / "table"
+         self.home.mkdir()
++        self.runtime = seed_runtime(self.home)
+         self.provider.mkdir(parents=True)
+         self.table_dir.mkdir()
+         (self.provider / "SKILL.md").write_text("# context-keeper\n", encoding="utf-8")
+@@ -82,7 +85,7 @@ class Sandbox:
+         with open(self.table_dir / "agents.json", "r", encoding="utf-8") as handle:
+             self.table = json.load(handle)
+         self.platform_config = self.table["platforms"]["darwin"]
+-        self.registry_path = self.table_dir / "registry.json"
++        self.registry_path = self.runtime.registry
+ 
+     def allowed_user_paths(self):
+         return agm_paths.allowed_user_paths(self.platform_config, None, home=str(self.home))
+@@ -198,7 +201,7 @@ def build_installed_project(sb: Sandbox, name, *, auth="yes", runtime_passed=Fal
+         evidence.write_text("new-session acceptance\n", encoding="utf-8")
+         runtime = {"status": "passed", "evidence_path": str(evidence)}
+     registry = {
+-        "schema_version": 1,
++        **installed_registry(),
+         "projects": {
+             str(main): {
+                 "main_checkout": str(main),
+@@ -459,7 +462,7 @@ class CheckReadOnlyTests(unittest.TestCase):
+         self.assertEqual(
+             set(envelope),
+             {"schema_version", "command", "status", "projects", "changes", "warnings",
+-             "errors", "approval_required", "next_action"},
++             "errors", "approval_required", "next_action", "runtime_layout"},
+         )
+         self.assertEqual(envelope["command"], "check-memory")
+         self.assertEqual(envelope["status"], "completed")
+@@ -652,7 +655,7 @@ class CheckReadOnlyTests(unittest.TestCase):
+     def test_unregistered_project_reports_gap_and_discovery(self):
+         main = _git_repo(self.sb.root / "fresh")
+         (self.sb.home / ".codex").mkdir()
+-        self.sb.write_registry({"schema_version": 1, "projects": {}, "shared_objects": {}})
++        self.sb.write_registry(installed_registry())
+         envelope, code = run_check(self.sb, ["--project", str(main)])
+         self.assertEqual((envelope["status"], code), ("gaps", 1))
+         report = envelope["projects"][0]
+diff --git a/tests/unit/test_m206_remove.py b/tests/unit/test_m206_remove.py
+index fbb7547..5c74438 100644
+--- a/tests/unit/test_m206_remove.py
++++ b/tests/unit/test_m206_remove.py
+@@ -7,6 +7,8 @@ import unittest
+ from pathlib import Path
+ 
+ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
++from runtime_fixture import seed_runtime, installed_registry
+ from agm_core.entries import sha256, link_fingerprint
+ from agm_core.paths import load_agents_table, select_platform
+ from agm_core.project import resolve_project
+@@ -28,15 +30,15 @@ class RemoveFixture(unittest.TestCase):
+         self.identity = resolve_project(self.repo)
+         self.home = self.root / 'home'
+         self.home.mkdir()
+-        self.install = self.root / 'install'
+-        self.install.mkdir()
++        self.runtime = seed_runtime(self.home)
++        self.install = self.runtime.var
+         self.registry = self.install / 'registry.json'
+         self.manifest = self.install / 'creation.json'
+         self.manifest.write_text('{}')
+         self.config = select_platform(load_agents_table(), 'darwin')
+         self.request = {'project': str(self.repo), 'home': str(self.home),
+                         'platform_config': self.config, 'approval': None}
+-        self.data = empty_registry()
++        self.data = installed_registry()
+         self.main = str(self.repo)
+         self.data['projects'][self.main] = new_project(self.identity, ['codex'])
+         self.assembly = self.data['projects'][self.main]['checkouts'][self.main]
+diff --git a/tests/unit/test_m207_faults.py b/tests/unit/test_m207_faults.py
+index 16e81d0..3c65c70 100644
+--- a/tests/unit/test_m207_faults.py
++++ b/tests/unit/test_m207_faults.py
+@@ -17,6 +17,8 @@ from pathlib import Path
+ 
+ SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
+ sys.path.insert(0, str(SCRIPTS))
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
++from runtime_fixture import seed_runtime, installed_registry
+ from agm_core import check as check_mod
+ from agm_core import enable, paths, registry
+ from agm_core.remove import run as remove_run
+@@ -36,6 +38,8 @@ class M207Fixture(unittest.TestCase):
+         self.install.mkdir(parents=True)
+         self.home = self.area / "home"
+         self.home.mkdir()
++        self.runtime = seed_runtime(self.home)
++        self.install = self.runtime.var
+         self.source = self._keeper_source()
+         self.config = paths.select_platform(paths.load_agents_table(), "darwin")
+         self.calls = []
+@@ -43,7 +47,7 @@ class M207Fixture(unittest.TestCase):
+                         "memory_choice": "no", "approval": None, "interactive": False,
+                         "home": str(self.home), "platform_config": self.config,
+                         "agents_table_path": str(self.install / "agents.json"),
+-                        "install_dir": str(self.install), "runner": self.runner}
++                        "runtime_layout": self.runtime, "runner": self.runner}
+         (self.install / "agents.json").write_bytes((SCRIPTS / "agents.json").read_bytes())
+ 
+     def _keeper_source(self):
+@@ -178,7 +182,7 @@ class FaultMatrixTests(M207Fixture):
+         (self.install / "registry.json").unlink()
+ 
+         self.request.update(approval=None, memory_choice=None)
+-        self.assertEqual(enable.run(self.request)["status"], "approval_required")
++        self.assertEqual(enable.run(self.request)["errors"][0]["code"], "machine_not_installed")
+ 
+         result = self.check()
+         self.assertEqual(result["status"], "gaps", result)
+@@ -186,8 +190,8 @@ class FaultMatrixTests(M207Fixture):
+                       [g["code"] for g in result["projects"][0]["gaps"]])
+ 
+         removal = self.remove()
+-        self.assertEqual(removal["status"], "completed", removal)
+-        self.assertIn("registry 不存在", removal["warnings"][0])
++        self.assertEqual(removal["status"], "failed", removal)
++        self.assertEqual(removal["errors"][0]["code"], "machine_not_installed")
+         for path, data in outputs.items():
+             self.assertEqual(path.read_bytes(), data, "registry 丢失不得触发任何删除")
+         self.assertFalse((self.install / "registry.json").exists(), "remove 不得凭空重建 registry")
+@@ -267,8 +271,8 @@ class FaultMatrixTests(M207Fixture):
+         self.assertEqual(result["status"], "failed", result)
+         self.assertEqual(result["errors"][0]["code"], "path_conflict")
+         self.assertEqual(marker.read_bytes(), b"occupied")
+-        self.assertFalse((self.install / "registry.json").exists())
+-        self.assertFalse((self.install / "backups").exists())
++        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
++        self.assertFalse((self.runtime.backups).exists())
+         self.assertFalse((self.root / "CLAUDE.md").exists())
+ 
+     def test_workbuddy_native_bytes_survive_enable_and_remove_cycle(self):
+diff --git a/tests/unit/test_m3_workbuddy.py b/tests/unit/test_m3_workbuddy.py
+index 71c0a2f..b526941 100644
+--- a/tests/unit/test_m3_workbuddy.py
++++ b/tests/unit/test_m3_workbuddy.py
+@@ -61,7 +61,7 @@ class WorkBuddyProtocolTests(EnableFixture):
+         result = enable.run(self.request)
+         self.assertEqual(result['errors'][0]['code'], 'provider_scope_mismatch', result)
+         self.assertFalse((self.root / '.workbuddy/memory/MEMORY.md').exists())
+-        self.assertFalse((self.install / 'registry.json').exists())
++        self.assertEqual(self.load()['projects'], {})
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/scripts/agm_core/layout.py b/scripts/agm_core/layout.py
+new file mode 100644
+index 0000000..bbebdfe
+--- /dev/null
++++ b/scripts/agm_core/layout.py
+@@ -0,0 +1,80 @@
++"""Pure machine runtime paths; resolving a layout never creates anything.
++
++The source checkout and agents table are deliberately not inputs. Python callers
++may inject RuntimeLayout with the same HOME; there is no production CLI override.
++"""
++from dataclasses import dataclass
++from pathlib import Path
++
++
++class LayoutError(ValueError):
++    def __init__(self, code, message):
++        super().__init__(message)
++        self.code = code
++
++
++@dataclass(frozen=True)
++class RuntimeLayout:
++    home: Path
++
++    def __post_init__(self):
++        home = Path(self.home)
++        if not home.is_absolute() or str(home) != str(home.absolute()) or ".." in home.parts:
++            raise LayoutError("runtime_layout_invalid", "HOME must be an absolute normalized path")
++        object.__setattr__(self, "home", home)
++
++    @property
++    def root(self):
++        return self.home / ".agents-group"
++
++    @property
++    def code(self):
++        return self.root / "skills/agent-group-memory"
++
++    @property
++    def var(self):
++        return self.root / "var"
++
++    @property
++    def registry(self):
++        return self.var / "registry.json"
++
++    @property
++    def lock(self):
++        return self.var / ".agm.lock"
++
++    @property
++    def transaction_lock(self):
++        return self.lock / "transaction"
++
++    @property
++    def backups(self):
++        return self.root / "backups"
++
++    def describe(self):
++        return {name: str(getattr(self, name)) for name in
++                ("root", "code", "registry", "lock", "transaction_lock", "backups")}
++
++    def validate_paths(self):
++        # Refuse symlink parents/leaves without following them as write targets.
++        for path in (self.root, self.var, self.registry, self.lock, self.transaction_lock, self.backups):
++            if path.is_symlink() or path.parent.resolve() / path.name != path:
++                raise LayoutError("runtime_path_conflict", "Runtime symlink path: " + str(path))
++        for path in (self.root, self.var, self.backups):
++            if path.exists() and not path.is_dir():
++                raise LayoutError("runtime_path_conflict", "Expected runtime directory: " + str(path))
++
++
++def resolve_layout(home=None):
++    return RuntimeLayout(Path.home() if home is None else Path(home))
++
++
++def from_request(request):
++    # Requests must carry HOME. An omitted test HOME must never fall back to the host.
++    if not request.get("home"):
++        raise LayoutError("runtime_layout_invalid", "request.home is required")
++    layout = request.get("runtime_layout") or resolve_layout(request["home"])
++    if not isinstance(layout, RuntimeLayout) or layout.home != Path(request["home"]):
++        raise LayoutError("runtime_layout_invalid", "Injected layout must match request.home")
++    layout.validate_paths()
++    return layout
+diff --git a/tests/unit/runtime_fixture.py b/tests/unit/runtime_fixture.py
+new file mode 100644
+index 0000000..ec180d6
+--- /dev/null
++++ b/tests/unit/runtime_fixture.py
+@@ -0,0 +1,21 @@
++"""Synthetic installed machine for project-command tests; never an installer."""
++from agm_core.layout import resolve_layout
++from agm_core.registry import empty_registry, serialize_registry
++
++
++def installed_registry():
++    data = empty_registry()
++    data["product"] = {
++        "product_id": "agent-group-memory", "installation_id": "fixture-machine",
++        "product_structure_version": 1, "product_code_version": "0.4.0",
++        "source": {"url": "fixture://agm", "commit": "a" * 40, "tree_sha256": "b" * 64},
++        "installation_status": "complete", "last_operation_id": "fixture-install",
++    }
++    return data
++
++
++def seed_runtime(home):
++    runtime = resolve_layout(home)
++    runtime.var.mkdir(parents=True)
++    runtime.registry.write_bytes(serialize_registry(installed_registry()))
++    return runtime
+diff --git a/tests/unit/test_m402_layout_registry.py b/tests/unit/test_m402_layout_registry.py
+new file mode 100644
+index 0000000..cc73bc4
+--- /dev/null
++++ b/tests/unit/test_m402_layout_registry.py
+@@ -0,0 +1,305 @@
++"""M4-02 regressions using synthetic HOME and machine metadata only."""
++import copy
++import hashlib
++import io
++import json
++import os
++from pathlib import Path
++import subprocess
++import sys
++import tempfile
++import unittest
++
++REPO = Path(__file__).resolve().parents[2]
++sys.path.insert(0, str(REPO / "scripts"))
++sys.path.insert(0, str(Path(__file__).parent))
++import agm
++from agm_core import check, enable, layout, paths, registry, remove
++from agm_core.transaction import Transaction, read_snapshot
++from runtime_fixture import installed_registry, seed_runtime
++
++
++class LayoutRegistryTests(unittest.TestCase):
++    def setUp(self):
++        self.temp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temp.cleanup)
++        self.area = Path(self.temp.name).resolve()
++        self.home = self.area / "home"
++        self.home.mkdir()
++        self.runtime = layout.resolve_layout(self.home)
++        self.config = paths.select_platform(paths.load_agents_table(), "darwin")
++        self.request = {"home": str(self.home), "platform_config": self.config,
++                        "project": str(self.area / "no-project"), "all": True,
++                        "agents": ["codex"], "memory_choice": "no", "approval": None,
++                        "interactive": False}
++
++    def tree(self):
++        return {str(p.relative_to(self.area)): (p.read_bytes(), p.stat().st_mtime_ns)
++                if p.is_file() else (None, None) for p in self.area.rglob("*")}
++
++    def cli(self, args):
++        output = io.StringIO()
++        code = agm.main(args, home=str(self.home), platform="darwin", interactive=True,
++                        stdin=io.StringIO(), stdout=output, stderr=io.StringIO())
++        return code, json.loads(output.getvalue())
++
++    def test_layout_resolution_has_no_side_effects(self):
++        before = self.tree()
++        self.assertEqual(layout.from_request(self.request), self.runtime)
++        self.assertEqual(self.runtime.registry, self.home / ".agents-group/var/registry.json")
++        self.assertEqual(self.runtime.transaction_lock, self.home / ".agents-group/var/.agm.lock/transaction")
++        self.assertEqual(self.runtime.backups, self.home / ".agents-group/backups")
++        self.assertEqual(self.tree(), before)
++
++    def test_missing_request_home_never_falls_back_to_host(self):
++        with self.assertRaises(layout.LayoutError):
++            layout.from_request({})
++        with self.assertRaises(layout.LayoutError):
++            layout.from_request(dict(self.request, runtime_layout=layout.resolve_layout(self.area)))
++
++    def test_symlink_runtime_parent_is_rejected_without_writes(self):
++        other = self.area / "other"
++        other.mkdir()
++        self.runtime.root.symlink_to(other, target_is_directory=True)
++        before = self.tree()
++        with self.assertRaises(layout.LayoutError):
++            layout.from_request(self.request)
++        self.assertEqual(before, self.tree())
++
++    def test_empty_home_cli_entrypoints_import_help_check_never_write(self):
++        before = self.tree()
++        env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1")
++        for argv in (["--help"], ["enable-memory", "--help"], ["remove-memory", "--help"],
++                     ["check-memory", "--help"], ["check-memory", "--all"],
++                     ["enable-memory", "--project", str(self.area), "--no-memory"],
++                     ["remove-memory", "--project", str(self.area)]):
++            result = subprocess.run([sys.executable, "-B", str(REPO / "scripts/agm.py"), *argv],
++                                    cwd=self.area, env=env, capture_output=True, text=True)
++            self.assertIn(result.returncode, (0, 1, 2, 5), result.stderr)
++            self.assertEqual(before, self.tree(), argv)
++        result = subprocess.run([sys.executable, "-B", "-c",
++            "import sys; sys.path.insert(0, sys.argv[1]); import agm; "
++            "from agm_core import layout, registry, enable, remove, check",
++            str(REPO / "scripts")], cwd=self.area, env=env, capture_output=True)
++        self.assertEqual(result.returncode, 0, result.stderr)
++        self.assertEqual(before, self.tree())
++
++    def test_all_commands_report_same_new_layout(self):
++        seed_runtime(self.home)
++        for args in (["enable-memory", "--project", str(self.area), "--no-memory"],
++                     ["remove-memory", "--project", str(self.area)], ["check-memory", "--all"]):
++            _, result = self.cli(args)
++            self.assertEqual(result["runtime_layout"], self.runtime.describe(), result)
++
++    def test_agents_table_and_old_install_dir_cannot_relocate_active_registry(self):
++        old = self.area / "old-code"
++        old.mkdir()
++        old_registry = old / "registry.json"
++        old_registry.write_bytes(b'{"schema_version":1,"projects":{},"shared_objects":{}}')
++        before = self.tree()
++        result = check.run(dict(self.request, agents_table_path=str(old / "agents.json")))
++        self.assertEqual(result["status"], "gaps")
++        self.assertEqual(result["runtime_layout"]["registry"], str(self.runtime.registry))
++        self.assertEqual(before, self.tree())
++
++    def test_uninstalled_and_incomplete_product_models_reject_writers(self):
++        self.runtime.var.mkdir(parents=True)
++        repo = self.area / "project"
++        repo.mkdir()
++        subprocess.run(["git", "init", "-q", str(repo)], check=True, capture_output=True)
++        request = dict(self.request, project=str(repo))
++        for model in (registry.empty_registry(), installed_registry()):
++            if model["product"]:
++                model["product"]["installation_status"] = "installing"
++            self.runtime.registry.write_bytes(registry.serialize_registry(model))
++            before = self.tree()
++            for command in (enable.run, remove.run):
++                result = command(request)
++                self.assertEqual(result["status"], "failed", result)
++                self.assertEqual(before, self.tree())
++
++    def test_legacy_v1_only_explicit_diagnostic_loader_accepts_it(self):
++        self.runtime.var.mkdir(parents=True)
++        old = {"schema_version": 1, "projects": {}, "shared_objects": {}}
++        self.runtime.registry.write_text(json.dumps(old))
++        self.assertEqual(registry.load_legacy_registry(self.runtime.registry), old)
++        with self.assertRaises(registry.RegistryMigrationRequired):
++            registry.load_registry(self.runtime.registry)
++        with self.assertRaises(registry.RegistryError):
++            registry.validate_registry_v1(dict(old, product=None))
++        repo = self.area / "project"
++        repo.mkdir()
++        subprocess.run(["git", "init", "-q", str(repo)], check=True, capture_output=True)
++        request = dict(self.request, project=str(repo))
++        before = self.tree()
++        for command in (enable.run, remove.run):
++            result = command(request)
++            self.assertEqual(result["errors"][0]["code"], "registry_migration_required", result)
++            self.assertEqual(before, self.tree())
++        result = check.run(request)
++        self.assertEqual(result["status"], "gaps")
++        self.assertTrue(any("explicit machine migration" in w for w in result["warnings"]))
++        self.assertEqual(before, self.tree())
++
++    def test_future_schema_and_structure_are_refused(self):
++        for change in (lambda d: d.update(schema_version=3),
++                       lambda d: d["product"].update(product_structure_version=2)):
++            data = installed_registry()
++            change(data)
++            with self.assertRaises(registry.RegistryError):
++                registry.validate_registry(data)
++
++    def test_code_schema_and_structure_versions_are_separate(self):
++        data = installed_registry()
++        self.assertEqual(data["schema_version"], 2)
++        self.assertEqual(data["product"]["product_structure_version"], 1)
++        self.assertEqual(registry.validate_registry(data), data)
++        data["product"]["product_code_version"] = "1.6.0"
++        registry.validate_registry(data)
++        data["product"]["product_code_version"] = "DESIGN v1.6"
++        with self.assertRaises(registry.RegistryError):
++            registry.validate_registry(data)
++
++    def test_all_required_nullable_fields_and_nested_unknown_fields_are_strict(self):
++        base = installed_registry()
++        for name in base:
++            data = copy.deepcopy(base)
++            del data[name]
++            with self.subTest(field=name), self.assertRaises(registry.RegistryError):
++                registry.validate_registry(data)
++        for target in (lambda d: d, lambda d: d["product"], lambda d: d["product"]["source"],
++                       lambda d: d["machine"]):
++            data = copy.deepcopy(base)
++            target(data)["extra"] = None
++            with self.assertRaises(registry.RegistryError):
++                registry.validate_registry(data)
++
++    def machine_model(self):
++        data = installed_registry()
++        target = self.home / ".codex/AGENTS.md"
++        data["machine"]["agents"]["codex"] = {
++            "installation": {"status": "installed", "observed_at": "2026-10-30T00:00:00Z", "evidence": "fixture package"},
++            "static": registry.unknown_fact(), "runtime_acceptance": {"status": "pending", "evidence_path": None}}
++        data["machine"]["objects"]["codex-rules"] = {
++            "kind": "file", "path": str(target), "scope": "machine", "agents": ["codex"],
++            "ownership": "reused", "marker": None, "fingerprint": {"algorithm": "sha256", "basis": "file_bytes", "value": "b" * 64},
++            "original_existed": True, "link_target": None, "backup_manifest": None, "consumers": []}
++        return data, target
++
++    def test_machine_installation_without_project_or_fake_consumer(self):
++        data, target = self.machine_model()
++        self.assertEqual(data["projects"], {})
++        encoded = registry.serialize_registry(data, allowed_user_paths=[str(target)])
++        self.assertEqual(json.loads(encoded), data)
++
++    def test_machine_object_consumer_agent_scope_and_path_guards(self):
++        base, target = self.machine_model()
++        for mutation in (lambda d: d["machine"]["objects"]["codex-rules"].update(consumers=[str(self.area)]),
++                         lambda d: d["machine"]["objects"]["codex-rules"].update(scope="user"),
++                         lambda d: d["machine"]["objects"]["codex-rules"].update(agents=["claude"]),
++                         lambda d: d["machine"]["objects"]["codex-rules"].update(path=str(self.area / "outside")),
++                         lambda d: d["machine"]["agents"]["codex"]["installation"].update(status="ready")):
++            data = copy.deepcopy(base)
++            mutation(data)
++            with self.assertRaises(registry.RegistryError):
++                registry.validate_registry(data, allowed_user_paths=[str(target)])
++
++    def test_machine_created_ownership_cannot_be_invented_by_a_project_commit(self):
++        data, target = self.machine_model()
++        target.parent.mkdir()
++        target.write_bytes(b"existing")
++        data["machine"]["objects"]["codex-rules"]["fingerprint"]["value"] = hashlib.sha256(b"existing").hexdigest()
++        self.runtime.var.mkdir(parents=True)
++        self.runtime.registry.write_bytes(registry.serialize_registry(data, allowed_user_paths=[str(target)]))
++        tx = Transaction(lock_path=self.runtime.lock, backup_root=self.runtime.backups, allowed_roots=[self.home])
++        forged = copy.deepcopy(data)
++        forged["machine"]["objects"]["codex-rules"].update(
++            ownership="created", original_existed=False, backup_manifest=str(tx.manifest_path))
++        with self.assertRaises(registry.RegistryError):
++            registry.commit_registry(self.runtime.registry, forged, transaction=tx,
++                expected=read_snapshot(self.runtime.registry), previous=data, allowed_user_paths=[str(target)])
++        self.assertFalse(self.runtime.backups.exists())
++
++    def test_nullable_migration_and_import_models_do_not_grant_installation(self):
++        data = installed_registry()
++        data["legacy_import"] = {"operation_id": "op", "source_tree_sha256": "c" * 64,
++                                 "manifest_path": str(self.area / "manifest.json"), "status": "applying"}
++        registry.validate_registry(data)
++        with self.assertRaises(registry.RegistryError):
++            registry.require_installed(data)
++        data["legacy_import"]["extra"] = False
++        with self.assertRaises(registry.RegistryError):
++            registry.validate_registry(data)
++
++
++from test_m204_enable import EnableFixture
++
++
++class MachinePreservationTests(EnableFixture):
++    def removal_request(self):
++        request = {"project": str(self.root), "home": str(self.home),
++                   "platform_config": self.config, "approval": None}
++        preview = remove.run(request)
++        self.assertEqual(preview["status"], "approval_required", preview)
++        model = self.load()
++        project = model["projects"][str(self.root)]
++        assembly = project["checkouts"][str(self.root)]
++        request["approval"] = {
++            "command": "remove-memory", "main_checkout": str(self.root), "checkout": str(self.root),
++            "git_common_dir": assembly["git_common_dir"], "agents": assembly["agents"],
++            "memory_authorization": None, "store_path": assembly["store"]["path"],
++            "provider_source": project["provider_source"], "provider_fingerprints": [],
++            "changes": [{k: c[k] for k in ("path", "operation", "before_fingerprint", "after_fingerprint")}
++                        for c in preview["changes"]]}
++        return request
++
++    def test_machine_metadata_unchanged_through_project_enable_remove(self):
++        metadata = {key: copy.deepcopy(self.load()[key]) for key in
++                    ("product", "machine", "migration", "legacy_import")}
++        self.apply()
++        result = remove.run(self.removal_request())
++        self.assertEqual(result["status"], "completed", result)
++        current = self.load()
++        self.assertEqual({key: current[key] for key in metadata}, metadata)
++        self.assertEqual(current["projects"][str(self.root)]["memory_authorization"], "no")
++        self.assertTrue(current["shared_objects"])
++        self.assertTrue(all(obj["consumers"] == [] for obj in current["shared_objects"].values()))
++
++    def test_enable_and_remove_hold_the_same_writer_and_transaction_locks(self):
++        seen = []
++        def observe(event, path):
++            if event == "before_write":
++                self.assertTrue(self.runtime.lock.is_dir())
++                self.assertTrue(self.runtime.transaction_lock.is_dir())
++                seen.append(path)
++        self.request["transaction_hook"] = observe
++        self.apply()
++        self.assertTrue(seen)
++        seen.clear()
++        def transaction_factory(**kwargs):
++            self.assertEqual(kwargs["lock_path"], self.runtime.transaction_lock)
++            self.assertEqual(kwargs["backup_root"], self.runtime.backups)
++            old_hook = kwargs["hook"]
++            def hook(event, path):
++                observe(event, path)
++                old_hook(event, path)
++            kwargs["hook"] = hook
++            return Transaction(**kwargs)
++        result = remove.run(self.removal_request(), transaction_factory=transaction_factory)
++        self.assertEqual(result["status"], "completed", result)
++        self.assertTrue(seen)
++        self.assertFalse(self.runtime.lock.exists())
++
++    def test_remove_cannot_bypass_enable_writer_lock(self):
++        self.apply()
++        request = self.removal_request()
++        before = self.runtime.registry.read_bytes()
++        self.runtime.lock.mkdir()
++        result = remove.run(request)
++        self.assertEqual(result["errors"][0]["code"], "lock_conflict", result)
++        self.assertEqual(self.runtime.registry.read_bytes(), before)
++        self.assertTrue(self.runtime.lock.exists())
++
++
++if __name__ == "__main__":
++    unittest.main()

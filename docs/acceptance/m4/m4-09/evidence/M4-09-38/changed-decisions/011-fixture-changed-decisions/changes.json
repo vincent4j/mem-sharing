@@ -1,0 +1,21 @@
+[
+  {
+    "path": "organize-request.json",
+    "before": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377434005851306,
+      "size": 76,
+      "kind": "file",
+      "sha256": "27db3e182d3547b60a3380ba37e74fec2944b5b3c41282933596fe68550343fb"
+    },
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377434232112537,
+      "size": 409,
+      "kind": "file",
+      "sha256": "e20bc823c26bdcee3ea45f5a4cbeaaf0b634453b10003f2d710d2c8371b22c93"
+    }
+  }
+]

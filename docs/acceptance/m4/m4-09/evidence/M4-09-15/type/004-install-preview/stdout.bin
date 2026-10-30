@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "machine_route_abnormal", "message": "Machine scene abnormal: ['Unexplained content without ledger: /private/tmp/M4-09-15-wnaoowy5/home/.mem-sharing']"}], "schema_version": 1, "status": "failed"}

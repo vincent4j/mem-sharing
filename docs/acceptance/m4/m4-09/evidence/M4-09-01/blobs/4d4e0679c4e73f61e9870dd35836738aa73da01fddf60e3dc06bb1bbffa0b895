@@ -1,0 +1,10 @@
+{
+  "base_commit": "cfe0ac1bb0f4aa6fe1ec934cdc2f03b5e3fab203",
+  "path": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/agm-m403-isolated-tv21bhn0/repo",
+  "files": {
+    "scripts/agm_core/registry.py": "46d84b41c900b81c2c1c6e299661a4932adf6b6e810e3c60c229ea15968c7181",
+    "scripts/agm_core/migrate.py": "4f926bd636e3fefd06261fd1e43f4f8036956ee789f3e129d58e7bc3e6277b39",
+    "tests/unit/test_m403_migrate.py": "6e2c6d8dcf873a487e8e647db420717a04e3588a3eb8a02342fc2b9326b3eff3",
+    "tests/integration/test_m403_migration.py": "fe7de726e8ad8204d506f1508e24bdc97f248a758957914d2f1e00039f4b0913"
+  }
+}

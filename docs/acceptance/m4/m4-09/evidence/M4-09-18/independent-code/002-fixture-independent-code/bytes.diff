@@ -1,0 +1,4 @@
+--- before/home/.local/share/mem-sharing/README.md
++++ after/home/.local/share/mem-sharing/README.md
+@@ -0,0 +1 @@
++independent checkout sentinel

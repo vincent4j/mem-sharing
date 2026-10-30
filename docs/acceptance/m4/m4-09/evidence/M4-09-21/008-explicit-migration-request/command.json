@@ -1,0 +1,34 @@
+{
+  "label": "explicit-migration-request",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import sys,json\nsys.path.insert(0,sys.argv[1])\nfrom agm_core import migrate\nfrom agm_core.layout import resolve_layout\ntry:\n result=migrate.plan_migration(resolve_layout(sys.argv[2]),[sys.argv[3]])\n print(json.dumps(result))\nexcept Exception as e:\n print(json.dumps({'error_type':type(e).__name__,'code':getattr(e,'code',None),'message':str(e)}));sys.exit(2)\n",
+    "/private/tmp/M4-09-21-uw1f59jv/source/scripts",
+    "/private/tmp/M4-09-21-uw1f59jv/home",
+    "/private/tmp/M4-09-21-uw1f59jv/old-product/scripts/registry.json"
+  ],
+  "cwd": "/private/tmp/M4-09-21-uw1f59jv/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-21-uw1f59jv/home",
+    "PATH": "/private/tmp/M4-09-21-uw1f59jv/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-21-uw1f59jv/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:19:03.364525Z",
+  "ended_utc": "2026-10-30T16:19:03.509090Z",
+  "duration_seconds": 0.14456562499981374,
+  "exit_code": 2,
+  "stdin_base64": "",
+  "json": {
+    "error_type": "MigrationError",
+    "code": "migration_unsupported",
+    "message": "Development ledger migration and journal replay are unsupported; preserve materials for diagnosis"
+  }
+}

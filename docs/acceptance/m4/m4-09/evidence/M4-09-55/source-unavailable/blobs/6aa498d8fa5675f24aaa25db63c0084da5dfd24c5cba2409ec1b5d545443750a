@@ -1,0 +1,7 @@
+{
+  "name": "@anthropic-ai/claude-code",
+  "version": "1.0.0",
+  "bin": {
+    "claude": "bin/claude"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "runtime_layout": {
+    "root": "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing",
+    "code": "/private/tmp/M4-09-62-rll8vzqn/home/.local/share/mem-sharing",
+    "registry": "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing/var/registry.json",
+    "lock": "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing/var/.agm.lock",
+    "transaction_lock": "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing/var/.agm.lock/transaction",
+    "backups": "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing/backups"
+  },
+  "command": "enable-memory",
+  "status": "approval_required",
+  "projects": [
+    {
+      "main_checkout": "/private/tmp/M4-09-62-rll8vzqn/project",
+      "checkout": "/private/tmp/M4-09-62-rll8vzqn/project",
+      "memory_policy": "follow_ck",
+      "agents": [
+        "codex"
+      ],
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      },
+      "evidence": [
+        "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing/var/registry.json"
+      ]
+    }
+  ],
+  "changes": [],
+  "warnings": [],
+  "errors": [],
+  "approval_required": true,
+  "next_action": "{\"schema_version\": 1, \"command\": \"enable-memory\", \"main_checkout\": \"/private/tmp/M4-09-62-rll8vzqn/project\", \"checkout\": \"/private/tmp/M4-09-62-rll8vzqn/project\", \"git_common_dir\": \"/private/tmp/M4-09-62-rll8vzqn/project/.git\", \"agents\": [\"codex\"], \"memory_policy\": \"follow_ck\", \"changes\": [{\"path\": \"/private/tmp/M4-09-62-rll8vzqn/project/AGENTS.md\", \"operation\": \"create\", \"before_fingerprint\": null, \"after_fingerprint\": \"85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406\"}], \"installation\": {\"codex\": {\"status\": \"installed\", \"fingerprint\": \"bce80fd0b6a86213472a6686c5adae1fb8f1d488a78e036112bbc606d31138d9\"}, \"claude\": {\"status\": \"absent\", \"fingerprint\": \"edc6cedd57ccb7ecc5ddd8099090b3a0f45bcd43f4827c7533125402f64555a9\"}, \"workbuddy\": {\"status\": \"absent\", \"fingerprint\": \"ebb79f38350a55d241a020eeb7e3f9f3c8125fa29928a582e3d2859e4ba3ab31\"}}, \"native_pending\": [], \"confirmed_at\": \"<UTC timestamp>\", \"reference\": \"<user confirmation reference>\"}"
+}

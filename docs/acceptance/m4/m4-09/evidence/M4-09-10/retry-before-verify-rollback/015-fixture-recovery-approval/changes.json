@@ -1,0 +1,31 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377364036568980,
+      "size": 544,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377367127413214,
+      "size": 576,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "recovery-approval-14.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377367127512007,
+      "size": 1944,
+      "kind": "file",
+      "sha256": "e1e4905052f93fcdfa29d25486fb9ccd80f000de56d148f4c80cd12316ee2c0b"
+    }
+  }
+]

@@ -1,0 +1,19 @@
+--- before/organize-request.json
++++ after/organize-request.json
+@@ -1,4 +1,15 @@
+ {
+   "home": "/private/tmp/M4-09-38-42fgqvqd/home",
+-  "date": "2026-10-31"
++  "date": "2026-10-31",
++  "decisions": {
++    "1de697e9941002934cce86dc44a46ba7f19855e850ee5ac4480f748fe373e182": {
++      "action": "keep"
++    },
++    "3c324b999ba62813106cee2432c039c4b8024bbecb5811fa93c8f3f88785a31e": {
++      "action": "keep"
++    },
++    "803cf4efed5ccd75de5509b64203d0ddd3e574efd750d2a3aebaf7ba04524c1b": {
++      "action": "keep"
++    }
++  }
+ }

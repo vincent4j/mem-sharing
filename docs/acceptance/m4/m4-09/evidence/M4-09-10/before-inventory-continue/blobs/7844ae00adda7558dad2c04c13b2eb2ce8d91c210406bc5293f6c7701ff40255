@@ -1,0 +1,65 @@
+{
+  "steps": [
+    {
+      "step": "reset-scene",
+      "before": {
+        "a.md": "file:alpha\n",
+        "b.md": "absent",
+        "link.md": "absent"
+      }
+    },
+    {
+      "step": "crash-child",
+      "returncode": 9,
+      "stdout": "crash: before_write /Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m2-platforms/recover-scene/link.md",
+      "stderr": ""
+    },
+    {
+      "step": "scene-inspect",
+      "status": "applying",
+      "lock": true,
+      "outputs": {
+        "a.md": "file:alpha-NEW\n",
+        "b.md": "file:beta\n",
+        "link.md": "absent"
+      }
+    },
+    {
+      "step": "recover-refused-with-lock",
+      "error": {
+        "code": "lock_conflict",
+        "message": "writer lock exists; do not steal a stale lock"
+      },
+      "scene_unchanged": true
+    },
+    {
+      "step": "operator-removed-stale-lock",
+      "justification": "child exited rc=9; lock dir provenance is this drill"
+    },
+    {
+      "step": "recover-manifest",
+      "status": "rolled_back",
+      "entries": [
+        "restored",
+        "restored",
+        "restored"
+      ],
+      "outputs": {
+        "a.md": "file:alpha\n",
+        "b.md": "absent",
+        "link.md": "absent"
+      }
+    }
+  ],
+  "verdict": "passed",
+  "before": {
+    "a.md": "file:alpha\n",
+    "b.md": "absent",
+    "link.md": "absent"
+  },
+  "after": {
+    "a.md": "file:alpha\n",
+    "b.md": "absent",
+    "link.md": "absent"
+  }
+}

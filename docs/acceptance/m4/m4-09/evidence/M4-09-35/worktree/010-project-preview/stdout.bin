@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "runtime_layout": {
+    "root": "/private/tmp/M4-09-35-bmbf2vo1/home/.mem-sharing",
+    "code": "/private/tmp/M4-09-35-bmbf2vo1/home/.local/share/mem-sharing",
+    "registry": "/private/tmp/M4-09-35-bmbf2vo1/home/.mem-sharing/var/registry.json",
+    "lock": "/private/tmp/M4-09-35-bmbf2vo1/home/.mem-sharing/var/.agm.lock",
+    "transaction_lock": "/private/tmp/M4-09-35-bmbf2vo1/home/.mem-sharing/var/.agm.lock/transaction",
+    "backups": "/private/tmp/M4-09-35-bmbf2vo1/home/.mem-sharing/backups"
+  },
+  "command": "enable-memory",
+  "status": "failed",
+  "projects": [],
+  "changes": [],
+  "warnings": [],
+  "errors": [
+    {
+      "code": "worktree_unsupported",
+      "path": null,
+      "message": "M2 supports only the main checkout: /private/tmp/M4-09-35-bmbf2vo1/worktree-scan/linked-main",
+      "recovery": null
+    }
+  ],
+  "approval_required": false,
+  "next_action": "Inspect preserved evidence; re-preview before retrying. No store assets are deleted."
+}

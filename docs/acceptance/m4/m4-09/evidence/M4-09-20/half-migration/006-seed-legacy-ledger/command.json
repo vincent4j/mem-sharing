@@ -1,0 +1,37 @@
+{
+  "label": "seed-legacy-ledger",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import sys,json\nfrom pathlib import Path\nsys.path.insert(0,sys.argv[1])\nfrom agm_core import registry\npath=Path(sys.argv[2]);schema=int(sys.argv[3]);path.parent.mkdir(parents=True,exist_ok=True)\nif schema==1:d={'schema_version':1,'projects':{},'shared_objects':{}}\nelse:\n d=registry.empty_registry();d['schema_version']=2\n d['product']={'product_id':'agent-group-memory','installation_id':'old-development-machine','product_structure_version':1,'product_code_version':'0.4.0','source':{'url':'fixture://old-development','commit':'a'*40,'tree_sha256':'b'*64},'installation_status':'complete','last_operation_id':'old-op'}\npath.write_text(json.dumps(d));print(json.dumps({'fixture_ledger':str(path),'raw':d}))\n",
+    "/private/tmp/M4-09-20-y8ri8bdv/source/scripts",
+    "/private/tmp/M4-09-20-y8ri8bdv/old-product/scripts/registry.json",
+    "1"
+  ],
+  "cwd": "/private/tmp/M4-09-20-y8ri8bdv/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-20-y8ri8bdv/home",
+    "PATH": "/private/tmp/M4-09-20-y8ri8bdv/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-20-y8ri8bdv/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:19:12.756853Z",
+  "ended_utc": "2026-10-30T16:19:12.889580Z",
+  "duration_seconds": 0.13272541697369888,
+  "exit_code": 0,
+  "stdin_base64": "",
+  "json": {
+    "fixture_ledger": "/private/tmp/M4-09-20-y8ri8bdv/old-product/scripts/registry.json",
+    "raw": {
+      "schema_version": 1,
+      "projects": {},
+      "shared_objects": {}
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "python3",
+    "/Users/vincent4j/Tools/Source/context-keeper/scripts/context_keeper_probe.py",
+    "status",
+    "--root",
+    "/Users/vincent4j/Tools/Source/agent-group-memory"
+  ],
+  "observed_at": "2026-10-29T10:57:40.801871Z",
+  "rc": 0,
+  "stdout": "## branch\n## main...origin/main\n?? .agents/\n?? .claude/\n?? .codex/\n?? .workbuddy/\n?? docs/acceptance/m1-03/\n?? docs/acceptance/m1-04/\n?? docs/context-keeper/\n## name-status\n(empty)\n## stat\n(empty)\n",
+  "stderr": ""
+}

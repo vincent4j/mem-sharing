@@ -1,0 +1,24 @@
+{
+  "schema_version": 3,
+  "projects": {},
+  "shared_objects": {},
+  "product": {
+    "product_id": "mem-sharing",
+    "installation_id": "20261030T162207Z-2a58e43a1c064dc7844aefdb9c1b6c6f",
+    "product_structure_version": 1,
+    "product_code_version": "0.4.0",
+    "source": {
+      "url": "https://github.com/vincent4j/mem-sharing",
+      "commit": "de9cc4fdd0c7c5088267b9ff3bf0ff10ad52a40b",
+      "tree_sha256": "772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872"
+    },
+    "installation_status": "complete",
+    "last_operation_id": "20261030T162207Z-2a58e43a1c064dc7844aefdb9c1b6c6f"
+  },
+  "machine": {
+    "agents": {},
+    "objects": {}
+  },
+  "migration": null,
+  "legacy_import": null
+}

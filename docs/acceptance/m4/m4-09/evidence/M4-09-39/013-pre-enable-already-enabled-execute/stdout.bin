@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "runtime_layout": {
+    "root": "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing",
+    "code": "/private/tmp/M4-09-39-1h2o9gn4/home/.local/share/mem-sharing",
+    "registry": "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing/var/registry.json",
+    "lock": "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing/var/.agm.lock",
+    "transaction_lock": "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing/var/.agm.lock/transaction",
+    "backups": "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing/backups"
+  },
+  "command": "enable-memory",
+  "status": "completed",
+  "projects": [
+    {
+      "main_checkout": "/private/tmp/M4-09-39-1h2o9gn4/scan/already-enabled",
+      "checkout": "/private/tmp/M4-09-39-1h2o9gn4/scan/already-enabled",
+      "memory_policy": "follow_ck",
+      "agents": [
+        "codex"
+      ],
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      },
+      "evidence": [
+        "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing/var/registry.json"
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "path": "/private/tmp/M4-09-39-1h2o9gn4/scan/already-enabled/AGENTS.md",
+      "operation": "create",
+      "before_fingerprint": null,
+      "after_fingerprint": "becc6956e42aeea2b59e039a90170ec57f31e37809a831959fce6d3adedca822",
+      "ownership": "created",
+      "applied": true
+    }
+  ],
+  "warnings": [
+    "Runtime acceptance pending; CK installation and record data are retained and not inspected."
+  ],
+  "errors": [],
+  "approval_required": false,
+  "next_action": null
+}

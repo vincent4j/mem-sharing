@@ -1,0 +1,25 @@
+{
+  "case": "M4-09-29",
+  "name": "缺 Git 诊断及外层安装缺口",
+  "status": "blocked",
+  "area": "/private/tmp/M4-09-29-uy28ulw3",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-missing-git-diagnostic",
+      "label": "missing-git-diagnostic",
+      "exit_code": 2
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "PATH-only missing-Git branch collected. INSTALL assigns package-manager installation to outer Agent orchestration; no frozen isolated OS/package-manager route. Real macOS dependency/permission scenarios not executed."
+  ],
+  "ended_utc": "2026-10-30T16:24:49.846665Z",
+  "recovery_locations": [],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

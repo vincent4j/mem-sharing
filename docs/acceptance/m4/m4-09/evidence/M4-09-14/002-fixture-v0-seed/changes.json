@@ -1,0 +1,192 @@
+[
+  {
+    "path": "home",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377043172723178,
+      "size": 64,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377043730213971,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents-group",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377043731349065,
+      "size": 256,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents-group/.sync-state.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377043731402690,
+      "size": 28,
+      "kind": "file",
+      "sha256": "3f3fbd06bd8c4b831bd8b4d24e301c5df1d7a4413f3744d77b7cdba62af4ec95"
+    }
+  },
+  {
+    "path": "home/.agents-group/mcp",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377043731082813,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents-group/mcp/config.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377043731123855,
+      "size": 28,
+      "kind": "file",
+      "sha256": "3f3fbd06bd8c4b831bd8b4d24e301c5df1d7a4413f3744d77b7cdba62af4ec95"
+    }
+  },
+  {
+    "path": "home/.agents-group/memories",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377043730750560,
+      "size": 160,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents-group/memories/MEMORY.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377043730402723,
+      "size": 101,
+      "kind": "file",
+      "sha256": "ab93dff472476a4288674273875499555c58aba0e484bd2dffbbdc6f53120647"
+    }
+  },
+  {
+    "path": "home/.agents-group/memories/relative",
+    "before": null,
+    "after": {
+      "mode": 41453,
+      "permissions": "0o755",
+      "mtime_ns": 1793377043730748435,
+      "size": 9,
+      "kind": "symlink",
+      "target": "主题.md"
+    }
+  },
+  {
+    "path": "home/.agents-group/memories/主题.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377043730535933,
+      "size": 21,
+      "kind": "file",
+      "sha256": "e2cb2a1227c5bff5602c58154a9f67c3d185f7f3d969073bb258ece5f57986b5"
+    }
+  },
+  {
+    "path": "home/.agents-group/references",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377043730646183,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents-group/references/手册.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377043730696642,
+      "size": 11,
+      "kind": "file",
+      "sha256": "31b21810de38f32201bd31bec75aeb968e86ad4070c70ccd5f9698a0bf484cab"
+    }
+  },
+  {
+    "path": "home/.agents-group/scripts",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377043731235314,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents-group/scripts/never-run.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377043731281939,
+      "size": 28,
+      "kind": "file",
+      "sha256": "3f3fbd06bd8c4b831bd8b4d24e301c5df1d7a4413f3744d77b7cdba62af4ec95"
+    }
+  },
+  {
+    "path": "home/.agents-group/skills",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377043730877352,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents-group/skills/independent",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377043730932645,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents-group/skills/independent/SKILL.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377043730978895,
+      "size": 28,
+      "kind": "file",
+      "sha256": "3f3fbd06bd8c4b831bd8b4d24e301c5df1d7a4413f3744d77b7cdba62af4ec95"
+    }
+  }
+]

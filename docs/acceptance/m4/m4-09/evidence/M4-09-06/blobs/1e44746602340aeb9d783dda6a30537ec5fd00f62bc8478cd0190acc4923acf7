@@ -1,0 +1,1424 @@
+{
+  "AGENTS.md": {
+    "type": "file",
+    "sha256": "22d192dc313e08bfd37614f3ac66c8dc6db95d86f36d937f6f5c7d9733357b58",
+    "size": 3464,
+    "mtime_ns": 1784773218545423836
+  },
+  "CLAUDE.md": {
+    "type": "file",
+    "sha256": "54134fb03cc201fe5cc500302f1ce9db49635c9fb9bfb97d3299c305d3d2ad79",
+    "size": 32,
+    "mtime_ns": 1783567206375386815
+  },
+  "context-keeper.json": {
+    "type": "absent"
+  },
+  ".workbuddy": {
+    "type": "absent"
+  },
+  ".workbuddy/memory": {
+    "type": "absent"
+  },
+  ".workbuddy/screenshots": {
+    "type": "absent"
+  },
+  ".agents-group": {
+    "type": "absent"
+  },
+  ".agents/skills": {
+    "type": "absent"
+  },
+  ".codex/skills": {
+    "type": "absent"
+  },
+  ".claude/skills": {
+    "type": "absent"
+  },
+  "docs/context-keeper": {
+    "type": "absent"
+  },
+  "docs/context-keeper/evolution": {
+    "type": "absent"
+  },
+  "docs/context-keeper/evolution/index.md": {
+    "type": "file",
+    "sha256": "d7951a933843fb787604d23101d71a5c935bee237b9e9b86de2f60ece193b626",
+    "size": 944,
+    "mtime_ns": 1793109749439258632
+  },
+  "docs/context-keeper/evolution/模型400错误关联与采样参数边界.md": {
+    "type": "file",
+    "sha256": "ee7bfbab8d9073e7cd7b4e26c457fd50a1cd5e2a91a5ec9a4d5f833b72744ab6",
+    "size": 1520,
+    "mtime_ns": 1793104540533171881
+  },
+  "docs/context-keeper/evolution/真实链路验收分层.md": {
+    "type": "file",
+    "sha256": "d28cfec8b6023900cc6b661970b71d776903ff92c0890bf3d89a83d089837499",
+    "size": 1029,
+    "mtime_ns": 1792059740318087263
+  },
+  "docs/context-keeper/evolution/结构化模型合同与局部调整保真.md": {
+    "type": "file",
+    "sha256": "de08be573d0fdfd5af3fb920f9299476354a7e6caaabb88a699938b311e80244",
+    "size": 1542,
+    "mtime_ns": 1792122829794192780
+  },
+  "docs/context-keeper/evolution/自定义摘要真实验收与原文保留.md": {
+    "type": "file",
+    "sha256": "664e0e51f12ee7addc5d3dd26a52a086f16d74e1933e5fa6e3b1080744db2c85",
+    "size": 1777,
+    "mtime_ns": 1793109749439021507
+  },
+  "docs/context-keeper/evolution/隔离运行后台与授权边界.md": {
+    "type": "file",
+    "sha256": "2178edcf70d5112fa183141cb1438b373ad9e316e1bba67a14e11857c9f9a739",
+    "size": 1137,
+    "mtime_ns": 1792059740318749514
+  },
+  "docs/context-keeper/memory-keeper.md": {
+    "type": "file",
+    "sha256": "309aaaac7a970907924c49cf513db206ae174dc41ef9b5e3151297163b3b1057",
+    "size": 78766,
+    "mtime_ns": 1793281172181006050
+  },
+  "docs/context-keeper/migration-manifest.json": {
+    "type": "file",
+    "sha256": "7a693fb7d898d1025dec35d133a96f770a52920ebd1e5c45ca2fa278ab8eca1d",
+    "size": 80343,
+    "mtime_ns": 1792059740319544015
+  },
+  "docs/context-keeper/plans": {
+    "type": "absent"
+  },
+  "docs/context-keeper/plans/2026-05-14-平台管理与微信接入需求.md": {
+    "type": "file",
+    "sha256": "8230f4bbdfdc6dce951d4430e18a6155179dfbff754821a175387e4618132126",
+    "size": 7217,
+    "mtime_ns": 1792059740319872307
+  },
+  "docs/context-keeper/plans/2026-05-14-新建项目两步页面需求.md": {
+    "type": "file",
+    "sha256": "202b7d88cedaf1b93d3d39df894614f1ccb34d53a99012e76b820028d9cbe1b6",
+    "size": 3037,
+    "mtime_ns": 1792059740320146224
+  },
+  "docs/context-keeper/plans/2026-05-14-模型配置LLM联通测试需求.md": {
+    "type": "file",
+    "sha256": "b64770f610289e755c1a7a11d2984db0e84c38693584d8fa4bc15def5d9baa18",
+    "size": 3614,
+    "mtime_ns": 1792059740320221224
+  },
+  "docs/context-keeper/plans/2026-05-14-项目数据库化多用户支持需求.md": {
+    "type": "file",
+    "sha256": "2d0c3030971e7ede5558a2c41454e19aab19144200573344d714bbd7dc08d3b4",
+    "size": 3687,
+    "mtime_ns": 1792059740320318516
+  },
+  "docs/context-keeper/plans/2026-05-15-内容初筛流水线修复与优化需求.md": {
+    "type": "file",
+    "sha256": "e87bda90193f0bea3e47ee57788315648f908e0f210211df4b969eff6f7b7777",
+    "size": 1934,
+    "mtime_ns": 1792059740320406349
+  },
+  "docs/context-keeper/plans/2026-05-15-消息架构解耦与流水线重排需求.md": {
+    "type": "file",
+    "sha256": "cb667c4eba696cd01d1183c1bde7dd62dbe5dd1983a609b99412ff6cbac9cb08",
+    "size": 3861,
+    "mtime_ns": 1792059740320543683
+  },
+  "docs/context-keeper/plans/2026-05-16-微信群边缘场景.md": {
+    "type": "file",
+    "sha256": "755c00c4d8888118f131fe443299132f707f57146df00cdb478f5570adaec521",
+    "size": 8530,
+    "mtime_ns": 1792059740320644766
+  },
+  "docs/context-keeper/plans/2026-05-18-TrendRadar借鉴点.md": {
+    "type": "file",
+    "sha256": "e5b1da2a2effa9b3e3f061b45248b7daa26ef37a1d77f3ea7978a27aedd91235",
+    "size": 4835,
+    "mtime_ns": 1792059740320723808
+  },
+  "docs/context-keeper/plans/2026-05-19-X采集技术实现方案.md": {
+    "type": "file",
+    "sha256": "5c59361d099095d8d5c624aaf40459e7b2883e899d8d9f85da6d573881f3e9bf",
+    "size": 12368,
+    "mtime_ns": 1792059740320890266
+  },
+  "docs/context-keeper/plans/2026-05-19-x-builders-list.md": {
+    "type": "file",
+    "sha256": "5962195d6b72e64ffc0543c2650d1318ffe45bffc09b425fb4a4ff0b9e00c935",
+    "size": 1633,
+    "mtime_ns": 1792059740320971308
+  },
+  "docs/context-keeper/plans/2026-05-20-洞察评分需求.md": {
+    "type": "file",
+    "sha256": "8ff3a3b8ff6f2d2cd0bbe35658467f30970203be521ef691b66ef13a6cecc4d0",
+    "size": 5022,
+    "mtime_ns": 1792059740321079808
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-API-Contract.md": {
+    "type": "file",
+    "sha256": "73371259584d5bff3a817df1bfc54283a2b99ae72efd53f88181fdc354690c1e",
+    "size": 8443,
+    "mtime_ns": 1792059740321171475
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-MVP-第一段编码计划.md": {
+    "type": "file",
+    "sha256": "ca5ad193689104cbce1dcc6bc9363b2412988a68665ab2bf443461e163853666",
+    "size": 3991,
+    "mtime_ns": 1792059740321247684
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-MVP-第三段-XhsAdapter-keyword-spike.md": {
+    "type": "file",
+    "sha256": "1a60388e3c1b447bbcf29340e54bcaa0099488adbaabc0ba8b3491e8b8686af8",
+    "size": 3221,
+    "mtime_ns": 1792059740321317517
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-MVP-第二段-sidecar-skeleton.md": {
+    "type": "file",
+    "sha256": "d963c8c4bc52ffda58bf06d30eac992131ded505b22209692e51c4392742f2a5",
+    "size": 2731,
+    "mtime_ns": 1792059740321405101
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-MVP-第五段-Tauri-Shell-真实环境验证.md": {
+    "type": "file",
+    "sha256": "f9c15a2627ca8639ecdedee23bdb08adae97032e1a93825277ad21c9bfa137ef",
+    "size": 9753,
+    "mtime_ns": 1792059740321681559
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-MVP-第四段-sidecar-runtime-loop.md": {
+    "type": "file",
+    "sha256": "3659ebb43bf871847e4e3904ffb8a54b5d3789c57f790ced160631767d435161",
+    "size": 4650,
+    "mtime_ns": 1792059740321759934
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-用户状态机.md": {
+    "type": "file",
+    "sha256": "7f51f322eaf91d891fb7e2c2a98135e5614e473dbaafa780e7230146c04b5510",
+    "size": 6312,
+    "mtime_ns": 1792059740321975101
+  },
+  "docs/context-keeper/plans/2026-06-03-KnowWind-Local-Collector-技术方案.md": {
+    "type": "file",
+    "sha256": "04c64c3909679c897dd36fe5bda9c8a18185b59dc950a7c0c5e443c4ca69d575",
+    "size": 15258,
+    "mtime_ns": 1792059740322106935
+  },
+  "docs/context-keeper/plans/2026-06-14-小红书本地采集风控与内容完整度需求.md": {
+    "type": "file",
+    "sha256": "f7097d5dea77fb9ad7397d180e7cef0142b752b7e22170c3da7eca3fe4e973c9",
+    "size": 6032,
+    "mtime_ns": 1792059740322237643
+  },
+  "docs/context-keeper/plans/2026-06-15-小红书安全模式与日志护栏需求.md": {
+    "type": "file",
+    "sha256": "46d48e34b729cc2d5b95f17dd3e15f0c9f1af87515ee6d4fd634f8b74467b5ab",
+    "size": 5258,
+    "mtime_ns": 1792059740322433185
+  },
+  "docs/context-keeper/plans/2026-06-15-小红书本地关键词搜索全路径需求.md": {
+    "type": "file",
+    "sha256": "5a92abf45239c242b39d44f66bb149a282bbc0b14b1e3aba3ff0459500147950",
+    "size": 7069,
+    "mtime_ns": 1792059740322605686
+  },
+  "docs/context-keeper/plans/2026-06-15-本地采集租约与安全验证日志需求.md": {
+    "type": "file",
+    "sha256": "1ab4df886fdcd0b403cdbee00d37bf288b7411d1142f80f86f0b64f5dfae9eb5",
+    "size": 3950,
+    "mtime_ns": 1792059740322668310
+  },
+  "docs/context-keeper/plans/2026-06-15-模型调用统一迁移需求.md": {
+    "type": "file",
+    "sha256": "5cf2b64744b6ea87475102acd4c6a61e82ce0b82908d39b0b91164bcd1fb353c",
+    "size": 2781,
+    "mtime_ns": 1792059740322767686
+  },
+  "docs/context-keeper/plans/2026-06-15-模型配置Anthropic协议补全需求.md": {
+    "type": "file",
+    "sha256": "3f54f680d0014a042ab285de37cf9332835dab529360e499071dc4e12d5a2c23",
+    "size": 2950,
+    "mtime_ns": 1792059740322871394
+  },
+  "docs/context-keeper/plans/2026-06-15-洞察分享需求.md": {
+    "type": "file",
+    "sha256": "77e59aa104380cd5c216ddde25bb568a718b2d388503073a24dae5908dbb20c1",
+    "size": 8069,
+    "mtime_ns": 1792059740323083603
+  },
+  "docs/context-keeper/plans/2026-06-16-采集客户端登录日志与启动修复需求.md": {
+    "type": "file",
+    "sha256": "3426d0560d5c87abef29ca843a834e40513a1ba54b7edae2fcee5814a449abe7",
+    "size": 4451,
+    "mtime_ns": 1792059740323157645
+  },
+  "docs/context-keeper/plans/2026-06-17-小红书browser-use采集合同需求.md": {
+    "type": "file",
+    "sha256": "a9a23b33cb694087055e8d2f6887ffaa4d5dd4fa1779ddb5b648618170323620",
+    "size": 7037,
+    "mtime_ns": 1792059740323264478
+  },
+  "docs/context-keeper/plans/2026-06-19-小红书采集搜索与重复点击修复需求.md": {
+    "type": "file",
+    "sha256": "295a73d58e9fabbbca84cd731931e59de6510b389988c2f91194947883d11439",
+    "size": 3054,
+    "mtime_ns": 1792059740323431145
+  },
+  "docs/context-keeper/plans/2026-06-22-browser-use通用采集路线方案.md": {
+    "type": "file",
+    "sha256": "29ddeeecde1dc1d0319b77ce500d69b11be9995293d9c3c20668f6ece2818cbf",
+    "size": 12616,
+    "mtime_ns": 1792059740323525770
+  },
+  "docs/context-keeper/plans/2026-06-22-小红书browser-use-route复盘与后续方案需求.md": {
+    "type": "file",
+    "sha256": "51a0f1b0ee82665d8a2fdc87f14e68f0dd5bde1f822c5b98b6d396fc3106380f",
+    "size": 6940,
+    "mtime_ns": 1792059740323596728
+  },
+  "docs/context-keeper/plans/2026-06-22-小红书详情快照采集需求.md": {
+    "type": "file",
+    "sha256": "262b2d719dece5d36bb667cd264c0c1a6c4f6794c8041720259e652d3fec4696",
+    "size": 3939,
+    "mtime_ns": 1792059740323649770
+  },
+  "docs/context-keeper/plans/2026-06-23-小红书browser-use状态驱动动作层需求.md": {
+    "type": "file",
+    "sha256": "5c10386aad37f29cf9202a67507889e5fa78749bf6f67aea5079ecb0cb451c4a",
+    "size": 5873,
+    "mtime_ns": 1792059740323721604
+  },
+  "docs/context-keeper/plans/2026-06-25-小红书browser-use-extract联调需求.md": {
+    "type": "file",
+    "sha256": "7e040352f1a3d74eb667dea865ca4d8a3edc1936fe78bc42717cd61df53cf334",
+    "size": 4211,
+    "mtime_ns": 1792059740323826062
+  },
+  "docs/context-keeper/plans/2026-06-29-小红书browser-use采集修复需求.md": {
+    "type": "file",
+    "sha256": "8ee00180cd5182748fe2c6039bde8229a3537e7e49c13711b0072c92976677b4",
+    "size": 4370,
+    "mtime_ns": 1792059740323895729
+  },
+  "docs/context-keeper/plans/2026-06-30-本地采集客户端与小红书联调修复需求.md": {
+    "type": "file",
+    "sha256": "d233fba42a77b3d761528e0b7d759ac6508f660f806b5ce72716f6e0daa79a9e",
+    "size": 5925,
+    "mtime_ns": 1792059740323967479
+  },
+  "docs/context-keeper/plans/2026-06-30-本地采集客户端批次队列设计需求.md": {
+    "type": "file",
+    "sha256": "cd3fefa5ddbc3b934a9f80ce34d05e935d6e04bd0364f4613a330a1f3ab285c3",
+    "size": 5654,
+    "mtime_ns": 1792059740324039104
+  },
+  "docs/context-keeper/plans/2026-07-01-小红书采集质量联调修复需求.md": {
+    "type": "file",
+    "sha256": "779569ac7d797a5e15079c6d41dac1fadf01497777b812e283fae6d1c45e01e1",
+    "size": 7208,
+    "mtime_ns": 1792059740324236854
+  },
+  "docs/context-keeper/plans/2026-07-06-小红书博主主页组订阅需求.md": {
+    "type": "file",
+    "sha256": "6be71eb652adcfac239542f832b4567a63ebad5544498063cb1df8d72d5fa9d1",
+    "size": 3201,
+    "mtime_ns": 1792059740324325896
+  },
+  "docs/context-keeper/plans/2026-07-09-X个人主页采集到洞察闭环需求.md": {
+    "type": "file",
+    "sha256": "e12fce894748ce2b1bd78615f68db63257025c26095c29a275b9339a0ec2dfcd",
+    "size": 2541,
+    "mtime_ns": 1792059740324381646
+  },
+  "docs/context-keeper/plans/2026-07-09-小红书个人主页定位验证需求.md": {
+    "type": "file",
+    "sha256": "2640e348394f65693f8ab0fe39a731f5f5568f30df810cedc65fb9ec966daf7e",
+    "size": 2475,
+    "mtime_ns": 1792059740324431688
+  },
+  "docs/context-keeper/plans/2026-07-10-微信用户界面暂停需求.md": {
+    "type": "file",
+    "sha256": "a24eda1aec2a7870cde8cdb7192576fb1b4e1c831ad62c35978eab8ac2f06dbb",
+    "size": 929,
+    "mtime_ns": 1792059740324483105
+  },
+  "docs/context-keeper/plans/2026-07-13-小红书个人主页公测收口需求.md": {
+    "type": "file",
+    "sha256": "58647e8179712190ec8a7c59137d9a5592b3767991653e5c41321361303cc8a3",
+    "size": 1969,
+    "mtime_ns": 1792059740324536438
+  },
+  "docs/context-keeper/plans/2026-07-14-X本地采集公测收口需求.md": {
+    "type": "file",
+    "sha256": "ce8cdf1c2fa04241c35b85033a5df99d3fa0566a96728823ccc49226bec85253",
+    "size": 22714,
+    "mtime_ns": 1792059740324636813
+  },
+  "docs/context-keeper/plans/2026-07-14-小红书博主简介与洞察提炼稳定性需求.md": {
+    "type": "file",
+    "sha256": "365f4e29bee632762c4820a4917edb9ee67f980dbbb5cc3720bfbad8b81fc9cc",
+    "size": 2172,
+    "mtime_ns": 1792059740324693272
+  },
+  "docs/context-keeper/plans/2026-07-16-本地采集客户端多项目与UX收口需求.md": {
+    "type": "file",
+    "sha256": "412cb9719f0004f8a4ce7d37023c5663b6c2cf99e6756e972d3df562ab3c3187",
+    "size": 3688,
+    "mtime_ns": 1792059740324745563
+  },
+  "docs/context-keeper/plans/2026-07-22-信息源配置体验收口需求.md": {
+    "type": "file",
+    "sha256": "5113563ffff6550f0b3be88ae557a5fc8e2d217652d5835ed360a0b90295c1a1",
+    "size": 4086,
+    "mtime_ns": 1792059740324796897
+  },
+  "docs/context-keeper/plans/2026-07-22-工作流观察页体验优化需求.md": {
+    "type": "file",
+    "sha256": "562e246296272ee141070d248f5cab46f53ab42a40a3a5411e4cc24ac7b81cb1",
+    "size": 3432,
+    "mtime_ns": 1792059740324852480
+  },
+  "docs/context-keeper/plans/2026-07-22-洞察输出与项目设置体验收口需求.md": {
+    "type": "file",
+    "sha256": "0ff6a64bfc82158abee9b86b12cd6b34cf93e362624a5241040456db6f14a537",
+    "size": 5444,
+    "mtime_ns": 1792059740324919605
+  },
+  "docs/context-keeper/plans/2026-07-22-运行日志明细与可观测性优化需求.md": {
+    "type": "file",
+    "sha256": "449fdab022a6c41659a817919fc173364edd1edd485c532cd791441c257e9ba3",
+    "size": 3363,
+    "mtime_ns": 1792059740325013605
+  },
+  "docs/context-keeper/plans/2026-07-23-微信平台能力移除需求.md": {
+    "type": "file",
+    "sha256": "56433c93e2ae3f8e9dec5c0bd5324d432cf26bd664564cc2c1fc2abef907aef1",
+    "size": 3297,
+    "mtime_ns": 1792059740325074397
+  },
+  "docs/context-keeper/plans/2026-07-23-本地采集风控策略需求.md": {
+    "type": "file",
+    "sha256": "6b53c172f34f9e03f09123a9a0ae7e9790441ac429cb16d66f9681f9e6efd4e7",
+    "size": 3007,
+    "mtime_ns": 1792059740325130606
+  },
+  "docs/context-keeper/plans/2026-07-23-洞察生成与本地采集逐单元收口需求.md": {
+    "type": "file",
+    "sha256": "5177c687fd86a62a4b3a9b029eb4693d5decfddfb1c0c40dd0b66004a030d44b",
+    "size": 6118,
+    "mtime_ns": 1792059740325203731
+  },
+  "docs/context-keeper/plans/2026-07-27-平台管理隐藏API入口需求.md": {
+    "type": "file",
+    "sha256": "94c3e2c4e0150032505e30de6dcc02e05515b7422e0cf4abcdcde2a38f8a2e43",
+    "size": 1578,
+    "mtime_ns": 1792059740325253314
+  },
+  "docs/context-keeper/plans/2026-07-28-客户端发布与双平台登录资料收口需求.md": {
+    "type": "file",
+    "sha256": "17d4b62dea504e4e04669f2402b2b7f17d5785030856af089c0c89405f596e3d",
+    "size": 4990,
+    "mtime_ns": 1792059740325319522
+  },
+  "docs/context-keeper/plans/2026-08-07-AI对话创建与公共模型需求.md": {
+    "type": "file",
+    "sha256": "b49498cb06e5d139048c0332bd1f322599f26f920b572d94fec7633be04462c8",
+    "size": 7063,
+    "mtime_ns": 1792059740325398148
+  },
+  "docs/context-keeper/plans/2026-08-24-SaaS薄客户端与可靠采集执行器改造方案.md": {
+    "type": "file",
+    "sha256": "6d4d5d4269b8e4b2f7152f34a539a63a57f513996a251a15de23421dade76b85",
+    "size": 33273,
+    "mtime_ns": 1792059740325503939
+  },
+  "docs/context-keeper/plans/2026-08-30-Collector-状态原型开发交接.md": {
+    "type": "file",
+    "sha256": "df19ce0b7d46f5aea4729940862962c4c17d1060a5c5735c96148a8359589ee6",
+    "size": 3707,
+    "mtime_ns": 1792059740325581231
+  },
+  "docs/context-keeper/plans/2026-09-02-Collector-后续开发交接.md": {
+    "type": "file",
+    "sha256": "760e6e1bab8dd5adf1dea270d1b68c052c56dbc2fabf3cbae5def649b787dba6",
+    "size": 13581,
+    "mtime_ns": 1792059740325682440
+  },
+  "docs/context-keeper/plans/2026-09-02-e2e-acceptance-checklist.md": {
+    "type": "file",
+    "sha256": "6e9ea2a7bc42ee1d780af29b5548e52e165ba92224543036c1273c1088399d8f",
+    "size": 7169,
+    "mtime_ns": 1792059740325760981
+  },
+  "docs/context-keeper/plans/2026-09-02-pre-existing-cleanup-and-admin-trigger.md": {
+    "type": "file",
+    "sha256": "418ecdab17ff21ac48a18adada8cc690aa984e1abbeba2243b391c424a2dfa46",
+    "size": 4027,
+    "mtime_ns": 1792059740325818565
+  },
+  "docs/context-keeper/plans/2026-09-07-采集管理与模型等待需求.md": {
+    "type": "file",
+    "sha256": "115e8e52d8ba31d221b7dbea1702131bf6047b1085ffec8b1a405509d2498278",
+    "size": 2102,
+    "mtime_ns": 1792059740325907607
+  },
+  "docs/context-keeper/plans/2026-09-14-采集交互与小红书额度收口需求.md": {
+    "type": "file",
+    "sha256": "44fc009c65ca38a311c615300c14c9727124f4ba5d116e8e8d2cca6ce44cc64b",
+    "size": 2314,
+    "mtime_ns": 1792059740326091398
+  },
+  "docs/context-keeper/plans/2026-10-15-只读审查修复与真实联调收口.md": {
+    "type": "file",
+    "sha256": "d6f45d1f5d51378110c0c2041933c9655ce91fb2fcbb8aaf13b329c2b26dd09d",
+    "size": 2507,
+    "mtime_ns": 1792059740326263774
+  },
+  "docs/context-keeper/plans/2026-10-16-模型调用合同与调整范围修复收口.md": {
+    "type": "file",
+    "sha256": "8ab213b6b5df0ba2fd3898a25af4f965a90a06d78db2423ab25e59d25d385194",
+    "size": 1777,
+    "mtime_ns": 1792122829793056622
+  },
+  "docs/context-keeper/plans/2026-10-27-客户端020交付与模型温度参数移除.md": {
+    "type": "file",
+    "sha256": "395f453567044b91fe23fc7304331a11308f5717904ece8eb749575149816677",
+    "size": 3714,
+    "mtime_ns": 1793109749438209967
+  },
+  "docs/context-keeper/plans/2026-10-28-平台指标与小红书采集四项修复.md": {
+    "type": "file",
+    "sha256": "a5998034cddbf48f6cbe4148aecc8a8bbc8df3a727639740f6db9ea13a1852ab",
+    "size": 3957,
+    "mtime_ns": 1793152575067979453
+  },
+  "docs/context-keeper/plans/2026-10-28-采集效率主线收口与Git合并.md": {
+    "type": "file",
+    "sha256": "85a1cb05d12317bc89acf704f51a74337f5dddc18f69003112fd73e9c914356e",
+    "size": 2449,
+    "mtime_ns": 1793172094464666350
+  },
+  "docs/context-keeper/worklogs": {
+    "type": "absent"
+  },
+  "docs/context-keeper/worklogs/2026-05-09-KnowWind-MVP.md": {
+    "type": "file",
+    "sha256": "cb88e3b303ef07d0d8a9eacd418762f3d245512e0a38fdf45b38ae139da7f7a3",
+    "size": 5745,
+    "mtime_ns": 1792059740326397191
+  },
+  "docs/context-keeper/worklogs/2026-05-10-MVP收尾.md": {
+    "type": "file",
+    "sha256": "8e247a8c93b8040478e89cc712ff5425115a2c3da8ef7f2cbee4f746506d09b9",
+    "size": 2563,
+    "mtime_ns": 1792059740326446899
+  },
+  "docs/context-keeper/worklogs/2026-05-10-反馈闭环验证与前端类型补全.md": {
+    "type": "file",
+    "sha256": "077f880cd9d1c358e5011a11181afc2c6e86e0d5c07677c0aef6978dd8e6ea8e",
+    "size": 3997,
+    "mtime_ns": 1792059740326498024
+  },
+  "docs/context-keeper/worklogs/2026-05-10-配置策略与反馈闭环.md": {
+    "type": "file",
+    "sha256": "976eab0715df9258c9cb9888d33c24f885f18bfd7f189660164d98236e3ef2dd",
+    "size": 4700,
+    "mtime_ns": 1792059740326563816
+  },
+  "docs/context-keeper/worklogs/2026-05-11-OpenRouter风格收敛.md": {
+    "type": "file",
+    "sha256": "03785bff2edff94260e2f2432bc50e539e6ad9181630862257f7637b3df94af6",
+    "size": 4735,
+    "mtime_ns": 1792059740326630233
+  },
+  "docs/context-keeper/worklogs/2026-05-11-wx-still启动排查与清理.md": {
+    "type": "file",
+    "sha256": "f77a91512b35ae4eedf013b30b8f29c6f0786da80e662b4854a1f5ad308fbf11",
+    "size": 2759,
+    "mtime_ns": 1792059740326682691
+  },
+  "docs/context-keeper/worklogs/2026-05-11-前端UI重设计.md": {
+    "type": "file",
+    "sha256": "2167a8b01a1fec8b5c7f5dedbbc7470c993ac9e3c1c0ce6bfb3abaf1a872cc46",
+    "size": 7501,
+    "mtime_ns": 1792059740326757774
+  },
+  "docs/context-keeper/worklogs/2026-05-11-项目概念设计.md": {
+    "type": "file",
+    "sha256": "14d6c2600978a42523c7341a423025633b6d32b47f022bffc213ce29db6fec00",
+    "size": 5552,
+    "mtime_ns": 1792059740326824649
+  },
+  "docs/context-keeper/worklogs/2026-05-14-原型图-信息源界面细化.md": {
+    "type": "file",
+    "sha256": "4ac9bc5a7ba7f3dfae9eacfdd362116dd321eab906f1a6dcacafb79d751b8ced",
+    "size": 5012,
+    "mtime_ns": 1792059740326900941
+  },
+  "docs/context-keeper/worklogs/2026-05-14-原型图-新建项目布局重设计.md": {
+    "type": "file",
+    "sha256": "95cd1bdc99c503a7f25d77f6333b1d5706d90e944a82f33a6731a7e03341a9b7",
+    "size": 3397,
+    "mtime_ns": 1792059740326951316
+  },
+  "docs/context-keeper/worklogs/2026-05-14-平台管理与微信接入设计.md": {
+    "type": "file",
+    "sha256": "9696950cd0ec9b39175ecfec3be4185726e2e665ceecee9738c264c1c9ba6feb",
+    "size": 4564,
+    "mtime_ns": 1792059740327018150
+  },
+  "docs/context-keeper/worklogs/2026-05-14-微信头像绑定与平台管理UI优化.md": {
+    "type": "file",
+    "sha256": "d3c703676ed85f6e90cf98ff776e2a4ab699b267858c3ea98551a1305cb4c25c",
+    "size": 6038,
+    "mtime_ns": 1792059740327087316
+  },
+  "docs/context-keeper/worklogs/2026-05-14-新建项目两步页面.md": {
+    "type": "file",
+    "sha256": "a51f7a4d604cb6e5fafc74ef769e0bb67216f07b057fd057d686ba7c31121b16",
+    "size": 6781,
+    "mtime_ns": 1792059740327271192
+  },
+  "docs/context-keeper/worklogs/2026-05-14-模型配置LLM联通测试.md": {
+    "type": "file",
+    "sha256": "db20f5a5ab9a9e6765d958880ab55726da39720ac673c4d5bdf834756a182cff",
+    "size": 7492,
+    "mtime_ns": 1792059740327365108
+  },
+  "docs/context-keeper/worklogs/2026-05-14-项目数据库化多用户支持.md": {
+    "type": "file",
+    "sha256": "8a63c62c3fdf363644854307415759b13e5137e737e13206b14ff3052c65bf96",
+    "size": 7479,
+    "mtime_ns": 1792059740327448484
+  },
+  "docs/context-keeper/worklogs/2026-05-15-内容初筛流水线修复与优化.md": {
+    "type": "file",
+    "sha256": "10cc8c08d2c24dc1fc4c902761f83f5fa412c3211cea71dd39b6893d9bc515e3",
+    "size": 6133,
+    "mtime_ns": 1792059740327527442
+  },
+  "docs/context-keeper/worklogs/2026-05-15-消息架构解耦与流水线重排.md": {
+    "type": "file",
+    "sha256": "8ac9e0c190b06cc556119394ffcfbcdac7126d05412ec4d9c87b547b03f32531",
+    "size": 9176,
+    "mtime_ns": 1792059740327818567
+  },
+  "docs/context-keeper/worklogs/2026-05-20-X作者Bio翻译.md": {
+    "type": "file",
+    "sha256": "4ecd8473ccab8d2d33b95b2a855bf562c2e8b7df1052453619c34d00e7b39995",
+    "size": 5075,
+    "mtime_ns": 1792059740327894026
+  },
+  "docs/context-keeper/worklogs/2026-05-20-X提炼流水线调试与分批日志.md": {
+    "type": "file",
+    "sha256": "9e4cc0a64b590c28a2d955481238a61724adfa2ac82a904e4bd07a0bed1fff19",
+    "size": 6252,
+    "mtime_ns": 1792059740327976859
+  },
+  "docs/context-keeper/worklogs/2026-05-20-标签缓存实现.md": {
+    "type": "file",
+    "sha256": "f6d647531abe4cb07641504b5d557c7584ae58ec486f47ed02da8da6c0e864a8",
+    "size": 2374,
+    "mtime_ns": 1792059740328038026
+  },
+  "docs/context-keeper/worklogs/2026-05-20-核心文档重组与README更新.md": {
+    "type": "file",
+    "sha256": "c1b783260ea5e0b05b9edac6c03601b72c54157baa95a3d70e827fd3e8400ab8",
+    "size": 3192,
+    "mtime_ns": 1792059740328098151
+  },
+  "docs/context-keeper/worklogs/2026-05-20-重跑对话框与项目下拉修复.md": {
+    "type": "file",
+    "sha256": "66dba19d7c881e0f873370fc40885e433aa2def5c57cba4ed9a1f227ff790c7a",
+    "size": 6972,
+    "mtime_ns": 1792059740328224193
+  },
+  "docs/context-keeper/worklogs/2026-05-22-XHS卡片原始笔记展开交互.md": {
+    "type": "file",
+    "sha256": "cefe5fe44ac567676118de0f6e8ffb44d5001794c1ce5b0d65eb31b64888eff3",
+    "size": 3151,
+    "mtime_ns": 1792059740328312235
+  },
+  "docs/context-keeper/worklogs/2026-05-22-三方接口管理与平台Logo集成.md": {
+    "type": "file",
+    "sha256": "e220c79f5a9d11ede53641a05f0697686024ca5b4b735da2f6d7200ca3857a28",
+    "size": 7301,
+    "mtime_ns": 1792059740328405027
+  },
+  "docs/context-keeper/worklogs/2026-05-27-工作流页面UX优化.md": {
+    "type": "file",
+    "sha256": "ef7572e658a6be6ed9b98bbb33289517a7405750ffad97de10b2854c37ef5d5f",
+    "size": 5597,
+    "mtime_ns": 1792059740328490068
+  },
+  "docs/context-keeper/worklogs/2026-05-28-X采集修复与模型分配重构.md": {
+    "type": "file",
+    "sha256": "86aae4bfe23b98969418bcbd96df0167e7bd14f7f25ad32e27b47ea3374a4252",
+    "size": 7163,
+    "mtime_ns": 1792059740328569985
+  },
+  "docs/context-keeper/worklogs/2026-06-03-Collector-Runtime-Loop验证.md": {
+    "type": "file",
+    "sha256": "25dd74f51b06163c8489a273408f5cde9aea9332133dfa80226e268c34150034",
+    "size": 17627,
+    "mtime_ns": 1792059740328658652
+  },
+  "docs/context-keeper/worklogs/2026-06-03-Collector本地采集器联调闭环.md": {
+    "type": "file",
+    "sha256": "551c306695c6aed2866ad3cd96e6a995696521a48b6c2b8cf2ed47f19ced1c7d",
+    "size": 10177,
+    "mtime_ns": 1792059740328767527
+  },
+  "docs/context-keeper/worklogs/2026-06-04-Collector默认值与Tauri-icon修复.md": {
+    "type": "file",
+    "sha256": "86620bdc5caad8efd15946abbd6c50213fe4d60d73d0d9ab777bb483e688600d",
+    "size": 5478,
+    "mtime_ns": 1792059740328849319
+  },
+  "docs/context-keeper/worklogs/2026-06-04-KnowWind-profile-注册与头像.md": {
+    "type": "file",
+    "sha256": "fe8a6dce83f85479466079560abecc62f9e43a71a20cd330ffb1f59679294688",
+    "size": 6355,
+    "mtime_ns": 1792059740328929652
+  },
+  "docs/context-keeper/worklogs/2026-06-04-T2-Tauri-sidecar-client与SIGTERM修复.md": {
+    "type": "file",
+    "sha256": "669efa8cfc865bf9c58ce52dd4c86661064c06288baad2bebf168c30d7aad6e5",
+    "size": 8470,
+    "mtime_ns": 1792059740329024736
+  },
+  "docs/context-keeper/worklogs/2026-06-04-T3-Tauri-主窗口UI.md": {
+    "type": "file",
+    "sha256": "50739080be42751e5b921163232377f66e8ec599e755526b6975e5883ce2dcb3",
+    "size": 6930,
+    "mtime_ns": 1792059740329105986
+  },
+  "docs/context-keeper/worklogs/2026-06-04-T4-平台登录按钮.md": {
+    "type": "file",
+    "sha256": "729472664a6717c7c1df4e34bb68bccfa6fbff8d9f7170ca5e3d146bec868402",
+    "size": 7316,
+    "mtime_ns": 1792059740329182194
+  },
+  "docs/context-keeper/worklogs/2026-06-04-Tauri-桌面端设计系统迁移.md": {
+    "type": "file",
+    "sha256": "5576e6a421ce94ecc29ae2f3f127b7de8224c2042642bb4de56a7e69b4d910f5",
+    "size": 7223,
+    "mtime_ns": 1792059740329263569
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T10-XHS-real-verify.md": {
+    "type": "file",
+    "sha256": "e64035d636804efc6e6429f56e21e53a86e3017e78691f3503432ca94583b447",
+    "size": 15195,
+    "mtime_ns": 1792059740329373153
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T11-macOS-app-dmg打包.md": {
+    "type": "file",
+    "sha256": "786c9d7cb8b6b230108394447cc688ed3830c2a5871140a65568654381a94aa6",
+    "size": 9191,
+    "mtime_ns": 1792059740329460278
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T12-sidecar-async-SingletonLock-login_required.md": {
+    "type": "file",
+    "sha256": "ac3b19cf789b331a38df635c2bbf940a2f25010b0c3073dbd35432f5242fb980",
+    "size": 12239,
+    "mtime_ns": 1792059740329594570
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T13-UI-消费login_required-502退避.md": {
+    "type": "file",
+    "sha256": "a1c4dc7b59ae624407c0ea11bab230633f8470f01b3cc78b2ec8099292e05f4f",
+    "size": 10138,
+    "mtime_ns": 1792059740329841945
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T14-首次启动绑定UI.md": {
+    "type": "file",
+    "sha256": "d98ce695ab92e35a1afed766c3fa1d80e2095460206c77dddba4f60f78484087",
+    "size": 12351,
+    "mtime_ns": 1792059740329954154
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T15-SaaS-小红书本地采集卡.md": {
+    "type": "file",
+    "sha256": "67e8f716000b63200afd24888188da80868996fe0bd62acb4c1815e326b1f202",
+    "size": 9690,
+    "mtime_ns": 1792059740330045029
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T5-T6-并行开发与联调.md": {
+    "type": "file",
+    "sha256": "7cdd02e822e96af739ec646d6c11c3d927550d8754ddcf84f873bdf88358048a",
+    "size": 15074,
+    "mtime_ns": 1792059740331580739
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T7-T9-T10-托盘-联调脚本-真实XHS验证.md": {
+    "type": "file",
+    "sha256": "9d3e0949252769539677ad31806cee1240e06c1b609b976ac9b2b30233018821",
+    "size": 13614,
+    "mtime_ns": 1792059740331881198
+  },
+  "docs/context-keeper/worklogs/2026-06-05-i18n与README分发指南.md": {
+    "type": "file",
+    "sha256": "c6662808e35ad77268b4f224b61041d27a7f50f8b155ecb39c52ccf6d03f34ca",
+    "size": 9604,
+    "mtime_ns": 1792059740331976698
+  },
+  "docs/context-keeper/worklogs/2026-06-11-采集客户端修复-SingletonLock.md": {
+    "type": "file",
+    "sha256": "ee1e53fa3d9c7dc0a3d6b359d9269788410cac02c42a6cbe9fe9832243c81549",
+    "size": 15288,
+    "mtime_ns": 1792059740333427908
+  },
+  "docs/context-keeper/worklogs/2026-06-14-小红书本地采集风控与内容完整度.md": {
+    "type": "file",
+    "sha256": "7db07d49d9245c6434c01673dc0cc2645c0ca7ba0002cd7c8acbd0ac3a4e0366",
+    "size": 10069,
+    "mtime_ns": 1792059740333681617
+  },
+  "docs/context-keeper/worklogs/2026-06-15-小红书安全模式与日志护栏.md": {
+    "type": "file",
+    "sha256": "dbd1170959e294a65939a338b132fa0f07c292d95cfa1993326085d41f9661de",
+    "size": 7486,
+    "mtime_ns": 1792059740333769325
+  },
+  "docs/context-keeper/worklogs/2026-06-15-小红书本地关键词搜索全路径.md": {
+    "type": "file",
+    "sha256": "548a89d0b9a0ff304ff8f6b797af7cedc36c858b09c6a86c6d60550a6e26265a",
+    "size": 12223,
+    "mtime_ns": 1792059740333858284
+  },
+  "docs/context-keeper/worklogs/2026-06-15-本地采集租约与安全验证日志.md": {
+    "type": "file",
+    "sha256": "20b170a0b74ebb23a941fafd86e6d2911bd42c77c25d95cf126cba2569eae70b",
+    "size": 7317,
+    "mtime_ns": 1792059740333931992
+  },
+  "docs/context-keeper/worklogs/2026-06-15-模型调用统一迁移.md": {
+    "type": "file",
+    "sha256": "05270529586614aebcd48f5dca8853dc74b74827e8068b0e84bfa5f2d5bfeaf6",
+    "size": 6122,
+    "mtime_ns": 1792059740334017367
+  },
+  "docs/context-keeper/worklogs/2026-06-15-模型配置Anthropic协议补全.md": {
+    "type": "file",
+    "sha256": "0862984b1781e8656d84b30289e79cecd448ea55f7e059080bb42f52b08026cb",
+    "size": 5790,
+    "mtime_ns": 1792059740334094743
+  },
+  "docs/context-keeper/worklogs/2026-06-15-洞察分享.md": {
+    "type": "file",
+    "sha256": "7e7ecddfdb200b6c9724d63690d9a181ac8b4f69529a7032c6159c82321035e4",
+    "size": 13731,
+    "mtime_ns": 1792059740334350243
+  },
+  "docs/context-keeper/worklogs/2026-06-16-采集客户端登录日志与启动修复.md": {
+    "type": "file",
+    "sha256": "7c3a68c8c4eed9850c713d11ea16f1a7ce9be9f25fb0ca3f9206ee3306846310",
+    "size": 9363,
+    "mtime_ns": 1792059740334448035
+  },
+  "docs/context-keeper/worklogs/2026-06-17-小红书browser-use采集合同.md": {
+    "type": "file",
+    "sha256": "8a8430c7a264e6ed030760ae5133cc3e0b6eb4fd8d13de9a916f98ace58b4e78",
+    "size": 13935,
+    "mtime_ns": 1792059740334547868
+  },
+  "docs/context-keeper/worklogs/2026-06-19-小红书采集搜索与重复点击修复.md": {
+    "type": "file",
+    "sha256": "df1f542f90ed3ba5d9bd4881efe4639b4263735c5cee75437598d945055861de",
+    "size": 7436,
+    "mtime_ns": 1792059740334630951
+  },
+  "docs/context-keeper/worklogs/2026-06-22-小红书browser-use-route复盘与后续方案.md": {
+    "type": "file",
+    "sha256": "54b00647202aabd8267fc05ab985aa0f9f4075bac64a8a80ee2f27b3c66aa067",
+    "size": 10700,
+    "mtime_ns": 1792059740334711827
+  },
+  "docs/context-keeper/worklogs/2026-06-22-小红书详情快照采集.md": {
+    "type": "file",
+    "sha256": "3025e2d7c046b51fac6455b65bb4c0b2759830d8d47f0ae048e39184af8f90e2",
+    "size": 6846,
+    "mtime_ns": 1792059740334874785
+  },
+  "docs/context-keeper/worklogs/2026-06-23-小红书browser-use状态驱动动作层.md": {
+    "type": "file",
+    "sha256": "31f24614f753cde73f0ed13fcc4b4cc5fa51982627141bae9ef3b9123c3939fa",
+    "size": 10854,
+    "mtime_ns": 1792059740334952910
+  },
+  "docs/context-keeper/worklogs/2026-06-25-小红书browser-use-AI面板关闭修复.md": {
+    "type": "file",
+    "sha256": "be310b0a5180c24457ebced92a606eb565175bc41772b54218f1ae953e57e39a",
+    "size": 7915,
+    "mtime_ns": 1792059740335163369
+  },
+  "docs/context-keeper/worklogs/2026-06-25-小红书browser-use-extract联调.md": {
+    "type": "file",
+    "sha256": "485f309cbd54cabde89123e908cbc8e1080a016e860e4e6eb26fe9afda830f4a",
+    "size": 8632,
+    "mtime_ns": 1792059740335239202
+  },
+  "docs/context-keeper/worklogs/2026-06-26-小红书browser-use-联调修复与profile管理.md": {
+    "type": "file",
+    "sha256": "29aad59d1caef7375de7c18a1d5272bf0eefe0bdb1f32bc5a4dd401f94ab3590",
+    "size": 7065,
+    "mtime_ns": 1792059740335314203
+  },
+  "docs/context-keeper/worklogs/2026-06-26-小红书详情提取根因修复与调试方法论.md": {
+    "type": "file",
+    "sha256": "31c7ee36c9f48174e33c6526b6ef7e5cda7b376d0f4b65c9896853334be9f5ce",
+    "size": 7792,
+    "mtime_ns": 1792059740335389703
+  },
+  "docs/context-keeper/worklogs/2026-06-27-browser-use小红书ai-agent实操流程.md": {
+    "type": "file",
+    "sha256": "d140eea8798692549d18dc0ca44fe1b13991e7446ce95b054cdfa289102ddfa8",
+    "size": 11191,
+    "mtime_ns": 1792059740335473786
+  },
+  "docs/context-keeper/worklogs/2026-06-27-小红书详情提取overlay-JS-eval修复.md": {
+    "type": "file",
+    "sha256": "e7938306f293146437ee9c8d1815b43dd04a76b5876d4a95e9015f4e6f5ba019",
+    "size": 6924,
+    "mtime_ns": 1792059740335551703
+  },
+  "docs/context-keeper/worklogs/2026-06-29-browser-use小红书媒体抽取复核.md": {
+    "type": "file",
+    "sha256": "f71a2856424959947a88334d1e7b34e8e2b90fabfcdddc44d2b5da7227279391",
+    "size": 8547,
+    "mtime_ns": 1792059740335630286
+  },
+  "docs/context-keeper/worklogs/2026-06-29-小红书browser-use采集修复.md": {
+    "type": "file",
+    "sha256": "7aa386c0c1d3d0c292073a285877084b37c60acefc13eb8840cdc8d35f31f8a3",
+    "size": 8436,
+    "mtime_ns": 1792059740335707953
+  },
+  "docs/context-keeper/worklogs/2026-06-30-本地采集客户端与小红书联调修复.md": {
+    "type": "file",
+    "sha256": "82847c87ab4a5be52bf3306731516d0961977ac85cc914256b4b256aa9250988",
+    "size": 11451,
+    "mtime_ns": 1792059740335790578
+  },
+  "docs/context-keeper/worklogs/2026-06-30-本地采集客户端批次队列设计.md": {
+    "type": "file",
+    "sha256": "7441ba508c13568db951307a8679000028b264feebb88b762ade7ce77d2b8d75",
+    "size": 6410,
+    "mtime_ns": 1792059740336004412
+  },
+  "docs/context-keeper/worklogs/2026-07-01-小红书采集质量联调修复.md": {
+    "type": "file",
+    "sha256": "bd06a6589ad699164cb9ba6b59bfb34b39cda4d5eb837e30147c7dfc9c57fb83",
+    "size": 14768,
+    "mtime_ns": 1792059740336104745
+  },
+  "docs/context-keeper/worklogs/2026-07-02-小红书采集与日志可观测性修复.md": {
+    "type": "file",
+    "sha256": "219d2a4a27d9f4250e1598a116a298aadde769edc4254b67d24f78cf44155580",
+    "size": 6658,
+    "mtime_ns": 1792059740336175245
+  },
+  "docs/context-keeper/worklogs/2026-07-03-本地采集客户端UX与历史采集.md": {
+    "type": "file",
+    "sha256": "63396f1429fd388a96107c36d5e0af0cd1c278829bf9f34efe3cbd8fb02b59c9",
+    "size": 6394,
+    "mtime_ns": 1792059740336247745
+  },
+  "docs/context-keeper/worklogs/2026-07-03-根指令token压缩.md": {
+    "type": "file",
+    "sha256": "d9470117a8270914c24ab51795cfb4f916f616d6bb76be6da6c693ff3c6e849c",
+    "size": 2136,
+    "mtime_ns": 1792059740336300621
+  },
+  "docs/context-keeper/worklogs/2026-07-06-小红书M3作者图片联调修复.md": {
+    "type": "file",
+    "sha256": "5f917fa1012d2f6a240eb53ed9be63f2a41e68aa8865a8f15b880242dcaa430e",
+    "size": 6352,
+    "mtime_ns": 1792059740336372079
+  },
+  "docs/context-keeper/worklogs/2026-07-06-小红书博主主页组订阅与风控止血.md": {
+    "type": "file",
+    "sha256": "bdf4eee5dab8e1af47a688ba4c58f0510760a2d81c0378d7787393b7368df7b2",
+    "size": 6362,
+    "mtime_ns": 1792059740336440996
+  },
+  "docs/context-keeper/worklogs/2026-07-07-X关键词本地采集与真实联调.md": {
+    "type": "file",
+    "sha256": "0b21c80ae0bfdb39d3ddb0d41a40970163a448a68e685d8556619e42508a252d",
+    "size": 6737,
+    "mtime_ns": 1792059740336512829
+  },
+  "docs/context-keeper/worklogs/2026-07-08-X洞察与采集复发问题收敛.md": {
+    "type": "file",
+    "sha256": "ea8b4a19ef86dd99d03b668af94f23337ee11fd88c5e988a02a2af3f9b288753",
+    "size": 8728,
+    "mtime_ns": 1792059740336585246
+  },
+  "docs/context-keeper/worklogs/2026-07-08-小红书号搜索定位主页验证.md": {
+    "type": "file",
+    "sha256": "9f0c0bed5a7a62dd6df707694ce5ed53aa7de2947e9640203817d98ef4474732",
+    "size": 5515,
+    "mtime_ns": 1792059740336654996
+  },
+  "docs/context-keeper/worklogs/2026-07-09-X个人主页采集到洞察闭环.md": {
+    "type": "file",
+    "sha256": "bfeb8bcf681b0263af4de0d2aec4580ef1f13b1e1af0c05687f71bc920cc29d9",
+    "size": 7934,
+    "mtime_ns": 1792059740336882705
+  },
+  "docs/context-keeper/worklogs/2026-07-09-X洞察详情完整正文与段落修复.md": {
+    "type": "file",
+    "sha256": "a17a9bf04cc5e15eef1847e4f2ca4c881c3400dec05755631213ba9ffec7530a",
+    "size": 8797,
+    "mtime_ns": 1792059740336958538
+  },
+  "docs/context-keeper/worklogs/2026-07-09-小红书个人主页与模型下拉联调.md": {
+    "type": "file",
+    "sha256": "c50fa394f85640d6d7a916801a485911d392c266c43983b0d7063de0bf813a59",
+    "size": 7401,
+    "mtime_ns": 1792059740337031621
+  },
+  "docs/context-keeper/worklogs/2026-07-09-小红书个人主页定位验证.md": {
+    "type": "file",
+    "sha256": "9480434d30b744b32ad5f8790711ca12ba8c5e7c3dcd4bb631603e6ff1b98f2d",
+    "size": 7064,
+    "mtime_ns": 1792059740337099205
+  },
+  "docs/context-keeper/worklogs/2026-07-09-小红书个人主页采集到洞察闭环.md": {
+    "type": "file",
+    "sha256": "aa49281b91bd98ac96d8ff32f24adc831d674fd1c2afac914f0e8fdf635aba9b",
+    "size": 8644,
+    "mtime_ns": 1792059740337175455
+  },
+  "docs/context-keeper/worklogs/2026-07-10-小红书个人主页精确账号与风控收口.md": {
+    "type": "file",
+    "sha256": "cc9e15838016e733933778f3615e44ca5c54a9e003ea0403ca51df6b8f1f0bbc",
+    "size": 5089,
+    "mtime_ns": 1792059740337246788
+  },
+  "docs/context-keeper/worklogs/2026-07-10-微信客户端集成与依赖维护.md": {
+    "type": "file",
+    "sha256": "16bc54fea7f99e0e34fe46b6959bc8178154ed07373ccf818a7cda5251ceeaa5",
+    "size": 3715,
+    "mtime_ns": 1792059740337505997
+  },
+  "docs/context-keeper/worklogs/2026-07-10-微信用户界面暂停.md": {
+    "type": "file",
+    "sha256": "a4046ee66a0c9920ba18f617a992f95739b0f4b0ca62e506dbe200aa6861c38b",
+    "size": 3103,
+    "mtime_ns": 1792059740337561664
+  },
+  "docs/context-keeper/worklogs/2026-07-13-小红书个人主页公测收口.md": {
+    "type": "file",
+    "sha256": "1d5859674cf8c028211e1cb0597afb24126b19f5d23690593076731e8df56f04",
+    "size": 6729,
+    "mtime_ns": 1792059740337633247
+  },
+  "docs/context-keeper/worklogs/2026-07-13-小红书个人主页精确定位回归修复.md": {
+    "type": "file",
+    "sha256": "fe7cb1a34272f676d1d0055cb97d43257e7faa60c02adce59ba3002614498aa8",
+    "size": 5731,
+    "mtime_ns": 1792059740337705289
+  },
+  "docs/context-keeper/worklogs/2026-07-14-AI编程从想法到产品第1篇策划.md": {
+    "type": "file",
+    "sha256": "d52e88269ca1d0e12c0f6a7b8d6359b3b23ba883f0e32a5a49cd75bfb6340b38",
+    "size": 6786,
+    "mtime_ns": 1792059740337803456
+  },
+  "docs/context-keeper/worklogs/2026-07-14-小红书博主简介与洞察提炼收口.md": {
+    "type": "file",
+    "sha256": "6c2398932d0d23f43cd68ec12ed48cbdbf7dbf70b78b9ca20f1eed402fbf80dd",
+    "size": 5195,
+    "mtime_ns": 1792059740337997164
+  },
+  "docs/context-keeper/worklogs/2026-07-15-AI编程系列第1篇正文定稿.md": {
+    "type": "file",
+    "sha256": "d2fbae9bf4330dc03668ad0e8bfd98b0d3e856ea29e30b21fa7fe07b118f7456",
+    "size": 8409,
+    "mtime_ns": 1792059740338075081
+  },
+  "docs/context-keeper/worklogs/2026-07-15-X本地采集公测收口.md": {
+    "type": "file",
+    "sha256": "ab071482969b60697e940454218e06a60374307eabeaddc2f4a60f26de81ee43",
+    "size": 5222,
+    "mtime_ns": 1792059740338148873
+  },
+  "docs/context-keeper/worklogs/2026-07-16-本地采集客户端多项目与UX收口.md": {
+    "type": "file",
+    "sha256": "2348dde8bb933e3fb5952845fe130eb8ebc4c37adf7847dfab5b2372a970cbde",
+    "size": 8623,
+    "mtime_ns": 1792059740338225956
+  },
+  "docs/context-keeper/worklogs/2026-07-17-采集客户端更名与项目数据清理.md": {
+    "type": "file",
+    "sha256": "7bb08a6c9eb36d091c0eb63be2e4003974de083e54057bc5581ac5df1eb0bb3b",
+    "size": 3902,
+    "mtime_ns": 1792059740338277831
+  },
+  "docs/context-keeper/worklogs/2026-07-20-本地采集公测修复与实测复盘.md": {
+    "type": "file",
+    "sha256": "e5dec9a7fc58bfd3d9d8d491970f6e2fa9f3e8facff91cc195cd46dc2ab9dcd1",
+    "size": 4374,
+    "mtime_ns": 1792059740338350332
+  },
+  "docs/context-keeper/worklogs/2026-07-21-本地采集遗留修复与X跨轮验证.md": {
+    "type": "file",
+    "sha256": "51b9edcbad714c387ece321f4bdadcf8df80b6259f5b42395e88b1f80cf8ee4e",
+    "size": 8671,
+    "mtime_ns": 1792059740338426998
+  },
+  "docs/context-keeper/worklogs/2026-07-22-X与小红书互动数据采集.md": {
+    "type": "file",
+    "sha256": "2d7cfffe1a9dd6ebf8db1ee98314311d219c6896cd750b80855a594b7a8da9f1",
+    "size": 6556,
+    "mtime_ns": 1792059740338496332
+  },
+  "docs/context-keeper/worklogs/2026-07-22-信息源配置体验收口.md": {
+    "type": "file",
+    "sha256": "11be1d252f989ee250676be2516652915259ff66af62162b6c418614ad5c9efb",
+    "size": 5742,
+    "mtime_ns": 1792059740338563915
+  },
+  "docs/context-keeper/worklogs/2026-07-22-小红书洞察图片与作者简介修复.md": {
+    "type": "file",
+    "sha256": "355c81f18cbe72f6ea4334dcff02cfb08f339902c8db41ee276a66390ab35210",
+    "size": 5670,
+    "mtime_ns": 1792059740338661124
+  },
+  "docs/context-keeper/worklogs/2026-07-22-工作流观察页体验优化.md": {
+    "type": "file",
+    "sha256": "fd0b2c844d12929024d59c247f43341a4ec1431702d0194d780989eeb3aff38f",
+    "size": 5103,
+    "mtime_ns": 1792059740338819957
+  },
+  "docs/context-keeper/worklogs/2026-07-22-本地采集验收缺陷与评分解释修复.md": {
+    "type": "file",
+    "sha256": "8d1c7d8dfbe1d9f7c503441c02974c4fbb1a7c798eca4e9315adb0ea6483b884",
+    "size": 7616,
+    "mtime_ns": 1792059740338897457
+  },
+  "docs/context-keeper/worklogs/2026-07-22-洞察输出与项目设置体验收口.md": {
+    "type": "file",
+    "sha256": "a84af50167d240369ed3112bc247c2c6ff7bc8172e86c71846d65fc19ee09b3c",
+    "size": 9029,
+    "mtime_ns": 1792059740338972791
+  },
+  "docs/context-keeper/worklogs/2026-07-22-运行日志不可变与重新提炼溯源修复.md": {
+    "type": "file",
+    "sha256": "c056d0162666eb6a550e9b3eec35b9a8a71410b5adb171e2b2128af87c32a988",
+    "size": 6872,
+    "mtime_ns": 1792059740339044583
+  },
+  "docs/context-keeper/worklogs/2026-07-22-运行日志明细与可观测性优化.md": {
+    "type": "file",
+    "sha256": "179527f9e1e0bfc0c10ff112d1487eb42b15f77110364aa8d922ef8fb4ff36aa",
+    "size": 5111,
+    "mtime_ns": 1792059740339114458
+  },
+  "docs/context-keeper/worklogs/2026-07-23-微信平台能力移除.md": {
+    "type": "file",
+    "sha256": "ccbc66d1e4c02345c9251c2319da5c2c96465ffde5eb0a7e510d2b0585416f86",
+    "size": 5929,
+    "mtime_ns": 1792059740339181791
+  },
+  "docs/context-keeper/worklogs/2026-07-23-本地采集风控策略.md": {
+    "type": "file",
+    "sha256": "15e4e81406399e21f18363556d8e6601d03a9cd3c0a401b7ff300f0ad2ce49f7",
+    "size": 7411,
+    "mtime_ns": 1792059740339360499
+  },
+  "docs/context-keeper/worklogs/2026-07-23-洞察生成与本地采集逐单元收口.md": {
+    "type": "file",
+    "sha256": "6b1922dcc7b984ce19b03a940985cd5ce96ab2047edeb3c1913b8ddb6b7cbfca",
+    "size": 7496,
+    "mtime_ns": 1792059740339430166
+  },
+  "docs/context-keeper/worklogs/2026-07-27-X阶段提交竞态与失败汇总修复.md": {
+    "type": "file",
+    "sha256": "58b7cee3cf8f08a157b84bc921266035a1815c87ec23353982393499c1724002",
+    "size": 6813,
+    "mtime_ns": 1792059740339599916
+  },
+  "docs/context-keeper/worklogs/2026-07-27-小红书筛选识别与即时停止修复.md": {
+    "type": "file",
+    "sha256": "7539379e0062c2f67d0204131dd38d68cb78988d496799621350dccafcad85cb",
+    "size": 7718,
+    "mtime_ns": 1792059740339671333
+  },
+  "docs/context-keeper/worklogs/2026-07-27-平台管理隐藏API入口.md": {
+    "type": "file",
+    "sha256": "064bf95a54dbea5d1e02a8a34c61348f9b73b2e26ada56def113497f6b97d50c",
+    "size": 3288,
+    "mtime_ns": 1792059740339723708
+  },
+  "docs/context-keeper/worklogs/2026-07-27-本地采集客户端体验与数据重置.md": {
+    "type": "file",
+    "sha256": "dc89ed3282a1e8135a05e003d398412837b29fb70fb5786316ad10aafe9c5bea",
+    "size": 6081,
+    "mtime_ns": 1792059740341177752
+  },
+  "docs/context-keeper/worklogs/2026-07-27-采集链路完整Review收口.md": {
+    "type": "file",
+    "sha256": "c379e444083721a518e66460e64d61d69d58a7d251b9f00521de8c3d0d30ef10",
+    "size": 4816,
+    "mtime_ns": 1792059740341298627
+  },
+  "docs/context-keeper/worklogs/2026-07-28-公测安装包与全新部署说明收口.md": {
+    "type": "file",
+    "sha256": "537ea314f4e7a1e76725a64904b43e75302caca408d6d306866958ddecd1ba90",
+    "size": 5604,
+    "mtime_ns": 1792059740341395752
+  },
+  "docs/context-keeper/worklogs/2026-07-28-公测客户端稳定性修复与最终打包.md": {
+    "type": "file",
+    "sha256": "6bc06090746d54ec213da86222b601454df097928d29b9f4dfcbbda683ad9e34",
+    "size": 6431,
+    "mtime_ns": 1792059740341598544
+  },
+  "docs/context-keeper/worklogs/2026-07-28-公测部署安全收口.md": {
+    "type": "file",
+    "sha256": "dc409b048c40def72f83332bcbd72e8be4a421d5caa6f5b9cc6c1089edc87d90",
+    "size": 5633,
+    "mtime_ns": 1792059740341670628
+  },
+  "docs/context-keeper/worklogs/2026-07-28-客户端发布与双平台登录资料收口.md": {
+    "type": "file",
+    "sha256": "e09de0f9b697835d8068505943156590eb05955f11388cb4becdd9b4c4f5cd16",
+    "size": 10339,
+    "mtime_ns": 1792059740341757211
+  },
+  "docs/context-keeper/worklogs/2026-07-28-用户手册与客户端下载入口收口.md": {
+    "type": "file",
+    "sha256": "d1c5e567dc20c7dbafc357ca305a22fc1782efcd38b68f1e650f209ba0e8242b",
+    "size": 4254,
+    "mtime_ns": 1792059740341945711
+  },
+  "docs/context-keeper/worklogs/2026-07-28-采集结果与历史摘要收口.md": {
+    "type": "file",
+    "sha256": "1e33dcb60f546237924b4c5febf38be7a3cb5dc94023a69b114c7270e79f5cb3",
+    "size": 5657,
+    "mtime_ns": 1792059740342020420
+  },
+  "docs/context-keeper/worklogs/2026-07-29-公测采集结果与跨日修复.md": {
+    "type": "file",
+    "sha256": "eae0d31b2c10dba31ee44eb1fd300d1a1eb7d6221d4c03004eadb06ecca7704e",
+    "size": 3232,
+    "mtime_ns": 1792059740342100920
+  },
+  "docs/context-keeper/worklogs/2026-07-29-本地采集组合验收与客户端交互修复.md": {
+    "type": "file",
+    "sha256": "24379ca617f97acc840fc4226efeec80c0c4de260e9dc104d2eba0ba86fd7d13",
+    "size": 9982,
+    "mtime_ns": 1792059740342178712
+  },
+  "docs/context-keeper/worklogs/2026-08-06-公测失败补采与模型错误提示.md": {
+    "type": "file",
+    "sha256": "c2a773668cad5023ac46a8c0d5d09dcc5129cf03f4d0b9c12cbf732618c2f1a4",
+    "size": 6679,
+    "mtime_ns": 1792059740342252128
+  },
+  "docs/context-keeper/worklogs/2026-08-06-模型用途与优先级队列.md": {
+    "type": "file",
+    "sha256": "1dd1eaa2875f10be79ee55cdaa725b0e3d16ac93f2bb9332ffcd893810124d9c",
+    "size": 6050,
+    "mtime_ns": 1792059740342322545
+  },
+  "docs/context-keeper/worklogs/2026-08-07-AI对话创建与公共模型.md": {
+    "type": "file",
+    "sha256": "e43e7f726d86b48e0c318c7f8abb768f005ca54db6d72e2846e2c7376196dac7",
+    "size": 6926,
+    "mtime_ns": 1792059740342394629
+  },
+  "docs/context-keeper/worklogs/2026-08-12-AI创建与项目设置分支联调.md": {
+    "type": "file",
+    "sha256": "6eb54d526a2a5194cc2050aa520b288df3bd14be88232673fc73d091902e9f62",
+    "size": 8173,
+    "mtime_ns": 1792059740342564045
+  },
+  "docs/context-keeper/worklogs/2026-08-17-项目创建与公共模型真实联调收口.md": {
+    "type": "file",
+    "sha256": "a8a32fcbaa9658763c95f54dd85b6918b2c48ae227ddaaf1ab0dc56e805d3902",
+    "size": 6276,
+    "mtime_ns": 1792059740342648546
+  },
+  "docs/context-keeper/worklogs/2026-08-18-本地验收与创建采集稳定性修复.md": {
+    "type": "file",
+    "sha256": "6d10457edc9b8ed1c4ea2e60985576a706a5c85608735d582ca1d4c3c57ba44d",
+    "size": 5229,
+    "mtime_ns": 1792059740342727587
+  },
+  "docs/context-keeper/worklogs/2026-08-21-本地验收回归与采集日志收口.md": {
+    "type": "file",
+    "sha256": "e8af5407d229691bda7f3be32078b8cda5f1d6882dbe6653f2f4f1db9b78f59f",
+    "size": 5323,
+    "mtime_ns": 1792059740342800338
+  },
+  "docs/context-keeper/worklogs/2026-08-21-项目创建多选交互修复.md": {
+    "type": "file",
+    "sha256": "219c4c96cd51c985b229017e6286ba746d5071d85329b26d8bdd44701cda58ef",
+    "size": 4818,
+    "mtime_ns": 1792059740342875629
+  },
+  "docs/context-keeper/worklogs/2026-08-21-项目创建验收反馈与公共模型容灾.md": {
+    "type": "file",
+    "sha256": "78489e124425d323eba5c2796aceef4b34424f448c192c4537cefb9bc558ead0",
+    "size": 6453,
+    "mtime_ns": 1792059740342975838
+  },
+  "docs/context-keeper/worklogs/2026-08-24-SaaS薄客户端与可靠采集执行器方案.md": {
+    "type": "file",
+    "sha256": "7ca99b9d74e096e185f8269cc95db23d4e41f9ff406718afb5e9cf847bf3fb26",
+    "size": 5548,
+    "mtime_ns": 1792059740343140588
+  },
+  "docs/context-keeper/worklogs/2026-09-01-Collector状态板与SaaS定时采集收口.md": {
+    "type": "file",
+    "sha256": "c52f51c78d8be955bab8db1e5f059cdaa383a3c9040e40c0715db24b2dd394a6",
+    "size": 4811,
+    "mtime_ns": 1792059740343216880
+  },
+  "docs/context-keeper/worklogs/2026-09-02-Collector-SaaS客户端闭环交接.md": {
+    "type": "file",
+    "sha256": "4af75a82887fa603861b12f9630f6d1190ef8acdcc517042046f536e8037e6df",
+    "size": 3857,
+    "mtime_ns": 1792059740343274796
+  },
+  "docs/context-keeper/worklogs/2026-09-02-任务A真实闭环完成.md": {
+    "type": "file",
+    "sha256": "0a27b17bc164e7fa27356cc38704e63196f6865852ec92c566a5f0dd8dc9ea06",
+    "size": 5818,
+    "mtime_ns": 1792059740343463505
+  },
+  "docs/context-keeper/worklogs/2026-09-02-任务B真实进度与完成态完成.md": {
+    "type": "file",
+    "sha256": "28794e1ccd1ed3fb804861c5b9936f327c93042392e1b99d6d33fcd2f07326bc",
+    "size": 6316,
+    "mtime_ns": 1792059740343543838
+  },
+  "docs/context-keeper/worklogs/2026-09-02-任务C结果未知与诊断闭环完成.md": {
+    "type": "file",
+    "sha256": "885be7cce5118855ea0f4ea3d61151023a3e2d4e6570610947d96eff40f48860",
+    "size": 6990,
+    "mtime_ns": 1792059740343628922
+  },
+  "docs/context-keeper/worklogs/2026-09-02-任务D真实定时闭环完成.md": {
+    "type": "file",
+    "sha256": "ea2a29f0bf7a6462f2e53bd8aebfc4eb2ea8f6aaa04f5ffb3ccd00b5d772d003",
+    "size": 7228,
+    "mtime_ns": 1792059740343709297
+  },
+  "docs/context-keeper/worklogs/2026-09-02-任务E真实登录介入闭环完成.md": {
+    "type": "file",
+    "sha256": "2d7353cf79f684d6de73058db2b4e9c31ff58341d6f1db1fd3b6cfcc97ffefa6",
+    "size": 7128,
+    "mtime_ns": 1792059740343792214
+  },
+  "docs/context-keeper/worklogs/2026-09-04-小红书重复登录修复与待验收.md": {
+    "type": "file",
+    "sha256": "b141002dcebff6fbe368f5dffadc38b788169cd85f1f66c75727bac9ea67ad93",
+    "size": 7800,
+    "mtime_ns": 1792059740343948714
+  },
+  "docs/context-keeper/worklogs/2026-09-07-采集管理与模型等待收尾.md": {
+    "type": "file",
+    "sha256": "7c58fe4cc0c0a1eaada51afa2ec9c5861bd22e4f3c9b70e03badd9ec81ca1ac6",
+    "size": 12347,
+    "mtime_ns": 1792059740344156673
+  },
+  "docs/context-keeper/worklogs/2026-09-08-公测最终盘点与验收收口.md": {
+    "type": "file",
+    "sha256": "e84adaeec0bf23599c9d4c9c4139673d1c620a370aa9abe3f19890105ae24f9d",
+    "size": 6827,
+    "mtime_ns": 1792059740344266798
+  },
+  "docs/context-keeper/worklogs/2026-09-09-平台登录自动恢复修复.md": {
+    "type": "file",
+    "sha256": "18f8f740971741252522800e9b434d89bb5883660bd88d2505e8e6144e00ab94",
+    "size": 28365,
+    "mtime_ns": 1792059740344366506
+  },
+  "docs/context-keeper/worklogs/2026-09-09-最终验收报告.md": {
+    "type": "file",
+    "sha256": "20120c6eb4eff3afba394ca564f0ea2c1d03f624acad33b1d7804d554ee6fd2c",
+    "size": 9932,
+    "mtime_ns": 1792059740344478006
+  },
+  "docs/context-keeper/worklogs/2026-09-10-博主简介与采集结果卡片修复.md": {
+    "type": "file",
+    "sha256": "5cc03a756c63e41a6abdb973cf5cef5777a7511f651a04d6f600bb0f1b0f8560",
+    "size": 3649,
+    "mtime_ns": 1792059740344682673
+  },
+  "docs/context-keeper/worklogs/2026-09-14-采集交互与小红书额度收口.md": {
+    "type": "file",
+    "sha256": "2f137ef0da80c481c119b68cbd37e9bc8b1c6e01a1b31c6b58ceb8a339d01b06",
+    "size": 3437,
+    "mtime_ns": 1792059740344888507
+  },
+  "docs/context-keeper/worklogs/2026-10-15-只读审查修复与真实联调收口.md": {
+    "type": "file",
+    "sha256": "44a8686de466cf8562b95e4dd0af2f426ebf9715939c6a18798f9737e83c1931",
+    "size": 10153,
+    "mtime_ns": 1792059740345112757
+  },
+  "docs/context-keeper/worklogs/2026-10-16-模型调用合同与调整范围修复收口.md": {
+    "type": "file",
+    "sha256": "2c018a3d1fd9f5d08d227ef6739d9b234e70de559605101a88525a987e07a770",
+    "size": 5852,
+    "mtime_ns": 1792122829793162614
+  },
+  "docs/context-keeper/worklogs/2026-10-19-客户端任务历史与连接提示改善.md": {
+    "type": "file",
+    "sha256": "d08fdf70c02ea1d970dc08110af525835dcdfbf00770f052b496ccb8a129349e",
+    "size": 4503,
+    "mtime_ns": 1792408916777791577
+  },
+  "docs/context-keeper/worklogs/2026-10-26-六项审查缺陷整合与10月19日勘误.md": {
+    "type": "file",
+    "sha256": "d55dd17d5e7f35146662058730161283184e4a2fc2d04a3391e2ed7cad5a878e",
+    "size": 24550,
+    "mtime_ns": 1793019702110029672
+  },
+  "docs/context-keeper/worklogs/2026-10-27-客户端020交付与模型温度参数移除.md": {
+    "type": "file",
+    "sha256": "02a9377b73e83d589db1a2e1aba2fda6d0af12c75b90893524e24d5ab90eb805",
+    "size": 17120,
+    "mtime_ns": 1793109778948529966
+  },
+  "docs/context-keeper/worklogs/2026-10-27-模型保存旧静态产物部署修复收口.md": {
+    "type": "file",
+    "sha256": "b5aca64481844274ca5da40b1f5820e620ca3f187a6219d866c43c1f591cb064",
+    "size": 6464,
+    "mtime_ns": 1793069490813618289
+  },
+  "docs/context-keeper/worklogs/2026-10-27-模型布局拒收纠正与视觉待验收口.md": {
+    "type": "file",
+    "sha256": "6f6cbc43cbc24dd57659b89bce8e51391e4fcb93936e6bce0c014af0bd917d9f",
+    "size": 35554,
+    "mtime_ns": 1793102031263899834
+  },
+  "docs/context-keeper/worklogs/2026-10-28-平台指标与小红书采集四项修复.md": {
+    "type": "file",
+    "sha256": "eaca78cf135f6592a3819e64fea8e0e23a3a1e4b594b90dd9cb39507b94c0590",
+    "size": 9820,
+    "mtime_ns": 1793152575068192035
+  },
+  "docs/context-keeper/worklogs/2026-10-28-采集效率主线收口与Git合并.md": {
+    "type": "file",
+    "sha256": "5c93a114a2b9827e0a9e8121b94cafe3f532e7dbd126de5f06d8be9efab0b18e",
+    "size": 5996,
+    "mtime_ns": 1793172094464930436
+  },
+  "docs/context-keeper/worklogs/2026-10-29-评分V2收口接替与工作流文案对齐.md": {
+    "type": "file",
+    "sha256": "4e1a0295df0d1e22471fa5d41b9c2cd99377a499a5db07d50536860fe1a1fbe9",
+    "size": 4881,
+    "mtime_ns": 1793260133564496161
+  },
+  ".zcode/acp/sandbox.json": {
+    "type": "file",
+    "sha256": "e94fd72fbeb942ed6c1a84d306b0cda508c85560cc3baa220ada47ad70d4ce1b",
+    "size": 74,
+    "mtime_ns": 1793239167018844908
+  }
+}

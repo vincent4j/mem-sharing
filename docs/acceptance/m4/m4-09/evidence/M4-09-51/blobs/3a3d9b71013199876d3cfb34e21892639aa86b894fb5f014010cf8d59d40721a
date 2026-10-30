@@ -1,0 +1,99 @@
+{
+  "schema_version": 3,
+  "projects": {},
+  "shared_objects": {},
+  "product": {
+    "product_id": "mem-sharing",
+    "installation_id": "20261030T162504Z-08b640aa71604f6084db253520732978",
+    "product_structure_version": 1,
+    "product_code_version": "0.4.0",
+    "source": {
+      "url": "https://github.com/vincent4j/mem-sharing",
+      "commit": "de9cc4fdd0c7c5088267b9ff3bf0ff10ad52a40b",
+      "tree_sha256": "772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872"
+    },
+    "installation_status": "complete",
+    "last_operation_id": "20261030T162504Z-08b640aa71604f6084db253520732978"
+  },
+  "machine": {
+    "agents": {
+      "codex": {
+        "installation": {
+          "status": "installed",
+          "observed_at": "2026-10-30T16:25:05Z",
+          "evidence": "detect m4-05/1: 解析到 @openai/codex 1.0.0 的真实包入口,bin 入口存在"
+        },
+        "static": {
+          "status": "unknown",
+          "observed_at": null,
+          "evidence": null
+        },
+        "runtime_acceptance": {
+          "status": "pending",
+          "evidence_path": null
+        }
+      },
+      "claude": {
+        "installation": {
+          "status": "installed",
+          "observed_at": "2026-10-30T16:25:05Z",
+          "evidence": "detect m4-05/1: 解析到 @anthropic-ai/claude-code 1.0.0 的真实包入口,bin 入口存在"
+        },
+        "static": {
+          "status": "unknown",
+          "observed_at": null,
+          "evidence": null
+        },
+        "runtime_acceptance": {
+          "status": "pending",
+          "evidence_path": null
+        }
+      }
+    },
+    "objects": {
+      "/private/tmp/M4-09-51-6wfuj0lw/home/.codex/AGENTS.md#public-source": {
+        "kind": "user_convention",
+        "path": "/private/tmp/M4-09-51-6wfuj0lw/home/.codex/AGENTS.md",
+        "scope": "machine",
+        "agents": [
+          "codex"
+        ],
+        "ownership": "created",
+        "marker": {
+          "start": "<!-- mem-sharing:rules:start -->",
+          "end": "<!-- mem-sharing:rules:end -->"
+        },
+        "fingerprint": {
+          "algorithm": "sha256",
+          "basis": "block_bytes",
+          "value": "613505fd66cd67ef9a03def9f452fb0ac8be6f73dbbeea8ac081b01dcd100d2e"
+        },
+        "original_existed": false,
+        "link_target": null,
+        "backup_manifest": "/private/tmp/M4-09-51-6wfuj0lw/home/.mem-sharing-install-20261030T162504Z-08b640aa71604f6084db253520732978/entry-backups/20261030T162505Z-b9d00ad6318049b5b984ac9ecde851a6/manifest.json",
+        "consumers": []
+      },
+      "/private/tmp/M4-09-51-6wfuj0lw/home/.claude/CLAUDE.md#import": {
+        "kind": "import",
+        "path": "/private/tmp/M4-09-51-6wfuj0lw/home/.claude/CLAUDE.md",
+        "scope": "machine",
+        "agents": [
+          "claude"
+        ],
+        "ownership": "reused",
+        "marker": null,
+        "fingerprint": {
+          "algorithm": "sha256",
+          "basis": "file_bytes",
+          "value": "bd363d0db24e055fa76306793e8933a4318eb892182554dd2cf78bbb22d9f8ec"
+        },
+        "original_existed": true,
+        "link_target": null,
+        "backup_manifest": null,
+        "consumers": []
+      }
+    }
+  },
+  "migration": null,
+  "legacy_import": null
+}

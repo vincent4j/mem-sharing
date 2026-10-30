@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "command": "enable-memory",
+  "status": "failed",
+  "projects": [],
+  "changes": [],
+  "warnings": [],
+  "errors": [
+    {
+      "code": "approval_file_invalid",
+      "path": "docs/acceptance/m2-08/knowwind/second-run/source-proposal.json",
+      "message": "confirmed_at 必须是 UTC ISO8601(YYYY-MM-DDTHH:MM:SS[.小数]Z)",
+      "recovery": null
+    }
+  ],
+  "approval_required": false,
+  "next_action": null
+}

@@ -1,0 +1,24 @@
+{
+  "label": "fixture-target-manifest",
+  "argv": [
+    "fixture-operation",
+    "target-manifest"
+  ],
+  "cwd": "/private/tmp/M4-09-11-q5o7a_kq/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-11-q5o7a_kq/home",
+    "PATH": "/private/tmp/M4-09-11-q5o7a_kq/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-11-q5o7a_kq/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:21:51.001067Z",
+  "ended_utc": "2026-10-30T16:21:51.022463Z",
+  "duration_seconds": 0.021394291979959235,
+  "fixture_operation": "target-manifest",
+  "returned": "None"
+}

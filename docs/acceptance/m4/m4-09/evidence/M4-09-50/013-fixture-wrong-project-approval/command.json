@@ -1,0 +1,24 @@
+{
+  "label": "fixture-wrong-project-approval",
+  "argv": [
+    "fixture-operation",
+    "wrong-project-approval"
+  ],
+  "cwd": "/private/tmp/M4-09-50-4ltwuvco/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-50-4ltwuvco/home",
+    "PATH": "/private/tmp/M4-09-50-4ltwuvco/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-50-4ltwuvco/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:22:49.187597Z",
+  "ended_utc": "2026-10-30T16:22:49.206739Z",
+  "duration_seconds": 0.01914341698284261,
+  "fixture_operation": "wrong-project-approval",
+  "returned": "None"
+}

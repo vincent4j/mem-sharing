@@ -1,0 +1,28 @@
+{
+  "label": "read-installed-templates",
+  "argv": [
+    "/bin/cat",
+    "/private/tmp/M4-09-32-g3qb06e0/home/.mem-sharing/memories/MEMORY.md",
+    "/private/tmp/M4-09-32-g3qb06e0/home/.mem-sharing/memories/topics/使用约定.md",
+    "/private/tmp/M4-09-32-g3qb06e0/home/.codex/AGENTS.md",
+    "/private/tmp/M4-09-32-g3qb06e0/home/.claude/CLAUDE.md",
+    "/private/tmp/M4-09-32-g3qb06e0/project/AGENTS.md"
+  ],
+  "cwd": "/private/tmp/M4-09-32-g3qb06e0/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-32-g3qb06e0/home",
+    "PATH": "/private/tmp/M4-09-32-g3qb06e0/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-32-g3qb06e0/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:24:30.497718Z",
+  "ended_utc": "2026-10-30T16:24:30.521957Z",
+  "duration_seconds": 0.024238582991529256,
+  "exit_code": 0,
+  "stdin_base64": ""
+}

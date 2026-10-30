@@ -1,0 +1,42 @@
+{
+  "label": "pty-enter",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import sys,json\nsys.path.insert(0,sys.argv[1])\nfrom agm_core import ck_install,paths\nrequest={'home':sys.argv[2],'platform_config':paths.select_platform(paths.load_agents_table(),'darwin')}\nprint(json.dumps(ck_install.tail({'status':'completed'},request),ensure_ascii=False))\n",
+    "/private/tmp/M4-09-54-reop8umf/source/scripts",
+    "/private/tmp/M4-09-54-reop8umf/home"
+  ],
+  "cwd": "/private/tmp/M4-09-54-reop8umf/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-54-reop8umf/home",
+    "PATH": "/private/tmp/M4-09-54-reop8umf/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-54-reop8umf/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:25:12.697343Z",
+  "ended_utc": "2026-10-30T16:25:13.512078Z",
+  "duration_seconds": 0.8147267090098467,
+  "exit_code": 0,
+  "pty_stdin_base64": "Cg==",
+  "input_origin": "machine-fed synthetic PTY input, not real human confirmation",
+  "json": {
+    "status": "completed",
+    "context_keeper": {
+      "status": "unavailable",
+      "errors": [
+        {
+          "code": "ck_source_unavailable",
+          "message": "Provide --ck-source /absolute/durable/context-keeper (clean checkout at 695074ee4b6ddb9999be858093f833d6377bd641); no source is downloaded automatically"
+        }
+      ],
+      "next_action": "Run scripts/install.py --context-keeper --ck-source /absolute/durable/context-keeper after supplying a clean source at 695074ee4b6ddb9999be858093f833d6377bd641"
+    }
+  }
+}

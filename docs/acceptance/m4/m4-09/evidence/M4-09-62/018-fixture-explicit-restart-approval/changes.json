@@ -1,0 +1,31 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377417511182564,
+      "size": 448,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377418965051367,
+      "size": 480,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "explicit-restart-approval-17.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377418965130159,
+      "size": 1420,
+      "kind": "file",
+      "sha256": "4a1a31f242ea50289371057d1d2cfa8d6690d50216ad87a26c704cdec3dea02d"
+    }
+  }
+]

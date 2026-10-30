@@ -1,0 +1,43 @@
+[
+  {
+    "path": "home/.agents-group/memories",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377074103511925,
+      "size": 160,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377074221608961,
+      "size": 224,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents-group/memories/a",
+    "before": null,
+    "after": {
+      "mode": 41453,
+      "permissions": "0o755",
+      "mtime_ns": 1793377074221525751,
+      "size": 1,
+      "kind": "symlink",
+      "target": "b"
+    }
+  },
+  {
+    "path": "home/.agents-group/memories/b",
+    "before": null,
+    "after": {
+      "mode": 41453,
+      "permissions": "0o755",
+      "mtime_ns": 1793377074221595419,
+      "size": 1,
+      "kind": "symlink",
+      "target": "a"
+    }
+  }
+]

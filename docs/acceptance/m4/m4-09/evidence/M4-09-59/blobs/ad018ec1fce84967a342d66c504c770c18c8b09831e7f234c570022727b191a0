@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "operation": "enable-memory",
+  "status": "committed",
+  "registry_path": "/private/tmp/M4-09-59-thrsm7z9/home/.mem-sharing/var/registry.json",
+  "created_directories": [],
+  "entries": [
+    {
+      "path": "/private/tmp/M4-09-59-thrsm7z9/project/AGENTS.md",
+      "before": {
+        "existed": false,
+        "kind": "absent",
+        "mode": null,
+        "link_target": null,
+        "fingerprint": null,
+        "backup": null
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    },
+    {
+      "path": "/private/tmp/M4-09-59-thrsm7z9/home/.mem-sharing/var/registry.json",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "3dd80021eed85923da15eaf93266fa0f6b0e37c323ce1a4d7a4836ded62ffb6b",
+        "backup": "1.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "ab89b764bc7fd2d180f125d18169c029efd74341ccf020ff99a496a1c545cdea",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    }
+  ],
+  "error": null
+}

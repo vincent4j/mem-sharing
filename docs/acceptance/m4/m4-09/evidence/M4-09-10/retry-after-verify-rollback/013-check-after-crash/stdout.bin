@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "runtime_layout": null,
+  "command": "check-memory",
+  "status": "failed",
+  "projects": [],
+  "changes": [],
+  "warnings": [],
+  "errors": [
+    {
+      "code": "machine_upgrade_pending",
+      "path": null,
+      "message": "Machine upgrade requires explicit recovery: /private/tmp/M4-09-10-dy9_e14a/home/.mem-sharing-upgrade.json",
+      "recovery": null
+    }
+  ],
+  "approval_required": false,
+  "next_action": null
+}

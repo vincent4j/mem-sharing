@@ -1,0 +1,52 @@
+{
+  "case": "M4-09-18",
+  "name": "特殊路径和源码占位",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-18-v5w89hvv",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-fixture-foreign-code",
+      "label": "fixture-foreign-code",
+      "exit_code": null
+    },
+    {
+      "path": "007-install-preview",
+      "label": "install-preview",
+      "exit_code": 2
+    }
+  ],
+  "notes": [
+    "Source is an exact git-archive export of baseline; source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:18:05.824538Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-18-v5w89hvv/home/.mem-sharing-install-20261030T161803Z-85786d6cd4d7412b87b8856da7478f28/journal.json",
+    "/private/tmp/M4-09-18-v5w89hvv/home/.mem-sharing-install-20261030T161803Z-85786d6cd4d7412b87b8856da7478f28/entry-backups/20261030T161804Z-a5f480a60fae4cbbaa0d33b0ff101e3a/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

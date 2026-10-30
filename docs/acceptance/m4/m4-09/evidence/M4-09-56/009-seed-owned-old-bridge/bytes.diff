@@ -1,0 +1,41 @@
+--- before/home/.mem-sharing/var/registry.json
++++ after/home/.mem-sharing/var/registry.json
+@@ -20,13 +20,13 @@
+               ],
+               "ownership": "created",
+               "marker": {
+-                "start": "<!-- mem-sharing:project-experience:start -->",
+-                "end": "<!-- mem-sharing:project-experience:end -->"
++                "start": "<!-- context-keeper:start -->",
++                "end": "<!-- context-keeper:end -->"
+               },
+               "fingerprint": {
+                 "algorithm": "sha256",
+                 "basis": "block_bytes",
+-                "value": "c5b66fc63bac19e8501c2d941475b1def7f38f02e9bbe402fcba348674043a65"
++                "value": "ebb9bd777d2ad82332d3b59d59e448410487991dde97c5e96fbfe5e5aba9e44e"
+               },
+               "original_existed": false,
+               "link_target": null,
+@@ -36,7 +36,7 @@
+               ],
+               "lifecycle": {
+                 "version": 1,
+-                "unit_hex": "3c212d2d206d656d2d73686172696e673a70726f6a6563742d657870657269656e63653a7374617274202d2d3e0ae4bd8de7bdaeefbc9ae9a1b9e79baee7bb8fe58e86e8aeb0e5bd95e5ba93e794b120436f6e74657874204b656570657220e7aea1e79086efbc8ce9bb98e8aea4e4bd8de4ba8e20646f63732f636f6e746578742d6b65657065722fe380820ae585a5e58fa3efbc9ae4bdbfe794a8202f636f6e746578742d6b6565706572efbc8ce9a696e6aca1e4bf9de5ad98e68c8920434b20e6b581e7a88be7a1aee8aea4e4bd8de7bdaee5b9b6e5889de5a78be58c96e380820ae8818ce8b4a3efbc9ae591bde4bba4e38081e8aeb0e5bd95e6a0bce5bc8fe38081e4bf9de5ad98e4b88ee69fa5e689bee6b581e7a88be794b120436f6e74657874204b656570657220e887aae8a18ce5ae9ae4b989e380820a3c212d2d206d656d2d73686172696e673a70726f6a6563742d657870657269656e63653a656e64202d2d3e",
++                "unit_hex": "3c212d2d20636f6e746578742d6b65657065723a7374617274202d2d3e0a73796e746865746963206f6c6420434b2070726f746f636f6c0a3c212d2d20636f6e746578742d6b65657065723a656e64202d2d3e",
+                 "prefix_hex": "",
+                 "suffix_hex": "",
+                 "file_created": true,
+--- before/project/AGENTS.md
++++ after/project/AGENTS.md
+@@ -1,8 +1,6 @@
+ # project
+ 
+ ## 项目规则
+-<!-- mem-sharing:project-experience:start -->
+-位置：项目经历记录库由 Context Keeper 管理，默认位于 docs/context-keeper/。
+-入口：使用 /context-keeper，首次保存按 CK 流程确认位置并初始化。
+-职责：命令、记录格式、保存与查找流程由 Context Keeper 自行定义。
+-<!-- mem-sharing:project-experience:end -->+<!-- context-keeper:start -->
++synthetic old CK protocol
++<!-- context-keeper:end -->

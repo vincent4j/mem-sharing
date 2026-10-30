@@ -1,0 +1,83 @@
+{
+  "case": "M4-09-25",
+  "name": "AGENTS 漂移拒绝后完整采集重跑",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-25-6sldvcix",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "007-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "008-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "009-fixture-agents-duplicate",
+      "label": "fixture-agents-duplicate",
+      "exit_code": null
+    },
+    {
+      "path": "010-check",
+      "label": "check",
+      "exit_code": 1
+    },
+    {
+      "path": "011-remove-preview",
+      "label": "remove-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "012-remove-kernel-preview",
+      "label": "remove-kernel-preview",
+      "exit_code": 0
+    },
+    {
+      "path": "013-post-remove-check",
+      "label": "post-remove-check",
+      "exit_code": 1
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:26:25.303099Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-25-6sldvcix/home/.mem-sharing-install-20261030T162622Z-85b033d2b3754204a8f235ece0a4e024/journal.json",
+    "/private/tmp/M4-09-25-6sldvcix/home/.mem-sharing-install-20261030T162622Z-85b033d2b3754204a8f235ece0a4e024/entry-backups/20261030T162623Z-401b3b79ec0a46a9abf14dcb6464ab8a/manifest.json",
+    "/private/tmp/M4-09-25-6sldvcix/home/.mem-sharing/backups/20261030T162624Z-7f8c7ff38e76475da9de67a109954827/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

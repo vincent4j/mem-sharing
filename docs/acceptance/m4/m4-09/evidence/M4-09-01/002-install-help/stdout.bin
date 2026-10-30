@@ -1,0 +1,38 @@
+usage: install.py [-h] [--source SOURCE] [--source-manifest SOURCE_MANIFEST]
+                  [--commit COMMIT] [--version VERSION]
+                  [--request-file REQUEST_FILE] [--operation-id OPERATION_ID]
+                  [--agent {codex,claude,workbuddy}]
+                  [--approval-file APPROVAL_FILE] [--recover RECOVER]
+                  [--action {continue,rollback}] [--acquire]
+                  [--staging STAGING] [--project PROJECT] [--context-keeper]
+                  [--ck-source CK_SOURCE]
+
+Machine installation: preview first; execute only an exact approved plan.
+
+options:
+  -h, --help            show this help message and exit
+  --source SOURCE       Absolute clean local Git checkout (default: this
+                        source checkout)
+  --source-manifest SOURCE_MANIFEST
+                        Absolute JSON file containing a verified source object
+  --commit COMMIT       Full pinned source commit; local default is current
+                        verified HEAD
+  --version VERSION     Target product code version MAJOR.MINOR.PATCH
+  --request-file REQUEST_FILE
+                        Absolute JSON: conversions/legacy ledger
+                        identity/evidence inputs
+  --operation-id OPERATION_ID
+  --agent {codex,claude,workbuddy}
+  --approval-file APPROVAL_FILE
+                        Absolute JSON exact plan plus confirmed_at/reference
+  --recover RECOVER     Absolute operation journal; independent recovery mode
+  --action {continue,rollback}
+                        Recovery action
+  --acquire             Separate official pinned-source acquisition plan
+  --staging STAGING     Absolute absent acquisition directory
+  --project PROJECT     Actual absolute project root for reported follow-up
+                        commands only
+  --context-keeper      Independent optional CK user-install plan
+  --ck-source CK_SOURCE
+                        Absolute durable clean CK checkout at the integration
+                        pin

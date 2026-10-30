@@ -1,0 +1,12 @@
+{
+  "phase": "ensure readback verification",
+  "failure_type": "acceptance_harness_assertion",
+  "cause": "backup_file field exists only in manifest snapshot; direct dict equality is invalid",
+  "ensure_outputs": "both rc=0, scope=project, action=unchanged",
+  "independent_readback_equal": true,
+  "post_failure_extra_operation": "read-only init preview rc=5; no init --approved executed",
+  "store_created": false,
+  "m1_04_started": false,
+  "ensure_manifest": "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/backups/20261029T105159Z-m1-03-ensure/manifest.json",
+  "observed_at": "2026-10-29T10:52:37.829903Z"
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "command": "remove-memory",
+  "main_checkout": "/Users/vincent4j/Tools/Source/agent-group-memory",
+  "checkout": "/Users/vincent4j/Tools/Source/agent-group-memory",
+  "git_common_dir": "/Users/vincent4j/Tools/Source/agent-group-memory/.git",
+  "agents": [
+    "codex",
+    "claude",
+    "workbuddy"
+  ],
+  "memory_authorization": null,
+  "store_path": "/Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper",
+  "provider_source": "/Users/vincent4j/Tools/Source/context-keeper",
+  "provider_fingerprints": [],
+  "changes": [
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/AGENTS.md",
+      "operation": "update",
+      "before_fingerprint": "1daf0ff06f2baa8d663c6ebca6d680b4763327140cf7c8d9bfc2bbee547c6c14",
+      "after_fingerprint": "d8195f884e3b77fb92042d4270cdd05979f261b8a2ae5494ed5e24d0081b8bd3"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md",
+      "operation": "update",
+      "before_fingerprint": "86416f63ef31209aa1ccfe3aa726252a6124555c58556a7e1ea8024d186b5727",
+      "after_fingerprint": "620b25c46b91e165f41fef43f7d7a41a769c9b30510ac00725aee96412661e74"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.agents/skills/context-keeper",
+      "operation": "remove",
+      "before_fingerprint": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+      "after_fingerprint": null
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.codex/skills/context-keeper",
+      "operation": "remove",
+      "before_fingerprint": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+      "after_fingerprint": null
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.claude/skills/context-keeper",
+      "operation": "remove",
+      "before_fingerprint": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+      "after_fingerprint": null
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/skills/context-keeper",
+      "operation": "remove",
+      "before_fingerprint": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34",
+      "after_fingerprint": null
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/memory/MEMORY.md",
+      "operation": "update",
+      "before_fingerprint": "fdddd30c301506356c95d2174509fd17627b626cb59a96078134abad6acb00e4",
+      "after_fingerprint": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/registry.json",
+      "operation": "update",
+      "before_fingerprint": "7efd28d320aa9f8af4d8c3e146efab68852c6f17cc4e98e9207677ad976aed55",
+      "after_fingerprint": "fe9858bc55db46b92f79b1c295f54607d70b916cf7c9b4ba7eb5c382ba41e5eb"
+    }
+  ],
+  "confirmed_at": "2026-10-29T14:06:16Z",
+  "reference": "M2-09 platform matrix uninstall drill; task message deddc255-fe9a-4329-bc69-0c12b28ab9fa authorizes remove+re-enable cycle on this repo only"
+}

@@ -1,0 +1,24 @@
+{
+  "label": "fixture-custom-store",
+  "argv": [
+    "fixture-operation",
+    "custom-store"
+  ],
+  "cwd": "/private/tmp/M4-09-42-up7yf4jg/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-42-up7yf4jg/home",
+    "PATH": "/private/tmp/M4-09-42-up7yf4jg/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-42-up7yf4jg/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:24:26.082150Z",
+  "ended_utc": "2026-10-30T16:24:26.100124Z",
+  "duration_seconds": 0.01796837500296533,
+  "fixture_operation": "custom-store",
+  "returned": "None"
+}

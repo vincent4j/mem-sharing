@@ -1,0 +1,169 @@
+[
+  {
+    "path": "home/.mem-sharing/backups",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377332455819636,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377333450733419,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/backups/20261030T162213Z-dc66b6ab62724f628d6a740e5545fd27",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377333807516423,
+      "size": 192,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/backups/20261030T162213Z-dc66b6ab62724f628d6a740e5545fd27/0.before",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377333451021422,
+      "size": 387,
+      "kind": "file",
+      "sha256": "85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/backups/20261030T162213Z-dc66b6ab62724f628d6a740e5545fd27/1.before",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377333451336091,
+      "size": 21,
+      "kind": "file",
+      "sha256": "87ab3efae513e8f31e17ae69dbb9d4936dcbeb23c408577c2483c963bc2cdab6"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/backups/20261030T162213Z-dc66b6ab62724f628d6a740e5545fd27/2.before",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377333451692928,
+      "size": 7408,
+      "kind": "file",
+      "sha256": "f37c0cf204bf8fe2ab3fc03627b7a77f2ebd8429dfdded04a00640dc4143c806"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/backups/20261030T162213Z-dc66b6ab62724f628d6a740e5545fd27/manifest.json",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377333807362422,
+      "size": 2124,
+      "kind": "file",
+      "sha256": "bf7ec17bdfebfdceec818a68d2df914a30a80b3e5291eb528e67ba73b4090655"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/var",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377332570550224,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377333807805718,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/var/registry.json",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377332569415672,
+      "size": 7408,
+      "kind": "file",
+      "sha256": "f37c0cf204bf8fe2ab3fc03627b7a77f2ebd8429dfdded04a00640dc4143c806"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377333806457205,
+      "size": 6315,
+      "kind": "file",
+      "sha256": "7c0f830f07a53ab06bd764bdd8a2d5be109887647435c327b88067c54c0ef1b7"
+    }
+  },
+  {
+    "path": "project",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377332568313912,
+      "size": 160,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377333677804074,
+      "size": 160,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/AGENTS.md",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377332567168527,
+      "size": 387,
+      "kind": "file",
+      "sha256": "85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377333562636523,
+      "size": 529,
+      "kind": "file",
+      "sha256": "d3017a75ee18512f5c832d3cee84a8abf8e612b50ead6a8df5e838437f1da9be"
+    }
+  },
+  {
+    "path": "project/CLAUDE.md",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377332624309089,
+      "size": 21,
+      "kind": "file",
+      "sha256": "87ab3efae513e8f31e17ae69dbb9d4936dcbeb23c408577c2483c963bc2cdab6"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377333677612280,
+      "size": 10,
+      "kind": "file",
+      "sha256": "d50f58ce7a174da0793eb82e0754f309f99333c8e378330a0e280dcf6ac70861"
+    }
+  }
+]

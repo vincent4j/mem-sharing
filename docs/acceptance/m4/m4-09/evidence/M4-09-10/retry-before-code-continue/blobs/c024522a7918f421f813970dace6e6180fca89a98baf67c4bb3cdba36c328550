@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "command": "enable-memory",
+  "status": "failed",
+  "projects": [],
+  "changes": [],
+  "warnings": [],
+  "errors": [
+    {
+      "code": "drift",
+      "path": null,
+      "message": "Created unit template changed; explicit review required: /Users/vincent4j/.workbuddy/MEMORY.md",
+      "recovery": null
+    }
+  ],
+  "approval_required": false,
+  "next_action": "Inspect preserved evidence; re-preview before retrying. No store assets are deleted."
+}

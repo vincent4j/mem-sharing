@@ -1,0 +1,36 @@
+{
+  "project": "/Users/vincent4j/Tools/Source/poster-fit",
+  "prompt": "继续这个项目，恢复当前进度，列出尚未完成的工作和依据。本次只读，不修改文件、不保存记忆、不安装、不迁移、不提交或推送。",
+  "versions": {
+    "codex": "codex-cli 0.162.0",
+    "claude": "2.1.295 (Claude Code)"
+  },
+  "codex_options": [
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--json",
+    "-C",
+    "/Users/vincent4j/Tools/Source/poster-fit"
+  ],
+  "claude_options": [
+    "-p",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--permission-mode",
+    "plan",
+    "--permission-prompts",
+    "none",
+    "--tools",
+    "Read,Glob,Grep,Bash",
+    "--allowedTools",
+    "Read",
+    "Glob",
+    "Grep",
+    "Bash(python3 * resume *)",
+    "--settings",
+    "{\"disableAllHooks\":true}"
+  ],
+  "notes": "全新进程；未指定 resume/continue、模型或账号；保留原生入口发现。Claude 禁用 hooks，限制为读取和续接；项目路径只作为启动 cwd，prompt 不提供记录库路径。"
+}

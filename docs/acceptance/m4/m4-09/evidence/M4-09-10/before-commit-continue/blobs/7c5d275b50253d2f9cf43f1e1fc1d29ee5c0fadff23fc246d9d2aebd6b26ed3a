@@ -1,0 +1,64 @@
+{
+  "schema_version": 3,
+  "projects": {},
+  "shared_objects": {},
+  "product": {
+    "product_id": "mem-sharing",
+    "installation_id": "20261030T162030Z-9349bcabb4f345b8adb2fd1bb4fa73d6",
+    "product_structure_version": 1,
+    "product_code_version": "0.4.0",
+    "source": {
+      "url": "https://github.com/vincent4j/mem-sharing",
+      "commit": "de9cc4fdd0c7c5088267b9ff3bf0ff10ad52a40b",
+      "tree_sha256": "772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872"
+    },
+    "installation_status": "complete",
+    "last_operation_id": "20261030T162030Z-9349bcabb4f345b8adb2fd1bb4fa73d6"
+  },
+  "machine": {
+    "agents": {
+      "codex": {
+        "installation": {
+          "status": "installed",
+          "observed_at": "2026-10-30T16:20:32Z",
+          "evidence": "detect m4-05/1: 解析到 @openai/codex 1.0.0 的真实包入口,bin 入口存在"
+        },
+        "static": {
+          "status": "unknown",
+          "observed_at": null,
+          "evidence": null
+        },
+        "runtime_acceptance": {
+          "status": "pending",
+          "evidence_path": null
+        }
+      }
+    },
+    "objects": {
+      "/private/tmp/M4-09-10-bg808k4d/home/.codex/AGENTS.md#public-source": {
+        "kind": "user_convention",
+        "path": "/private/tmp/M4-09-10-bg808k4d/home/.codex/AGENTS.md",
+        "scope": "machine",
+        "agents": [
+          "codex"
+        ],
+        "ownership": "created",
+        "marker": {
+          "start": "<!-- mem-sharing:rules:start -->",
+          "end": "<!-- mem-sharing:rules:end -->"
+        },
+        "fingerprint": {
+          "algorithm": "sha256",
+          "basis": "block_bytes",
+          "value": "e18218bb895cc0885e6cd08fc3f18f7a267761effed97670c16aa24e8ee2b190"
+        },
+        "original_existed": false,
+        "link_target": null,
+        "backup_manifest": "/private/tmp/M4-09-10-bg808k4d/home/.mem-sharing-install-20261030T162030Z-9349bcabb4f345b8adb2fd1bb4fa73d6/entry-backups/20261030T162032Z-292a513f87f04429b4923cc255696a68/manifest.json",
+        "consumers": []
+      }
+    }
+  },
+  "migration": null,
+  "legacy_import": null
+}

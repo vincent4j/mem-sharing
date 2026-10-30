@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "command": "check-memory",
+  "status": "gaps",
+  "projects": [
+    {
+      "main_checkout": "/Users/vincent4j/Tools/Source/agent-group-memory",
+      "checkout": "/Users/vincent4j/Tools/Source/agent-group-memory",
+      "registered": true,
+      "worktree": false,
+      "agents": [
+        "codex",
+        "claude",
+        "workbuddy"
+      ],
+      "states": {
+        "source_available": {
+          "status": "ready",
+          "observed_at": "2026-10-29T14:06:43Z",
+          "evidence": "provider 源码目录存在: /Users/vincent4j/Tools/Source/context-keeper"
+        },
+        "skill_installed": {
+          "codex": {
+            "status": "missing",
+            "observed_at": "2026-10-29T14:06:43Z",
+            "evidence": "codex Skill 根下未见 context-keeper(检查根: /Users/vincent4j/Tools/Source/agent-group-memory/.agents/skills; /Users/vincent4j/Tools/Source/agent-group-memory/.codex/skills)"
+          },
+          "claude": {
+            "status": "missing",
+            "observed_at": "2026-10-29T14:06:43Z",
+            "evidence": "claude Skill 根下未见 context-keeper(检查根: /Users/vincent4j/Tools/Source/agent-group-memory/.claude/skills)"
+          },
+          "workbuddy": {
+            "status": "missing",
+            "observed_at": "2026-10-29T14:06:43Z",
+            "evidence": "workbuddy Skill 根下未见 context-keeper(检查根: /Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/skills)"
+          }
+        },
+        "bridge_assembled": {
+          "codex": {
+            "status": "missing",
+            "observed_at": "2026-10-29T14:06:43Z",
+            "evidence": "codex 桥接块未找到(未登记现场仅观察标记): /Users/vincent4j/Tools/Source/agent-group-memory/AGENTS.md"
+          },
+          "claude": {
+            "status": "missing",
+            "observed_at": "2026-10-29T14:06:43Z",
+            "evidence": "claude 桥接块未找到(未登记现场仅观察标记): /Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md"
+          },
+          "workbuddy": {
+            "status": "missing",
+            "observed_at": "2026-10-29T14:06:43Z",
+            "evidence": "workbuddy 桥接块未找到(未登记现场仅观察标记): /Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/memory/MEMORY.md"
+          }
+        },
+        "store_authorized_ready": {
+          "status": "unknown",
+          "observed_at": "2026-10-29T14:06:43Z",
+          "evidence": "库目录存在: /Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper;只读检查不调用可能写缓存的 Keeper 探针,无法判定库可用/迁移状态"
+        }
+      },
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      },
+      "objects": [
+        {
+          "id": "/Users/vincent4j/Tools/Source/agent-group-memory/AGENTS.md#base",
+          "kind": "file",
+          "path": "/Users/vincent4j/Tools/Source/agent-group-memory/AGENTS.md",
+          "scope": "project",
+          "agents": [
+            "codex"
+          ],
+          "ownership": "reused",
+          "status": "drifted",
+          "detail": "整文件指纹不符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md#base",
+          "kind": "file",
+          "path": "/Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md",
+          "scope": "project",
+          "agents": [
+            "claude"
+          ],
+          "ownership": "reused",
+          "status": "drifted",
+          "detail": "整文件指纹不符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md#import",
+          "kind": "import",
+          "path": "/Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md",
+          "scope": "project",
+          "agents": [
+            "claude"
+          ],
+          "ownership": "reused",
+          "status": "baseline_changed",
+          "detail": "引用行存在;整文件基线指纹不符(非引用内容已增长)"
+        }
+      ],
+      "agent_discovery": [
+        {
+          "agent": "codex",
+          "signals": [
+            {
+              "kind": "directory_exists",
+              "path": "/Users/vincent4j/.codex",
+              "strength": "hint",
+              "exists": true
+            }
+          ]
+        },
+        {
+          "agent": "claude",
+          "signals": [
+            {
+              "kind": "directory_exists",
+              "path": "/Users/vincent4j/.claude",
+              "strength": "hint",
+              "exists": true
+            }
+          ]
+        },
+        {
+          "agent": "workbuddy",
+          "signals": [
+            {
+              "kind": "directory_exists",
+              "path": "/Users/vincent4j/.workbuddy",
+              "strength": "hint",
+              "exists": true
+            }
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "object_drifted",
+          "agent": null,
+          "path": "/Users/vincent4j/Tools/Source/agent-group-memory/AGENTS.md",
+          "detail": "整文件指纹不符",
+          "suggestion": "manual"
+        },
+        {
+          "code": "object_drifted",
+          "agent": null,
+          "path": "/Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md",
+          "detail": "整文件指纹不符",
+          "suggestion": "manual"
+        },
+        {
+          "code": "skill_missing",
+          "agent": "codex",
+          "path": null,
+          "detail": "codex Skill 根下未见 context-keeper(检查根: /Users/vincent4j/Tools/Source/agent-group-memory/.agents/skills; /Users/vincent4j/Tools/Source/agent-group-memory/.codex/skills)",
+          "suggestion": "enable"
+        },
+        {
+          "code": "skill_missing",
+          "agent": "claude",
+          "path": null,
+          "detail": "claude Skill 根下未见 context-keeper(检查根: /Users/vincent4j/Tools/Source/agent-group-memory/.claude/skills)",
+          "suggestion": "enable"
+        },
+        {
+          "code": "skill_missing",
+          "agent": "workbuddy",
+          "path": null,
+          "detail": "workbuddy Skill 根下未见 context-keeper(检查根: /Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/skills)",
+          "suggestion": "enable"
+        },
+        {
+          "code": "bridge_missing",
+          "agent": "workbuddy",
+          "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/memory/MEMORY.md",
+          "detail": "workbuddy 桥接块未找到(未登记现场仅观察标记): /Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/memory/MEMORY.md",
+          "suggestion": "enable"
+        }
+      ],
+      "warnings": [
+        "identity_limit: v1 无法识别同路径重 clone(architecture §2.4);已知更换实例需重新核对授权",
+        "rule_growth: /Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md 在受管块与 @AGENTS.md 引用行之外仍有 68 字节非引用内容,请人工核对"
+      ],
+      "evidence": [
+        "provider 源码目录存在: /Users/vincent4j/Tools/Source/context-keeper",
+        "库目录存在: /Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper;只读检查不调用可能写缓存的 Keeper 探针,无法判定库可用/迁移状态",
+        "codex Skill 根下未见 context-keeper(检查根: /Users/vincent4j/Tools/Source/agent-group-memory/.agents/skills; /Users/vincent4j/Tools/Source/agent-group-memory/.codex/skills)",
+        "claude Skill 根下未见 context-keeper(检查根: /Users/vincent4j/Tools/Source/agent-group-memory/.claude/skills)",
+        "workbuddy Skill 根下未见 context-keeper(检查根: /Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/skills)",
+        "codex 桥接块未找到(未登记现场仅观察标记): /Users/vincent4j/Tools/Source/agent-group-memory/AGENTS.md",
+        "claude 桥接块未找到(未登记现场仅观察标记): /Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md",
+        "workbuddy 桥接块未找到(未登记现场仅观察标记): /Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/memory/MEMORY.md"
+      ]
+    }
+  ],
+  "changes": [],
+  "warnings": [
+    "agent-group-memory: identity_limit: v1 无法识别同路径重 clone(architecture §2.4);已知更换实例需重新核对授权",
+    "agent-group-memory: rule_growth: /Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md 在受管块与 @AGENTS.md 引用行之外仍有 68 字节非引用内容,请人工核对"
+  ],
+  "errors": [],
+  "approval_required": false,
+  "next_action": "check 发现缺口:suggestion=enable 的缺失项可运行 enable-memory 修复(写命令需授权/批准文件),drifted/conflict/manual 项先人工核对;缺口清单见 projects[].gaps"
+}

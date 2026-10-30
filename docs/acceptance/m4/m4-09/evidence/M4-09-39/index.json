@@ -1,0 +1,147 @@
+{
+  "case": "M4-09-39",
+  "name": "批量扫描和批准执行",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-39-1h2o9gn4",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-init-new-a",
+      "label": "init-new-a",
+      "exit_code": 0
+    },
+    {
+      "path": "007-init-new-b",
+      "label": "init-new-b",
+      "exit_code": 0
+    },
+    {
+      "path": "008-init-already-enabled",
+      "label": "init-already-enabled",
+      "exit_code": 0
+    },
+    {
+      "path": "009-init-drifted",
+      "label": "init-drifted",
+      "exit_code": 0
+    },
+    {
+      "path": "010-fixture-non-git-and-unselected",
+      "label": "fixture-non-git-and-unselected",
+      "exit_code": null
+    },
+    {
+      "path": "011-pre-enable-already-enabled-preview",
+      "label": "pre-enable-already-enabled-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "012-fixture-pre-enable-already-enabled-approval",
+      "label": "fixture-pre-enable-already-enabled-approval",
+      "exit_code": null
+    },
+    {
+      "path": "013-pre-enable-already-enabled-execute",
+      "label": "pre-enable-already-enabled-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "014-pre-enable-drifted-preview",
+      "label": "pre-enable-drifted-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "015-fixture-pre-enable-drifted-approval",
+      "label": "fixture-pre-enable-drifted-approval",
+      "exit_code": null
+    },
+    {
+      "path": "016-pre-enable-drifted-execute",
+      "label": "pre-enable-drifted-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "017-fixture-registered-project-drift",
+      "label": "fixture-registered-project-drift",
+      "exit_code": null
+    },
+    {
+      "path": "018-init-worktree-base",
+      "label": "init-worktree-base",
+      "exit_code": 0
+    },
+    {
+      "path": "019-fetch-local-frozen-object",
+      "label": "fetch-local-frozen-object",
+      "exit_code": 0
+    },
+    {
+      "path": "020-read-tree-local-frozen-object",
+      "label": "read-tree-local-frozen-object",
+      "exit_code": 0
+    },
+    {
+      "path": "021-create-linked-worktree",
+      "label": "create-linked-worktree",
+      "exit_code": 0
+    },
+    {
+      "path": "022-batch-preview",
+      "label": "batch-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "023-fixture-batch-approval",
+      "label": "fixture-batch-approval",
+      "exit_code": null
+    },
+    {
+      "path": "024-batch-apply",
+      "label": "batch-apply",
+      "exit_code": 0
+    },
+    {
+      "path": "025-batch-readback",
+      "label": "batch-readback",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:24:05.997778Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing-install-20261030T162354Z-a140869bdb74466380c7bd3d9e42df5c/journal.json",
+    "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing/backups/20261030T162404Z-ad0a53af3abd45e2a4b539de70ecc605/manifest.json",
+    "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing/backups/20261030T162357Z-654b4dc0f991496aad42c2cd688eace2/manifest.json",
+    "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing/backups/20261030T162358Z-31c08b16f6724ca4bb7bb60933b4f8e9/manifest.json",
+    "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing/backups/20261030T162404Z-4c365baf6a8c47aa88777609ef121911/manifest.json",
+    "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing/backups/20261030T162404Z-b096fc20685c481a88cf6030ac54bbd4/manifest.json",
+    "/private/tmp/M4-09-39-1h2o9gn4/home/.mem-sharing-install-20261030T162354Z-a140869bdb74466380c7bd3d9e42df5c/entry-backups/20261030T162355Z-fdeb978a72174e3e9e5c2869583ef2f7/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

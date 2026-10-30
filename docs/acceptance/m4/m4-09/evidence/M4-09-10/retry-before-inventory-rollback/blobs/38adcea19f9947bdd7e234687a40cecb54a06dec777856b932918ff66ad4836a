@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "command": "enable-memory",
+  "main_checkout": "/Users/vincent4j/Tools/Source/knowwind",
+  "checkout": "/Users/vincent4j/Tools/Source/knowwind",
+  "git_common_dir": "/Users/vincent4j/Tools/Source/knowwind/.git",
+  "agents": [
+    "codex",
+    "claude",
+    "workbuddy"
+  ],
+  "memory_authorization": "yes",
+  "store_path": "/Users/vincent4j/Tools/Source/knowwind/docs/context-keeper",
+  "provider_source": "/Users/vincent4j/Tools/Source/context-keeper",
+  "provider_fingerprints": [],
+  "changes": [
+    {
+      "path": "/Users/vincent4j/Tools/Source/knowwind/CLAUDE.md",
+      "operation": "update",
+      "before_fingerprint": "54134fb03cc201fe5cc500302f1ce9db49635c9fb9bfb97d3299c305d3d2ad79",
+      "after_fingerprint": "fcec3b0230245ad46850f5b646237940526a46de0cface22d3793af503dca466"
+    }
+  ],
+  "confirmed_at": "2026-10-29T13:51:09.551809+00:00",
+  "reference": "paseo-message:29740901-4bc0-4bcd-9383-c3f58b9bdd19; source selection proposal only, not exact approval"
+}

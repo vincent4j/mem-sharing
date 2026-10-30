@@ -1,0 +1,15 @@
+--- before/packages/claude/bin/claude
++++ after/packages/claude/bin/claude
+@@ -0,0 +1,2 @@
++#!/bin/sh
++exit 0
+--- before/packages/claude/package.json
++++ after/packages/claude/package.json
+@@ -0,0 +1,7 @@
++{
++  "name": "@anthropic-ai/claude-code",
++  "version": "1.0.0",
++  "bin": {
++    "claude": "bin/claude"
++  }
++}

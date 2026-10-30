@@ -1,0 +1,460 @@
+{
+  "schema_version": 1,
+  "command": "organize-user-rules",
+  "layout": {
+    "root": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing",
+    "code": "/private/tmp/M4-09-38-svllkyhx/home/.local/share/mem-sharing",
+    "registry": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/var/registry.json",
+    "lock": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/var/.agm.lock",
+    "transaction_lock": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/var/.agm.lock/transaction",
+    "backups": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/backups"
+  },
+  "date": "2026-10-31",
+  "request": {
+    "home": "/private/tmp/M4-09-38-svllkyhx/home",
+    "platform_config": {
+      "codex": {
+        "user_entry": "{home}/.codex/AGENTS.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/AGENTS.md",
+        "project_skill_roots": [
+          "{project}/.agents/skills",
+          "{project}/.codex/skills"
+        ],
+        "installation_signals": [
+          {
+            "kind": "directory_exists",
+            "path": "{home}/.codex",
+            "strength": "hint"
+          },
+          {
+            "kind": "path_executable",
+            "executable": "codex",
+            "package_name": "@openai/codex",
+            "strength": "strong"
+          },
+          {
+            "kind": "macos_app_bundle",
+            "bundle_name": "Codex.app",
+            "product_name": "Codex",
+            "require_bundle_version": false,
+            "require_signature_identifier_match": false,
+            "strength": "strong"
+          }
+        ],
+        "rule_mode": "native",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
+      },
+      "claude": {
+        "user_entry": "{home}/.claude/CLAUDE.md",
+        "project_rule_entry": "{project}/CLAUDE.md",
+        "project_bridge_entry": "{project}/CLAUDE.md",
+        "project_skill_roots": [
+          "{project}/.claude/skills"
+        ],
+        "installation_signals": [
+          {
+            "kind": "directory_exists",
+            "path": "{home}/.claude",
+            "strength": "hint"
+          },
+          {
+            "kind": "path_executable",
+            "executable": "claude",
+            "package_name": "@anthropic-ai/claude-code",
+            "strength": "strong"
+          },
+          {
+            "kind": "user_receipt",
+            "product_name": "Claude Code",
+            "strength": "strong"
+          }
+        ],
+        "rule_mode": "import_agents",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
+      },
+      "workbuddy": {
+        "user_entry": "{home}/.workbuddy/MEMORY.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/.workbuddy/memory/MEMORY.md",
+        "project_skill_roots": [
+          "{project}/.workbuddy/skills"
+        ],
+        "installation_signals": [
+          {
+            "kind": "directory_exists",
+            "path": "{home}/.workbuddy",
+            "strength": "hint"
+          },
+          {
+            "kind": "macos_app_bundle",
+            "bundle_name": "WorkBuddy.app",
+            "product_name": "WorkBuddy",
+            "require_bundle_version": true,
+            "require_signature_identifier_match": true,
+            "strength": "strong"
+          }
+        ],
+        "rule_mode": "user_convention",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
+      }
+    },
+    "date": "2026-10-31"
+  },
+  "items": [
+    {
+      "item_id": "acbf8d00195f56ec21d160abec9a6804322a57475779f9ec1ce67f0f71e00473",
+      "agent": "codex",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.codex/AGENTS.md",
+      "start": 2213,
+      "end": 2253,
+      "text": "- 提交信息请使用简体中文。\r\n",
+      "sha256": "88b4858ea9c8dfac8b371c04f4e963cbba5fa63063c5c9083ec1100a6a12e991",
+      "classification": "公共",
+      "reason": "通用语言、风格或工作流程约定；建议跨执行器共享，仍需人工确认。",
+      "comparison": null,
+      "action": "move",
+      "suggested_action": "move",
+      "replacement": null,
+      "target": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/user-rules.md",
+      "removes_or_modifies_source": true
+    },
+    {
+      "item_id": "256bf4550ac9b6b23509497dae2638929638a954e104833a8b3f242864c874fc",
+      "agent": "codex",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.codex/AGENTS.md",
+      "start": 2253,
+      "end": 2302,
+      "text": "- codex 专属：使用专用执行器路径。\r\n",
+      "sha256": "dc9b5ec4529d10c4ba7fccc356fa8b6f21d945e04b8f81214f7380e31557d68d",
+      "classification": "独有",
+      "reason": "含执行器名称、专属工具/命令/路径或代码；保守原地保留。",
+      "comparison": null,
+      "action": "keep",
+      "suggested_action": "keep",
+      "replacement": null,
+      "target": null,
+      "removes_or_modifies_source": false
+    },
+    {
+      "item_id": "1f3fe6343eec1e24c9445fc4f7907fe209c3cc1c993b6bec58700ead7fc73fb9",
+      "agent": "codex",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.codex/AGENTS.md",
+      "start": 2302,
+      "end": 2330,
+      "text": "- 回答应简洁明确。\r\n",
+      "sha256": "39e659f771207c399d02da4bef65035b272f96e0310ce9b5ada7fc2b0e127b7a",
+      "classification": "疑似冗余",
+      "reason": "与公共源条目词面相近（1.00）；仅为语义重复建议，须人工逐项核对。",
+      "comparison": {
+        "path": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/communication.md",
+        "start": 24,
+        "end": 49,
+        "text": "回答应简洁明确。\n",
+        "sha256": "482ed41d8f47cb87d32e03f72f75fe77ebb9377471dbfb387ff7f41e177c257e"
+      },
+      "action": "delete",
+      "suggested_action": "delete",
+      "replacement": null,
+      "target": null,
+      "removes_or_modifies_source": true
+    },
+    {
+      "item_id": "62ab1fc118fa0514abde9b8149cb8adb076fae3325f9b6638ed3bbb33986c9a1",
+      "agent": "codex",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.codex/AGENTS.md",
+      "start": 2330,
+      "end": 2366,
+      "text": "- 未明确归属的 abc 约定。\r\n",
+      "sha256": "311c8c861b92bbb79a3f657da5962a5b435f3c16bb6e32298bc23af06b9ea809",
+      "classification": "独有",
+      "reason": "缺乏跨执行器通用证据；归属不明，保守原地保留，可人工重审。",
+      "comparison": null,
+      "action": "keep",
+      "suggested_action": "keep",
+      "replacement": null,
+      "target": null,
+      "removes_or_modifies_source": false
+    },
+    {
+      "item_id": "9b700a34c1941f794f83a42d74f5c25cb30fc4ef2cb5f906f49e5fd098998336",
+      "agent": "claude",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.claude/CLAUDE.md",
+      "start": 71,
+      "end": 111,
+      "text": "- 提交信息请使用简体中文。\r\n",
+      "sha256": "88b4858ea9c8dfac8b371c04f4e963cbba5fa63063c5c9083ec1100a6a12e991",
+      "classification": "公共",
+      "reason": "通用语言、风格或工作流程约定；建议跨执行器共享，仍需人工确认。",
+      "comparison": null,
+      "action": "move",
+      "suggested_action": "move",
+      "replacement": null,
+      "target": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/user-rules.md",
+      "removes_or_modifies_source": true
+    },
+    {
+      "item_id": "6d5c191e0d9491fea3791f96f27352605a5da4cc01814584fd3d2a08c339ec1b",
+      "agent": "claude",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.claude/CLAUDE.md",
+      "start": 111,
+      "end": 161,
+      "text": "- claude 专属：使用专用执行器路径。\r\n",
+      "sha256": "1f879455d6e5a3ebcbaf197cbceacfc8793361b5ed505b6e70d0ae9ef15c9891",
+      "classification": "独有",
+      "reason": "含执行器名称、专属工具/命令/路径或代码；保守原地保留。",
+      "comparison": null,
+      "action": "keep",
+      "suggested_action": "keep",
+      "replacement": null,
+      "target": null,
+      "removes_or_modifies_source": false
+    },
+    {
+      "item_id": "8080fb22f463963a19ab57c72b9463aa2d0ee47af10f404ef7286fa5017882f6",
+      "agent": "claude",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.claude/CLAUDE.md",
+      "start": 161,
+      "end": 189,
+      "text": "- 回答应简洁明确。\r\n",
+      "sha256": "39e659f771207c399d02da4bef65035b272f96e0310ce9b5ada7fc2b0e127b7a",
+      "classification": "疑似冗余",
+      "reason": "与公共源条目词面相近（1.00）；仅为语义重复建议，须人工逐项核对。",
+      "comparison": {
+        "path": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/communication.md",
+        "start": 24,
+        "end": 49,
+        "text": "回答应简洁明确。\n",
+        "sha256": "482ed41d8f47cb87d32e03f72f75fe77ebb9377471dbfb387ff7f41e177c257e"
+      },
+      "action": "delete",
+      "suggested_action": "delete",
+      "replacement": null,
+      "target": null,
+      "removes_or_modifies_source": true
+    },
+    {
+      "item_id": "bfb851e3ea90ef398274c32d75e2c01259fa8dcdf6f61c6624e8fecdbee395d6",
+      "agent": "claude",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.claude/CLAUDE.md",
+      "start": 189,
+      "end": 225,
+      "text": "- 未明确归属的 abc 约定。\r\n",
+      "sha256": "311c8c861b92bbb79a3f657da5962a5b435f3c16bb6e32298bc23af06b9ea809",
+      "classification": "独有",
+      "reason": "缺乏跨执行器通用证据；归属不明，保守原地保留，可人工重审。",
+      "comparison": null,
+      "action": "keep",
+      "suggested_action": "keep",
+      "replacement": null,
+      "target": null,
+      "removes_or_modifies_source": false
+    },
+    {
+      "item_id": "c2490c5d5b74cfe44fcff42f6f0762c1f82f92e363dfb2f9b467abc849f164d3",
+      "agent": "workbuddy",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.workbuddy/MEMORY.md",
+      "start": 2,
+      "end": 42,
+      "text": "- 提交信息请使用简体中文。\r\n",
+      "sha256": "88b4858ea9c8dfac8b371c04f4e963cbba5fa63063c5c9083ec1100a6a12e991",
+      "classification": "公共",
+      "reason": "通用语言、风格或工作流程约定；建议跨执行器共享，仍需人工确认。",
+      "comparison": null,
+      "action": "move",
+      "suggested_action": "move",
+      "replacement": null,
+      "target": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/user-rules.md",
+      "removes_or_modifies_source": true
+    },
+    {
+      "item_id": "9fc5cd988be33b83bffdf5db3450bc8cb1981fb9ff839fbcd70e78301c0ded9f",
+      "agent": "workbuddy",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.workbuddy/MEMORY.md",
+      "start": 42,
+      "end": 95,
+      "text": "- workbuddy 专属：使用专用执行器路径。\r\n",
+      "sha256": "5f111bf08240745f84bd90916f1cab1bb8bd5160610a198db2a3acb76103a676",
+      "classification": "独有",
+      "reason": "含执行器名称、专属工具/命令/路径或代码；保守原地保留。",
+      "comparison": null,
+      "action": "keep",
+      "suggested_action": "keep",
+      "replacement": null,
+      "target": null,
+      "removes_or_modifies_source": false
+    },
+    {
+      "item_id": "d7e036559910d41fd02da46b328f0deddc9f8288a987618476652a5db73029ce",
+      "agent": "workbuddy",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.workbuddy/MEMORY.md",
+      "start": 95,
+      "end": 123,
+      "text": "- 回答应简洁明确。\r\n",
+      "sha256": "39e659f771207c399d02da4bef65035b272f96e0310ce9b5ada7fc2b0e127b7a",
+      "classification": "疑似冗余",
+      "reason": "与公共源条目词面相近（1.00）；仅为语义重复建议，须人工逐项核对。",
+      "comparison": {
+        "path": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/communication.md",
+        "start": 24,
+        "end": 49,
+        "text": "回答应简洁明确。\n",
+        "sha256": "482ed41d8f47cb87d32e03f72f75fe77ebb9377471dbfb387ff7f41e177c257e"
+      },
+      "action": "delete",
+      "suggested_action": "delete",
+      "replacement": null,
+      "target": null,
+      "removes_or_modifies_source": true
+    },
+    {
+      "item_id": "10b91aad72bb81bd4439140df64428dd3c3d0192e08d62014ad814c199714506",
+      "agent": "workbuddy",
+      "source": "/private/tmp/M4-09-38-svllkyhx/home/.workbuddy/MEMORY.md",
+      "start": 123,
+      "end": 159,
+      "text": "- 未明确归属的 abc 约定。\r\n",
+      "sha256": "311c8c861b92bbb79a3f657da5962a5b435f3c16bb6e32298bc23af06b9ea809",
+      "classification": "独有",
+      "reason": "缺乏跨执行器通用证据；归属不明，保守原地保留，可人工重审。",
+      "comparison": null,
+      "action": "keep",
+      "suggested_action": "keep",
+      "replacement": null,
+      "target": null,
+      "removes_or_modifies_source": false
+    }
+  ],
+  "blocked_entries": [
+    {
+      "path": "/private/tmp/M4-09-38-svllkyhx/home/.claude/CLAUDE.md",
+      "reason": "旧整文件受管记录覆盖入口正文；V 不得被整理向导修改。",
+      "record_types": [
+        "import"
+      ],
+      "conversion": "先由产品生命周期转换将旧整文件记录转为精确受管单元，再重新预览；不要手删台账。"
+    }
+  ],
+  "protected_units": [
+    {
+      "path": "/private/tmp/M4-09-38-svllkyhx/home/.codex/AGENTS.md",
+      "start": 0,
+      "end": 2211,
+      "sha256": "b797dbe91c3b126496de9ca16740932ff432c85ec4d2cfa5dff85d6a8ba476ac"
+    },
+    {
+      "path": "/private/tmp/M4-09-38-svllkyhx/home/.claude/CLAUDE.md",
+      "start": 0,
+      "end": 69,
+      "sha256": "831878b83b0437d9946f20abee7bbea72fd37cce72a41a73fd6feeee4cc88275"
+    }
+  ],
+  "observations": {
+    "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/var/registry.json": {
+      "kind": "file",
+      "sha256": "b628950101b4ad9290d1318d352f390514a66ef92a29881a46a7533a4d41798c",
+      "mode": 384
+    },
+    "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/MEMORY.md": {
+      "kind": "file",
+      "sha256": "44685b1e24240b335da1414c8ec64ba06e264ebcff24d2f2f70dc4e85c85f4c3",
+      "mode": 384
+    },
+    "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/communication.md": {
+      "kind": "file",
+      "sha256": "fc6d4d4dc3db649c9a9ae3be155695829860c6885d6b8f547f724ee653f6e94e",
+      "mode": 420
+    },
+    "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/topics/使用约定.md": {
+      "kind": "file",
+      "sha256": "c6a5a0ca239597fcbaa2898af8537ce3745ee3f4d14bf47e8c85b809582ce62e",
+      "mode": 384
+    },
+    "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/user-rules.md": {
+      "kind": "absent",
+      "sha256": null,
+      "mode": null
+    },
+    "/private/tmp/M4-09-38-svllkyhx/home/.codex/AGENTS.md": {
+      "kind": "file",
+      "sha256": "d1d4a4f39094b9aa34a0f5f91a7e629e913909059f6d827d85587b10e9efece9",
+      "mode": 384
+    },
+    "/private/tmp/M4-09-38-svllkyhx/home/.claude/CLAUDE.md": {
+      "kind": "file",
+      "sha256": "2a6ea617e3930f9fa0dc02471b75b92786d68bda1a75746d5bf8f35282d10a62",
+      "mode": 384
+    },
+    "/private/tmp/M4-09-38-svllkyhx/home/.workbuddy/MEMORY.md": {
+      "kind": "file",
+      "sha256": "0c52940ab6cf277412c97bf72faa3a11a9f3369fffe92b41f3fcff6f779410f4",
+      "mode": 420
+    }
+  },
+  "public_listing": [
+    "MEMORY.md",
+    "communication.md",
+    "topics",
+    "topics/使用约定.md"
+  ],
+  "l0_draft": "- 用户公共规则：通用约定已按集中批准计划归位，独有内容仍留原入口。[user-rules.md](user-rules.md)\n",
+  "changes": [
+    {
+      "path": "/private/tmp/M4-09-38-svllkyhx/home/.claude/CLAUDE.md",
+      "before": {
+        "kind": "file",
+        "sha256": "2a6ea617e3930f9fa0dc02471b75b92786d68bda1a75746d5bf8f35282d10a62",
+        "mode": 384
+      },
+      "after_sha256": "0a43de0dc6b3536554d3d565c74ff8e7c02e39f4ab63fbaa4847a692dcfa0400",
+      "after_hex": "402f707269766174652f746d702f4d342d30392d33382d73766c6c6b7968782f686f6d652f2e6d656d2d73686172696e672f6d656d6f726965732f4d454d4f52592e6d640a0a0a2d20636c6175646520e4b893e5b19eefbc9ae4bdbfe794a8e4b893e794a8e689a7e8a18ce599a8e8b7afe5be84e380820d0a2d20e69caae6988ee7a1aee5bd92e5b19ee79a842061626320e7baa6e5ae9ae380820d0a"
+    },
+    {
+      "path": "/private/tmp/M4-09-38-svllkyhx/home/.codex/AGENTS.md",
+      "before": {
+        "kind": "file",
+        "sha256": "d1d4a4f39094b9aa34a0f5f91a7e629e913909059f6d827d85587b10e9efece9",
+        "mode": 384
+      },
+      "after_sha256": "9d8196c37b25fa02d85ebc08d079818196785499170012138fc7534a3b9c48fe",
+      "after_hex": "3c212d2d206d656d2d73686172696e673a72756c65733a7374617274202d2d3e0ae5bc80e5a78be4bbbbe58aa1e5898de8afbbe58f96e5b9b6e981b5e5ae88202f707269766174652f746d702f4d342d30392d33382d73766c6c6b7968782f686f6d652f2e6d656d2d73686172696e672f6d656d6f726965732f4d454d4f52592e6d643be8afbbe4b88de588b0e5b0b1e8afb4e6988ee380820ae794a8e688b7e8a784e58899e6b2bbe790863ae585ace585b1e58685e5aeb9e58faae58699e585ace585b1e68c87e5ae9ae69687e4bbb628522f6d656d6f7269657329efbc8c4167656e7420e78bace69c89e58685e5aeb9e4bf9de79599e4ba8ee59084e887aae794a8e688b7e69687e4bbb6efbc8ce6b0b8e4b88de5b9b6e585a5e585ace585b1e68896e887aae58aa8e588a0e999a4e38082e8bf9be585a52047697420e4b8bb20636865636b6f757420e697b6efbc8ce69caae799bbe8aeb0e9a1b9e79baee9bb98e8aea4e590afe794a8e9a1b9e79baee8a784e58899efbc9ae5889be5bbbae7bcbae5a4b1e79a84204147454e54532e6d6420e9aaa8e69eb6e5b9b6e8bfbde58aa0e9a1b9e79baee7bb8fe58e86e79fade58d8fe8aeaeefbc8ce5b7b2e69c89e585a8e69687e4bf9de79599e38082e9bb98e8aea4e590afe794a8e4b88de5889be5bbba20434b20e8aeb0e5bd95e5ba93e38081e4b88de8b083e794a820434b20e5ae89e8a385e68896e5889de5a78be58c96efbc9be9a696e6aca1202f636f6e746578742d6b656570657220e8bf9be585a520434b20e6b581e7a88befbc8ce9a696e6aca1e4bf9de5ad98e68c89e585b6e6b581e7a88be7a1aee8aea4e4bd8de7bdaee38082e9a1b9e79baee694bfe7ad96e5b7b2e4b8ba2064697361626c656420e697b6efbc8ce9bb98e8aea4e6b581e7a88be4b88de5be97e9878de696b0e590afe794a8e585a5e58fa3e38081e887aae58aa8e8aeb0e5bd95e7bb8fe58e86e68896e5889de5a78be58c96efbc9be5b7b2e69c8920434b20e887aae58aa8e8a784e58899e4b99fe4b88de883bde8a686e79b96e6ada4e694bfe7ad96e38082e9878de696b0e590afe794a8e9a1bbe794a8e688b7e698bee5bc8fe689a7e8a18c20656e61626c652d6d656d6f7279efbc9be8a7a3e999a42064697361626c656420e9a1bbe698bee5bc8f20656e61626c652d6d656d6f7279202d2d6d656d6f727920e5b9b6e689b9e58786e7b2bee7a1aee8aea1e58892e38082436c6175646520e5928c20576f726b427564647920e9a1b9e79baee585a5e58fa3e58faae794b1e59084e887aae5ae9ee99985e4bdbfe794a8e697b6e8a1a5e9bd90efbc8ce585b6e4bb96e689a7e8a18ce599a8e4b88de5be97e9a284e5bbbaefbc9be99d9e2047697420e79baee5bd95e5928c206c696e6b656420776f726b7472656520e4b88de8a7a6e58f91e380820ae4bb8520436f64657820e9a696e6aca1e5ae9ee99985e4bdbfe794a8e697b6efbc8ce68c89e9bb98e8aea4e590afe794a8e69da1e6acbee8a1a5e7bcbae5a4b1204147454e54532e6d64efbc9be5b7b22064697361626c656420e9a1b9e79baee4b88de887aae58aa8e681a2e5a48de380820a2f6d656d2d73686172696e6720e88f9ce58d953a0ae7bb99e9a1b9e79baee590afe794a8e8aeb0e5bf86efbc9ae4b8bae5bd93e5898de9a1b9e79baee5bbbae7ab8be585b1e4baabe8a784e58899e585a5e58fa320e2869220707974686f6e33202f707269766174652f746d702f4d342d30392d33382d73766c6c6b7968782f686f6d652f2e6c6f63616c2f73686172652f6d656d2d73686172696e672f736372697074732f61676d2e707920656e61626c652d6d656d6f7279202d2d70726f6a656374203ce9a1b9e79baee7bb9de5afb9e8b7afe5be843e202d2d6d656d6f72790ae6b7bbe58aa0e696b0e79a84204167656e74efbc9ae68ea5e585a5e5b7b2e5ae89e8a385e79a84e689a7e8a18ce599a820e2869220707974686f6e33202f707269766174652f746d702f4d342d30392d33382d73766c6c6b7968782f686f6d652f2e6c6f63616c2f73686172652f6d656d2d73686172696e672f736372697074732f696e7374616c6c2e7079202d2d6167656e74203ce689a7e8a18ce599a8e5908d3e0ae581a5e5bab7e6a380e69fa5efbc9ae58faae8afbbe6a380e69fa5e5b7b2e799bbe8aeb0e585a5e58fa320e2869220707974686f6e33202f707269766174652f746d702f4d342d30392d33382d73766c6c6b7968782f686f6d652f2e6c6f63616c2f73686172652f6d656d2d73686172696e672f736372697074732f61676d2e707920636865636b2d6d656d6f7279202d2d70726f6a656374203ce9a1b9e79baee7bb9de5afb9e8b7afe5be843e0ae5819ce794a8e8aeb0e5bf86efbc9ae692a4e585a5e58fa3e5b9b6e4bf9de79599e695b0e68dae20e2869220707974686f6e33202f707269766174652f746d702f4d342d30392d33382d73766c6c6b7968782f686f6d652f2e6c6f63616c2f73686172652f6d656d2d73686172696e672f736372697074732f61676d2e70792072656d6f76652d6d656d6f7279202d2d70726f6a656374203ce9a1b9e79baee7bb9de5afb9e8b7afe5be843eefbc9be4bb85e7a681e887aae58aa8e9a1b9e79baee7bb8fe58e86e8aeb0e5bd95e38081e4bf9de79599e585a5e58fa3e794a820656e61626c652d6d656d6f7279202d2d6e6f2d6d656d6f72790ae695b4e79086e794a8e688b7e8a784e58899efbc9ae585ace585b1e4b88ee78bace69c89e58886e5bc80efbc8ce98090e69da1e8aea1e58892e5908ee4b880e6aca1e689b9e5878620e2869220e68c8920534b494c4c2e6d6420e6b2bbe79086e6b581e7a88be689a7e8a18c0ae689b9e9878fe590afe794a8e8aeb0e5bf86efbc9ae689abe68f8fe7bb99e5ae9ae79baee5bd95efbc8ce6b187e680bbe9a284e8a788e5908ee4b880e6aca1e689b9e5878620e2869220e59084e9a1b9e79bae20656e61626c652d6d656d6f72790a0a3c212d2d206d656d2d73686172696e673a72756c65733a656e64202d2d3e0a0a2d20636f64657820e4b893e5b19eefbc9ae4bdbfe794a8e4b893e794a8e689a7e8a18ce599a8e8b7afe5be84e380820d0a2d20e69caae6988ee7a1aee5bd92e5b19ee79a842061626320e7baa6e5ae9ae380820d0a"
+    },
+    {
+      "path": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/MEMORY.md",
+      "before": {
+        "kind": "file",
+        "sha256": "44685b1e24240b335da1414c8ec64ba06e264ebcff24d2f2f70dc4e85c85f4c3",
+        "mode": 384
+      },
+      "after_sha256": "a56eb0e203440a033fb196f35cdcf92f8c8ea21c6135b49b970b61c9dd39f2e0",
+      "after_hex": "2320e585ace585b1e8aeb0e5bf860a0ae8afbbe58f96e5a591e7baa6efbc9a4c3020e68192e8afbb20e2869220e99c80e8a681e697b6e8afbbe8afa5e4b8bbe9a298204c3120e6a682e8a681e6aeb520e2869220e4bb8de4b88de8b6b3e6898de8afbb204c3220e585a8e69687e380820a4c3020e4b880e4b8bbe9a298e4b880e8a18cefbc9ae4b8bbe9a298e5908d202b20e4b880e58fa5e8af9de5bd93e5898de7bb93e8aeba202b20e993bee68ea5efbc9be7b4a2e5bc9520e289a432303020e8a18c202f2032354b42e380820a4c3120e4bd8de4ba8ee4b8bbe9a298e69687e4bbb6e5bc80e5a4b4efbc8ce7ae80e58897e5bd93e5898de69c89e69588e7bb93e8aebae4b88ee5be85e58a9eefbc9b4c3220e4b8bae585a8e69687e58f8a207265666572656e6365732f20e6898be5868ce380820ae69198e8a681e59ca8e8aeb0e5bf86e695b4e79086e697b6e6898be58699efbc8ce4b88de887aae58aa8e7949fe68890efbc9be5a29ee58aa0e4b8bbe9a298e69687e4bbb6efbc8ce4b88de58aa0e995bfe7b4a2e5bc95e380820ae794a8e688b7e8a784e58899e6b2bbe790863ae585ace585b1e58685e5aeb9e58faae58699e585ace585b1e68c87e5ae9ae69687e4bbb628522f6d656d6f7269657329efbc8c4167656e7420e78bace69c89e58685e5aeb9e4bf9de79599e4ba8ee59084e887aae794a8e688b7e69687e4bbb6efbc8ce6b0b8e4b88de5b9b6e585a5e585ace585b1e68896e887aae58aa8e588a0e999a4e38082e8bf9be585a52047697420e4b8bb20636865636b6f757420e697b6efbc8ce69caae799bbe8aeb0e9a1b9e79baee9bb98e8aea4e590afe794a8e9a1b9e79baee8a784e58899efbc9ae5889be5bbbae7bcbae5a4b1e79a84204147454e54532e6d6420e9aaa8e69eb6e5b9b6e8bfbde58aa0e9a1b9e79baee7bb8fe58e86e79fade58d8fe8aeaeefbc8ce5b7b2e69c89e585a8e69687e4bf9de79599e38082e9bb98e8aea4e590afe794a8e4b88de5889be5bbba20434b20e8aeb0e5bd95e5ba93e38081e4b88de8b083e794a820434b20e5ae89e8a385e68896e5889de5a78be58c96efbc9be9a696e6aca1202f636f6e746578742d6b656570657220e8bf9be585a520434b20e6b581e7a88befbc8ce9a696e6aca1e4bf9de5ad98e68c89e585b6e6b581e7a88be7a1aee8aea4e4bd8de7bdaee38082e9a1b9e79baee694bfe7ad96e5b7b2e4b8ba2064697361626c656420e697b6efbc8ce9bb98e8aea4e6b581e7a88be4b88de5be97e9878de696b0e590afe794a8e585a5e58fa3e38081e887aae58aa8e8aeb0e5bd95e7bb8fe58e86e68896e5889de5a78be58c96efbc9be5b7b2e69c8920434b20e887aae58aa8e8a784e58899e4b99fe4b88de883bde8a686e79b96e6ada4e694bfe7ad96e38082e9878de696b0e590afe794a8e9a1bbe794a8e688b7e698bee5bc8fe689a7e8a18c20656e61626c652d6d656d6f7279efbc9be8a7a3e999a42064697361626c656420e9a1bbe698bee5bc8f20656e61626c652d6d656d6f7279202d2d6d656d6f727920e5b9b6e689b9e58786e7b2bee7a1aee8aea1e58892e38082436c6175646520e5928c20576f726b427564647920e9a1b9e79baee585a5e58fa3e58faae794b1e59084e887aae5ae9ee99985e4bdbfe794a8e697b6e8a1a5e9bd90efbc8ce585b6e4bb96e689a7e8a18ce599a8e4b88de5be97e9a284e5bbbaefbc9be99d9e2047697420e79baee5bd95e5928c206c696e6b656420776f726b7472656520e4b88de8a7a6e58f91e380820ae4bb8520436c6175646520436f646520e59ca8e69cace9a1b9e79baee5ae9ee99985e4bdbfe794a8e4b894e9a1b9e79baee5b7b2e590afe794a8e38081e694bfe7ad96e99d9e2064697361626c656420e697b6e8a1a5e5bc95e794a8efbc9a434c415544452e6d6420e4b88de5ad98e59ca8e6898de5889be5bbbae4bb85e590ab20404147454e54532e6d6420e79a84e69687e4bbb6efbc9be5b7b2e69c89e6ada3e69687e5bf85e9a1bbe5ae8ce695b4e4bf9de79599efbc8ce4bb85e8bfbde58aa0e7bcbae5a4b1e79a8420404147454e54532e6d6420e5bc95e794a8e8a18cefbc8ce9878de5a48de689a7e8a18ce4b88de694b9e5ad97e88a82e380820a2f6d656d2d73686172696e6720e88f9ce58d953a0ae7bb99e9a1b9e79baee590afe794a8e8aeb0e5bf86efbc9ae4b8bae5bd93e5898de9a1b9e79baee5bbbae7ab8be585b1e4baabe8a784e58899e585a5e58fa320e2869220707974686f6e33202f707269766174652f746d702f4d342d30392d33382d73766c6c6b7968782f686f6d652f2e6c6f63616c2f73686172652f6d656d2d73686172696e672f736372697074732f61676d2e707920656e61626c652d6d656d6f7279202d2d70726f6a656374203ce9a1b9e79baee7bb9de5afb9e8b7afe5be843e202d2d6d656d6f72790ae6b7bbe58aa0e696b0e79a84204167656e74efbc9ae68ea5e585a5e5b7b2e5ae89e8a385e79a84e689a7e8a18ce599a820e2869220707974686f6e33202f707269766174652f746d702f4d342d30392d33382d73766c6c6b7968782f686f6d652f2e6c6f63616c2f73686172652f6d656d2d73686172696e672f736372697074732f696e7374616c6c2e7079202d2d6167656e74203ce689a7e8a18ce599a8e5908d3e0ae581a5e5bab7e6a380e69fa5efbc9ae58faae8afbbe6a380e69fa5e5b7b2e799bbe8aeb0e585a5e58fa320e2869220707974686f6e33202f707269766174652f746d702f4d342d30392d33382d73766c6c6b7968782f686f6d652f2e6c6f63616c2f73686172652f6d656d2d73686172696e672f736372697074732f61676d2e707920636865636b2d6d656d6f7279202d2d70726f6a656374203ce9a1b9e79baee7bb9de5afb9e8b7afe5be843e0ae5819ce794a8e8aeb0e5bf86efbc9ae692a4e585a5e58fa3e5b9b6e4bf9de79599e695b0e68dae20e2869220707974686f6e33202f707269766174652f746d702f4d342d30392d33382d73766c6c6b7968782f686f6d652f2e6c6f63616c2f73686172652f6d656d2d73686172696e672f736372697074732f61676d2e70792072656d6f76652d6d656d6f7279202d2d70726f6a656374203ce9a1b9e79baee7bb9de5afb9e8b7afe5be843eefbc9be4bb85e7a681e887aae58aa8e9a1b9e79baee7bb8fe58e86e8aeb0e5bd95e38081e4bf9de79599e585a5e58fa3e794a820656e61626c652d6d656d6f7279202d2d6e6f2d6d656d6f72790ae695b4e79086e794a8e688b7e8a784e58899efbc9ae585ace585b1e4b88ee78bace69c89e58886e5bc80efbc8ce98090e69da1e8aea1e58892e5908ee4b880e6aca1e689b9e5878620e2869220e68c8920534b494c4c2e6d6420e6b2bbe79086e6b581e7a88be689a7e8a18c0ae689b9e9878fe590afe794a8e8aeb0e5bf86efbc9ae689abe68f8fe7bb99e5ae9ae79baee5bd95efbc8ce6b187e680bbe9a284e8a788e5908ee4b880e6aca1e689b9e5878620e2869220e59084e9a1b9e79bae20656e61626c652d6d656d6f72790a0a0a2d20e4bdbfe794a8e7baa6e5ae9aefbc9ae4b8ade69ea2e5b7b2e5889de5a78be58c96efbc8ce4b8bbe9a298e7bb93e8aebae794b1204167656e7420e7bb8fe7a1aee8aea4e5908ee6898be58699e7bbb4e68aa4e380825be6a682e8a681e4b88ee585a8e696875d28746f706963732fe4bdbfe794a8e7baa6e5ae9a2e6d64290a2d20e794a8e688b7e585ace585b1e8a784e58899efbc9ae9809ae794a8e7baa6e5ae9ae5b7b2e68c89e99b86e4b8ade689b9e58786e8aea1e58892e5bd92e4bd8defbc8ce78bace69c89e58685e5aeb9e4bb8de79599e58e9fe585a5e58fa3e380825b757365722d72756c65732e6d645d28757365722d72756c65732e6d64290a"
+    },
+    {
+      "path": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/memories/user-rules.md",
+      "before": {
+        "kind": "absent",
+        "sha256": null,
+        "mode": null
+      },
+      "after_sha256": "d20fd446b654b198451ade6fc46353f58fe8581914f24746e54aa698f6996306",
+      "after_hex": "2320e794a8e688b7e585ace585b1e8a784e588990a0a2323204c3120e6a682e8a6810a0ae5bd93e5898de69c89e69588e7bb93e8aebaefbc9ae4bba5e4b88be9809ae794a8e7baa6e5ae9ae7bb8fe5ae8ce695b4e8aea1e58892e99b86e4b8ade7a1aee8aea4e5908ee794b1e59084e689a7e8a18ce599a8e585b1e4baabe380820ae5be85e58a9eefbc9ae8a784e58899e58f98e58c96e697b6e6898be58699e69bb4e696b0e69cace6a682e8a681e58f8ae7b4a2e5bc95e7bb93e8aebae380820a0a2323204c3220e58e9fe69687e4b88ee69da5e6ba900a3c212d2d206d656d2d73686172696e673a6f7267616e697a65642d616362663864303031393566353665633231643136306162656339613638303433323261353734373537373966396563316365363766306637316530303437333a7374617274202d2d3e0a2d20e68f90e4baa4e4bfa1e681afe8afb7e4bdbfe794a8e7ae80e4bd93e4b8ade69687e380820a0a3e20e8bf81e887aa207e2f2e636f6465782f4147454e54532e6d6428323032362d31302d33312c20e58e9fe6aeb5207368613235362038386234383538656139633864666163290a3c212d2d206d656d2d73686172696e673a6f7267616e697a65642d616362663864303031393566353665633231643136306162656339613638303433323261353734373537373966396563316365363766306637316530303437333a656e64202d2d3e0a3c212d2d206d656d2d73686172696e673a6f7267616e697a65642d396237303061333463313934316637393466383361343264373466356332356362333066633465663263623566393036663439653566643039383939383333363a7374617274202d2d3e0a2d20e68f90e4baa4e4bfa1e681afe8afb7e4bdbfe794a8e7ae80e4bd93e4b8ade69687e380820a0a3e20e8bf81e887aa207e2f2e636c617564652f434c415544452e6d6428323032362d31302d33312c20e58e9fe6aeb5207368613235362038386234383538656139633864666163290a3c212d2d206d656d2d73686172696e673a6f7267616e697a65642d396237303061333463313934316637393466383361343264373466356332356362333066633465663263623566393036663439653566643039383939383333363a656e64202d2d3e0a3c212d2d206d656d2d73686172696e673a6f7267616e697a65642d633234393063356435623734636665343466636666343266366630373632633166383266393265333633646662326639623436376162633834396631363464333a7374617274202d2d3e0a2d20e68f90e4baa4e4bfa1e681afe8afb7e4bdbfe794a8e7ae80e4bd93e4b8ade69687e380820a0a3e20e8bf81e887aa207e2f2e776f726b62756464792f4d454d4f52592e6d6428323032362d31302d33312c20e58e9fe6aeb5207368613235362038386234383538656139633864666163290a3c212d2d206d656d2d73686172696e673a6f7267616e697a65642d633234393063356435623734636665343466636666343266366630373632633166383266393265333633646662326639623436376162633834396631363464333a656e64202d2d3e"
+    },
+    {
+      "path": "/private/tmp/M4-09-38-svllkyhx/home/.workbuddy/MEMORY.md",
+      "before": {
+        "kind": "file",
+        "sha256": "0c52940ab6cf277412c97bf72faa3a11a9f3369fffe92b41f3fcff6f779410f4",
+        "mode": 420
+      },
+      "after_sha256": "b5efcaa7c5ef1d5ab828ffd6c50d39b12daaff6a554745b4f62f9fcba3940b08",
+      "after_hex": "0a0a2d20776f726b627564647920e4b893e5b19eefbc9ae4bdbfe794a8e4b893e794a8e689a7e8a18ce599a8e8b7afe5be84e380820d0a2d20e69caae6988ee7a1aee5bd92e5b19ee79a842061626320e7baa6e5ae9ae380820d0a"
+    }
+  ],
+  "metadata_scope": "/private/tmp/M4-09-38-svllkyhx/home/.mem-sharing/backups",
+  "registry_policy": "unchanged; content is not a V object",
+  "plan_sha256": "f311d0751ab0d91deeca554fcf13ddc90edd412d6add9899b5ac9d6300be7981",
+  "confirmed_at": "2026-10-30T16:23:52.091402Z"
+}

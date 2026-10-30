@@ -1,0 +1,21 @@
+[
+  {
+    "path": "home/.mem-sharing/var/registry.json",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377036535905727,
+      "size": 2131,
+      "kind": "file",
+      "sha256": "1211b98fe172f2aa4788dca28cc7071b57b8126e0e95ee0db18b496254a82224"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377036774586445,
+      "size": 589,
+      "kind": "file",
+      "sha256": "1bd37a2a9e3f2f1b86c6c0217dc9481ef516300945df92d240cf86937b459972"
+    }
+  }
+]

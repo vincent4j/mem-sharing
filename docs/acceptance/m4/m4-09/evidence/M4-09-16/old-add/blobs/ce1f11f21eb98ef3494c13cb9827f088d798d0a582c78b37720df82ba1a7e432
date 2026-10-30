@@ -1,0 +1,53 @@
+--- before
++++ after-enable
+@@ -1,15 +1,47 @@
+ {
++  ".agents/skills/context-keeper": {
++    "type": "symlink",
++    "target": "/Users/vincent4j/Tools/Source/context-keeper",
++    "mtime_ns": 1793281976013869126
++  },
++  ".claude/skills/context-keeper": {
++    "type": "symlink",
++    "target": "/Users/vincent4j/Tools/Source/context-keeper",
++    "mtime_ns": 1793281976015421796
++  },
++  ".codex/skills/context-keeper": {
++    "type": "symlink",
++    "target": "/Users/vincent4j/Tools/Source/context-keeper",
++    "mtime_ns": 1793281976014542794
++  },
+   ".gitignore": {
+     "type": "file",
+     "sha256": "e71c3a5ab3e44f03f457394228fdff9f35d7c6b04a5ec9f648dbf21827e34713",
+     "size": 526,
+     "mtime_ns": 1791802857223562840
+   },
++  ".workbuddy/memory/MEMORY.md": {
++    "type": "file",
++    "sha256": "5d464acc40d0bf2b30fc02dcffda1fdbf1cee80c5e3e742da9e85a1c871a8315",
++    "size": 2672,
++    "mtime_ns": 1793281976016108923
++  },
++  ".workbuddy/skills/context-keeper": {
++    "type": "symlink",
++    "target": "/Users/vincent4j/Tools/Source/context-keeper",
++    "mtime_ns": 1793281976015717839
++  },
+   "AGENTS.md": {
+     "type": "file",
+-    "sha256": "67223927eeb4916e9c00e42a8f2247f7a8743d59a9dd9bbb03b57ae6e91596a7",
+-    "size": 12889,
+-    "mtime_ns": 1792460996711489920
++    "sha256": "09067905d39f89392e373af0861b9e9b225aee547dfa3cd678fb636b4273fea6",
++    "size": 15191,
++    "mtime_ns": 1793281976012147539
++  },
++  "CLAUDE.md": {
++    "type": "file",
++    "sha256": "de341baaa31993aa7e8e58a7ff3417de5c8debc4c89c2b68c1684a6ebcc6319c",
++    "size": 2313,
++    "mtime_ns": 1793281976012942707
+   },
+   "README.md": {
+     "type": "file",

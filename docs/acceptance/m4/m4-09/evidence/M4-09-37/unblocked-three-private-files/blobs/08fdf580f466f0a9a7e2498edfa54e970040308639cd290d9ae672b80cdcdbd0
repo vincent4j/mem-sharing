@@ -1,0 +1,15 @@
+{
+  "home": "/private/tmp/M4-09-37-cfylbggd/home",
+  "date": "2026-10-31",
+  "decisions": {
+    "ee208c706ba1e93ca9c45dff5c5de8d8995116d8d8dbe2b95ccb62d24eba2b45": {
+      "action": "keep"
+    },
+    "166e6f73d5bdf399ba962f62c13e453b6c780409e700df88404b8ce07180de67": {
+      "action": "keep"
+    },
+    "cc0e808fe0faa96dc45e31d43ec85934a09ca713838c053ea7747db33e5091fe": {
+      "action": "keep"
+    }
+  }
+}

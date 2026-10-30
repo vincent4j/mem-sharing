@@ -1,0 +1,31 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377403512904175,
+      "size": 416,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377404367621513,
+      "size": 448,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "synthetic-explicit-claude-use-approval-11.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377404367686930,
+      "size": 972,
+      "kind": "file",
+      "sha256": "f69809281fb9d4020b6df87d03727406e89c340c9dad93f08cbee6f9078d54fa"
+    }
+  }
+]

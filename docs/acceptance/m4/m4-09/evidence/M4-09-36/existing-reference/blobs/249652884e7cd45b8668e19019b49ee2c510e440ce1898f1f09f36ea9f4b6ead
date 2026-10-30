@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "operation": "assemble-user-entries",
+  "status": "committed",
+  "registry_path": "/private/tmp/M4-09-36-f0ae2igz/home/.mem-sharing-install-20261030T162318Z-99ae7efe600f4edc8fb9e9688e0749ff/staged-registry.json",
+  "created_directories": [
+    "/private/tmp/M4-09-36-f0ae2igz/home/.claude",
+    "/private/tmp/M4-09-36-f0ae2igz/home/.codex"
+  ],
+  "entries": [
+    {
+      "path": "/private/tmp/M4-09-36-f0ae2igz/home/.claude/CLAUDE.md",
+      "before": {
+        "existed": false,
+        "kind": "absent",
+        "mode": null,
+        "link_target": null,
+        "fingerprint": null,
+        "backup": null
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "362aac4510a7f0e7b006c849b4077775afda6bc8fccffdaa31b8b0b2d81d9d39",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    },
+    {
+      "path": "/private/tmp/M4-09-36-f0ae2igz/home/.codex/AGENTS.md",
+      "before": {
+        "existed": false,
+        "kind": "absent",
+        "mode": null,
+        "link_target": null,
+        "fingerprint": null,
+        "backup": null
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "3a10c48671f2071af99161f188ba0ea5594d339a6a11f4b7683eeeeb2d02f5e4",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    },
+    {
+      "path": "/private/tmp/M4-09-36-f0ae2igz/home/.mem-sharing-install-20261030T162318Z-99ae7efe600f4edc8fb9e9688e0749ff/staged-registry.json",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "367aacc5d2f075bcadd19397b063928ca4cb6fa02ad89089795c72c05085a6a5",
+        "backup": "2.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "8001c9d478a05b1e528d839674d721f7369b8d5ea4f3d0ba02959f69346e4e41",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    }
+  ],
+  "error": null
+}

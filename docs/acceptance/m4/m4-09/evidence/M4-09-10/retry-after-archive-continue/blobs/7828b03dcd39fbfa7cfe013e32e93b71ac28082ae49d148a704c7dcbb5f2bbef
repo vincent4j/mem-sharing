@@ -1,0 +1,56 @@
+{
+  "base_commit": "fbddc93d3f7fe597b600b9679396637916421c9f",
+  "cwd": "/Users/vincent4j/Tools/Source/agent-group-memory",
+  "python": "3.14.3 (main, Feb  3 2026, 15:32:20) [Clang 17.0.0 (clang-1700.6.3.2)]",
+  "files": {
+    "scripts/agm_core/user_entries.py": "5cff6dfb0f21dc24b21b41b0b815bf4570cec3f795b41d7771054e52a191f789",
+    "scripts/agm_core/user_install.py": "39f2c09d552e049e6dd92ec1d97adb346615ca3483113b7a80c5da55d71518da",
+    "scripts/agm_core/legacy_import.py": "4dce85bb42237cce0f7b2f4de1213ae32c19fd45e59025fff26adf8a994c8faf",
+    "tests/unit/test_m404_install.py": "385b2e4172829ac8fd7ce28995bbada25a80ec2fb7484b631a54c5df92a4c491",
+    "tests/integration/test_m404_install_process.py": "ae52f1ef6e07b39424551d6c2d4532d8050da0b826a51a9762ee029b0f8ad83b"
+  },
+  "commands": [
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/unit"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "exit_code": 0,
+      "tests": 360,
+      "raw": "unit.log"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/integration"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "M404_EVIDENCE_DIR": "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m4/m4-04/raw",
+        "M404_EVIDENCE_RUN": "fbddc93-m404-delivery"
+      },
+      "exit_code": 0,
+      "tests": 59,
+      "raw": "integration.log"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377192740659819,
+      "size": 448,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377193324695563,
+      "size": 480,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "upgrade-plan.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377193324812314,
+      "size": 60278,
+      "kind": "file",
+      "sha256": "a9b9d5cb02f6eb473ae6683537e5d2a2a75815589cf6d2eb915a2377eabb18aa"
+    }
+  }
+]

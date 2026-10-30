@@ -1,0 +1,4 @@
+--- before/source/scripts/é.py
++++ after/source/scripts/é.py
+@@ -0,0 +1 @@
++# same

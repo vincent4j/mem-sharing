@@ -1,0 +1,53 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377157656945108,
+      "size": 320,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377158137933246,
+      "size": 352,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "old-product",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377158138028538,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "old-product/memories",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377158138114706,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "old-product/memories/body.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377158138180331,
+      "size": 17,
+      "kind": "file",
+      "sha256": "78f39805f1af11981f0d25d4060634c16f684992bc120ef37f33e936c6cc4f60"
+    }
+  }
+]

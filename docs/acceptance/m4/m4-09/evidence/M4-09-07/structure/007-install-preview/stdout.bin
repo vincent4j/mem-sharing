@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "machine_route_future", "message": "Machine scene future: ['unsupported future version']"}], "schema_version": 1, "status": "failed"}

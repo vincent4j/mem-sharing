@@ -1,0 +1,63 @@
+{
+  "case": "M4-09-53",
+  "name": "预填未来同意与无确认封皮",
+  "status": "blocked",
+  "area": "/private/tmp/M4-09-53-r8k47fwv",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-prefilled-future-consent",
+      "label": "fixture-prefilled-future-consent",
+      "exit_code": null
+    },
+    {
+      "path": "005-prefill-main-rejection",
+      "label": "prefill-main-rejection",
+      "exit_code": 2
+    },
+    {
+      "path": "006-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "007-valid-main-install",
+      "label": "valid-main-install",
+      "exit_code": 0
+    },
+    {
+      "path": "008-fixture-unconfirmed-ck-negative-fixture",
+      "label": "fixture-unconfirmed-ck-negative-fixture",
+      "exit_code": null
+    },
+    {
+      "path": "009-unconfirmed-ck-route",
+      "label": "unconfirmed-ck-route",
+      "exit_code": 2
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "Main future-consent injection exercised. Valid CK-plan missing-confirmation variant cannot get past unavailable durable pinned synthetic source; no real confirmation was fabricated."
+  ],
+  "ended_utc": "2026-10-30T16:25:11.001734Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-53-r8k47fwv/home/.mem-sharing-install-20261030T162509Z-efeee864cf6d436784da3ea6b76dd34c/journal.json",
+    "/private/tmp/M4-09-53-r8k47fwv/home/.mem-sharing-install-20261030T162509Z-efeee864cf6d436784da3ea6b76dd34c/entry-backups/20261030T162510Z-3f673b456bdd4b8b870146b7d47e94fe/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

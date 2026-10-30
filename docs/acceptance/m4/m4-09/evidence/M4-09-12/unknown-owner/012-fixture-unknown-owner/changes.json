@@ -1,0 +1,21 @@
+[
+  {
+    "path": "home/.mem-sharing-install.lock/migration-owner.json",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377442616465637,
+      "size": 180,
+      "kind": "file",
+      "sha256": "ac1b1a83d31e0bfd76ab4c342949be8a6d3e56a057d58d866a73189d68877c5f"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377443323184625,
+      "size": 164,
+      "kind": "file",
+      "sha256": "a318f777dd974bfb84d19c76da9998df903ff9032ea218ddeacb7e473cdbccca"
+    }
+  }
+]

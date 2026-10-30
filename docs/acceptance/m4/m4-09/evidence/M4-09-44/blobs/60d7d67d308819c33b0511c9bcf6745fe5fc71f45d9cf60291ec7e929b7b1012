@@ -1,0 +1,34 @@
+..............................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 446 tests in 269.232s
+
+OK
+SOURCE {"source_status": "missing", "gap_codes": ["source_missing", "source_missing"]}
+DECLINE {"authorization": "no", "created_bridges_removed": true, "denial_guard": true, "store_preserved": true, "plan_changes": 6}
+PHASE prepare before continue completed 0.4.1
+PHASE prepare before rollback rolled_back 0.4.0
+PHASE prepare after continue completed 0.4.1
+PHASE prepare after rollback rolled_back 0.4.0
+PHASE archive before continue completed 0.4.1
+PHASE archive before rollback rolled_back 0.4.0
+PHASE archive after continue completed 0.4.1
+PHASE archive after rollback rolled_back 0.4.0
+PHASE inventory before continue completed 0.4.1
+PHASE inventory before rollback rolled_back 0.4.0
+PHASE inventory after continue completed 0.4.1
+PHASE inventory after rollback rolled_back 0.4.0
+PHASE code before continue completed 0.4.1
+PHASE code before rollback rolled_back 0.4.0
+PHASE code after continue completed 0.4.1
+PHASE code after rollback rolled_back 0.4.0
+PHASE verify before continue completed 0.4.1
+PHASE verify before rollback rolled_back 0.4.0
+PHASE verify after continue completed 0.4.1
+PHASE verify after rollback rolled_back 0.4.0
+PHASE commit before continue completed 0.4.1
+PHASE commit before rollback rolled_back 0.4.0
+PHASE commit after continue completed 0.4.1
+PHASE commit after rollback completed 0.4.1
+REBUILD {"projects_before": 2, "preview_rebuild": {"classification": "registry_project_corrupt", "reason": "unknown fact status", "registry_sha256": "8ed7aefccd4b6a299432d270374be5d28d36844c6aa4d3d946b04a4c7c4bb408", "registry_bytes": 8093, "project_count": 2, "removed_projects": [{"main_checkout": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmp0ie2vqj2/project with spaces", "record_sha256": "bdceb09e34d230a613e0dbaef0e9d123f2feaa01408088e9e8bbc9c20a3e6d5f"}, {"main_checkout": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmp0ie2vqj2/second-project", "record_sha256": "479f9932ac3304f7fc038febb59ca3701cf3353494974e8f7b79a2731f35fdcb"}], "removed_shared_objects": ["/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmp0ie2vqj2/home/.workbuddy/MEMORY.md#rules"], "scope": "reset all project registrations and shared consumer indexes; preserve machine identity and all user files"}, "without_separate_approval": "approval_required", "result": "completed", "projects_after": 1}
+RACE recovery_required external edit
+UNIT_EXIT=0

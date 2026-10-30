@@ -1,0 +1,1063 @@
+{
+  "utc": "2026-10-29T13:32:23.485201+00:00",
+  "project": "/Users/vincent4j/Tools/Source/poster-fit",
+  "entries": {
+    "AGENTS.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "67223927eeb4916e9c00e42a8f2247f7a8743d59a9dd9bbb03b57ae6e91596a7",
+      "size": 12889,
+      "mtime_ns": 1792460996711489920
+    },
+    "CLAUDE.md": {
+      "exists": false,
+      "symlink": false
+    },
+    "context-keeper.json": {
+      "exists": false,
+      "symlink": false
+    },
+    ".workbuddy": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    ".workbuddy/memory": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    ".workbuddy/memory/2026-09-17.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "6c2b0937997797c1a5248ee1e4cf42f6a28ac4fc398a663d95e59467a7f715de",
+      "size": 17910,
+      "mtime_ns": 1789642649040885358
+    },
+    ".workbuddy/memory/2026-09-18.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "785ff7673826c8a47c1084d9a148439afe352aeae62bf07409014ad9c8c4af4b",
+      "size": 5380,
+      "mtime_ns": 1789721032864324628
+    },
+    ".workbuddy/skills": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    ".workbuddy/skills/prompt-gap": {
+      "exists": true,
+      "symlink": true,
+      "target": "/Users/vincent4j/Tools/Source/prompt-gap"
+    },
+    ".workbuddy/tmp": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    ".workbuddy/tmp/prompt-gap-501": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    ".workbuddy/tmp/prompt-gap-501/24540fa054d2fce6e87e248dd39d308ea5ec261e2e5a76339401a1088382279f.lock": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "mtime_ns": 1789719365537905026
+    },
+    ".agents-group": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    ".agents-group/.sync.lock": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "mtime_ns": 1790599710857000522
+    },
+    ".agents-group/mcp": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    ".agents-group/mcp/eagle-mcp.json": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "e165f98cebaf5dd1b974bb3f65cf6901b7f8502b7619ec5dfe2667c0bee3807e",
+      "size": 138,
+      "mtime_ns": 1790599710857919859
+    },
+    ".agents-group/state.json": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "a19e6d040e4c3fae57838a3c1bc373f98b87f00baf19ca6d7b23999a906039de",
+      "size": 627,
+      "mtime_ns": 1790599710859767573
+    },
+    ".agents/skills": {
+      "exists": false,
+      "symlink": false
+    },
+    ".codex/skills": {
+      "exists": false,
+      "symlink": false
+    },
+    ".claude/skills": {
+      "exists": false,
+      "symlink": false
+    },
+    "docs/context-keeper": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    "docs/context-keeper/README.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "c9578e89c9b127f63229ffd18493e1bffb6cab9fc16328ade628072d29e2f7c8",
+      "size": 1944,
+      "mtime_ns": 1789642576919250056
+    },
+    "docs/context-keeper/evolution": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    "docs/context-keeper/evolution/E11印花母片用户复核覆盖初审.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "ca5b4422be7c3baf4b7d8dcd226e9223099b31c386c8026bdce5198a9f4415e8",
+      "size": 1108,
+      "mtime_ns": 1791880615773004875
+    },
+    "docs/context-keeper/evolution/E14单品母片阶段的批准与真值边界.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "7d1df496141f4ca851b9c1028b7d9de5dce281a625cab1e496931fdacd0789a6",
+      "size": 1166,
+      "mtime_ns": 1791880615773064791
+    },
+    "docs/context-keeper/evolution/E14参考包变化与身份搭配回归.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "cf7b910dd0db719820dca82f87ff638a0e3f4fe691bcd495258984377d525eab",
+      "size": 1135,
+      "mtime_ns": 1791880615773118291
+    },
+    "docs/context-keeper/evolution/E14局部色度必须兼顾完整分区与亮度.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "1e3657bd95a18548ae266c4275ecb1580d2cb1bd80fbfece13b95b0ade0183a4",
+      "size": 1016,
+      "mtime_ns": 1791880615773177958
+    },
+    "docs/context-keeper/evolution/E14返修证据边界与窄门禁.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "f2dfff70d571826f8682923461e86f45d517a9356a8232215057da959bbba9b5",
+      "size": 1007,
+      "mtime_ns": 1791880615773227291
+    },
+    "docs/context-keeper/evolution/E15路线耗尽后停止试错与无Photoshop边界.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "77d6b82ec0931856177d69aba499b9694017cbfce82cf96867a4931aa668021b",
+      "size": 1138,
+      "mtime_ns": 1791880615773278541
+    },
+    "docs/context-keeper/evolution/PromptGap完整审核必须对齐用户范围.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "fbf131631af855ac09bb22fc0ea7e59b4912905c7bb74cc342d3225310e09770",
+      "size": 1610,
+      "mtime_ns": 1789962181864914683
+    },
+    "docs/context-keeper/evolution/index.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "ec76a0aa12730b4cfe5e01d653202f104d68cb609f86e0c11fcb0c65f12ea8ee",
+      "size": 4111,
+      "mtime_ns": 1792401725099185526
+    },
+    "docs/context-keeper/evolution/running与回执不等于有效反馈工作.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "b4f0125c1da3c1715ac0fe48e95c6a1f410e27bd647fa864a8c6588b59313c16",
+      "size": 1424,
+      "mtime_ns": 1792401725099361688
+    },
+    "docs/context-keeper/evolution/临时入口绕过受管链会复发错误.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "0fce4185beee08a503266199990f02017680288ae8dbc260041eed923c4acb7b",
+      "size": 1304,
+      "mtime_ns": 1792401725100255327
+    },
+    "docs/context-keeper/evolution/从实拍起逐节点模型对照与反馈口径.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "f621d4c02b4079d0ac79dccd7023d4e209bd816a8fa963799e667c2032dcc019",
+      "size": 1170,
+      "mtime_ns": 1791880615773329791
+    },
+    "docs/context-keeper/evolution/内部编号不能替代模型可读约束.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "8da97580e8ea9bb46ace605f969acbcb21a868937f3f595591eb1310b560c6de",
+      "size": 1556,
+      "mtime_ns": 1789962397594503943
+    },
+    "docs/context-keeper/evolution/商品几何与颜色必须相对实物测量.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "be06bbc2285493719e70ecb9c41723ce066414751483b95323d8841564bddfa7",
+      "size": 1028,
+      "mtime_ns": 1791880615773394666
+    },
+    "docs/context-keeper/evolution/固定干净影棚与身份搭配分审.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "f52b5f086ee311b3c56dc45699b233f65875308942118d7ef54a52b0c5152c18",
+      "size": 1159,
+      "mtime_ns": 1791880615773462207
+    },
+    "docs/context-keeper/evolution/场景扩图必须由行为和接触驱动.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "90194342f0feca9750d194ece4efc0d32470d2f14131a8bc5d72873abc4d2230",
+      "size": 1037,
+      "mtime_ns": 1791880615773517540
+    },
+    "docs/context-keeper/evolution/委派任务主会话阶段可见性.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "506f2f05fbadd1a76b149ebe6fffaff7f6f9c66960fb74644dfa6ab01a0b4c3f",
+      "size": 1305,
+      "mtime_ns": 1790251310889996451
+    },
+    "docs/context-keeper/evolution/完整回归错误归因修复不被targeted替代.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "486dd5d4e3546922ec3a4ea024a313dc5ce9aadd12503aca752e41427fa00b04",
+      "size": 1523,
+      "mtime_ns": 1792401725100569984
+    },
+    "docs/context-keeper/evolution/小红书研究只用Computer-Use.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "6b2780fe79569f3ecee985d4f4a316dd6673aa6424bcfec653168fdabf0d13dd",
+      "size": 1016,
+      "mtime_ns": 1791880615773585874
+    },
+    "docs/context-keeper/evolution/开发收口的时间预算与可恢复检查点.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "dea4db503a07268875af11cd16db33c48688ea9b413ffff4cb90c42fb2b869fe",
+      "size": 1228,
+      "mtime_ns": 1789896474673316604
+    },
+    "docs/context-keeper/evolution/文件一致不等于视觉正确或用户收到.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "b7dce9e6f95ff9be50f1c31ac133237e008e26ab84e21384d4d3c9ae9ef2c320",
+      "size": 1693,
+      "mtime_ns": 1792401725100662564
+    },
+    "docs/context-keeper/evolution/无模特母片颜色与门襟结构分维验收.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "e8de735960d18e2e4930a434f7e65c5e2b0b896fb60ca1c95684471149c21d54",
+      "size": 1040,
+      "mtime_ns": 1791880615773639957
+    },
+    "docs/context-keeper/evolution/无色卡实拍不能做绝对颜色映射.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "c85ff1c16f9de332b434bc0b09d36a786d49a441a3e48219084af1b52b902947",
+      "size": 1043,
+      "mtime_ns": 1791880615773688748
+    },
+    "docs/context-keeper/evolution/独立树快照接续与一次性整合.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "06b81a635cda743485fa3d3cb516777c4876328f8bfcd73340798853b61eeed7",
+      "size": 1488,
+      "mtime_ns": 1792401725100751020
+    },
+    "docs/context-keeper/evolution/生产门禁回归绑定正式产物与派发基线.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "d6fd0f262b477e51e0ec4452f10497e7a5b47b233110b85644d4d87ef60e396f",
+      "size": 2453,
+      "mtime_ns": 1792052503802277540
+    },
+    "docs/context-keeper/evolution/生图任务范围内默认授权与调用边界.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "faa9d13268c818511bd7701c123162b62718785aef71a27b272b9a7b3de322cb",
+      "size": 1223,
+      "mtime_ns": 1790677895254191164
+    },
+    "docs/context-keeper/evolution/生图失败先分层归因输入目标与模型错误.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "b317512f2cef83f25d55d0c53f68fee5c2e8dc9645d027a70fa5f385137918d1",
+      "size": 1728,
+      "mtime_ns": 1792401725100841392
+    },
+    "docs/context-keeper/evolution/生图输入分级与缺项决定.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "931b3ad986badd488719aaf56c9b1d7db8a894c4bac1ffd61e7102bf6eed9e5c",
+      "size": 1031,
+      "mtime_ns": 1791880615773735624
+    },
+    "docs/context-keeper/evolution/生成图片统一仓库外存放.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "0de25d984b02d9f87f9d7f6d62faba45a5825c6c9c74eb138c4334a7620d2864",
+      "size": 1503,
+      "mtime_ns": 1789983615907670747
+    },
+    "docs/context-keeper/evolution/盘点请求须执行后交付.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "ab80e1ba788260a7135b8d09ac3c706ee639ba6ef1aec562bae22c52b9a416d4",
+      "size": 692,
+      "mtime_ns": 1790561836076029824
+    },
+    "docs/context-keeper/evolution/范围追加须真实新确认且不重置历史.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "01e97c364f4935b329fc2239bb098823bbc64fc8fba87e2a75d24818975d9473",
+      "size": 1467,
+      "mtime_ns": 1792401725101085468
+    },
+    "docs/context-keeper/evolution/袖腋短连接结构须独立验收.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "6fdff9a292e7c0be719699d2f76574d9dbdf4badf77e0e7a51120f7441ed0300",
+      "size": 1031,
+      "mtime_ns": 1791880615773800332
+    },
+    "docs/context-keeper/evolution/逐节点五分钟与并行验收.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "5f0eecdbc84b18e799f680f1897af916cdf13b7537fa67fd6586705c1a9a11f2",
+      "size": 1135,
+      "mtime_ns": 1791880615773850415
+    },
+    "docs/context-keeper/evolution/门禁测试须正向与拒绝反例并测.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "0d1fea96290d53aeecd810f25972dbd74cc81603e41ee4d361b93b8886a1dedf",
+      "size": 1500,
+      "mtime_ns": 1792401725101174465
+    },
+    "docs/context-keeper/memory-keeper.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "c767397867bc52cb7e0283d80f267ff63473ed95f7c4677c6da1d0810727afff",
+      "size": 14975,
+      "mtime_ns": 1792404982636023681
+    },
+    "docs/context-keeper/plans": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    "docs/context-keeper/plans/2026-08-07-M1三门禁与知识库重构需求.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "933e78e9cc8825a4f48d126a995a92c02fe0ae628c63418eca9c2315ce0d1b3c",
+      "size": 3631,
+      "mtime_ns": 1789636693875024526
+    },
+    "docs/context-keeper/plans/2026-08-11-参考证据角色与平铺图生图准备门禁需求.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "009f7df3dd703ada7e91677dc615e9ffc2fa12f0bd3a8877c0184f73a41af69e",
+      "size": 3739,
+      "mtime_ns": 1789636693879976572
+    },
+    "docs/context-keeper/plans/2026-08-11-服装参考图准入与褶皱闭环需求.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "2892b0d7a73606159b50e9a75442cf5bf5d061d253ddf34cf54cecdbabbf3f97",
+      "size": 2457,
+      "mtime_ns": 1789636398475324932
+    },
+    "docs/context-keeper/plans/2026-08-17-平铺服装上身多模型生产工作流需求.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "4fb9ea61b5ec21e898c2e234bd65dc05bdaaf950218df9038c4daa70af4e840a",
+      "size": 3150,
+      "mtime_ns": 1789636693885348187
+    },
+    "docs/context-keeper/plans/2026-08-26-实验学习与模型能力需求.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "d3f1b506884e720a01403c73a2e9a5a4d9a21ed711001b2a76aae9097a8f49df",
+      "size": 2243,
+      "mtime_ns": 1789636398475581632
+    },
+    "docs/context-keeper/plans/2026-08-28-服装商品图默认综合工作流需求.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "c1f4f475bb8639004a6900f74c93edb510ed69a4d44e034360f25af2f97a6ff1",
+      "size": 3561,
+      "mtime_ns": 1789636693890286484
+    },
+    "docs/context-keeper/plans/2026-09-03-生成前七步锁定流程需求.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "a30c346f735ca5dd3d07825be2369bb454270b2845b2d9d53005b68866f1f507",
+      "size": 2093,
+      "mtime_ns": 1789636398475873789
+    },
+    "docs/context-keeper/plans/2026-09-07-生产执行门禁需求.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "050a3ae4e2cd407f70019f5750c1310f3292c846a12470796260b40545773384",
+      "size": 1311,
+      "mtime_ns": 1789636693895172199
+    },
+    "docs/context-keeper/plans/2026-09-10-E13姿势材质稳定方案需求.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "f22306605296fa18edb7f1885a8e15e61fdf7831fe73ee67911965901207b21c",
+      "size": 1102,
+      "mtime_ns": 1791880615773927748
+    },
+    "docs/context-keeper/plans/2026-09-14-GPT-Image2案例库与审核工作台改造方案.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "362c4d54b86f7fa9ede038a740fc53b6cd782eb09bf359917bbef0571fb1b952",
+      "size": 29156,
+      "mtime_ns": 1789636755086187821
+    },
+    "docs/context-keeper/plans/2026-09-14-生成前视觉决策与提示词编译优化需求.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "c69d0ef6905c88d8127c236affc69c90888447c929b2a749571eb776ef69588e",
+      "size": 6934,
+      "mtime_ns": 1789636693902004891
+    },
+    "docs/context-keeper/plans/2026-09-20-全流程五分钟节点与并行验收.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "adf78c2c21c4a9fd3cf826ab88ed0e5057e3fc3e02cb538e1ca4219b0fb98db3",
+      "size": 2499,
+      "mtime_ns": 1789907058441117278
+    },
+    "docs/context-keeper/plans/2026-09-20-固定干净影棚并移除场景选择.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "11990b0fa11b2db56fceff0ffebd7d7c93b9667837bf69299740d404bbef6a0e",
+      "size": 2121,
+      "mtime_ns": 1789903819159511184
+    },
+    "docs/context-keeper/plans/2026-09-20-工作流门禁优化暂停与续接计划.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "5768ad7ef46cf043e3d472191a8d2070dc3644e60cdd8cadc166d800f7c9b213",
+      "size": 13533,
+      "mtime_ns": 1789896894827357629
+    },
+    "docs/context-keeper/plans/2026-09-21-E15场景动作扩图需求恢复.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "0ff4856bc7316bb760f7ff0aa4b8c0c2b8c994057f67d5dec5f7317a595d25a8",
+      "size": 1016,
+      "mtime_ns": 1791880615773988540
+    },
+    "docs/context-keeper/plans/2026-09-21-E15复盘与单次成图优化方案.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "2db9b32222f67d2ba85e80cf39ee848ea7303238c0a327c728f9c6421470717f",
+      "size": 1151,
+      "mtime_ns": 1791880615774039165
+    },
+    "docs/context-keeper/plans/2026-09-21-两分钟生图工作流结构优化.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "be2139663399b029289ca464ad77ca7be19b9da623da3c05c42ebbc50062ecc6",
+      "size": 12784,
+      "mtime_ns": 1789959283672467924
+    },
+    "docs/context-keeper/plans/2026-09-21-实验原始证据精简索引迁移.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "ecefd78b3ef32bb06bc84b4fe2835ee9e144cadaf9e96016ae632da50e71d090",
+      "size": 1751,
+      "mtime_ns": 1789983615907105756
+    },
+    "docs/context-keeper/plans/2026-10-10-E14书店同场景续接与生产提速.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "40ecf32158bc5ea37e6fb295e9ec1e5b3ea256f37ed361639a6ad018f83af620",
+      "size": 1114,
+      "mtime_ns": 1791880615774087290
+    },
+    "docs/context-keeper/plans/2026-10-13-E14双场景成图与本地快审入口收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "2acc6f23ee6746032ab283d6f042a77fdc780410c6387df831b743b766b6c2ad",
+      "size": 1135,
+      "mtime_ns": 1791880615774144039
+    },
+    "docs/context-keeper/plans/2026-10-14-任务范围派发与总览交付知识收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "ab0cd27f8bcd4cad64d217e490a907a34dbb9879b97ce237d14110b191e28784",
+      "size": 1347,
+      "mtime_ns": 1791957079794258608
+    },
+    "docs/context-keeper/plans/2026-10-15-request-C60八项交互实现与提交收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "57d9858cb62142a8fb56ed9d502375f9bc9687d7052a6444b6afbac6e0877e7a",
+      "size": 3279,
+      "mtime_ns": 1792052503800644666
+    },
+    "docs/context-keeper/plans/2026-10-15-三个P1门禁修复与证据化收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "b02cdb7d12c4560cff442ac9f3412716284e43b5a3e1d81772db7d6eecd49d05",
+      "size": 2221,
+      "mtime_ns": 1792035284819353082
+    },
+    "docs/context-keeper/plans/2026-10-15-三站对标研究与双入口建议归档.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "66848f7fc9de45deabffddfbdb510f77d2e6a65783b604825c32565b3dd16be9",
+      "size": 1878,
+      "mtime_ns": 1792056423270989770
+    },
+    "docs/context-keeper/plans/2026-10-19-Paseo核心源码表述撤下与收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "e56e3c36f4bff66842cdd8a8b449ac4197da8d26c1a21c35e4822764b3ab128b",
+      "size": 1566,
+      "mtime_ns": 1792401725102061521
+    },
+    "docs/context-keeper/plans/2026-10-19-主线合并与工作树清理及备份语义审查留档.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "b72b6eecae2f0971cf1cc46dcd2a7febe2c7b34129c8dc98db81263a56ccc3a2",
+      "size": 2298,
+      "mtime_ns": 1792401725102274389
+    },
+    "docs/context-keeper/plans/2026-10-19-五节点用户说明层审查与证据转持久.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "a261e57f9b1c2d72e1c86eeb5f0caf1b037d125d3093998ffe275e3f942414c3",
+      "size": 2735,
+      "mtime_ns": 1792461728118305409
+    },
+    "docs/context-keeper/plans/2026-10-19-五节点阶段B留档与有限收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "058576a73416628781474a0f5fdda98ef7fa96f41bce1a364b3e190b39a142d3",
+      "size": 5406,
+      "mtime_ns": 1792461728128289476
+    },
+    "docs/context-keeper/plans/2026-10-19-五节点需求验收与发布收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "ee31e0748878d93912953bac0bcd6474c431669c47b2056f3ba6dc5d7619e2a9",
+      "size": 3726,
+      "mtime_ns": 1792401725102650919
+    },
+    "docs/context-keeper/worklogs": {
+      "exists": true,
+      "symlink": false,
+      "directory": true
+    },
+    "docs/context-keeper/worklogs/2026-08-05-E04淘宝头图MVP重生成.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "1cb9badab8a886117e9bfdf1ca52dc6ce508ab2d873d32a409b8961c64257521",
+      "size": 1129,
+      "mtime_ns": 1791880615774200831
+    },
+    "docs/context-keeper/worklogs/2026-08-06-六款头图商品保真复核.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "28e91e6c077eca757172cfafe81464eb6dbb97f1a3018cc268e78ea135cb7123",
+      "size": 1125,
+      "mtime_ns": 1791880615774247581
+    },
+    "docs/context-keeper/worklogs/2026-08-07-E04实拍底图受控重生成.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "5881868187e0b5936e768330c5dd2abd0d29186b25ff34d2777ed7a82a68f0a8",
+      "size": 1126,
+      "mtime_ns": 1791880615774297539
+    },
+    "docs/context-keeper/worklogs/2026-08-07-Eagle服装实拍感样本审查.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "fb6530c410eb4394ba1950889759da5bd4681a234ada7edab34b3da9d72555ef",
+      "size": 1110,
+      "mtime_ns": 1791880615774347414
+    },
+    "docs/context-keeper/worklogs/2026-08-07-M1三门禁与知识库重构.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "583e3a14200122d49228758722541127739610e47e10719ee6bb4c5e5ecfd689",
+      "size": 1084,
+      "mtime_ns": 1791880615774396039
+    },
+    "docs/context-keeper/worklogs/2026-08-11-M1状态与生产输入门禁修复.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "ac1a540efe4dd0be41ecefe140823c0b479c447c601a8a5beac7e232c700e8fe",
+      "size": 1104,
+      "mtime_ns": 1791880615774454706
+    },
+    "docs/context-keeper/worklogs/2026-08-11-参考证据角色与平铺图生图准备门禁.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "eb3858229e1a3aef4e7167c0ca040ce4183ffaabe299c04ddac403ce860b322c",
+      "size": 5243,
+      "mtime_ns": 1789636776598044670
+    },
+    "docs/context-keeper/worklogs/2026-08-11-服装参考图准入与褶皱闭环.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "62f0bd36b3e771cebea7b8890f11094f10e19d05aa21d49efb29504365fc3f25",
+      "size": 3929,
+      "mtime_ns": 1789636398478455996
+    },
+    "docs/context-keeper/worklogs/2026-08-11-黄金样片失败台账与单变量返修.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "70253ec723d1cff6538cab27009b1ebc62b5419a8767b7bf81c9ea22bddce5d5",
+      "size": 1120,
+      "mtime_ns": 1791880615774511956
+    },
+    "docs/context-keeper/worklogs/2026-08-12-E09平铺商品层与通用形态先验.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "a57aeb4224d23279d6e1b0a5771546c39035f582b3602fd4e98afe134a6e4759",
+      "size": 1126,
+      "mtime_ns": 1791880615774560372
+    },
+    "docs/context-keeper/worklogs/2026-08-17-平铺服装上身多模型生产工作流.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "34f5528437b80578e45360c6bc00e685e57be3a6471d5c385911a74a8372861d",
+      "size": 4800,
+      "mtime_ns": 1789636776609377714
+    },
+    "docs/context-keeper/worklogs/2026-08-19-Eagle服装实拍图片标签规范.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "1e7ab76d3493f3327c0342237c641e816d4be7719c284bc73b5ec5201a51d60e",
+      "size": 1021,
+      "mtime_ns": 1791880615774607581
+    },
+    "docs/context-keeper/worklogs/2026-08-26-E10五图生产收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "42f73444dbb05d9859f4ddd5a0f4f6f30e2c52cb644054b5ad1c999eaf6aa527",
+      "size": 983,
+      "mtime_ns": 1791880615774655414
+    },
+    "docs/context-keeper/worklogs/2026-08-26-E10局部微纹理闭环.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "6a7bf83597a415a1a2443f14cb3a3f3022e186531a7491e9fe856be3dc3c8f9a",
+      "size": 1037,
+      "mtime_ns": 1791880615774702580
+    },
+    "docs/context-keeper/worklogs/2026-08-26-实验学习与模型能力闭环.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "cb4ede01c13548ca8d4a00fd86addfd8e1246504f842dbad1363af2ce0b03e90",
+      "size": 6413,
+      "mtime_ns": 1789636398479413256
+    },
+    "docs/context-keeper/worklogs/2026-08-28-E11-Seedream受控生产验证.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "5412ef1c1ddc05e7582e04009c239acc7bba37a4bc4ddd0bd2228d90fa1154c3",
+      "size": 1006,
+      "mtime_ns": 1791880615774748539
+    },
+    "docs/context-keeper/worklogs/2026-08-28-服装商品图默认综合工作流.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "c9faabf5661f10466b8ba30ad949363d03b565af6a49d18dcaee90d3a2e1bea9",
+      "size": 5691,
+      "mtime_ns": 1789636776622701402
+    },
+    "docs/context-keeper/worklogs/2026-08-31-阶段1事实源与工作流收口.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "20d3b5f916e6ca465b55a30640e8e08b11a0e574381100ffa5d453e8f4e141b9",
+      "size": 1118,
+      "mtime_ns": 1791880615774796414
+    },
+    "docs/context-keeper/worklogs/2026-09-02-E12正式输入服装生图测试复盘.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "455bc91c602392dcdbec86501a309a3cee5a619cf297f1c7a1932526a49301df",
+      "size": 1139,
+      "mtime_ns": 1791880615774843414
+    },
+    "docs/context-keeper/worklogs/2026-09-03-场景模特卡与完结复盘闭环.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "13b0dc85df20240f95a6068e85968e225505dc0d4c680f411bfec2e347e90ab0",
+      "size": 1022,
+      "mtime_ns": 1791880615774896247
+    },
+    "docs/context-keeper/worklogs/2026-09-03-生成前七步锁定流程.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "141962fe36dfb9dbf6944a4b3fe4c76f7036f29c06f545cb755dc277c9b551ea",
+      "size": 3010,
+      "mtime_ns": 1789636398480224813
+    },
+    "docs/context-keeper/worklogs/2026-09-07-五套核账与生产执行门禁.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "1ec9bc8f4f0d256fc97c4e0477de86cfdd329ad8a65fe7a413ba45aa6e3d6b63",
+      "size": 1135,
+      "mtime_ns": 1791880615774943747
+    },
+    "docs/context-keeper/worklogs/2026-09-08-阶段2-Go-No-Go收口.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "21bfc589fb13d9ce269be3acf9f86816d985ff76a4b1d602d1e26a9ead4a4c17",
+      "size": 1181,
+      "mtime_ns": 1791880615774994413
+    },
+    "docs/context-keeper/worklogs/2026-09-10-E13姿势材质稳定方案.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "c0ee7e2a10e3adfedbf82ec18025b547db2f1527dc8f372974795d9bed3ea856",
+      "size": 1102,
+      "mtime_ns": 1791880615775042997
+    },
+    "docs/context-keeper/worklogs/2026-09-11-E13材质验证停止复盘.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "d2fa87d2eaa56c89fbaee743129fc9ad6461dc2f925a89995c6b20673decf90e",
+      "size": 1087,
+      "mtime_ns": 1791880615775087538
+    },
+    "docs/context-keeper/worklogs/2026-09-14-E13整轮复盘与表面纹理门禁.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "7dce427c2e17bfa59af3895db3bb14f6a336115cd23b14a2ecc6dfd3600c484c",
+      "size": 1100,
+      "mtime_ns": 1791880615775130288
+    },
+    "docs/context-keeper/worklogs/2026-09-14-GPT-Image2案例库与审核闭环.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "67718ffe70233190fa7179629574b5e0181113bda89bb5b2d68a98687f541e5a",
+      "size": 5809,
+      "mtime_ns": 1789636776645173997
+    },
+    "docs/context-keeper/worklogs/2026-09-14-生成前视觉决策与提示词编译优化.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "f83d107687f6413c7f5225f8b128bad917523e30f93c38f4116312a128ad9b82",
+      "size": 15541,
+      "mtime_ns": 1789636776648565553
+    },
+    "docs/context-keeper/worklogs/2026-09-15-服装主体与小红书双研究门禁.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "fa9af39f3581c93c896b3242f1323414f9b0d97e913cd5a75a4001d55aa876c0",
+      "size": 1123,
+      "mtime_ns": 1791880615775177205
+    },
+    "docs/context-keeper/worklogs/2026-09-15-生图速度瓶颈与单命令启动优化.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "1630eab1b21bf12c4ca33326017ec854d9c1fd9d8311b0c6e14617ae3af013a0",
+      "size": 3921,
+      "mtime_ns": 1789636398482229205
+    },
+    "docs/context-keeper/worklogs/2026-09-20-全流程五分钟节点与并行验收.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "a1d80fc418748e83036cad7a0edb9760885c8202ad234aa5341f0774cdc289f6",
+      "size": 4305,
+      "mtime_ns": 1789907058441577656
+    },
+    "docs/context-keeper/worklogs/2026-09-20-固定干净影棚并移除场景选择.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "45fa0452541235574368521e8b6c52bf62043a6dab22afe91d1a80d10f96ff25",
+      "size": 1120,
+      "mtime_ns": 1791880615775223913
+    },
+    "docs/context-keeper/worklogs/2026-09-20-小红书仅用Computer-Use.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "896e08e2e3a72fc12698aabe8908d7523e8d18258a63184e5f85507ee56ed5e0",
+      "size": 1040,
+      "mtime_ns": 1791880615775268580
+    },
+    "docs/context-keeper/worklogs/2026-09-20-工作流门禁优化暂停与续接计划.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "504871a15dd8d6f4b2b08c3d3f6123204348d41b3b012cb58c3db763dafa6ce6",
+      "size": 4586,
+      "mtime_ns": 1789896894828288581
+    },
+    "docs/context-keeper/worklogs/2026-09-21-E15单次成图方案复核.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "7f27b7ff8422db440193dc219a673c2440d6747c041e1e65d33d0414b5cd4e72",
+      "size": 1016,
+      "mtime_ns": 1791880615775312621
+    },
+    "docs/context-keeper/worklogs/2026-09-21-E15场景动作扩图需求恢复.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "f76bc830cbbcc136117a8188bb57e93223f373feee907d8a87ebfc5b89bb12aa",
+      "size": 1016,
+      "mtime_ns": 1791880615775353288
+    },
+    "docs/context-keeper/worklogs/2026-09-21-E15干净影棚商品母版生成.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "167eb2dfecc7ab535a5241c79b356cca555c64251021ff210421ac771fac40d2",
+      "size": 1114,
+      "mtime_ns": 1791880615775398913
+    },
+    "docs/context-keeper/worklogs/2026-09-21-PromptGap完整审核范围纠正.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "0e2beb91626b38756a772a6a6ffbc36812a841ccccc8ed21ccfde5e91d880f14",
+      "size": 1055,
+      "mtime_ns": 1791880615775446413
+    },
+    "docs/context-keeper/worklogs/2026-09-21-两分钟生图工作流结构优化.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "c99141cf8eeb2fae19e2e10fda94ddfce05daaa668ef2fd5401c72c9f4ee3fba",
+      "size": 5838,
+      "mtime_ns": 1789959354387405314
+    },
+    "docs/context-keeper/worklogs/2026-09-21-实验原始证据精简索引迁移.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "ecfcbab0af04bbf6456e1b2dffc08e0cf5739fc5fddb920325c9ca279fe1906c",
+      "size": 1039,
+      "mtime_ns": 1791880615775491246
+    },
+    "docs/context-keeper/worklogs/2026-09-21-生成图片统一仓库外存放.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "e63a06b239e51bcabfd5403cc2a86559b923277a77680b6e106489319d3beb2a",
+      "size": 1538,
+      "mtime_ns": 1789969869669230668
+    },
+    "docs/context-keeper/worklogs/2026-09-22-E15停止试错与无Photoshop工作流复盘.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "9c1fe0f4e2e433c0a172b82e67489fdb1c5236e2249e8abd29c48afa2bbc8509",
+      "size": 1123,
+      "mtime_ns": 1791880615775563246
+    },
+    "docs/context-keeper/worklogs/2026-09-24-生图输入分级与缺项确认.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "8bbfcfc492a1f187024264d50d95cc19229c7659b3ffb5c6057df49550d47c64",
+      "size": 1138,
+      "mtime_ns": 1791880615775608746
+    },
+    "docs/context-keeper/worklogs/2026-09-28-E04至E16实拍继承与生成分工技术审计.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "cd0104d31a5d83e1b250c7f9b5c84e33a6f6c6c72878d16145ffe62d7c2a818d",
+      "size": 1126,
+      "mtime_ns": 1791880615775665454
+    },
+    "docs/context-keeper/worklogs/2026-09-28-E10E11跨商品母片首图与输入门禁.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "1be14738f1d79e624661a57d8ab705e04dabec9aab1e2ae22e10049a5c0b0efa",
+      "size": 1114,
+      "mtime_ns": 1791880615775715121
+    },
+    "docs/context-keeper/worklogs/2026-09-28-E14参考包AB各一次验证与裁决.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "be5b63b9990108b6cbb134ca3d66d6e1dcc224e961baeddf472c46d5d695c23d",
+      "size": 1129,
+      "mtime_ns": 1791880615775760871
+    },
+    "docs/context-keeper/worklogs/2026-09-28-E14双路样片问题盘点.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "fb660c9cdf196d7471896ef65280c8219064bc13d1ee9ac7cb8b52b471c4859d",
+      "size": 1127,
+      "mtime_ns": 1791880615775809370
+    },
+    "docs/context-keeper/worklogs/2026-09-28-E14安全内区局部色度一次验证.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "e8943686ae55974ed87a5d25dd7199c09130e14cada0ee25f399c994ec8be933",
+      "size": 1019,
+      "mtime_ns": 1791880615775856995
+    },
+    "docs/context-keeper/worklogs/2026-09-28-E14无模特衣服母片试行技术落地.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "0a6a0fbf31edd1e8aeac00b6a6cc785d940289182849cbfb8dda5a1dc1f638f8",
+      "size": 1119,
+      "mtime_ns": 1791880615775906787
+    },
+    "docs/context-keeper/worklogs/2026-09-29-E14后期校色终止与色卡输入规范.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "3fa988678d448f857dbaf6312080f6af7031b81399cf969000b50d49dbc311d6",
+      "size": 1114,
+      "mtime_ns": 1791880615775952870
+    },
+    "docs/context-keeper/worklogs/2026-09-29-E14门襟条纹纠错与色卡策略.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "1ca642f85c1ad586870de55f8d1c00aaa4bfe11a333bf78e9e9e74e6df2dc19e",
+      "size": 1034,
+      "mtime_ns": 1791880615776016745
+    },
+    "docs/context-keeper/worklogs/2026-09-29-E14门襟结构修正派发阻断.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "bfe566ec6623f95223b065ca017faf91d13da4fca62e780eca40ee33168bbaf0",
+      "size": 1022,
+      "mtime_ns": 1791880615776066245
+    },
+    "docs/context-keeper/worklogs/2026-09-29-E14颜色收尾与色卡拍摄规范.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "885ee10fb8f6f1e2e1514ffdd3cd16a5044bdb41c4d044bf8d5942279163a84f",
+      "size": 1129,
+      "mtime_ns": 1791880615776116703
+    },
+    "docs/context-keeper/worklogs/2026-10-09-生图流程核心优先级与数字母片路线评审.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "ea9d0edf9bda73ef09c15db4b0eb92dab5e8c403f27034108ec0b7388bcf0dfb",
+      "size": 4685,
+      "mtime_ns": 1791543730690344331
+    },
+    "docs/context-keeper/worklogs/2026-10-10-E14书店生成与两轮提速修复.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "935d610498652a825e553e071448ec23cf728f3ef086f70db0c1f003c1a88a40",
+      "size": 1145,
+      "mtime_ns": 1791880615776168245
+    },
+    "docs/context-keeper/worklogs/2026-10-12-E14快审热路径一次读图提交.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "0b1503afeadf2623cc74d3b7aaa45364aabe006c8f496fcea0609e96b0accb3e",
+      "size": 1144,
+      "mtime_ns": 1791880615776225287
+    },
+    "docs/context-keeper/worklogs/2026-10-13-E14双场景成图与本地快审入口收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "9e9a86b35a70655f3c198a4105bf0d68903accea2628276836ae83d764618972",
+      "size": 1135,
+      "mtime_ns": 1791880615776280203
+    },
+    "docs/context-keeper/worklogs/2026-10-13-E14四图人工验收与跨商品批量工作流定稿.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "d8f6da53d4fd7cecb36d9b9e9893f6b7c15e12130205b3ec891fc4eb44e87986",
+      "size": 1175,
+      "mtime_ns": 1791880615776335411
+    },
+    "docs/context-keeper/worklogs/2026-10-13-E14自然遮挡与人景融合验收纠正.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "7a89dc0cedc4e3d912f301505d80d087c6f22b96595c3343f3e5e4f89c4a6563",
+      "size": 1040,
+      "mtime_ns": 1791880615776386495
+    },
+    "docs/context-keeper/worklogs/2026-10-14-任务范围派发与总览交付知识收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "d78d6ff24e648643143802e964db1f99d2dfd7b71b15fb67ac1189154a5228b2",
+      "size": 4378,
+      "mtime_ns": 1791957079794330315
+    },
+    "docs/context-keeper/worklogs/2026-10-15-request-C60八项交互实现与提交收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "64c4624c3f6c8feab17613cd448e4002fb1f7344d50115455053acd75eb406f3",
+      "size": 6575,
+      "mtime_ns": 1792052503800736705
+    },
+    "docs/context-keeper/worklogs/2026-10-15-三个P1门禁修复与证据化收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "b36e59a7318e65c7fd9a455e91d6f6ca261af21b9e4b24c09b63b968ad447eed",
+      "size": 8672,
+      "mtime_ns": 1792035284819583915
+    },
+    "docs/context-keeper/worklogs/2026-10-15-三站对标研究与双入口建议归档.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "cc104dd4d02f004695c9cdd20ba8175c9ce49187676a6c786833cd0ee6aa378e",
+      "size": 3344,
+      "mtime_ns": 1792056423271127563
+    },
+    "docs/context-keeper/worklogs/2026-10-19-Paseo核心源码表述撤下与收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "c30e1c805f7a754c17bffdb162ba643dcdbc9d42c387d7f9f3956272fbf73503",
+      "size": 3826,
+      "mtime_ns": 1792401725102786415
+    },
+    "docs/context-keeper/worklogs/2026-10-19-主线合并与工作树清理及备份语义审查留档.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "935a803a47c2b94b97f38dbce9a772f123fe0d11ea4213c3150337bbc63eb18a",
+      "size": 7154,
+      "mtime_ns": 1792401725103023991
+    },
+    "docs/context-keeper/worklogs/2026-10-19-五节点用户说明层审查与证据转持久.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "bd949ac3ca48519d8240e9bec00bd502cc4f4c53b7be085cf7f52e178c1f1016",
+      "size": 7309,
+      "mtime_ns": 1792404982636286176
+    },
+    "docs/context-keeper/worklogs/2026-10-19-五节点阶段B留档与有限收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "8dbe9bfbe4d4246a2a95e909d7d02d3ab62ff97b0bea1caeb3526c733786a2dc",
+      "size": 9046,
+      "mtime_ns": 1792401725103334023
+    },
+    "docs/context-keeper/worklogs/2026-10-19-五节点需求验收与发布收尾.md": {
+      "exists": true,
+      "symlink": false,
+      "sha256": "b34c4cf1bf2b31021fd21f9a5a82bf9f87d1e7875c4c84b2acfc47e0bbf8bc99",
+      "size": 12431,
+      "mtime_ns": 1792401725103641764
+    },
+    ".zcode/acp/sandbox.json": {
+      "exists": false,
+      "symlink": false
+    }
+  }
+}

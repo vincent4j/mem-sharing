@@ -1,0 +1,64 @@
+{
+  "schema_version": 3,
+  "projects": {},
+  "shared_objects": {},
+  "product": {
+    "product_id": "mem-sharing",
+    "installation_id": "20261030T162149Z-61408de8165046009fdf4f641652dafd",
+    "product_structure_version": 1,
+    "product_code_version": "0.4.1",
+    "source": {
+      "url": "https://github.com/vincent4j/mem-sharing",
+      "commit": "8a8999401c8c11ccd9d3f8772fe5eb3d3713a944",
+      "tree_sha256": "dcf0b8d1e0568e78fea35def23f89afde621a6dbe35d179fbd7ad05be3b77816"
+    },
+    "installation_status": "complete",
+    "last_operation_id": "synthetic-fault-upgrade"
+  },
+  "machine": {
+    "agents": {
+      "codex": {
+        "installation": {
+          "status": "installed",
+          "observed_at": "2026-10-30T16:21:50Z",
+          "evidence": "detect m4-05/1: 解析到 @openai/codex 1.0.0 的真实包入口,bin 入口存在"
+        },
+        "static": {
+          "status": "unknown",
+          "observed_at": null,
+          "evidence": null
+        },
+        "runtime_acceptance": {
+          "status": "pending",
+          "evidence_path": null
+        }
+      }
+    },
+    "objects": {
+      "/private/tmp/M4-09-11-q5o7a_kq/home/.codex/AGENTS.md#public-source": {
+        "kind": "user_convention",
+        "path": "/private/tmp/M4-09-11-q5o7a_kq/home/.codex/AGENTS.md",
+        "scope": "machine",
+        "agents": [
+          "codex"
+        ],
+        "ownership": "created",
+        "marker": {
+          "start": "<!-- mem-sharing:rules:start -->",
+          "end": "<!-- mem-sharing:rules:end -->"
+        },
+        "fingerprint": {
+          "algorithm": "sha256",
+          "basis": "block_bytes",
+          "value": "5aba3a70d8009f68c212d45b2dcc2d8c50f9a607145723b19db95ea07ccc7c32"
+        },
+        "original_existed": false,
+        "link_target": null,
+        "backup_manifest": "/private/tmp/M4-09-11-q5o7a_kq/home/.mem-sharing-install-20261030T162149Z-61408de8165046009fdf4f641652dafd/entry-backups/20261030T162150Z-fb7e55c7d50c40c397fc5e11ac91d060/manifest.json",
+        "consumers": []
+      }
+    }
+  },
+  "migration": null,
+  "legacy_import": null
+}

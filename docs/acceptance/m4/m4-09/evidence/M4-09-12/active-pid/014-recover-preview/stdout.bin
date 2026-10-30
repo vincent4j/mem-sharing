@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "lock_conflict", "message": "Lock owner still exists; no lock stealing"}], "schema_version": 1, "status": "failed"}

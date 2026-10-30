@@ -1,0 +1,26 @@
+{
+  "label": "fixture-git-init",
+  "argv": [
+    "/usr/bin/git",
+    "init",
+    "-q",
+    "/private/tmp/M4-09-10-i9hfsbxj/project"
+  ],
+  "cwd": "/private/tmp/M4-09-10-i9hfsbxj/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-10-i9hfsbxj/home",
+    "PATH": "/private/tmp/M4-09-10-i9hfsbxj/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-10-i9hfsbxj/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:20:11.120542Z",
+  "ended_utc": "2026-10-30T16:20:11.222297Z",
+  "duration_seconds": 0.10175599998910911,
+  "exit_code": 0,
+  "stdin_base64": ""
+}

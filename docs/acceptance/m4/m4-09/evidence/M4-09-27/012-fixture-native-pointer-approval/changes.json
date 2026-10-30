@@ -1,0 +1,31 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377343577062574,
+      "size": 416,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377344524642801,
+      "size": 448,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "native-pointer-approval-11.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377344524702509,
+      "size": 996,
+      "kind": "file",
+      "sha256": "79240c3c3e0b3f1dbe41998283aaa4cd02e241bebf81e33cd23ba640a1dec559"
+    }
+  }
+]

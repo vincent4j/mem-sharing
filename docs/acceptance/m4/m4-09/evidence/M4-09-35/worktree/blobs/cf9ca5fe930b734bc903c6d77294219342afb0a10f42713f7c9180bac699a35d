@@ -1,0 +1,55 @@
+............................................./Users/vincent4j/Tools/Source/agent-group-memory/tests/integration/test_m207_cli_cycle.py:185: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+../Users/vincent4j/Tools/Source/agent-group-memory/tests/integration/test_m207_cli_cycle.py:185: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/vincent4j/Tools/Source/agent-group-memory/tests/integration/test_m207_cli_cycle.py:459: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+...................
+----------------------------------------------------------------------
+Ran 66 tests in 168.337s
+
+OK
+CLI DECLINE authorization=no; created triggers removed; denial guard present; store/source unchanged
+CLI SOURCE source_available=missing; source_missing gaps; zero persistent writes
+REAL_CHAIN {"P_commit": "27d6e264496184a85dc015039885ebdae174f89d", "T_commit": "f5d3add71e7cf35039c0907728ec883151a9f6f6", "T_parent": "27d6e264496184a85dc015039885ebdae174f89d", "P_manifest": "50e922d11d53af6627ea0bae437222c498391916a53c2790b44c8fa48e25d134", "T_manifest": "961ac4669ed50e7f9d83a9f0f8f0bcda2b218631b80157268910795cfa699835", "changed_files": ["scripts/agm.py", "scripts/agm_core/layout.py", "scripts/agm_core/upgrade.py", "scripts/agm_core/user_install.py", "scripts/agm_core/versions.py"], "P_self_installed": true, "P_command_ran": true, "T_command_ran": true, "same_version_zero_mtime": true}
+REAL_ROLLBACK version=0.4.0; post-upgrade project and authorization preserved; user bytes unchanged
+REAL_FILE_WINDOW .agm-code-manifest.json before continue
+REAL_FILE_WINDOW .agm-code-manifest.json before rollback
+REAL_FILE_WINDOW .agm-code-manifest.json after continue
+REAL_FILE_WINDOW .agm-code-manifest.json after rollback
+REAL_FILE_WINDOW scripts/agm.py before continue
+REAL_FILE_WINDOW scripts/agm.py before rollback
+REAL_FILE_WINDOW scripts/agm.py after continue
+REAL_FILE_WINDOW scripts/agm.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/layout.py before continue
+REAL_FILE_WINDOW scripts/agm_core/layout.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/layout.py after continue
+REAL_FILE_WINDOW scripts/agm_core/layout.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py before continue
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py after continue
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/user_install.py before continue
+REAL_FILE_WINDOW scripts/agm_core/user_install.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/user_install.py after continue
+REAL_FILE_WINDOW scripts/agm_core/user_install.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/versions.py before continue
+REAL_FILE_WINDOW scripts/agm_core/versions.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/versions.py after continue
+REAL_FILE_WINDOW scripts/agm_core/versions.py after rollback
+REAL_PHASE prepare continue completed 
+REAL_PHASE prepare rollback rolled_back 
+REAL_PHASE archive continue completed 
+REAL_PHASE archive rollback rolled_back 
+REAL_PHASE inventory continue completed 
+REAL_PHASE inventory rollback rolled_back 
+REAL_PHASE code continue completed 
+REAL_PHASE code rollback rolled_back 
+REAL_PHASE verify continue completed 
+REAL_PHASE verify rollback rolled_back 
+REAL_PHASE commit continue completed finish_only
+REAL_PHASE commit rollback completed finish_only
+REAL_FIXED_TOOLKIT source unavailable; installer replaced; fixed launcher recovered; T CLI runs

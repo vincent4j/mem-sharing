@@ -1,0 +1,21 @@
+[
+  {
+    "path": "home/.mem-sharing-install-20261030T161732Z-77ad91ebb7dc41edae534c996aebb2cc/journal.json",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377053642120253,
+      "size": 171216,
+      "kind": "file",
+      "sha256": "c36ac570475028736484e3284b1cf461eced3d14ea1c29d6c0065990b8e47f58"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377053844257389,
+      "size": 171223,
+      "kind": "file",
+      "sha256": "a592906882d370c6acb8f4e5a3cfd901109e0a447b7cef636dab8417b6b1ecc4"
+    }
+  }
+]

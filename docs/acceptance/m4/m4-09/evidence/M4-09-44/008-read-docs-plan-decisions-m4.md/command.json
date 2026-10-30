@@ -1,0 +1,24 @@
+{
+  "label": "read-docs-plan-decisions-m4.md",
+  "argv": [
+    "/bin/cat",
+    "/private/tmp/M4-09-44-90ht93jr/source/docs/plan/decisions-m4.md"
+  ],
+  "cwd": "/private/tmp/M4-09-44-90ht93jr/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-44-90ht93jr/home",
+    "PATH": "/private/tmp/M4-09-44-90ht93jr/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-44-90ht93jr/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:24:49.450451Z",
+  "ended_utc": "2026-10-30T16:24:49.514620Z",
+  "duration_seconds": 0.06417095797951333,
+  "exit_code": 0,
+  "stdin_base64": ""
+}

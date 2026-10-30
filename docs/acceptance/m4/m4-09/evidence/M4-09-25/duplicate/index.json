@@ -1,0 +1,79 @@
+{
+  "case": "M4-09-25",
+  "name": "AGENTS 生命周期",
+  "status": "blocked",
+  "area": "/private/tmp/M4-09-25-hz_jbq_2",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "007-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "008-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "009-fixture-agents-duplicate",
+      "label": "fixture-agents-duplicate",
+      "exit_code": null
+    },
+    {
+      "path": "010-check",
+      "label": "check",
+      "exit_code": 1
+    },
+    {
+      "path": "011-remove-preview",
+      "label": "remove-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "012-remove-kernel-preview",
+      "label": "remove-kernel-preview",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "Collector/precondition exception; not a product verdict: TypeError('the JSON object must be str, bytes or bytearray, not NoneType')"
+  ],
+  "ended_utc": "2026-10-30T16:22:02.993074Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-25-hz_jbq_2/home/.mem-sharing-install-20261030T162200Z-c7ca809e19884af1b7e3e0d5fca96f5b/journal.json",
+    "/private/tmp/M4-09-25-hz_jbq_2/home/.mem-sharing-install-20261030T162200Z-c7ca809e19884af1b7e3e0d5fca96f5b/entry-backups/20261030T162201Z-5d16f2a708bb43b78279e07600ec7e0e/manifest.json",
+    "/private/tmp/M4-09-25-hz_jbq_2/home/.mem-sharing/backups/20261030T162202Z-ee497aec65864a96baabb171309b52a9/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

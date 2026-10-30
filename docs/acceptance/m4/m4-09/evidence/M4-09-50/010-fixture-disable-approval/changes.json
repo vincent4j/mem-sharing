@@ -1,0 +1,31 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377367594749810,
+      "size": 416,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377368385288771,
+      "size": 448,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "disable-approval-9.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377368385343521,
+      "size": 1419,
+      "kind": "file",
+      "sha256": "6016b76d11c7df7b4aa0ba12e317238f1c23658a6105ae6ce1e78bb189ada16f"
+    }
+  }
+]

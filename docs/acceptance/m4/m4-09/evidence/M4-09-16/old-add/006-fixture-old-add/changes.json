@@ -1,0 +1,31 @@
+[
+  {
+    "path": "home/.agents-group/references",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377054837500740,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377055584009007,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents-group/references/added",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377055584060633,
+      "size": 5,
+      "kind": "file",
+      "sha256": "279b8a60f444fa8b6275687ce7e44363d97f72f88e4a3285baf0d9ed812e4061"
+    }
+  }
+]

@@ -1,0 +1,21 @@
+[
+  {
+    "path": "old-product/scripts/registry.json",
+    "before": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377142190837915,
+      "size": 59,
+      "kind": "file",
+      "sha256": "c15998df98f7307d596fc005107f5bc9b2b79ee0131cb0ac43e8609d210c1f18"
+    },
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377143565343203,
+      "size": 60,
+      "kind": "file",
+      "sha256": "db70d9f6eac45ba893e6d13743b86b4526c6ba82af3d02493f0ee58858a696ca"
+    }
+  }
+]

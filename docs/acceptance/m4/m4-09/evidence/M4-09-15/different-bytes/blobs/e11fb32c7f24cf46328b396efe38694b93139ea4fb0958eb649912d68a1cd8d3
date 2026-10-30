@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "operation": "m2-09-crash-drill",
+  "status": "rolled_back",
+  "registry_path": null,
+  "created_directories": [],
+  "entries": [
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m2-platforms/recover-scene/a.md",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 420,
+        "link_target": null,
+        "fingerprint": "b6a98d9ce9a2d9149288fa3df42d377c3e42737afdcdaf714e33c0a100b51060",
+        "backup": "0.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 420,
+        "link_target": null,
+        "fingerprint": "aca2d92141a34dc393a3a9e8041c4794e21378b74c5827206aa97d7e4d157566",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "restored"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m2-platforms/recover-scene/b.md",
+      "before": {
+        "existed": false,
+        "kind": "absent",
+        "mode": null,
+        "link_target": null,
+        "fingerprint": null,
+        "backup": null
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "f2c82decdd7181cf98945929a62598db7e6b477e11f6e0eb0ae97020eff151ad",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "restored"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m2-platforms/recover-scene/link.md",
+      "before": {
+        "existed": false,
+        "kind": "absent",
+        "mode": null,
+        "link_target": null,
+        "fingerprint": null,
+        "backup": null
+      },
+      "after": {
+        "existed": true,
+        "kind": "symlink",
+        "mode": null,
+        "link_target": "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m2-platforms/recover-scene/a.md",
+        "fingerprint": "2ef7810db95de64dae2f25b93c91aaed1b8ef461df0e14f076b6502a4abff965",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "restored"
+    }
+  ],
+  "error": null
+}

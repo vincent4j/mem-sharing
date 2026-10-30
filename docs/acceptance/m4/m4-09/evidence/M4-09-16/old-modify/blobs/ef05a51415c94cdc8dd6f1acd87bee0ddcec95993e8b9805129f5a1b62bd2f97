@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "diff",
+    "-u",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m1-07/protected-before-n2.json",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m1-07/protected-after-n2.json"
+  ],
+  "exit_code": 0,
+  "stderr": ""
+}

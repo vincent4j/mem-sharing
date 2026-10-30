@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "command": "enable-memory",
+  "main_checkout": "/private/tmp/M4-09-56-ygg_guy3/project",
+  "checkout": "/private/tmp/M4-09-56-ygg_guy3/project",
+  "git_common_dir": "/private/tmp/M4-09-56-ygg_guy3/project/.git",
+  "agents": [
+    "codex"
+  ],
+  "memory_policy": "follow_ck",
+  "changes": [
+    {
+      "path": "/private/tmp/M4-09-56-ygg_guy3/project/AGENTS.md",
+      "operation": "update",
+      "before_fingerprint": "77b79353c6db450ba575817cf8c9ea8800107443a57edb5d7ded861dea3f62ee",
+      "after_fingerprint": "85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406"
+    }
+  ],
+  "installation": {
+    "codex": {
+      "status": "installed",
+      "fingerprint": "1c495affe6e6a2496cd85883fb2bb4f1cbc1965fd93bfa4fb4c3aa4852bc8109"
+    },
+    "claude": {
+      "status": "absent",
+      "fingerprint": "0daeef97537d1dd985ab7460ab5494fe56664917d81302d10bcf152dc24dc7a3"
+    },
+    "workbuddy": {
+      "status": "absent",
+      "fingerprint": "fb2b121c37d878da73f57247f55a908685b9c6666a2b1b9fff0881a1d5b0d2ab"
+    }
+  },
+  "native_pending": [],
+  "legacy_bridge_transition": [
+    {
+      "path": "/private/tmp/M4-09-56-ygg_guy3/project/AGENTS.md",
+      "ownership": "created",
+      "before_hex": "3c212d2d20636f6e746578742d6b65657065723a7374617274202d2d3e0a73796e746865746963206f6c6420434b2070726f746f636f6c0a3c212d2d20636f6e746578742d6b65657065723a656e64202d2d3e",
+      "fingerprint": "ebb9bd777d2ad82332d3b59d59e448410487991dde97c5e96fbfe5e5aba9e44e",
+      "action": "retire created and rebuild"
+    }
+  ],
+  "confirmed_at": "2026-10-30T16:22:53.278969Z",
+  "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
+}

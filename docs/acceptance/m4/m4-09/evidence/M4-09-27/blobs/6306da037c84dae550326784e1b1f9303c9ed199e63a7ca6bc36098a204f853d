@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "operation": "remove-memory",
+  "status": "committed",
+  "registry_path": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/registry.json",
+  "created_directories": [],
+  "entries": [
+    {
+      "path": "/private/tmp/M4-09-27-47628ifz/project/AGENTS.md",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406",
+        "backup": "0.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "d3017a75ee18512f5c832d3cee84a8abf8e612b50ead6a8df5e838437f1da9be",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    },
+    {
+      "path": "/private/tmp/M4-09-27-47628ifz/project/.workbuddy/memory/MEMORY.md",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 420,
+        "link_target": null,
+        "fingerprint": "6e23989c1e126ed9af77e657a51531e966dba27b8db2f9d04d169e4946d79f8a",
+        "backup": "1.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 420,
+        "link_target": null,
+        "fingerprint": "1822b4a9d415df3ee168e5984e3fd69f4a64eefa145ee71c20ec7d71912e6929",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    },
+    {
+      "path": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/registry.json",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "0c74bf27a43190a7c2be4cb0018c286415ff954cc10a6754ac2e5d0ae9a78d8c",
+        "backup": "2.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "a297117a6ab1dd857d38b2dbe8d954726870fb2abee7d8c46d808444c2458ef3",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    }
+  ],
+  "error": null
+}

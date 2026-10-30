@@ -1,0 +1,68 @@
+{
+  "case": "M4-09-20",
+  "name": "双账及半迁移冲突",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-20-q__8yw_q",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-seed-legacy-ledger",
+      "label": "seed-legacy-ledger",
+      "exit_code": 0
+    },
+    {
+      "path": "007-fixture-old-body-sentinel",
+      "label": "fixture-old-body-sentinel",
+      "exit_code": null
+    },
+    {
+      "path": "008-fixture-old-request",
+      "label": "fixture-old-request",
+      "exit_code": null
+    },
+    {
+      "path": "009-install-preview",
+      "label": "install-preview",
+      "exit_code": 2
+    },
+    {
+      "path": "010-check",
+      "label": "check",
+      "exit_code": 1
+    }
+  ],
+  "notes": [
+    "Source is an exact git-archive export of baseline; source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "§26 replacement keeps conflict diagnosis and byte preservation; no mtime winner or migration is selected by the collector."
+  ],
+  "ended_utc": "2026-10-30T16:19:10.190836Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-20-q__8yw_q/home/.mem-sharing-install-20261030T161907Z-d637b7e529f947f69e1c068f16d359f0/journal.json",
+    "/private/tmp/M4-09-20-q__8yw_q/home/.mem-sharing-install-20261030T161907Z-d637b7e529f947f69e1c068f16d359f0/entry-backups/20261030T161908Z-1c773f4de661416a8bf92e9fa7ea6c56/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

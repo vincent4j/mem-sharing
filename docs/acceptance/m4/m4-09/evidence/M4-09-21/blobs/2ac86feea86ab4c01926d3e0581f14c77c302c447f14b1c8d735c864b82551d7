@@ -1,0 +1,9 @@
+{
+  "app_directories": [],
+  "legacy_registries": [
+    "/private/tmp/M4-09-21-uw1f59jv/old-product/scripts/registry.json"
+  ],
+  "legacy_source_commits": {
+    "/private/tmp/M4-09-21-uw1f59jv/old-product/scripts/registry.json": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}

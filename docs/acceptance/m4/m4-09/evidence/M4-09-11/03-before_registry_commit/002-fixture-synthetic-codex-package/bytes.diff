@@ -1,0 +1,15 @@
+--- before/packages/codex/bin/codex
++++ after/packages/codex/bin/codex
+@@ -0,0 +1,2 @@
++#!/bin/sh
++exit 0
+--- before/packages/codex/package.json
++++ after/packages/codex/package.json
+@@ -0,0 +1,7 @@
++{
++  "name": "@openai/codex",
++  "version": "1.0.0",
++  "bin": {
++    "codex": "bin/codex"
++  }
++}

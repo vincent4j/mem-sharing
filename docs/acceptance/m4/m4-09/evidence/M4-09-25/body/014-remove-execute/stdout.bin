@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "runtime_layout": {
+    "root": "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing",
+    "code": "/private/tmp/M4-09-25-56x83qu1/home/.local/share/mem-sharing",
+    "registry": "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing/var/registry.json",
+    "lock": "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing/var/.agm.lock",
+    "transaction_lock": "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing/var/.agm.lock/transaction",
+    "backups": "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing/backups"
+  },
+  "command": "remove-memory",
+  "status": "completed",
+  "projects": [
+    {
+      "main_checkout": "/private/tmp/M4-09-25-56x83qu1/project",
+      "checkout": "/private/tmp/M4-09-25-56x83qu1/project",
+      "memory_policy": "disabled",
+      "agents": [
+        "codex"
+      ],
+      "evidence": [
+        "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing/var/registry.json"
+      ],
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      }
+    }
+  ],
+  "changes": [
+    {
+      "path": "/private/tmp/M4-09-25-56x83qu1/project/AGENTS.md",
+      "operation": "update",
+      "ownership": "created",
+      "before_fingerprint": "3faa803577b260b49a8aea9dabfbf12f547d728dab7f0e503bcbcfa7cb1b94ea",
+      "after_fingerprint": "2565a5af8e1fc36e087f11faf2bb00db3ffc49a6563e79fd69b92d3d34572795",
+      "applied": true
+    },
+    {
+      "path": "/private/tmp/M4-09-25-56x83qu1/home/.mem-sharing/var/registry.json",
+      "operation": "update",
+      "ownership": "registry",
+      "before_fingerprint": "074531c87bcbf0b867923609ef3bd2107725608d4e11bfc8e913d6447c145794",
+      "after_fingerprint": "67efcd79250b4d9c95c6988c50abb69dcbd9971237c5dd0f0e0218da92b62b82",
+      "applied": true
+    }
+  ],
+  "warnings": [],
+  "errors": [],
+  "approval_required": false,
+  "next_action": null
+}

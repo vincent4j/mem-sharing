@@ -1,0 +1,21 @@
+[
+  {
+    "path": "home/.agents-group/memories/主题.md",
+    "before": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377053068472188,
+      "size": 21,
+      "kind": "file",
+      "sha256": "e2cb2a1227c5bff5602c58154a9f67c3d185f7f3d969073bb258ece5f57986b5"
+    },
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377053836022230,
+      "size": 7,
+      "kind": "file",
+      "sha256": "d67e2e944994496c8d8ec76eed0cf9f09679448d584b532bebf941852a37f5ed"
+    }
+  }
+]

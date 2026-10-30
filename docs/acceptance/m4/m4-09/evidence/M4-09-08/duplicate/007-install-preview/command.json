@@ -1,0 +1,40 @@
+{
+  "label": "install-preview",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "/private/tmp/M4-09-08-aavwurkj/source/scripts/install.py",
+    "--source-manifest",
+    "/private/tmp/M4-09-08-aavwurkj/source.json",
+    "--request-file",
+    "/private/tmp/M4-09-08-aavwurkj/request.json"
+  ],
+  "cwd": "/private/tmp/M4-09-08-aavwurkj/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-08-aavwurkj/home",
+    "PATH": "/private/tmp/M4-09-08-aavwurkj/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-08-aavwurkj/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:17:13.566987Z",
+  "ended_utc": "2026-10-30T16:17:13.868774Z",
+  "duration_seconds": 0.3017794170009438,
+  "exit_code": 2,
+  "stdin_base64": "",
+  "json": {
+    "command": "install-machine",
+    "errors": [
+      {
+        "code": "machine_route_bad_registry",
+        "message": "Machine scene bad_registry: ['duplicate JSON key: schema_version']"
+      }
+    ],
+    "schema_version": 1,
+    "status": "failed"
+  }
+}

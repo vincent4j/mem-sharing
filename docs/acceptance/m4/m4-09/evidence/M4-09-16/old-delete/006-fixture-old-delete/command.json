@@ -1,0 +1,24 @@
+{
+  "label": "fixture-old-delete",
+  "argv": [
+    "fixture-operation",
+    "old-delete"
+  ],
+  "cwd": "/private/tmp/M4-09-16-sybm7cw4/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-16-sybm7cw4/home",
+    "PATH": "/private/tmp/M4-09-16-sybm7cw4/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-16-sybm7cw4/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:17:37.331795Z",
+  "ended_utc": "2026-10-30T16:17:37.398261Z",
+  "duration_seconds": 0.0664625839854125,
+  "fixture_operation": "old-delete",
+  "returned": "None"
+}

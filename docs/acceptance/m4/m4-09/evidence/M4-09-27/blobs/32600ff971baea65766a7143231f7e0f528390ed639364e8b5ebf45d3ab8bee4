@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "operation": "enable-memory",
+  "status": "committed",
+  "registry_path": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/registry.json",
+  "created_directories": [],
+  "entries": [
+    {
+      "path": "/private/tmp/M4-09-27-47628ifz/project/.workbuddy/memory/MEMORY.md",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 420,
+        "link_target": null,
+        "fingerprint": "96fa66579e3d608b9cbafd64bbc2c87ebd98fd1df50dd865c764f07d1d9126ab",
+        "backup": "0.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 420,
+        "link_target": null,
+        "fingerprint": "587bd54c4003d0d060492182c45cb01a221841b9673fbacedd4244fb40a3b1b5",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    },
+    {
+      "path": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/registry.json",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "58b011a97866588289728766a61842ee31d09d8497181503f53692686bc1c70c",
+        "backup": "1.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "0c74bf27a43190a7c2be4cb0018c286415ff954cc10a6754ac2e5d0ae9a78d8c",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    }
+  ],
+  "error": null
+}

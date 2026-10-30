@@ -1,0 +1,64 @@
+[
+  {
+    "path": "home",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377353232083431,
+      "size": 192,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377353353639373,
+      "size": 224,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377353353703498,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents/skills",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377353353763165,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents/skills/context-keeper",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377353353822708,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.agents/skills/context-keeper/SKILL.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377353353887750,
+      "size": 49,
+      "kind": "file",
+      "sha256": "2382ec27eefe36c829eba742fa8723f3ba432ede139a6a476cc9028a9a66c966"
+    }
+  }
+]

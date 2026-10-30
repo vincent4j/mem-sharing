@@ -1,0 +1,3688 @@
+{
+  ".agents/skills/context-keeper": {
+    "type": "symlink",
+    "target": "/Users/vincent4j/Tools/Source/context-keeper",
+    "mtime_ns": 1793281915615377139
+  },
+  ".claude/skills/context-keeper": {
+    "type": "symlink",
+    "target": "/Users/vincent4j/Tools/Source/context-keeper",
+    "mtime_ns": 1793281915616941768
+  },
+  ".codex/skills/context-keeper": {
+    "type": "symlink",
+    "target": "/Users/vincent4j/Tools/Source/context-keeper",
+    "mtime_ns": 1793281915616226308
+  },
+  ".dockerignore": {
+    "type": "file",
+    "sha256": "4ba46f87224676f85a5a5189a884e9b114c112ddc10f14556096e8d448de61ab",
+    "size": 399,
+    "mtime_ns": 1785246609754378688
+  },
+  ".env.example": {
+    "type": "file",
+    "sha256": "7e5f1a72bc579bb68125c5a98b5e11c1bd71e340d1b8563961bd535c9ae02de9",
+    "size": 2469,
+    "mtime_ns": 1788776292731701840
+  },
+  ".gitignore": {
+    "type": "file",
+    "sha256": "a6cb2bd7bdb0c872d4f88bb01063531a7e686b44119072b844da1c0e70f407c2",
+    "size": 662,
+    "mtime_ns": 1785138723192006139
+  },
+  ".workbuddy/memory/MEMORY.md": {
+    "type": "file",
+    "sha256": "5d464acc40d0bf2b30fc02dcffda1fdbf1cee80c5e3e742da9e85a1c871a8315",
+    "size": 2672,
+    "mtime_ns": 1793281915617945812
+  },
+  ".workbuddy/skills/context-keeper": {
+    "type": "symlink",
+    "target": "/Users/vincent4j/Tools/Source/context-keeper",
+    "mtime_ns": 1793281915617525019
+  },
+  ".zcode/acp/sandbox.json": {
+    "type": "file",
+    "sha256": "e94fd72fbeb942ed6c1a84d306b0cda508c85560cc3baa220ada47ad70d4ce1b",
+    "size": 74,
+    "mtime_ns": 1793239167018844908
+  },
+  "AGENTS.md": {
+    "type": "file",
+    "sha256": "6258f7c70147f79ba7faf41aee73f80ee2a2e2aa54d24ce6f5e470ec98662c2b",
+    "size": 5766,
+    "mtime_ns": 1793281915613070176
+  },
+  "CLAUDE.md": {
+    "type": "file",
+    "sha256": "ada96f0b9db80e75cbd3493b60ab29576819a76debdd51bc8b2231a1cf036ac1",
+    "size": 2345,
+    "mtime_ns": 1793281915614346429
+  },
+  "DESIGN.md": {
+    "type": "file",
+    "sha256": "256f89f09a31aec337b3a6024da55419c5779f3326e1f9454747b8753ea9846e",
+    "size": 16568,
+    "mtime_ns": 1778506582735835832
+  },
+  "Dockerfile": {
+    "type": "file",
+    "sha256": "4ddb94d2d3342d53dabd504bb03c78962cdea524f12e0d20ae19147d6c24d389",
+    "size": 1138,
+    "mtime_ns": 1785912870347231840
+  },
+  "README.md": {
+    "type": "file",
+    "sha256": "9975b2987b0f86921511bd303b0554d2927253ec2c5edd61cd5f39e2e694e708",
+    "size": 10053,
+    "mtime_ns": 1793102445960162138
+  },
+  "collector-desktop/browser-worker/README.md": {
+    "type": "file",
+    "sha256": "5d7b1226ff7f9a236bf937b7308fd462edd8697d15552d61a34886681431ccf7",
+    "size": 4571,
+    "mtime_ns": 1782094301398102517
+  },
+  "collector-desktop/browser-worker/pyproject.toml": {
+    "type": "file",
+    "sha256": "78864b562fd5667a088f7c625bceefa7f6241ebc381efef7974d7628ac311ed1",
+    "size": 413,
+    "mtime_ns": 1784103193502313276
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/__init__.py": {
+    "type": "file",
+    "sha256": "f1422c1cfad114f4ff85e989bf1d6d282b134674e2a3edf2bddb8433a2b161b9",
+    "size": 128,
+    "mtime_ns": 1782094301397582052
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/__main__.py": {
+    "type": "file",
+    "sha256": "c2ee4ddb093c9af060cafaf68219907f8a6b7b301ed3f8bea75db7555adec987",
+    "size": 62,
+    "mtime_ns": 1781425521619700933
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/capabilities.py": {
+    "type": "file",
+    "sha256": "f2f38f113ee7933af476a193c7914e084afe0c5ff0330bdcc15f4e889835f03b",
+    "size": 4067,
+    "mtime_ns": 1793153960138511155
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/cli.py": {
+    "type": "file",
+    "sha256": "6d1bca7a0fab032fdb19d4995dcfea30ff80d8777e7e2738f09355f70fabaad1",
+    "size": 7216,
+    "mtime_ns": 1793276078799551662
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/commands.py": {
+    "type": "file",
+    "sha256": "35933c28b4144e73bae9ba10fb489ba07d249cface5263f74ccc503ea152d064",
+    "size": 576667,
+    "mtime_ns": 1793270947015522687
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/efficiency.py": {
+    "type": "file",
+    "sha256": "4f8b331ad4edb22da082c31d42a4a1e7845976f1ae4e79c355777385609fda8f",
+    "size": 2089,
+    "mtime_ns": 1793172094459830516
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/macos_activation.py": {
+    "type": "file",
+    "sha256": "a1e0b4d819558c73ef350149a9e61f47a931eef4e8134e5289fc2c1a8fd5f95e",
+    "size": 1386,
+    "mtime_ns": 1788927176635200536
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/materials.py": {
+    "type": "file",
+    "sha256": "1058782c1dbdb959c8c4bd173a2262b967f6fbadcfe3aa1bc0b91393930e6e11",
+    "size": 1783,
+    "mtime_ns": 1793172094460049768
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/protocol.py": {
+    "type": "file",
+    "sha256": "8b77e84f23d251ac78999f8ccadf5014cbcea0b34370cd4ec116a9ccd3690d64",
+    "size": 4004,
+    "mtime_ns": 1793172094460982568
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/routes.py": {
+    "type": "file",
+    "sha256": "ed7d80855f113326919d006ef29ca910cf848d8418857fed084a57c21c85e7c6",
+    "size": 64297,
+    "mtime_ns": 1788087925537559227
+  },
+  "collector-desktop/browser-worker/src/knowwind_browser_worker/xhs_metadata.py": {
+    "type": "file",
+    "sha256": "b8dd9d5b08369d2a19cacfadaa5bbc64d1c85c66d806e5f751017cc333856b61",
+    "size": 11894,
+    "mtime_ns": 1793153960140738220
+  },
+  "collector-desktop/collector-capabilities.json": {
+    "type": "file",
+    "sha256": "8540f30d40f1be4dcf32cf6f5ac3fb1550d33fc2c0212b699dcfa48d102cbd6e",
+    "size": 3685,
+    "mtime_ns": 1793153960141500755
+  },
+  "collector-desktop/scripts/Makefile": {
+    "type": "file",
+    "sha256": "e03da677c0d826e4586640ef9c7d7c89ce9e90f8ada217fd9cbe22821955e764",
+    "size": 628,
+    "mtime_ns": 1780629312990267411
+  },
+  "collector-desktop/scripts/README.md": {
+    "type": "file",
+    "sha256": "65ba6dd2f27a08bf1b045cfa4c90c21c59662a18910eb975e43ee814a141bbf8",
+    "size": 5444,
+    "mtime_ns": 1784773218548075640
+  },
+  "collector-desktop/scripts/build-macos-app.sh": {
+    "type": "file",
+    "sha256": "293db890a43e273e982e7e11ea1e00c784f7a12a4d05362820d5a9a1b988dff2",
+    "size": 7376,
+    "mtime_ns": 1793273541976660568
+  },
+  "collector-desktop/scripts/e2e-integration.sh": {
+    "type": "file",
+    "sha256": "6deb762d8f0fade1a80785e5c40bbb65410644171bd32bac054222d062dccf09",
+    "size": 12966,
+    "mtime_ns": 1783995598704497315
+  },
+  "collector-desktop/scripts/lib.sh": {
+    "type": "file",
+    "sha256": "e0831e39df247bff09596fca4b8c7f9724e90d0ad9a7b06d6a610862c49fdc7d",
+    "size": 3977,
+    "mtime_ns": 1780629312990704403
+  },
+  "collector-desktop/scripts/pyinstaller-browser-worker-entry.py": {
+    "type": "file",
+    "sha256": "7a644c15b82e69587eef548b0e61cb29071015f225a41bfeab3eed78d6c6cdfd",
+    "size": 85,
+    "mtime_ns": 1784098120688773363
+  },
+  "collector-desktop/scripts/pyinstaller-sidecar-entry.py": {
+    "type": "file",
+    "sha256": "fc824288c8101f5ff0937fad50142d1f98f6dbad54e3dafda76a9d13cde66cb8",
+    "size": 81,
+    "mtime_ns": 1783681984493821640
+  },
+  "collector-desktop/scripts/run-with-timeout.py": {
+    "type": "file",
+    "sha256": "9fea72368b5c5ca526878c222eb0e72293f73894e201f8f2f108aaa92886fd8a",
+    "size": 4785,
+    "mtime_ns": 1788098242165372962
+  },
+  "collector-desktop/scripts/smoke-macos-artifact.sh": {
+    "type": "file",
+    "sha256": "ca207e0b28fd88045ccbdec0e5d6a1fc5588546102578181fe7a8e9bff3c6199",
+    "size": 9756,
+    "mtime_ns": 1788101354394869325
+  },
+  "collector-desktop/scripts/start-installed-app.sh": {
+    "type": "file",
+    "sha256": "ba6f42d1f84e2856b0a2f57fcd577d021551407d22c9da0fa4fa07f44bf56393",
+    "size": 1085,
+    "mtime_ns": 1784272513053178895
+  },
+  "collector-desktop/scripts/verify-xhs.sh": {
+    "type": "file",
+    "sha256": "834d7506f68e89051798d69c52059688304d2a7fd474a010fc099bdd5b6930b4",
+    "size": 5023,
+    "mtime_ns": 1783937315859670925
+  },
+  "collector-desktop/sidecar/knowwind_collector/__init__.py": {
+    "type": "file",
+    "sha256": "3ebbb4065141012142168ecc70776886d2a452d80c3c3c1b19fc94665136fd5c",
+    "size": 21,
+    "mtime_ns": 1780472790378666825
+  },
+  "collector-desktop/sidecar/knowwind_collector/adapters/__init__.py": {
+    "type": "file",
+    "sha256": "476574861d149a1020925b859c12e9d936758b8f59c0ea487096cb82687c077e",
+    "size": 90,
+    "mtime_ns": 1784773218549799273
+  },
+  "collector-desktop/sidecar/knowwind_collector/adapters/x.py": {
+    "type": "file",
+    "sha256": "36f3c7d0bbe6d9878dfc27be11a13abb3f1f7185a606a24f860613a90fb77d94",
+    "size": 37392,
+    "mtime_ns": 1785341176287420097
+  },
+  "collector-desktop/sidecar/knowwind_collector/adapters/xhs.py": {
+    "type": "file",
+    "sha256": "1cca8f463f27327846b1dddf4474e1973769d9e39f681ddd9ec6af1fdde779ec",
+    "size": 20382,
+    "mtime_ns": 1785341176286896010
+  },
+  "collector-desktop/sidecar/knowwind_collector/api.py": {
+    "type": "file",
+    "sha256": "48d004e71c3df6d56517e1bb1d24b2ca7fa4131a461606836dcd768e4c835d5f",
+    "size": 9334,
+    "mtime_ns": 1788785754982545517
+  },
+  "collector-desktop/sidecar/knowwind_collector/browser.py": {
+    "type": "file",
+    "sha256": "5629d8c96b6a9ed9b36311d797d4594a0acfb3c1bc42dc0f73b87cf61e207c69",
+    "size": 11822,
+    "mtime_ns": 1788409154642657338
+  },
+  "collector-desktop/sidecar/knowwind_collector/browser_worker.py": {
+    "type": "file",
+    "sha256": "b6813108fe824d6bb53baa5bbb512e39fb768edac7eb79f6b461460618680885",
+    "size": 70327,
+    "mtime_ns": 1793277974657821464
+  },
+  "collector-desktop/sidecar/knowwind_collector/capabilities.py": {
+    "type": "file",
+    "sha256": "b9732b01560bb7f73e697dd98c45d79e0660ad65e2916caabeab866f520cf99f",
+    "size": 3751,
+    "mtime_ns": 1788087793769696197
+  },
+  "collector-desktop/sidecar/knowwind_collector/chrome_lock.py": {
+    "type": "file",
+    "sha256": "1ccab3b49ebe62d561a4beff8acd6a1399431cc20e70db7324f76b4130dec43b",
+    "size": 4766,
+    "mtime_ns": 1781168448898785105
+  },
+  "collector-desktop/sidecar/knowwind_collector/client.py": {
+    "type": "file",
+    "sha256": "04ed994bd563c227e6ea19dac982438e7dbc0b50bcc89e4dd472308c41a22a09",
+    "size": 8162,
+    "mtime_ns": 1793172094462192745
+  },
+  "collector-desktop/sidecar/knowwind_collector/config.py": {
+    "type": "file",
+    "sha256": "4e2ffed94de26f145ce7b8acb16cd8fc52bca0fc361916fcb389e51981ba5a7c",
+    "size": 11236,
+    "mtime_ns": 1788234738464961966
+  },
+  "collector-desktop/sidecar/knowwind_collector/main.py": {
+    "type": "file",
+    "sha256": "9c3d535f6506da3d90c24ebcd403a85e687fa556e3cf0a46ffa58689dd6ea9c3",
+    "size": 1139,
+    "mtime_ns": 1784773218552186409
+  },
+  "collector-desktop/sidecar/knowwind_collector/readiness.py": {
+    "type": "file",
+    "sha256": "4023a353212467790b87e45de72f7ca903119f08c83e69933bee7e372fe36731",
+    "size": 15319,
+    "mtime_ns": 1793276450438460929
+  },
+  "collector-desktop/sidecar/knowwind_collector/risk.py": {
+    "type": "file",
+    "sha256": "d9a2869949c0f4d9c602d615140766897deb621a9506e8580a5e74aaa143f2f8",
+    "size": 12902,
+    "mtime_ns": 1785340339020895041
+  },
+  "collector-desktop/sidecar/knowwind_collector/service.py": {
+    "type": "file",
+    "sha256": "3dedc72ce900bd4b631f8de2671834aba59d43278b3250d427930b2e770bddd6",
+    "size": 357886,
+    "mtime_ns": 1793172094463291838
+  },
+  "collector-desktop/sidecar/knowwind_collector/task_trace.py": {
+    "type": "file",
+    "sha256": "e2f82ab98a6f42f4d379adc8ee092f31fc7c1f34c4c8721f160bb65e14443963",
+    "size": 7240,
+    "mtime_ns": 1793172094463539840
+  },
+  "collector-desktop/sidecar/knowwind_collector/upload_journal.py": {
+    "type": "file",
+    "sha256": "f802ab868360bc0d730d7afcd375095a579d56d13cb1f85fb193b5c0944eaba4",
+    "size": 17461,
+    "mtime_ns": 1793172094463740384
+  },
+  "collector-desktop/sidecar/pyproject.toml": {
+    "type": "file",
+    "sha256": "421f12cf82221d74f44527220179cf0c806221e4492fbb734cd60e6a166f0ef4",
+    "size": 336,
+    "mtime_ns": 1784773218553543664
+  },
+  "collector-desktop/sidecar/requirements-build-macos.txt": {
+    "type": "file",
+    "sha256": "277cba44506ee1732550ab17f2d673b2f89236d260fda41cee5cdeac1bd61a9d",
+    "size": 20,
+    "mtime_ns": 1783681984499154614
+  },
+  "collector-desktop/tauri/.gitignore": {
+    "type": "file",
+    "sha256": "205f341a3e9c87cd2c857b5fcbbc65875d02e206104a49849e6aed249e0a1989",
+    "size": 674,
+    "mtime_ns": 1788347615172845635
+  },
+  "collector-desktop/tauri/README.md": {
+    "type": "file",
+    "sha256": "5774080f9849936ba6784c31780c3236a1a2b487ecbf77e26c0b623b5a469e70",
+    "size": 2708,
+    "mtime_ns": 1784773218554495586
+  },
+  "collector-desktop/tauri/package-lock.json": {
+    "type": "file",
+    "sha256": "b66464bb4c72bd9646cfdf9b346537a563b1d965db8d0bf6a1c83eff46bba133",
+    "size": 18741,
+    "mtime_ns": 1793007344638362983
+  },
+  "collector-desktop/tauri/package.json": {
+    "type": "file",
+    "sha256": "62403caeadb5b7254357129015c0415712aaa10a6cb1197ede39f870b7eca67f",
+    "size": 180,
+    "mtime_ns": 1793007344638295317
+  },
+  "collector-desktop/tauri/src-tauri/Cargo.lock": {
+    "type": "file",
+    "sha256": "f06bf3e766d7460c17bbe348557174199f8ac52910181511fcec44bceb425e8f",
+    "size": 120477,
+    "mtime_ns": 1793102445959831638
+  },
+  "collector-desktop/tauri/src-tauri/Cargo.toml": {
+    "type": "file",
+    "sha256": "438d298b27c723000fdfae2b7dafa02c5388756787f5e9d7ebf4999bc450577f",
+    "size": 719,
+    "mtime_ns": 1793102445959233556
+  },
+  "collector-desktop/tauri/src-tauri/build.rs": {
+    "type": "file",
+    "sha256": "2ab5260086625f5a176e390110b0471fb483ac28a48d81a884128f2e49149d1d",
+    "size": 489,
+    "mtime_ns": 1788174507403429801
+  },
+  "collector-desktop/tauri/src-tauri/icons/128x128.png": {
+    "type": "file",
+    "sha256": "329f38b1a7d3f8a6d9e36278ed6bb50dcd270876a14790dde71c253b2c5a68a2",
+    "size": 13716,
+    "mtime_ns": 1781617140996672298
+  },
+  "collector-desktop/tauri/src-tauri/icons/128x128@2x.png": {
+    "type": "file",
+    "sha256": "c7420f0e4317900abd18e266791268bb327f3faca0bc0567801e66c88cbe9388",
+    "size": 35093,
+    "mtime_ns": 1781617140997143359
+  },
+  "collector-desktop/tauri/src-tauri/icons/32x32.png": {
+    "type": "file",
+    "sha256": "2fa9aad03dafbd4d3505389476aa6eac03c0ca12abcaac743fde7f5857068042",
+    "size": 2317,
+    "mtime_ns": 1781617140997448262
+  },
+  "collector-desktop/tauri/src-tauri/icons/64x64.png": {
+    "type": "file",
+    "sha256": "6e76c77a1423bf16478e15505bcd4711fafc058ee1dce8a27fa7d1d03effe38d",
+    "size": 5743,
+    "mtime_ns": 1781617140997819495
+  },
+  "collector-desktop/tauri/src-tauri/icons/Square107x107Logo.png": {
+    "type": "file",
+    "sha256": "89921081abcd70974b24a663dd663d02d187576b08154141f13fe1e3c2a90477",
+    "size": 11009,
+    "mtime_ns": 1781617140998227644
+  },
+  "collector-desktop/tauri/src-tauri/icons/Square142x142Logo.png": {
+    "type": "file",
+    "sha256": "42bca0df9d0c7793bbe2212267f5216fb9744afe68c1ca7aed40004abdd3fda6",
+    "size": 15686,
+    "mtime_ns": 1781617140998729621
+  },
+  "collector-desktop/tauri/src-tauri/icons/Square150x150Logo.png": {
+    "type": "file",
+    "sha256": "b500ce3418404762bc1f6b6923154d24684ee870e10f01720c3ff2d22f5e35c4",
+    "size": 16778,
+    "mtime_ns": 1781617140999289137
+  },
+  "collector-desktop/tauri/src-tauri/icons/Square284x284Logo.png": {
+    "type": "file",
+    "sha256": "9bbfb6c91e53399a876be53a6e7afd365686656de5eb6fcb2339bb8188438b9c",
+    "size": 40708,
+    "mtime_ns": 1781617140999596914
+  },
+  "collector-desktop/tauri/src-tauri/icons/Square30x30Logo.png": {
+    "type": "file",
+    "sha256": "ec9760fd99da60ace9ba7cb1fe6d9b9d6b8cd4e3ad209f24d41ede0ef18413dd",
+    "size": 2128,
+    "mtime_ns": 1781617140999877777
+  },
+  "collector-desktop/tauri/src-tauri/icons/Square310x310Logo.png": {
+    "type": "file",
+    "sha256": "b32dd02e3d69ad49d13020e9f7648f52ed30a2fd7701c35f29a5ea136a94255a",
+    "size": 46191,
+    "mtime_ns": 1781617141000793735
+  },
+  "collector-desktop/tauri/src-tauri/icons/Square44x44Logo.png": {
+    "type": "file",
+    "sha256": "6b0a1285fd02001ac03b28a34b1ac50a86adf3969c9c9b3b08a448fee1fcd404",
+    "size": 3532,
+    "mtime_ns": 1781617141002475658
+  },
+  "collector-desktop/tauri/src-tauri/icons/Square71x71Logo.png": {
+    "type": "file",
+    "sha256": "cb2b384d768b61eb55d2561afc4d8c578c22a64cfcdd296aa5322dbb3f37aa4d",
+    "size": 6675,
+    "mtime_ns": 1781617141002802394
+  },
+  "collector-desktop/tauri/src-tauri/icons/Square89x89Logo.png": {
+    "type": "file",
+    "sha256": "d7a3142d5bded823baa9ecd3123492a41f441a0425165816debf13dfb1a7eba1",
+    "size": 8732,
+    "mtime_ns": 1781617141003214583
+  },
+  "collector-desktop/tauri/src-tauri/icons/StoreLogo.png": {
+    "type": "file",
+    "sha256": "73009e6046ffcd3f2f704c5c7576bb738f9b2604cde9933d911fdf41e75190c2",
+    "size": 4221,
+    "mtime_ns": 1781617141003412907
+  },
+  "collector-desktop/tauri/src-tauri/icons/icon.icns": {
+    "type": "file",
+    "sha256": "438ff956dddf35c9f933ca2c7fa4d7a95ad2c17b2cb6623266f52809eb3dc891",
+    "size": 549765,
+    "mtime_ns": 1781617141005138246
+  },
+  "collector-desktop/tauri/src-tauri/icons/icon.ico": {
+    "type": "file",
+    "sha256": "916192019bdd741b4f6ce039913a3cbeadefb5cd64f61cdba5ef1bd678e0f474",
+    "size": 51161,
+    "mtime_ns": 1781617141005565101
+  },
+  "collector-desktop/tauri/src-tauri/icons/icon.png": {
+    "type": "file",
+    "sha256": "bd2184067d83f7d926d42b83e1ccdd30d9214c86437080bef549c21b52d71aaf",
+    "size": 93595,
+    "mtime_ns": 1781617141006948622
+  },
+  "collector-desktop/tauri/src-tauri/icons/tray/tray-blue.png": {
+    "type": "file",
+    "sha256": "296ad61fd61ab9c20ce3ee83e6909fd4ec8d9d7b05a825f88052054092c1aad1",
+    "size": 208,
+    "mtime_ns": 1780629331634399631
+  },
+  "collector-desktop/tauri/src-tauri/icons/tray/tray-gray.png": {
+    "type": "file",
+    "sha256": "8ffe231a055ceaf53cddc90fd5a3660bd9ce8faa621f0a7816ffb279f8aa5a5e",
+    "size": 208,
+    "mtime_ns": 1780629331634517046
+  },
+  "collector-desktop/tauri/src-tauri/icons/tray/tray-green.png": {
+    "type": "file",
+    "sha256": "ecd3e174be89b120cac8193a0fa7465da09c5e63f59edeb78d841c2cb1b4d27b",
+    "size": 205,
+    "mtime_ns": 1780629331634635585
+  },
+  "collector-desktop/tauri/src-tauri/icons/tray/tray-yellow.png": {
+    "type": "file",
+    "sha256": "cd5646077265eeeb4038e65b3db191d908c0746ccb2a36db88a2074e96412cf6",
+    "size": 206,
+    "mtime_ns": 1780629331634759625
+  },
+  "collector-desktop/tauri/src-tauri/src/lib.rs": {
+    "type": "file",
+    "sha256": "e069188e79724f0c12928eae189c9dc6f47dd5dd1ce91c5afd8aae2513362ecd",
+    "size": 19174,
+    "mtime_ns": 1792406224526116981
+  },
+  "collector-desktop/tauri/src-tauri/src/main.rs": {
+    "type": "file",
+    "sha256": "1c30106d30f306e32df423d0fbfa5f061140455df25085a326bb164252e70316",
+    "size": 164,
+    "mtime_ns": 1780489379113601876
+  },
+  "collector-desktop/tauri/src-tauri/src/sidecar_client.rs": {
+    "type": "file",
+    "sha256": "905e6134821b688be34738eeb2a254465724274333fa1ef5c5cd678a31fa4f5c",
+    "size": 8657,
+    "mtime_ns": 1788508379723261033
+  },
+  "collector-desktop/tauri/src-tauri/src/tray.rs": {
+    "type": "file",
+    "sha256": "2a8bea283a84356fb3ab7c166dd972d4cf3a44f2b0cd8a8be954dea9d2fb6e89",
+    "size": 1897,
+    "mtime_ns": 1788162033090484233
+  },
+  "collector-desktop/tauri/src-tauri/tauri.bundle.conf.json": {
+    "type": "file",
+    "sha256": "8b9051a79c86cdb9921f0b2ac01e3e1863f70bfb471cfb40171977788b42f104",
+    "size": 208,
+    "mtime_ns": 1785238288068291244
+  },
+  "collector-desktop/tauri/src-tauri/tauri.conf.json": {
+    "type": "file",
+    "sha256": "54c51066dee699181a981bb560d2dc00712538efa4f2fa37a1c55b3654e37568",
+    "size": 1400,
+    "mtime_ns": 1793102445958872432
+  },
+  "collector-desktop/tauri/src/app.js": {
+    "type": "file",
+    "sha256": "53c57da49d67096bc7365d39d29323fcf0a16487ddf739814f0b4924e2ad1f73",
+    "size": 47715,
+    "mtime_ns": 1793107641007244155
+  },
+  "collector-desktop/tauri/src/app.test.cjs": {
+    "type": "file",
+    "sha256": "6b85d6899a5fbe0f585215876cca5adf6e8560a27ece8671d86d7d44eda36b5e",
+    "size": 42707,
+    "mtime_ns": 1793107641007527865
+  },
+  "collector-desktop/tauri/src/index.html": {
+    "type": "file",
+    "sha256": "44a3a7c674f5ee9539a0f051dbe60b4cabeab2240979efa1c6aea04f090a6c03",
+    "size": 9566,
+    "mtime_ns": 1793007344638241358
+  },
+  "collector-desktop/tauri/src/logo.png": {
+    "type": "file",
+    "sha256": "6e76c77a1423bf16478e15505bcd4711fafc058ee1dce8a27fa7d1d03effe38d",
+    "size": 5743,
+    "mtime_ns": 1788838181817018027
+  },
+  "collector-desktop/tauri/src/styles.css": {
+    "type": "file",
+    "sha256": "0ff6010ec4b5e3db0428acf6c50dc8d4e1eb4408801ec3178cfba6c4fade9aeb",
+    "size": 14282,
+    "mtime_ns": 1792408056537431340
+  },
+  "docker-compose.yml": {
+    "type": "file",
+    "sha256": "4d620410f7d1b34ca92715054d2cfc9f2090ce06c5551e64d95d0fcbdb284e27",
+    "size": 743,
+    "mtime_ns": 1785912870347889423
+  },
+  "docs/BP.md": {
+    "type": "file",
+    "sha256": "5580b4c8ff550017c6ee003d9c7a7046fd40794300b2697ab07b1e6becba7806",
+    "size": 20801,
+    "mtime_ns": 1782966509650920375
+  },
+  "docs/DESIGN.md": {
+    "type": "file",
+    "sha256": "b70d93de5fdff4da982d81430eafe8ea1b0e072fc55e568b7a26c9be5a1eaa8b",
+    "size": 14070,
+    "mtime_ns": 1792059740316661761
+  },
+  "docs/GA4_DATA_GUIDE.md": {
+    "type": "file",
+    "sha256": "5127267473fac6c2db84ff1f34246433de8820a5e54bc0d2531a38407cf9b228",
+    "size": 15130,
+    "mtime_ns": 1785912896846592061
+  },
+  "docs/TECH.md": {
+    "type": "file",
+    "sha256": "3a6ded2905a13abfa07eed60280ff6d9b0677e1e1acec05b8664e54b02383f1f",
+    "size": 21546,
+    "mtime_ns": 1792059740317031928
+  },
+  "docs/UI_SPEC.md": {
+    "type": "file",
+    "sha256": "3a591bc953b94cefd66745e4566fb5e347edb682bdcd8263c973be7818ab4b86",
+    "size": 29355,
+    "mtime_ns": 1789379350625127667
+  },
+  "docs/USER_JOURNEY.md": {
+    "type": "file",
+    "sha256": "39a45ddb370de132a095a085547ad680e8315b8ae900070dd4f1586f4dd115b5",
+    "size": 7904,
+    "mtime_ns": 1784773218663416828
+  },
+  "docs/WORKFLOW.md": {
+    "type": "file",
+    "sha256": "1d3720eb59d5031ffe4cbb0f5a92a78eb6aaff53346ebee1a1ed19ac4c2754ec",
+    "size": 17961,
+    "mtime_ns": 1792059740317507887
+  },
+  "docs/articles/01-构思.md": {
+    "type": "file",
+    "sha256": "9894b756543aeea7eb9e5131b2a42fffa8bbd06024c6a67ff56157aa1f7dd62b",
+    "size": 20037,
+    "mtime_ns": 1784276424455067144
+  },
+  "docs/articles/01-正文.md": {
+    "type": "file",
+    "sha256": "a5374999698d652e5ef3dc747606923d8daddcb4c508025af2acb8d74d86ecd8",
+    "size": 9824,
+    "mtime_ns": 1784276424455344186
+  },
+  "docs/articles/02-构思.md": {
+    "type": "file",
+    "sha256": "8f12871a639a4558dffcd9babe534802cdd2e9df2a6fb40ae823d5413b4e8e64",
+    "size": 15308,
+    "mtime_ns": 1785240840198985542
+  },
+  "docs/articles/02-正文.md": {
+    "type": "file",
+    "sha256": "c28ce12144d5eee1728ecf4e4bcec36f1b90dd8f019f077e5bd9623dba4b848e",
+    "size": 8705,
+    "mtime_ns": 1784280583906780377
+  },
+  "docs/articles/03-构思.md": {
+    "type": "file",
+    "sha256": "409afdcc2ce2e8a39b9295686ce69da5b2476e5ef635b37c2d13471959b21ed2",
+    "size": 24388,
+    "mtime_ns": 1785240840198354078
+  },
+  "docs/articles/03-正文.md": {
+    "type": "file",
+    "sha256": "a9f599323dbc6d66002414a4ea05e831c792584884fa67d1d163f5153d0356e1",
+    "size": 14894,
+    "mtime_ns": 1784552356977819187
+  },
+  "docs/articles/04-构思.md": {
+    "type": "file",
+    "sha256": "b3b39747a86effdffee3653e0241b88f0302917cbe7b4220db680d5d0dea33c7",
+    "size": 20944,
+    "mtime_ns": 1785321283117024321
+  },
+  "docs/articles/04-正文.md": {
+    "type": "file",
+    "sha256": "6bdf0ec22854864ffc48eedb945449d663cbaa56e69c37c5787914dfec0a2f15",
+    "size": 16581,
+    "mtime_ns": 1785321283116350530
+  },
+  "docs/articles/README.md": {
+    "type": "file",
+    "sha256": "db1d46402ce2847b9910fc44d9992d20426cadd8bf39fbc42ea12db1698c90e3",
+    "size": 30852,
+    "mtime_ns": 1785321283118127611
+  },
+  "docs/articles/references/02-正式发布版-2026-07-17.md": {
+    "type": "file",
+    "sha256": "7a8128b622d90d9273666acce1caef9ac9d8f1afd7cabeba5da4d6c082b571dc",
+    "size": 11029,
+    "mtime_ns": 1784538332806840233
+  },
+  "docs/articles/references/02-竞品官方资料-2026-07-17.md": {
+    "type": "file",
+    "sha256": "3b95b846a018072ff0e8f7149429b93f4f3d0e7b109caf41e0f4fdea37c48b00",
+    "size": 4090,
+    "mtime_ns": 1784260015853191695
+  },
+  "docs/articles/references/03-产品现状一致性审计-2026-07-20.md": {
+    "type": "file",
+    "sha256": "800d6473675f13c6ef2758b55b64e31d0ab5e18c92e79b26afc5fd08d119fdb8",
+    "size": 6772,
+    "mtime_ns": 1784549047452351828
+  },
+  "docs/articles/references/03-竞品调研与借鉴证据-2026-07-20.md": {
+    "type": "file",
+    "sha256": "484ae8b0b20367e5f9edb3c2857f8a2fe4e9b129014c32c87963e1827876c9fe",
+    "size": 7406,
+    "mtime_ns": 1784537933471668742
+  },
+  "docs/articles/写作风格.md": {
+    "type": "file",
+    "sha256": "8a17da487d4dd55071405850edd39696f1500a9ae6e1b41eea87637da8ff6b5f",
+    "size": 8124,
+    "mtime_ns": 1784552365750478907
+  },
+  "docs/bugs/2026-09-02-001-lease-seconds-too-short-for-xhs.md": {
+    "type": "file",
+    "sha256": "3ad769bf2d0ee633960fd3fb5371a23e6473bcedea3f824628fa31af767f5d7b",
+    "size": 3165,
+    "mtime_ns": 1788356151051433205
+  },
+  "docs/bugs/2026-09-02-002-failed-task-no-error-log.md": {
+    "type": "file",
+    "sha256": "847fbac344d0f14aaad44db5af25490a528c4c6e3abe2c29ef60d37d84180cef",
+    "size": 3098,
+    "mtime_ns": 1788356162384656907
+  },
+  "docs/bugs/2026-09-02-003-project-context-not-sync-with-url.md": {
+    "type": "file",
+    "sha256": "6bfb556c3344d1967c48dfae06d931b153cd1db13f76dea944d418f7bcf62780",
+    "size": 2832,
+    "mtime_ns": 1788356173404969093
+  },
+  "docs/bugs/2026-09-03-001-xhs-cookies-not-persisted-across-restart.md": {
+    "type": "file",
+    "sha256": "512846ee552b4a6244ddbc21b5fe50aed0cc96c9a88bc798bfe379fef8269990",
+    "size": 8535,
+    "mtime_ns": 1788512865226805505
+  },
+  "docs/bugs/2026-09-04-001-recent-result-fallback.md": {
+    "type": "file",
+    "sha256": "1fabcc126a87b9c4c36ca63a32554ee3edbfc813ee312ced8dbe80c4efb55b28",
+    "size": 4908,
+    "mtime_ns": 1788508431198249413
+  },
+  "docs/bugs/2026-09-04-002-client-status-ui-blocking.md": {
+    "type": "file",
+    "sha256": "f05f57f4b9fdfc77711d95f1cf9d52f8e56c8b4898323b1f00dc5e52343e1928",
+    "size": 4041,
+    "mtime_ns": 1788515845136002845
+  },
+  "docs/bugs/2026-09-04-003-manual-expiry-state.md": {
+    "type": "file",
+    "sha256": "5068bcbc300de020e8a18c5fc67f0280cc00cd47e5e2fc5e3f521f5bb1d1d000",
+    "size": 1072,
+    "mtime_ns": 1788515929035721903
+  },
+  "docs/bugs/2026-09-04-004-x-latest-and-failed-result.md": {
+    "type": "file",
+    "sha256": "02bb2f98bfc4da7163452b9df8829de982b2edd6af9247e4aaf29f78ce0352a2",
+    "size": 1984,
+    "mtime_ns": 1788519043299899752
+  },
+  "docs/bugs/2026-09-04-xhs-summary-fact-drift.md": {
+    "type": "file",
+    "sha256": "3e02d26ab4c182067d834d8b81932daf6a66090d47cfc61d387a321863a61198",
+    "size": 3503,
+    "mtime_ns": 1788776250362186098
+  },
+  "docs/build/dev-tauri.md": {
+    "type": "file",
+    "sha256": "72e61d797c0f15092b61a90b5e51fe2b3d9e17a5707fa37c9b75a782b1b12835",
+    "size": 2513,
+    "mtime_ns": 1781177651337520110
+  },
+  "docs/build/macos-app-dmg.md": {
+    "type": "file",
+    "sha256": "91cb8c7488f068e860c693f5d29a7a33e980846e1926743834b8b991f5fae6cf",
+    "size": 5365,
+    "mtime_ns": 1784272542457447855
+  },
+  "docs/context-keeper/evolution/index.md": {
+    "type": "file",
+    "sha256": "d7951a933843fb787604d23101d71a5c935bee237b9e9b86de2f60ece193b626",
+    "size": 944,
+    "mtime_ns": 1793109749439258632
+  },
+  "docs/context-keeper/evolution/模型400错误关联与采样参数边界.md": {
+    "type": "file",
+    "sha256": "ee7bfbab8d9073e7cd7b4e26c457fd50a1cd5e2a91a5ec9a4d5f833b72744ab6",
+    "size": 1520,
+    "mtime_ns": 1793104540533171881
+  },
+  "docs/context-keeper/evolution/真实链路验收分层.md": {
+    "type": "file",
+    "sha256": "d28cfec8b6023900cc6b661970b71d776903ff92c0890bf3d89a83d089837499",
+    "size": 1029,
+    "mtime_ns": 1792059740318087263
+  },
+  "docs/context-keeper/evolution/结构化模型合同与局部调整保真.md": {
+    "type": "file",
+    "sha256": "de08be573d0fdfd5af3fb920f9299476354a7e6caaabb88a699938b311e80244",
+    "size": 1542,
+    "mtime_ns": 1792122829794192780
+  },
+  "docs/context-keeper/evolution/自定义摘要真实验收与原文保留.md": {
+    "type": "file",
+    "sha256": "664e0e51f12ee7addc5d3dd26a52a086f16d74e1933e5fa6e3b1080744db2c85",
+    "size": 1777,
+    "mtime_ns": 1793109749439021507
+  },
+  "docs/context-keeper/evolution/隔离运行后台与授权边界.md": {
+    "type": "file",
+    "sha256": "2178edcf70d5112fa183141cb1438b373ad9e316e1bba67a14e11857c9f9a739",
+    "size": 1137,
+    "mtime_ns": 1792059740318749514
+  },
+  "docs/context-keeper/memory-keeper.md": {
+    "type": "file",
+    "sha256": "309aaaac7a970907924c49cf513db206ae174dc41ef9b5e3151297163b3b1057",
+    "size": 78766,
+    "mtime_ns": 1793281172181006050
+  },
+  "docs/context-keeper/migration-manifest.json": {
+    "type": "file",
+    "sha256": "7a693fb7d898d1025dec35d133a96f770a52920ebd1e5c45ca2fa278ab8eca1d",
+    "size": 80343,
+    "mtime_ns": 1792059740319544015
+  },
+  "docs/context-keeper/plans/2026-05-14-平台管理与微信接入需求.md": {
+    "type": "file",
+    "sha256": "8230f4bbdfdc6dce951d4430e18a6155179dfbff754821a175387e4618132126",
+    "size": 7217,
+    "mtime_ns": 1792059740319872307
+  },
+  "docs/context-keeper/plans/2026-05-14-新建项目两步页面需求.md": {
+    "type": "file",
+    "sha256": "202b7d88cedaf1b93d3d39df894614f1ccb34d53a99012e76b820028d9cbe1b6",
+    "size": 3037,
+    "mtime_ns": 1792059740320146224
+  },
+  "docs/context-keeper/plans/2026-05-14-模型配置LLM联通测试需求.md": {
+    "type": "file",
+    "sha256": "b64770f610289e755c1a7a11d2984db0e84c38693584d8fa4bc15def5d9baa18",
+    "size": 3614,
+    "mtime_ns": 1792059740320221224
+  },
+  "docs/context-keeper/plans/2026-05-14-项目数据库化多用户支持需求.md": {
+    "type": "file",
+    "sha256": "2d0c3030971e7ede5558a2c41454e19aab19144200573344d714bbd7dc08d3b4",
+    "size": 3687,
+    "mtime_ns": 1792059740320318516
+  },
+  "docs/context-keeper/plans/2026-05-15-内容初筛流水线修复与优化需求.md": {
+    "type": "file",
+    "sha256": "e87bda90193f0bea3e47ee57788315648f908e0f210211df4b969eff6f7b7777",
+    "size": 1934,
+    "mtime_ns": 1792059740320406349
+  },
+  "docs/context-keeper/plans/2026-05-15-消息架构解耦与流水线重排需求.md": {
+    "type": "file",
+    "sha256": "cb667c4eba696cd01d1183c1bde7dd62dbe5dd1983a609b99412ff6cbac9cb08",
+    "size": 3861,
+    "mtime_ns": 1792059740320543683
+  },
+  "docs/context-keeper/plans/2026-05-16-微信群边缘场景.md": {
+    "type": "file",
+    "sha256": "755c00c4d8888118f131fe443299132f707f57146df00cdb478f5570adaec521",
+    "size": 8530,
+    "mtime_ns": 1792059740320644766
+  },
+  "docs/context-keeper/plans/2026-05-18-TrendRadar借鉴点.md": {
+    "type": "file",
+    "sha256": "e5b1da2a2effa9b3e3f061b45248b7daa26ef37a1d77f3ea7978a27aedd91235",
+    "size": 4835,
+    "mtime_ns": 1792059740320723808
+  },
+  "docs/context-keeper/plans/2026-05-19-X采集技术实现方案.md": {
+    "type": "file",
+    "sha256": "5c59361d099095d8d5c624aaf40459e7b2883e899d8d9f85da6d573881f3e9bf",
+    "size": 12368,
+    "mtime_ns": 1792059740320890266
+  },
+  "docs/context-keeper/plans/2026-05-19-x-builders-list.md": {
+    "type": "file",
+    "sha256": "5962195d6b72e64ffc0543c2650d1318ffe45bffc09b425fb4a4ff0b9e00c935",
+    "size": 1633,
+    "mtime_ns": 1792059740320971308
+  },
+  "docs/context-keeper/plans/2026-05-20-洞察评分需求.md": {
+    "type": "file",
+    "sha256": "8ff3a3b8ff6f2d2cd0bbe35658467f30970203be521ef691b66ef13a6cecc4d0",
+    "size": 5022,
+    "mtime_ns": 1792059740321079808
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-API-Contract.md": {
+    "type": "file",
+    "sha256": "73371259584d5bff3a817df1bfc54283a2b99ae72efd53f88181fdc354690c1e",
+    "size": 8443,
+    "mtime_ns": 1792059740321171475
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-MVP-第一段编码计划.md": {
+    "type": "file",
+    "sha256": "ca5ad193689104cbce1dcc6bc9363b2412988a68665ab2bf443461e163853666",
+    "size": 3991,
+    "mtime_ns": 1792059740321247684
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-MVP-第三段-XhsAdapter-keyword-spike.md": {
+    "type": "file",
+    "sha256": "1a60388e3c1b447bbcf29340e54bcaa0099488adbaabc0ba8b3491e8b8686af8",
+    "size": 3221,
+    "mtime_ns": 1792059740321317517
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-MVP-第二段-sidecar-skeleton.md": {
+    "type": "file",
+    "sha256": "d963c8c4bc52ffda58bf06d30eac992131ded505b22209692e51c4392742f2a5",
+    "size": 2731,
+    "mtime_ns": 1792059740321405101
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-MVP-第五段-Tauri-Shell-真实环境验证.md": {
+    "type": "file",
+    "sha256": "f9c15a2627ca8639ecdedee23bdb08adae97032e1a93825277ad21c9bfa137ef",
+    "size": 9753,
+    "mtime_ns": 1792059740321681559
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-MVP-第四段-sidecar-runtime-loop.md": {
+    "type": "file",
+    "sha256": "3659ebb43bf871847e4e3904ffb8a54b5d3789c57f790ced160631767d435161",
+    "size": 4650,
+    "mtime_ns": 1792059740321759934
+  },
+  "docs/context-keeper/plans/2026-06-03-Collector-用户状态机.md": {
+    "type": "file",
+    "sha256": "7f51f322eaf91d891fb7e2c2a98135e5614e473dbaafa780e7230146c04b5510",
+    "size": 6312,
+    "mtime_ns": 1792059740321975101
+  },
+  "docs/context-keeper/plans/2026-06-03-KnowWind-Local-Collector-技术方案.md": {
+    "type": "file",
+    "sha256": "04c64c3909679c897dd36fe5bda9c8a18185b59dc950a7c0c5e443c4ca69d575",
+    "size": 15258,
+    "mtime_ns": 1792059740322106935
+  },
+  "docs/context-keeper/plans/2026-06-14-小红书本地采集风控与内容完整度需求.md": {
+    "type": "file",
+    "sha256": "f7097d5dea77fb9ad7397d180e7cef0142b752b7e22170c3da7eca3fe4e973c9",
+    "size": 6032,
+    "mtime_ns": 1792059740322237643
+  },
+  "docs/context-keeper/plans/2026-06-15-小红书安全模式与日志护栏需求.md": {
+    "type": "file",
+    "sha256": "46d48e34b729cc2d5b95f17dd3e15f0c9f1af87515ee6d4fd634f8b74467b5ab",
+    "size": 5258,
+    "mtime_ns": 1792059740322433185
+  },
+  "docs/context-keeper/plans/2026-06-15-小红书本地关键词搜索全路径需求.md": {
+    "type": "file",
+    "sha256": "5a92abf45239c242b39d44f66bb149a282bbc0b14b1e3aba3ff0459500147950",
+    "size": 7069,
+    "mtime_ns": 1792059740322605686
+  },
+  "docs/context-keeper/plans/2026-06-15-本地采集租约与安全验证日志需求.md": {
+    "type": "file",
+    "sha256": "1ab4df886fdcd0b403cdbee00d37bf288b7411d1142f80f86f0b64f5dfae9eb5",
+    "size": 3950,
+    "mtime_ns": 1792059740322668310
+  },
+  "docs/context-keeper/plans/2026-06-15-模型调用统一迁移需求.md": {
+    "type": "file",
+    "sha256": "5cf2b64744b6ea87475102acd4c6a61e82ce0b82908d39b0b91164bcd1fb353c",
+    "size": 2781,
+    "mtime_ns": 1792059740322767686
+  },
+  "docs/context-keeper/plans/2026-06-15-模型配置Anthropic协议补全需求.md": {
+    "type": "file",
+    "sha256": "3f54f680d0014a042ab285de37cf9332835dab529360e499071dc4e12d5a2c23",
+    "size": 2950,
+    "mtime_ns": 1792059740322871394
+  },
+  "docs/context-keeper/plans/2026-06-15-洞察分享需求.md": {
+    "type": "file",
+    "sha256": "77e59aa104380cd5c216ddde25bb568a718b2d388503073a24dae5908dbb20c1",
+    "size": 8069,
+    "mtime_ns": 1792059740323083603
+  },
+  "docs/context-keeper/plans/2026-06-16-采集客户端登录日志与启动修复需求.md": {
+    "type": "file",
+    "sha256": "3426d0560d5c87abef29ca843a834e40513a1ba54b7edae2fcee5814a449abe7",
+    "size": 4451,
+    "mtime_ns": 1792059740323157645
+  },
+  "docs/context-keeper/plans/2026-06-17-小红书browser-use采集合同需求.md": {
+    "type": "file",
+    "sha256": "a9a23b33cb694087055e8d2f6887ffaa4d5dd4fa1779ddb5b648618170323620",
+    "size": 7037,
+    "mtime_ns": 1792059740323264478
+  },
+  "docs/context-keeper/plans/2026-06-19-小红书采集搜索与重复点击修复需求.md": {
+    "type": "file",
+    "sha256": "295a73d58e9fabbbca84cd731931e59de6510b389988c2f91194947883d11439",
+    "size": 3054,
+    "mtime_ns": 1792059740323431145
+  },
+  "docs/context-keeper/plans/2026-06-22-browser-use通用采集路线方案.md": {
+    "type": "file",
+    "sha256": "29ddeeecde1dc1d0319b77ce500d69b11be9995293d9c3c20668f6ece2818cbf",
+    "size": 12616,
+    "mtime_ns": 1792059740323525770
+  },
+  "docs/context-keeper/plans/2026-06-22-小红书browser-use-route复盘与后续方案需求.md": {
+    "type": "file",
+    "sha256": "51a0f1b0ee82665d8a2fdc87f14e68f0dd5bde1f822c5b98b6d396fc3106380f",
+    "size": 6940,
+    "mtime_ns": 1792059740323596728
+  },
+  "docs/context-keeper/plans/2026-06-22-小红书详情快照采集需求.md": {
+    "type": "file",
+    "sha256": "262b2d719dece5d36bb667cd264c0c1a6c4f6794c8041720259e652d3fec4696",
+    "size": 3939,
+    "mtime_ns": 1792059740323649770
+  },
+  "docs/context-keeper/plans/2026-06-23-小红书browser-use状态驱动动作层需求.md": {
+    "type": "file",
+    "sha256": "5c10386aad37f29cf9202a67507889e5fa78749bf6f67aea5079ecb0cb451c4a",
+    "size": 5873,
+    "mtime_ns": 1792059740323721604
+  },
+  "docs/context-keeper/plans/2026-06-25-小红书browser-use-extract联调需求.md": {
+    "type": "file",
+    "sha256": "7e040352f1a3d74eb667dea865ca4d8a3edc1936fe78bc42717cd61df53cf334",
+    "size": 4211,
+    "mtime_ns": 1792059740323826062
+  },
+  "docs/context-keeper/plans/2026-06-29-小红书browser-use采集修复需求.md": {
+    "type": "file",
+    "sha256": "8ee00180cd5182748fe2c6039bde8229a3537e7e49c13711b0072c92976677b4",
+    "size": 4370,
+    "mtime_ns": 1792059740323895729
+  },
+  "docs/context-keeper/plans/2026-06-30-本地采集客户端与小红书联调修复需求.md": {
+    "type": "file",
+    "sha256": "d233fba42a77b3d761528e0b7d759ac6508f660f806b5ce72716f6e0daa79a9e",
+    "size": 5925,
+    "mtime_ns": 1792059740323967479
+  },
+  "docs/context-keeper/plans/2026-06-30-本地采集客户端批次队列设计需求.md": {
+    "type": "file",
+    "sha256": "cd3fefa5ddbc3b934a9f80ce34d05e935d6e04bd0364f4613a330a1f3ab285c3",
+    "size": 5654,
+    "mtime_ns": 1792059740324039104
+  },
+  "docs/context-keeper/plans/2026-07-01-小红书采集质量联调修复需求.md": {
+    "type": "file",
+    "sha256": "779569ac7d797a5e15079c6d41dac1fadf01497777b812e283fae6d1c45e01e1",
+    "size": 7208,
+    "mtime_ns": 1792059740324236854
+  },
+  "docs/context-keeper/plans/2026-07-06-小红书博主主页组订阅需求.md": {
+    "type": "file",
+    "sha256": "6be71eb652adcfac239542f832b4567a63ebad5544498063cb1df8d72d5fa9d1",
+    "size": 3201,
+    "mtime_ns": 1792059740324325896
+  },
+  "docs/context-keeper/plans/2026-07-09-X个人主页采集到洞察闭环需求.md": {
+    "type": "file",
+    "sha256": "e12fce894748ce2b1bd78615f68db63257025c26095c29a275b9339a0ec2dfcd",
+    "size": 2541,
+    "mtime_ns": 1792059740324381646
+  },
+  "docs/context-keeper/plans/2026-07-09-小红书个人主页定位验证需求.md": {
+    "type": "file",
+    "sha256": "2640e348394f65693f8ab0fe39a731f5f5568f30df810cedc65fb9ec966daf7e",
+    "size": 2475,
+    "mtime_ns": 1792059740324431688
+  },
+  "docs/context-keeper/plans/2026-07-10-微信用户界面暂停需求.md": {
+    "type": "file",
+    "sha256": "a24eda1aec2a7870cde8cdb7192576fb1b4e1c831ad62c35978eab8ac2f06dbb",
+    "size": 929,
+    "mtime_ns": 1792059740324483105
+  },
+  "docs/context-keeper/plans/2026-07-13-小红书个人主页公测收口需求.md": {
+    "type": "file",
+    "sha256": "58647e8179712190ec8a7c59137d9a5592b3767991653e5c41321361303cc8a3",
+    "size": 1969,
+    "mtime_ns": 1792059740324536438
+  },
+  "docs/context-keeper/plans/2026-07-14-X本地采集公测收口需求.md": {
+    "type": "file",
+    "sha256": "ce8cdf1c2fa04241c35b85033a5df99d3fa0566a96728823ccc49226bec85253",
+    "size": 22714,
+    "mtime_ns": 1792059740324636813
+  },
+  "docs/context-keeper/plans/2026-07-14-小红书博主简介与洞察提炼稳定性需求.md": {
+    "type": "file",
+    "sha256": "365f4e29bee632762c4820a4917edb9ee67f980dbbb5cc3720bfbad8b81fc9cc",
+    "size": 2172,
+    "mtime_ns": 1792059740324693272
+  },
+  "docs/context-keeper/plans/2026-07-16-本地采集客户端多项目与UX收口需求.md": {
+    "type": "file",
+    "sha256": "412cb9719f0004f8a4ce7d37023c5663b6c2cf99e6756e972d3df562ab3c3187",
+    "size": 3688,
+    "mtime_ns": 1792059740324745563
+  },
+  "docs/context-keeper/plans/2026-07-22-信息源配置体验收口需求.md": {
+    "type": "file",
+    "sha256": "5113563ffff6550f0b3be88ae557a5fc8e2d217652d5835ed360a0b90295c1a1",
+    "size": 4086,
+    "mtime_ns": 1792059740324796897
+  },
+  "docs/context-keeper/plans/2026-07-22-工作流观察页体验优化需求.md": {
+    "type": "file",
+    "sha256": "562e246296272ee141070d248f5cab46f53ab42a40a3a5411e4cc24ac7b81cb1",
+    "size": 3432,
+    "mtime_ns": 1792059740324852480
+  },
+  "docs/context-keeper/plans/2026-07-22-洞察输出与项目设置体验收口需求.md": {
+    "type": "file",
+    "sha256": "0ff6a64bfc82158abee9b86b12cd6b34cf93e362624a5241040456db6f14a537",
+    "size": 5444,
+    "mtime_ns": 1792059740324919605
+  },
+  "docs/context-keeper/plans/2026-07-22-运行日志明细与可观测性优化需求.md": {
+    "type": "file",
+    "sha256": "449fdab022a6c41659a817919fc173364edd1edd485c532cd791441c257e9ba3",
+    "size": 3363,
+    "mtime_ns": 1792059740325013605
+  },
+  "docs/context-keeper/plans/2026-07-23-微信平台能力移除需求.md": {
+    "type": "file",
+    "sha256": "56433c93e2ae3f8e9dec5c0bd5324d432cf26bd664564cc2c1fc2abef907aef1",
+    "size": 3297,
+    "mtime_ns": 1792059740325074397
+  },
+  "docs/context-keeper/plans/2026-07-23-本地采集风控策略需求.md": {
+    "type": "file",
+    "sha256": "6b53c172f34f9e03f09123a9a0ae7e9790441ac429cb16d66f9681f9e6efd4e7",
+    "size": 3007,
+    "mtime_ns": 1792059740325130606
+  },
+  "docs/context-keeper/plans/2026-07-23-洞察生成与本地采集逐单元收口需求.md": {
+    "type": "file",
+    "sha256": "5177c687fd86a62a4b3a9b029eb4693d5decfddfb1c0c40dd0b66004a030d44b",
+    "size": 6118,
+    "mtime_ns": 1792059740325203731
+  },
+  "docs/context-keeper/plans/2026-07-27-平台管理隐藏API入口需求.md": {
+    "type": "file",
+    "sha256": "94c3e2c4e0150032505e30de6dcc02e05515b7422e0cf4abcdcde2a38f8a2e43",
+    "size": 1578,
+    "mtime_ns": 1792059740325253314
+  },
+  "docs/context-keeper/plans/2026-07-28-客户端发布与双平台登录资料收口需求.md": {
+    "type": "file",
+    "sha256": "17d4b62dea504e4e04669f2402b2b7f17d5785030856af089c0c89405f596e3d",
+    "size": 4990,
+    "mtime_ns": 1792059740325319522
+  },
+  "docs/context-keeper/plans/2026-08-07-AI对话创建与公共模型需求.md": {
+    "type": "file",
+    "sha256": "b49498cb06e5d139048c0332bd1f322599f26f920b572d94fec7633be04462c8",
+    "size": 7063,
+    "mtime_ns": 1792059740325398148
+  },
+  "docs/context-keeper/plans/2026-08-24-SaaS薄客户端与可靠采集执行器改造方案.md": {
+    "type": "file",
+    "sha256": "6d4d5d4269b8e4b2f7152f34a539a63a57f513996a251a15de23421dade76b85",
+    "size": 33273,
+    "mtime_ns": 1792059740325503939
+  },
+  "docs/context-keeper/plans/2026-08-30-Collector-状态原型开发交接.md": {
+    "type": "file",
+    "sha256": "df19ce0b7d46f5aea4729940862962c4c17d1060a5c5735c96148a8359589ee6",
+    "size": 3707,
+    "mtime_ns": 1792059740325581231
+  },
+  "docs/context-keeper/plans/2026-09-02-Collector-后续开发交接.md": {
+    "type": "file",
+    "sha256": "760e6e1bab8dd5adf1dea270d1b68c052c56dbc2fabf3cbae5def649b787dba6",
+    "size": 13581,
+    "mtime_ns": 1792059740325682440
+  },
+  "docs/context-keeper/plans/2026-09-02-e2e-acceptance-checklist.md": {
+    "type": "file",
+    "sha256": "6e9ea2a7bc42ee1d780af29b5548e52e165ba92224543036c1273c1088399d8f",
+    "size": 7169,
+    "mtime_ns": 1792059740325760981
+  },
+  "docs/context-keeper/plans/2026-09-02-pre-existing-cleanup-and-admin-trigger.md": {
+    "type": "file",
+    "sha256": "418ecdab17ff21ac48a18adada8cc690aa984e1abbeba2243b391c424a2dfa46",
+    "size": 4027,
+    "mtime_ns": 1792059740325818565
+  },
+  "docs/context-keeper/plans/2026-09-07-采集管理与模型等待需求.md": {
+    "type": "file",
+    "sha256": "115e8e52d8ba31d221b7dbea1702131bf6047b1085ffec8b1a405509d2498278",
+    "size": 2102,
+    "mtime_ns": 1792059740325907607
+  },
+  "docs/context-keeper/plans/2026-09-14-采集交互与小红书额度收口需求.md": {
+    "type": "file",
+    "sha256": "44fc009c65ca38a311c615300c14c9727124f4ba5d116e8e8d2cca6ce44cc64b",
+    "size": 2314,
+    "mtime_ns": 1792059740326091398
+  },
+  "docs/context-keeper/plans/2026-10-15-只读审查修复与真实联调收口.md": {
+    "type": "file",
+    "sha256": "d6f45d1f5d51378110c0c2041933c9655ce91fb2fcbb8aaf13b329c2b26dd09d",
+    "size": 2507,
+    "mtime_ns": 1792059740326263774
+  },
+  "docs/context-keeper/plans/2026-10-16-模型调用合同与调整范围修复收口.md": {
+    "type": "file",
+    "sha256": "8ab213b6b5df0ba2fd3898a25af4f965a90a06d78db2423ab25e59d25d385194",
+    "size": 1777,
+    "mtime_ns": 1792122829793056622
+  },
+  "docs/context-keeper/plans/2026-10-27-客户端020交付与模型温度参数移除.md": {
+    "type": "file",
+    "sha256": "395f453567044b91fe23fc7304331a11308f5717904ece8eb749575149816677",
+    "size": 3714,
+    "mtime_ns": 1793109749438209967
+  },
+  "docs/context-keeper/plans/2026-10-28-平台指标与小红书采集四项修复.md": {
+    "type": "file",
+    "sha256": "a5998034cddbf48f6cbe4148aecc8a8bbc8df3a727639740f6db9ea13a1852ab",
+    "size": 3957,
+    "mtime_ns": 1793152575067979453
+  },
+  "docs/context-keeper/plans/2026-10-28-采集效率主线收口与Git合并.md": {
+    "type": "file",
+    "sha256": "85a1cb05d12317bc89acf704f51a74337f5dddc18f69003112fd73e9c914356e",
+    "size": 2449,
+    "mtime_ns": 1793172094464666350
+  },
+  "docs/context-keeper/worklogs/2026-05-09-KnowWind-MVP.md": {
+    "type": "file",
+    "sha256": "cb88e3b303ef07d0d8a9eacd418762f3d245512e0a38fdf45b38ae139da7f7a3",
+    "size": 5745,
+    "mtime_ns": 1792059740326397191
+  },
+  "docs/context-keeper/worklogs/2026-05-10-MVP收尾.md": {
+    "type": "file",
+    "sha256": "8e247a8c93b8040478e89cc712ff5425115a2c3da8ef7f2cbee4f746506d09b9",
+    "size": 2563,
+    "mtime_ns": 1792059740326446899
+  },
+  "docs/context-keeper/worklogs/2026-05-10-反馈闭环验证与前端类型补全.md": {
+    "type": "file",
+    "sha256": "077f880cd9d1c358e5011a11181afc2c6e86e0d5c07677c0aef6978dd8e6ea8e",
+    "size": 3997,
+    "mtime_ns": 1792059740326498024
+  },
+  "docs/context-keeper/worklogs/2026-05-10-配置策略与反馈闭环.md": {
+    "type": "file",
+    "sha256": "976eab0715df9258c9cb9888d33c24f885f18bfd7f189660164d98236e3ef2dd",
+    "size": 4700,
+    "mtime_ns": 1792059740326563816
+  },
+  "docs/context-keeper/worklogs/2026-05-11-OpenRouter风格收敛.md": {
+    "type": "file",
+    "sha256": "03785bff2edff94260e2f2432bc50e539e6ad9181630862257f7637b3df94af6",
+    "size": 4735,
+    "mtime_ns": 1792059740326630233
+  },
+  "docs/context-keeper/worklogs/2026-05-11-wx-still启动排查与清理.md": {
+    "type": "file",
+    "sha256": "f77a91512b35ae4eedf013b30b8f29c6f0786da80e662b4854a1f5ad308fbf11",
+    "size": 2759,
+    "mtime_ns": 1792059740326682691
+  },
+  "docs/context-keeper/worklogs/2026-05-11-前端UI重设计.md": {
+    "type": "file",
+    "sha256": "2167a8b01a1fec8b5c7f5dedbbc7470c993ac9e3c1c0ce6bfb3abaf1a872cc46",
+    "size": 7501,
+    "mtime_ns": 1792059740326757774
+  },
+  "docs/context-keeper/worklogs/2026-05-11-项目概念设计.md": {
+    "type": "file",
+    "sha256": "14d6c2600978a42523c7341a423025633b6d32b47f022bffc213ce29db6fec00",
+    "size": 5552,
+    "mtime_ns": 1792059740326824649
+  },
+  "docs/context-keeper/worklogs/2026-05-14-原型图-信息源界面细化.md": {
+    "type": "file",
+    "sha256": "4ac9bc5a7ba7f3dfae9eacfdd362116dd321eab906f1a6dcacafb79d751b8ced",
+    "size": 5012,
+    "mtime_ns": 1792059740326900941
+  },
+  "docs/context-keeper/worklogs/2026-05-14-原型图-新建项目布局重设计.md": {
+    "type": "file",
+    "sha256": "95cd1bdc99c503a7f25d77f6333b1d5706d90e944a82f33a6731a7e03341a9b7",
+    "size": 3397,
+    "mtime_ns": 1792059740326951316
+  },
+  "docs/context-keeper/worklogs/2026-05-14-平台管理与微信接入设计.md": {
+    "type": "file",
+    "sha256": "9696950cd0ec9b39175ecfec3be4185726e2e665ceecee9738c264c1c9ba6feb",
+    "size": 4564,
+    "mtime_ns": 1792059740327018150
+  },
+  "docs/context-keeper/worklogs/2026-05-14-微信头像绑定与平台管理UI优化.md": {
+    "type": "file",
+    "sha256": "d3c703676ed85f6e90cf98ff776e2a4ab699b267858c3ea98551a1305cb4c25c",
+    "size": 6038,
+    "mtime_ns": 1792059740327087316
+  },
+  "docs/context-keeper/worklogs/2026-05-14-新建项目两步页面.md": {
+    "type": "file",
+    "sha256": "a51f7a4d604cb6e5fafc74ef769e0bb67216f07b057fd057d686ba7c31121b16",
+    "size": 6781,
+    "mtime_ns": 1792059740327271192
+  },
+  "docs/context-keeper/worklogs/2026-05-14-模型配置LLM联通测试.md": {
+    "type": "file",
+    "sha256": "db20f5a5ab9a9e6765d958880ab55726da39720ac673c4d5bdf834756a182cff",
+    "size": 7492,
+    "mtime_ns": 1792059740327365108
+  },
+  "docs/context-keeper/worklogs/2026-05-14-项目数据库化多用户支持.md": {
+    "type": "file",
+    "sha256": "8a63c62c3fdf363644854307415759b13e5137e737e13206b14ff3052c65bf96",
+    "size": 7479,
+    "mtime_ns": 1792059740327448484
+  },
+  "docs/context-keeper/worklogs/2026-05-15-内容初筛流水线修复与优化.md": {
+    "type": "file",
+    "sha256": "10cc8c08d2c24dc1fc4c902761f83f5fa412c3211cea71dd39b6893d9bc515e3",
+    "size": 6133,
+    "mtime_ns": 1792059740327527442
+  },
+  "docs/context-keeper/worklogs/2026-05-15-消息架构解耦与流水线重排.md": {
+    "type": "file",
+    "sha256": "8ac9e0c190b06cc556119394ffcfbcdac7126d05412ec4d9c87b547b03f32531",
+    "size": 9176,
+    "mtime_ns": 1792059740327818567
+  },
+  "docs/context-keeper/worklogs/2026-05-20-X作者Bio翻译.md": {
+    "type": "file",
+    "sha256": "4ecd8473ccab8d2d33b95b2a855bf562c2e8b7df1052453619c34d00e7b39995",
+    "size": 5075,
+    "mtime_ns": 1792059740327894026
+  },
+  "docs/context-keeper/worklogs/2026-05-20-X提炼流水线调试与分批日志.md": {
+    "type": "file",
+    "sha256": "9e4cc0a64b590c28a2d955481238a61724adfa2ac82a904e4bd07a0bed1fff19",
+    "size": 6252,
+    "mtime_ns": 1792059740327976859
+  },
+  "docs/context-keeper/worklogs/2026-05-20-标签缓存实现.md": {
+    "type": "file",
+    "sha256": "f6d647531abe4cb07641504b5d557c7584ae58ec486f47ed02da8da6c0e864a8",
+    "size": 2374,
+    "mtime_ns": 1792059740328038026
+  },
+  "docs/context-keeper/worklogs/2026-05-20-核心文档重组与README更新.md": {
+    "type": "file",
+    "sha256": "c1b783260ea5e0b05b9edac6c03601b72c54157baa95a3d70e827fd3e8400ab8",
+    "size": 3192,
+    "mtime_ns": 1792059740328098151
+  },
+  "docs/context-keeper/worklogs/2026-05-20-重跑对话框与项目下拉修复.md": {
+    "type": "file",
+    "sha256": "66dba19d7c881e0f873370fc40885e433aa2def5c57cba4ed9a1f227ff790c7a",
+    "size": 6972,
+    "mtime_ns": 1792059740328224193
+  },
+  "docs/context-keeper/worklogs/2026-05-22-XHS卡片原始笔记展开交互.md": {
+    "type": "file",
+    "sha256": "cefe5fe44ac567676118de0f6e8ffb44d5001794c1ce5b0d65eb31b64888eff3",
+    "size": 3151,
+    "mtime_ns": 1792059740328312235
+  },
+  "docs/context-keeper/worklogs/2026-05-22-三方接口管理与平台Logo集成.md": {
+    "type": "file",
+    "sha256": "e220c79f5a9d11ede53641a05f0697686024ca5b4b735da2f6d7200ca3857a28",
+    "size": 7301,
+    "mtime_ns": 1792059740328405027
+  },
+  "docs/context-keeper/worklogs/2026-05-27-工作流页面UX优化.md": {
+    "type": "file",
+    "sha256": "ef7572e658a6be6ed9b98bbb33289517a7405750ffad97de10b2854c37ef5d5f",
+    "size": 5597,
+    "mtime_ns": 1792059740328490068
+  },
+  "docs/context-keeper/worklogs/2026-05-28-X采集修复与模型分配重构.md": {
+    "type": "file",
+    "sha256": "86aae4bfe23b98969418bcbd96df0167e7bd14f7f25ad32e27b47ea3374a4252",
+    "size": 7163,
+    "mtime_ns": 1792059740328569985
+  },
+  "docs/context-keeper/worklogs/2026-06-03-Collector-Runtime-Loop验证.md": {
+    "type": "file",
+    "sha256": "25dd74f51b06163c8489a273408f5cde9aea9332133dfa80226e268c34150034",
+    "size": 17627,
+    "mtime_ns": 1792059740328658652
+  },
+  "docs/context-keeper/worklogs/2026-06-03-Collector本地采集器联调闭环.md": {
+    "type": "file",
+    "sha256": "551c306695c6aed2866ad3cd96e6a995696521a48b6c2b8cf2ed47f19ced1c7d",
+    "size": 10177,
+    "mtime_ns": 1792059740328767527
+  },
+  "docs/context-keeper/worklogs/2026-06-04-Collector默认值与Tauri-icon修复.md": {
+    "type": "file",
+    "sha256": "86620bdc5caad8efd15946abbd6c50213fe4d60d73d0d9ab777bb483e688600d",
+    "size": 5478,
+    "mtime_ns": 1792059740328849319
+  },
+  "docs/context-keeper/worklogs/2026-06-04-KnowWind-profile-注册与头像.md": {
+    "type": "file",
+    "sha256": "fe8a6dce83f85479466079560abecc62f9e43a71a20cd330ffb1f59679294688",
+    "size": 6355,
+    "mtime_ns": 1792059740328929652
+  },
+  "docs/context-keeper/worklogs/2026-06-04-T2-Tauri-sidecar-client与SIGTERM修复.md": {
+    "type": "file",
+    "sha256": "669efa8cfc865bf9c58ce52dd4c86661064c06288baad2bebf168c30d7aad6e5",
+    "size": 8470,
+    "mtime_ns": 1792059740329024736
+  },
+  "docs/context-keeper/worklogs/2026-06-04-T3-Tauri-主窗口UI.md": {
+    "type": "file",
+    "sha256": "50739080be42751e5b921163232377f66e8ec599e755526b6975e5883ce2dcb3",
+    "size": 6930,
+    "mtime_ns": 1792059740329105986
+  },
+  "docs/context-keeper/worklogs/2026-06-04-T4-平台登录按钮.md": {
+    "type": "file",
+    "sha256": "729472664a6717c7c1df4e34bb68bccfa6fbff8d9f7170ca5e3d146bec868402",
+    "size": 7316,
+    "mtime_ns": 1792059740329182194
+  },
+  "docs/context-keeper/worklogs/2026-06-04-Tauri-桌面端设计系统迁移.md": {
+    "type": "file",
+    "sha256": "5576e6a421ce94ecc29ae2f3f127b7de8224c2042642bb4de56a7e69b4d910f5",
+    "size": 7223,
+    "mtime_ns": 1792059740329263569
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T10-XHS-real-verify.md": {
+    "type": "file",
+    "sha256": "e64035d636804efc6e6429f56e21e53a86e3017e78691f3503432ca94583b447",
+    "size": 15195,
+    "mtime_ns": 1792059740329373153
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T11-macOS-app-dmg打包.md": {
+    "type": "file",
+    "sha256": "786c9d7cb8b6b230108394447cc688ed3830c2a5871140a65568654381a94aa6",
+    "size": 9191,
+    "mtime_ns": 1792059740329460278
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T12-sidecar-async-SingletonLock-login_required.md": {
+    "type": "file",
+    "sha256": "ac3b19cf789b331a38df635c2bbf940a2f25010b0c3073dbd35432f5242fb980",
+    "size": 12239,
+    "mtime_ns": 1792059740329594570
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T13-UI-消费login_required-502退避.md": {
+    "type": "file",
+    "sha256": "a1c4dc7b59ae624407c0ea11bab230633f8470f01b3cc78b2ec8099292e05f4f",
+    "size": 10138,
+    "mtime_ns": 1792059740329841945
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T14-首次启动绑定UI.md": {
+    "type": "file",
+    "sha256": "d98ce695ab92e35a1afed766c3fa1d80e2095460206c77dddba4f60f78484087",
+    "size": 12351,
+    "mtime_ns": 1792059740329954154
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T15-SaaS-小红书本地采集卡.md": {
+    "type": "file",
+    "sha256": "67e8f716000b63200afd24888188da80868996fe0bd62acb4c1815e326b1f202",
+    "size": 9690,
+    "mtime_ns": 1792059740330045029
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T5-T6-并行开发与联调.md": {
+    "type": "file",
+    "sha256": "7cdd02e822e96af739ec646d6c11c3d927550d8754ddcf84f873bdf88358048a",
+    "size": 15074,
+    "mtime_ns": 1792059740331580739
+  },
+  "docs/context-keeper/worklogs/2026-06-05-T7-T9-T10-托盘-联调脚本-真实XHS验证.md": {
+    "type": "file",
+    "sha256": "9d3e0949252769539677ad31806cee1240e06c1b609b976ac9b2b30233018821",
+    "size": 13614,
+    "mtime_ns": 1792059740331881198
+  },
+  "docs/context-keeper/worklogs/2026-06-05-i18n与README分发指南.md": {
+    "type": "file",
+    "sha256": "c6662808e35ad77268b4f224b61041d27a7f50f8b155ecb39c52ccf6d03f34ca",
+    "size": 9604,
+    "mtime_ns": 1792059740331976698
+  },
+  "docs/context-keeper/worklogs/2026-06-11-采集客户端修复-SingletonLock.md": {
+    "type": "file",
+    "sha256": "ee1e53fa3d9c7dc0a3d6b359d9269788410cac02c42a6cbe9fe9832243c81549",
+    "size": 15288,
+    "mtime_ns": 1792059740333427908
+  },
+  "docs/context-keeper/worklogs/2026-06-14-小红书本地采集风控与内容完整度.md": {
+    "type": "file",
+    "sha256": "7db07d49d9245c6434c01673dc0cc2645c0ca7ba0002cd7c8acbd0ac3a4e0366",
+    "size": 10069,
+    "mtime_ns": 1792059740333681617
+  },
+  "docs/context-keeper/worklogs/2026-06-15-小红书安全模式与日志护栏.md": {
+    "type": "file",
+    "sha256": "dbd1170959e294a65939a338b132fa0f07c292d95cfa1993326085d41f9661de",
+    "size": 7486,
+    "mtime_ns": 1792059740333769325
+  },
+  "docs/context-keeper/worklogs/2026-06-15-小红书本地关键词搜索全路径.md": {
+    "type": "file",
+    "sha256": "548a89d0b9a0ff304ff8f6b797af7cedc36c858b09c6a86c6d60550a6e26265a",
+    "size": 12223,
+    "mtime_ns": 1792059740333858284
+  },
+  "docs/context-keeper/worklogs/2026-06-15-本地采集租约与安全验证日志.md": {
+    "type": "file",
+    "sha256": "20b170a0b74ebb23a941fafd86e6d2911bd42c77c25d95cf126cba2569eae70b",
+    "size": 7317,
+    "mtime_ns": 1792059740333931992
+  },
+  "docs/context-keeper/worklogs/2026-06-15-模型调用统一迁移.md": {
+    "type": "file",
+    "sha256": "05270529586614aebcd48f5dca8853dc74b74827e8068b0e84bfa5f2d5bfeaf6",
+    "size": 6122,
+    "mtime_ns": 1792059740334017367
+  },
+  "docs/context-keeper/worklogs/2026-06-15-模型配置Anthropic协议补全.md": {
+    "type": "file",
+    "sha256": "0862984b1781e8656d84b30289e79cecd448ea55f7e059080bb42f52b08026cb",
+    "size": 5790,
+    "mtime_ns": 1792059740334094743
+  },
+  "docs/context-keeper/worklogs/2026-06-15-洞察分享.md": {
+    "type": "file",
+    "sha256": "7e7ecddfdb200b6c9724d63690d9a181ac8b4f69529a7032c6159c82321035e4",
+    "size": 13731,
+    "mtime_ns": 1792059740334350243
+  },
+  "docs/context-keeper/worklogs/2026-06-16-采集客户端登录日志与启动修复.md": {
+    "type": "file",
+    "sha256": "7c3a68c8c4eed9850c713d11ea16f1a7ce9be9f25fb0ca3f9206ee3306846310",
+    "size": 9363,
+    "mtime_ns": 1792059740334448035
+  },
+  "docs/context-keeper/worklogs/2026-06-17-小红书browser-use采集合同.md": {
+    "type": "file",
+    "sha256": "8a8430c7a264e6ed030760ae5133cc3e0b6eb4fd8d13de9a916f98ace58b4e78",
+    "size": 13935,
+    "mtime_ns": 1792059740334547868
+  },
+  "docs/context-keeper/worklogs/2026-06-19-小红书采集搜索与重复点击修复.md": {
+    "type": "file",
+    "sha256": "df1f542f90ed3ba5d9bd4881efe4639b4263735c5cee75437598d945055861de",
+    "size": 7436,
+    "mtime_ns": 1792059740334630951
+  },
+  "docs/context-keeper/worklogs/2026-06-22-小红书browser-use-route复盘与后续方案.md": {
+    "type": "file",
+    "sha256": "54b00647202aabd8267fc05ab985aa0f9f4075bac64a8a80ee2f27b3c66aa067",
+    "size": 10700,
+    "mtime_ns": 1792059740334711827
+  },
+  "docs/context-keeper/worklogs/2026-06-22-小红书详情快照采集.md": {
+    "type": "file",
+    "sha256": "3025e2d7c046b51fac6455b65bb4c0b2759830d8d47f0ae048e39184af8f90e2",
+    "size": 6846,
+    "mtime_ns": 1792059740334874785
+  },
+  "docs/context-keeper/worklogs/2026-06-23-小红书browser-use状态驱动动作层.md": {
+    "type": "file",
+    "sha256": "31f24614f753cde73f0ed13fcc4b4cc5fa51982627141bae9ef3b9123c3939fa",
+    "size": 10854,
+    "mtime_ns": 1792059740334952910
+  },
+  "docs/context-keeper/worklogs/2026-06-25-小红书browser-use-AI面板关闭修复.md": {
+    "type": "file",
+    "sha256": "be310b0a5180c24457ebced92a606eb565175bc41772b54218f1ae953e57e39a",
+    "size": 7915,
+    "mtime_ns": 1792059740335163369
+  },
+  "docs/context-keeper/worklogs/2026-06-25-小红书browser-use-extract联调.md": {
+    "type": "file",
+    "sha256": "485f309cbd54cabde89123e908cbc8e1080a016e860e4e6eb26fe9afda830f4a",
+    "size": 8632,
+    "mtime_ns": 1792059740335239202
+  },
+  "docs/context-keeper/worklogs/2026-06-26-小红书browser-use-联调修复与profile管理.md": {
+    "type": "file",
+    "sha256": "29aad59d1caef7375de7c18a1d5272bf0eefe0bdb1f32bc5a4dd401f94ab3590",
+    "size": 7065,
+    "mtime_ns": 1792059740335314203
+  },
+  "docs/context-keeper/worklogs/2026-06-26-小红书详情提取根因修复与调试方法论.md": {
+    "type": "file",
+    "sha256": "31c7ee36c9f48174e33c6526b6ef7e5cda7b376d0f4b65c9896853334be9f5ce",
+    "size": 7792,
+    "mtime_ns": 1792059740335389703
+  },
+  "docs/context-keeper/worklogs/2026-06-27-browser-use小红书ai-agent实操流程.md": {
+    "type": "file",
+    "sha256": "d140eea8798692549d18dc0ca44fe1b13991e7446ce95b054cdfa289102ddfa8",
+    "size": 11191,
+    "mtime_ns": 1792059740335473786
+  },
+  "docs/context-keeper/worklogs/2026-06-27-小红书详情提取overlay-JS-eval修复.md": {
+    "type": "file",
+    "sha256": "e7938306f293146437ee9c8d1815b43dd04a76b5876d4a95e9015f4e6f5ba019",
+    "size": 6924,
+    "mtime_ns": 1792059740335551703
+  },
+  "docs/context-keeper/worklogs/2026-06-29-browser-use小红书媒体抽取复核.md": {
+    "type": "file",
+    "sha256": "f71a2856424959947a88334d1e7b34e8e2b90fabfcdddc44d2b5da7227279391",
+    "size": 8547,
+    "mtime_ns": 1792059740335630286
+  },
+  "docs/context-keeper/worklogs/2026-06-29-小红书browser-use采集修复.md": {
+    "type": "file",
+    "sha256": "7aa386c0c1d3d0c292073a285877084b37c60acefc13eb8840cdc8d35f31f8a3",
+    "size": 8436,
+    "mtime_ns": 1792059740335707953
+  },
+  "docs/context-keeper/worklogs/2026-06-30-本地采集客户端与小红书联调修复.md": {
+    "type": "file",
+    "sha256": "82847c87ab4a5be52bf3306731516d0961977ac85cc914256b4b256aa9250988",
+    "size": 11451,
+    "mtime_ns": 1792059740335790578
+  },
+  "docs/context-keeper/worklogs/2026-06-30-本地采集客户端批次队列设计.md": {
+    "type": "file",
+    "sha256": "7441ba508c13568db951307a8679000028b264feebb88b762ade7ce77d2b8d75",
+    "size": 6410,
+    "mtime_ns": 1792059740336004412
+  },
+  "docs/context-keeper/worklogs/2026-07-01-小红书采集质量联调修复.md": {
+    "type": "file",
+    "sha256": "bd06a6589ad699164cb9ba6b59bfb34b39cda4d5eb837e30147c7dfc9c57fb83",
+    "size": 14768,
+    "mtime_ns": 1792059740336104745
+  },
+  "docs/context-keeper/worklogs/2026-07-02-小红书采集与日志可观测性修复.md": {
+    "type": "file",
+    "sha256": "219d2a4a27d9f4250e1598a116a298aadde769edc4254b67d24f78cf44155580",
+    "size": 6658,
+    "mtime_ns": 1792059740336175245
+  },
+  "docs/context-keeper/worklogs/2026-07-03-本地采集客户端UX与历史采集.md": {
+    "type": "file",
+    "sha256": "63396f1429fd388a96107c36d5e0af0cd1c278829bf9f34efe3cbd8fb02b59c9",
+    "size": 6394,
+    "mtime_ns": 1792059740336247745
+  },
+  "docs/context-keeper/worklogs/2026-07-03-根指令token压缩.md": {
+    "type": "file",
+    "sha256": "d9470117a8270914c24ab51795cfb4f916f616d6bb76be6da6c693ff3c6e849c",
+    "size": 2136,
+    "mtime_ns": 1792059740336300621
+  },
+  "docs/context-keeper/worklogs/2026-07-06-小红书M3作者图片联调修复.md": {
+    "type": "file",
+    "sha256": "5f917fa1012d2f6a240eb53ed9be63f2a41e68aa8865a8f15b880242dcaa430e",
+    "size": 6352,
+    "mtime_ns": 1792059740336372079
+  },
+  "docs/context-keeper/worklogs/2026-07-06-小红书博主主页组订阅与风控止血.md": {
+    "type": "file",
+    "sha256": "bdf4eee5dab8e1af47a688ba4c58f0510760a2d81c0378d7787393b7368df7b2",
+    "size": 6362,
+    "mtime_ns": 1792059740336440996
+  },
+  "docs/context-keeper/worklogs/2026-07-07-X关键词本地采集与真实联调.md": {
+    "type": "file",
+    "sha256": "0b21c80ae0bfdb39d3ddb0d41a40970163a448a68e685d8556619e42508a252d",
+    "size": 6737,
+    "mtime_ns": 1792059740336512829
+  },
+  "docs/context-keeper/worklogs/2026-07-08-X洞察与采集复发问题收敛.md": {
+    "type": "file",
+    "sha256": "ea8b4a19ef86dd99d03b668af94f23337ee11fd88c5e988a02a2af3f9b288753",
+    "size": 8728,
+    "mtime_ns": 1792059740336585246
+  },
+  "docs/context-keeper/worklogs/2026-07-08-小红书号搜索定位主页验证.md": {
+    "type": "file",
+    "sha256": "9f0c0bed5a7a62dd6df707694ce5ed53aa7de2947e9640203817d98ef4474732",
+    "size": 5515,
+    "mtime_ns": 1792059740336654996
+  },
+  "docs/context-keeper/worklogs/2026-07-09-X个人主页采集到洞察闭环.md": {
+    "type": "file",
+    "sha256": "bfeb8bcf681b0263af4de0d2aec4580ef1f13b1e1af0c05687f71bc920cc29d9",
+    "size": 7934,
+    "mtime_ns": 1792059740336882705
+  },
+  "docs/context-keeper/worklogs/2026-07-09-X洞察详情完整正文与段落修复.md": {
+    "type": "file",
+    "sha256": "a17a9bf04cc5e15eef1847e4f2ca4c881c3400dec05755631213ba9ffec7530a",
+    "size": 8797,
+    "mtime_ns": 1792059740336958538
+  },
+  "docs/context-keeper/worklogs/2026-07-09-小红书个人主页与模型下拉联调.md": {
+    "type": "file",
+    "sha256": "c50fa394f85640d6d7a916801a485911d392c266c43983b0d7063de0bf813a59",
+    "size": 7401,
+    "mtime_ns": 1792059740337031621
+  },
+  "docs/context-keeper/worklogs/2026-07-09-小红书个人主页定位验证.md": {
+    "type": "file",
+    "sha256": "9480434d30b744b32ad5f8790711ca12ba8c5e7c3dcd4bb631603e6ff1b98f2d",
+    "size": 7064,
+    "mtime_ns": 1792059740337099205
+  },
+  "docs/context-keeper/worklogs/2026-07-09-小红书个人主页采集到洞察闭环.md": {
+    "type": "file",
+    "sha256": "aa49281b91bd98ac96d8ff32f24adc831d674fd1c2afac914f0e8fdf635aba9b",
+    "size": 8644,
+    "mtime_ns": 1792059740337175455
+  },
+  "docs/context-keeper/worklogs/2026-07-10-小红书个人主页精确账号与风控收口.md": {
+    "type": "file",
+    "sha256": "cc9e15838016e733933778f3615e44ca5c54a9e003ea0403ca51df6b8f1f0bbc",
+    "size": 5089,
+    "mtime_ns": 1792059740337246788
+  },
+  "docs/context-keeper/worklogs/2026-07-10-微信客户端集成与依赖维护.md": {
+    "type": "file",
+    "sha256": "16bc54fea7f99e0e34fe46b6959bc8178154ed07373ccf818a7cda5251ceeaa5",
+    "size": 3715,
+    "mtime_ns": 1792059740337505997
+  },
+  "docs/context-keeper/worklogs/2026-07-10-微信用户界面暂停.md": {
+    "type": "file",
+    "sha256": "a4046ee66a0c9920ba18f617a992f95739b0f4b0ca62e506dbe200aa6861c38b",
+    "size": 3103,
+    "mtime_ns": 1792059740337561664
+  },
+  "docs/context-keeper/worklogs/2026-07-13-小红书个人主页公测收口.md": {
+    "type": "file",
+    "sha256": "1d5859674cf8c028211e1cb0597afb24126b19f5d23690593076731e8df56f04",
+    "size": 6729,
+    "mtime_ns": 1792059740337633247
+  },
+  "docs/context-keeper/worklogs/2026-07-13-小红书个人主页精确定位回归修复.md": {
+    "type": "file",
+    "sha256": "fe7cb1a34272f676d1d0055cb97d43257e7faa60c02adce59ba3002614498aa8",
+    "size": 5731,
+    "mtime_ns": 1792059740337705289
+  },
+  "docs/context-keeper/worklogs/2026-07-14-AI编程从想法到产品第1篇策划.md": {
+    "type": "file",
+    "sha256": "d52e88269ca1d0e12c0f6a7b8d6359b3b23ba883f0e32a5a49cd75bfb6340b38",
+    "size": 6786,
+    "mtime_ns": 1792059740337803456
+  },
+  "docs/context-keeper/worklogs/2026-07-14-小红书博主简介与洞察提炼收口.md": {
+    "type": "file",
+    "sha256": "6c2398932d0d23f43cd68ec12ed48cbdbf7dbf70b78b9ca20f1eed402fbf80dd",
+    "size": 5195,
+    "mtime_ns": 1792059740337997164
+  },
+  "docs/context-keeper/worklogs/2026-07-15-AI编程系列第1篇正文定稿.md": {
+    "type": "file",
+    "sha256": "d2fbae9bf4330dc03668ad0e8bfd98b0d3e856ea29e30b21fa7fe07b118f7456",
+    "size": 8409,
+    "mtime_ns": 1792059740338075081
+  },
+  "docs/context-keeper/worklogs/2026-07-15-X本地采集公测收口.md": {
+    "type": "file",
+    "sha256": "ab071482969b60697e940454218e06a60374307eabeaddc2f4a60f26de81ee43",
+    "size": 5222,
+    "mtime_ns": 1792059740338148873
+  },
+  "docs/context-keeper/worklogs/2026-07-16-本地采集客户端多项目与UX收口.md": {
+    "type": "file",
+    "sha256": "2348dde8bb933e3fb5952845fe130eb8ebc4c37adf7847dfab5b2372a970cbde",
+    "size": 8623,
+    "mtime_ns": 1792059740338225956
+  },
+  "docs/context-keeper/worklogs/2026-07-17-采集客户端更名与项目数据清理.md": {
+    "type": "file",
+    "sha256": "7bb08a6c9eb36d091c0eb63be2e4003974de083e54057bc5581ac5df1eb0bb3b",
+    "size": 3902,
+    "mtime_ns": 1792059740338277831
+  },
+  "docs/context-keeper/worklogs/2026-07-20-本地采集公测修复与实测复盘.md": {
+    "type": "file",
+    "sha256": "e5dec9a7fc58bfd3d9d8d491970f6e2fa9f3e8facff91cc195cd46dc2ab9dcd1",
+    "size": 4374,
+    "mtime_ns": 1792059740338350332
+  },
+  "docs/context-keeper/worklogs/2026-07-21-本地采集遗留修复与X跨轮验证.md": {
+    "type": "file",
+    "sha256": "51b9edcbad714c387ece321f4bdadcf8df80b6259f5b42395e88b1f80cf8ee4e",
+    "size": 8671,
+    "mtime_ns": 1792059740338426998
+  },
+  "docs/context-keeper/worklogs/2026-07-22-X与小红书互动数据采集.md": {
+    "type": "file",
+    "sha256": "2d7cfffe1a9dd6ebf8db1ee98314311d219c6896cd750b80855a594b7a8da9f1",
+    "size": 6556,
+    "mtime_ns": 1792059740338496332
+  },
+  "docs/context-keeper/worklogs/2026-07-22-信息源配置体验收口.md": {
+    "type": "file",
+    "sha256": "11be1d252f989ee250676be2516652915259ff66af62162b6c418614ad5c9efb",
+    "size": 5742,
+    "mtime_ns": 1792059740338563915
+  },
+  "docs/context-keeper/worklogs/2026-07-22-小红书洞察图片与作者简介修复.md": {
+    "type": "file",
+    "sha256": "355c81f18cbe72f6ea4334dcff02cfb08f339902c8db41ee276a66390ab35210",
+    "size": 5670,
+    "mtime_ns": 1792059740338661124
+  },
+  "docs/context-keeper/worklogs/2026-07-22-工作流观察页体验优化.md": {
+    "type": "file",
+    "sha256": "fd0b2c844d12929024d59c247f43341a4ec1431702d0194d780989eeb3aff38f",
+    "size": 5103,
+    "mtime_ns": 1792059740338819957
+  },
+  "docs/context-keeper/worklogs/2026-07-22-本地采集验收缺陷与评分解释修复.md": {
+    "type": "file",
+    "sha256": "8d1c7d8dfbe1d9f7c503441c02974c4fbb1a7c798eca4e9315adb0ea6483b884",
+    "size": 7616,
+    "mtime_ns": 1792059740338897457
+  },
+  "docs/context-keeper/worklogs/2026-07-22-洞察输出与项目设置体验收口.md": {
+    "type": "file",
+    "sha256": "a84af50167d240369ed3112bc247c2c6ff7bc8172e86c71846d65fc19ee09b3c",
+    "size": 9029,
+    "mtime_ns": 1792059740338972791
+  },
+  "docs/context-keeper/worklogs/2026-07-22-运行日志不可变与重新提炼溯源修复.md": {
+    "type": "file",
+    "sha256": "c056d0162666eb6a550e9b3eec35b9a8a71410b5adb171e2b2128af87c32a988",
+    "size": 6872,
+    "mtime_ns": 1792059740339044583
+  },
+  "docs/context-keeper/worklogs/2026-07-22-运行日志明细与可观测性优化.md": {
+    "type": "file",
+    "sha256": "179527f9e1e0bfc0c10ff112d1487eb42b15f77110364aa8d922ef8fb4ff36aa",
+    "size": 5111,
+    "mtime_ns": 1792059740339114458
+  },
+  "docs/context-keeper/worklogs/2026-07-23-微信平台能力移除.md": {
+    "type": "file",
+    "sha256": "ccbc66d1e4c02345c9251c2319da5c2c96465ffde5eb0a7e510d2b0585416f86",
+    "size": 5929,
+    "mtime_ns": 1792059740339181791
+  },
+  "docs/context-keeper/worklogs/2026-07-23-本地采集风控策略.md": {
+    "type": "file",
+    "sha256": "15e4e81406399e21f18363556d8e6601d03a9cd3c0a401b7ff300f0ad2ce49f7",
+    "size": 7411,
+    "mtime_ns": 1792059740339360499
+  },
+  "docs/context-keeper/worklogs/2026-07-23-洞察生成与本地采集逐单元收口.md": {
+    "type": "file",
+    "sha256": "6b1922dcc7b984ce19b03a940985cd5ce96ab2047edeb3c1913b8ddb6b7cbfca",
+    "size": 7496,
+    "mtime_ns": 1792059740339430166
+  },
+  "docs/context-keeper/worklogs/2026-07-27-X阶段提交竞态与失败汇总修复.md": {
+    "type": "file",
+    "sha256": "58b7cee3cf8f08a157b84bc921266035a1815c87ec23353982393499c1724002",
+    "size": 6813,
+    "mtime_ns": 1792059740339599916
+  },
+  "docs/context-keeper/worklogs/2026-07-27-小红书筛选识别与即时停止修复.md": {
+    "type": "file",
+    "sha256": "7539379e0062c2f67d0204131dd38d68cb78988d496799621350dccafcad85cb",
+    "size": 7718,
+    "mtime_ns": 1792059740339671333
+  },
+  "docs/context-keeper/worklogs/2026-07-27-平台管理隐藏API入口.md": {
+    "type": "file",
+    "sha256": "064bf95a54dbea5d1e02a8a34c61348f9b73b2e26ada56def113497f6b97d50c",
+    "size": 3288,
+    "mtime_ns": 1792059740339723708
+  },
+  "docs/context-keeper/worklogs/2026-07-27-本地采集客户端体验与数据重置.md": {
+    "type": "file",
+    "sha256": "dc89ed3282a1e8135a05e003d398412837b29fb70fb5786316ad10aafe9c5bea",
+    "size": 6081,
+    "mtime_ns": 1792059740341177752
+  },
+  "docs/context-keeper/worklogs/2026-07-27-采集链路完整Review收口.md": {
+    "type": "file",
+    "sha256": "c379e444083721a518e66460e64d61d69d58a7d251b9f00521de8c3d0d30ef10",
+    "size": 4816,
+    "mtime_ns": 1792059740341298627
+  },
+  "docs/context-keeper/worklogs/2026-07-28-公测安装包与全新部署说明收口.md": {
+    "type": "file",
+    "sha256": "537ea314f4e7a1e76725a64904b43e75302caca408d6d306866958ddecd1ba90",
+    "size": 5604,
+    "mtime_ns": 1792059740341395752
+  },
+  "docs/context-keeper/worklogs/2026-07-28-公测客户端稳定性修复与最终打包.md": {
+    "type": "file",
+    "sha256": "6bc06090746d54ec213da86222b601454df097928d29b9f4dfcbbda683ad9e34",
+    "size": 6431,
+    "mtime_ns": 1792059740341598544
+  },
+  "docs/context-keeper/worklogs/2026-07-28-公测部署安全收口.md": {
+    "type": "file",
+    "sha256": "dc409b048c40def72f83332bcbd72e8be4a421d5caa6f5b9cc6c1089edc87d90",
+    "size": 5633,
+    "mtime_ns": 1792059740341670628
+  },
+  "docs/context-keeper/worklogs/2026-07-28-客户端发布与双平台登录资料收口.md": {
+    "type": "file",
+    "sha256": "e09de0f9b697835d8068505943156590eb05955f11388cb4becdd9b4c4f5cd16",
+    "size": 10339,
+    "mtime_ns": 1792059740341757211
+  },
+  "docs/context-keeper/worklogs/2026-07-28-用户手册与客户端下载入口收口.md": {
+    "type": "file",
+    "sha256": "d1c5e567dc20c7dbafc357ca305a22fc1782efcd38b68f1e650f209ba0e8242b",
+    "size": 4254,
+    "mtime_ns": 1792059740341945711
+  },
+  "docs/context-keeper/worklogs/2026-07-28-采集结果与历史摘要收口.md": {
+    "type": "file",
+    "sha256": "1e33dcb60f546237924b4c5febf38be7a3cb5dc94023a69b114c7270e79f5cb3",
+    "size": 5657,
+    "mtime_ns": 1792059740342020420
+  },
+  "docs/context-keeper/worklogs/2026-07-29-公测采集结果与跨日修复.md": {
+    "type": "file",
+    "sha256": "eae0d31b2c10dba31ee44eb1fd300d1a1eb7d6221d4c03004eadb06ecca7704e",
+    "size": 3232,
+    "mtime_ns": 1792059740342100920
+  },
+  "docs/context-keeper/worklogs/2026-07-29-本地采集组合验收与客户端交互修复.md": {
+    "type": "file",
+    "sha256": "24379ca617f97acc840fc4226efeec80c0c4de260e9dc104d2eba0ba86fd7d13",
+    "size": 9982,
+    "mtime_ns": 1792059740342178712
+  },
+  "docs/context-keeper/worklogs/2026-08-06-公测失败补采与模型错误提示.md": {
+    "type": "file",
+    "sha256": "c2a773668cad5023ac46a8c0d5d09dcc5129cf03f4d0b9c12cbf732618c2f1a4",
+    "size": 6679,
+    "mtime_ns": 1792059740342252128
+  },
+  "docs/context-keeper/worklogs/2026-08-06-模型用途与优先级队列.md": {
+    "type": "file",
+    "sha256": "1dd1eaa2875f10be79ee55cdaa725b0e3d16ac93f2bb9332ffcd893810124d9c",
+    "size": 6050,
+    "mtime_ns": 1792059740342322545
+  },
+  "docs/context-keeper/worklogs/2026-08-07-AI对话创建与公共模型.md": {
+    "type": "file",
+    "sha256": "e43e7f726d86b48e0c318c7f8abb768f005ca54db6d72e2846e2c7376196dac7",
+    "size": 6926,
+    "mtime_ns": 1792059740342394629
+  },
+  "docs/context-keeper/worklogs/2026-08-12-AI创建与项目设置分支联调.md": {
+    "type": "file",
+    "sha256": "6eb54d526a2a5194cc2050aa520b288df3bd14be88232673fc73d091902e9f62",
+    "size": 8173,
+    "mtime_ns": 1792059740342564045
+  },
+  "docs/context-keeper/worklogs/2026-08-17-项目创建与公共模型真实联调收口.md": {
+    "type": "file",
+    "sha256": "a8a32fcbaa9658763c95f54dd85b6918b2c48ae227ddaaf1ab0dc56e805d3902",
+    "size": 6276,
+    "mtime_ns": 1792059740342648546
+  },
+  "docs/context-keeper/worklogs/2026-08-18-本地验收与创建采集稳定性修复.md": {
+    "type": "file",
+    "sha256": "6d10457edc9b8ed1c4ea2e60985576a706a5c85608735d582ca1d4c3c57ba44d",
+    "size": 5229,
+    "mtime_ns": 1792059740342727587
+  },
+  "docs/context-keeper/worklogs/2026-08-21-本地验收回归与采集日志收口.md": {
+    "type": "file",
+    "sha256": "e8af5407d229691bda7f3be32078b8cda5f1d6882dbe6653f2f4f1db9b78f59f",
+    "size": 5323,
+    "mtime_ns": 1792059740342800338
+  },
+  "docs/context-keeper/worklogs/2026-08-21-项目创建多选交互修复.md": {
+    "type": "file",
+    "sha256": "219c4c96cd51c985b229017e6286ba746d5071d85329b26d8bdd44701cda58ef",
+    "size": 4818,
+    "mtime_ns": 1792059740342875629
+  },
+  "docs/context-keeper/worklogs/2026-08-21-项目创建验收反馈与公共模型容灾.md": {
+    "type": "file",
+    "sha256": "78489e124425d323eba5c2796aceef4b34424f448c192c4537cefb9bc558ead0",
+    "size": 6453,
+    "mtime_ns": 1792059740342975838
+  },
+  "docs/context-keeper/worklogs/2026-08-24-SaaS薄客户端与可靠采集执行器方案.md": {
+    "type": "file",
+    "sha256": "7ca99b9d74e096e185f8269cc95db23d4e41f9ff406718afb5e9cf847bf3fb26",
+    "size": 5548,
+    "mtime_ns": 1792059740343140588
+  },
+  "docs/context-keeper/worklogs/2026-09-01-Collector状态板与SaaS定时采集收口.md": {
+    "type": "file",
+    "sha256": "c52f51c78d8be955bab8db1e5f059cdaa383a3c9040e40c0715db24b2dd394a6",
+    "size": 4811,
+    "mtime_ns": 1792059740343216880
+  },
+  "docs/context-keeper/worklogs/2026-09-02-Collector-SaaS客户端闭环交接.md": {
+    "type": "file",
+    "sha256": "4af75a82887fa603861b12f9630f6d1190ef8acdcc517042046f536e8037e6df",
+    "size": 3857,
+    "mtime_ns": 1792059740343274796
+  },
+  "docs/context-keeper/worklogs/2026-09-02-任务A真实闭环完成.md": {
+    "type": "file",
+    "sha256": "0a27b17bc164e7fa27356cc38704e63196f6865852ec92c566a5f0dd8dc9ea06",
+    "size": 5818,
+    "mtime_ns": 1792059740343463505
+  },
+  "docs/context-keeper/worklogs/2026-09-02-任务B真实进度与完成态完成.md": {
+    "type": "file",
+    "sha256": "28794e1ccd1ed3fb804861c5b9936f327c93042392e1b99d6d33fcd2f07326bc",
+    "size": 6316,
+    "mtime_ns": 1792059740343543838
+  },
+  "docs/context-keeper/worklogs/2026-09-02-任务C结果未知与诊断闭环完成.md": {
+    "type": "file",
+    "sha256": "885be7cce5118855ea0f4ea3d61151023a3e2d4e6570610947d96eff40f48860",
+    "size": 6990,
+    "mtime_ns": 1792059740343628922
+  },
+  "docs/context-keeper/worklogs/2026-09-02-任务D真实定时闭环完成.md": {
+    "type": "file",
+    "sha256": "ea2a29f0bf7a6462f2e53bd8aebfc4eb2ea8f6aaa04f5ffb3ccd00b5d772d003",
+    "size": 7228,
+    "mtime_ns": 1792059740343709297
+  },
+  "docs/context-keeper/worklogs/2026-09-02-任务E真实登录介入闭环完成.md": {
+    "type": "file",
+    "sha256": "2d7353cf79f684d6de73058db2b4e9c31ff58341d6f1db1fd3b6cfcc97ffefa6",
+    "size": 7128,
+    "mtime_ns": 1792059740343792214
+  },
+  "docs/context-keeper/worklogs/2026-09-04-小红书重复登录修复与待验收.md": {
+    "type": "file",
+    "sha256": "b141002dcebff6fbe368f5dffadc38b788169cd85f1f66c75727bac9ea67ad93",
+    "size": 7800,
+    "mtime_ns": 1792059740343948714
+  },
+  "docs/context-keeper/worklogs/2026-09-07-采集管理与模型等待收尾.md": {
+    "type": "file",
+    "sha256": "7c58fe4cc0c0a1eaada51afa2ec9c5861bd22e4f3c9b70e03badd9ec81ca1ac6",
+    "size": 12347,
+    "mtime_ns": 1792059740344156673
+  },
+  "docs/context-keeper/worklogs/2026-09-08-公测最终盘点与验收收口.md": {
+    "type": "file",
+    "sha256": "e84adaeec0bf23599c9d4c9c4139673d1c620a370aa9abe3f19890105ae24f9d",
+    "size": 6827,
+    "mtime_ns": 1792059740344266798
+  },
+  "docs/context-keeper/worklogs/2026-09-09-平台登录自动恢复修复.md": {
+    "type": "file",
+    "sha256": "18f8f740971741252522800e9b434d89bb5883660bd88d2505e8e6144e00ab94",
+    "size": 28365,
+    "mtime_ns": 1792059740344366506
+  },
+  "docs/context-keeper/worklogs/2026-09-09-最终验收报告.md": {
+    "type": "file",
+    "sha256": "20120c6eb4eff3afba394ca564f0ea2c1d03f624acad33b1d7804d554ee6fd2c",
+    "size": 9932,
+    "mtime_ns": 1792059740344478006
+  },
+  "docs/context-keeper/worklogs/2026-09-10-博主简介与采集结果卡片修复.md": {
+    "type": "file",
+    "sha256": "5cc03a756c63e41a6abdb973cf5cef5777a7511f651a04d6f600bb0f1b0f8560",
+    "size": 3649,
+    "mtime_ns": 1792059740344682673
+  },
+  "docs/context-keeper/worklogs/2026-09-14-采集交互与小红书额度收口.md": {
+    "type": "file",
+    "sha256": "2f137ef0da80c481c119b68cbd37e9bc8b1c6e01a1b31c6b58ceb8a339d01b06",
+    "size": 3437,
+    "mtime_ns": 1792059740344888507
+  },
+  "docs/context-keeper/worklogs/2026-10-15-只读审查修复与真实联调收口.md": {
+    "type": "file",
+    "sha256": "44a8686de466cf8562b95e4dd0af2f426ebf9715939c6a18798f9737e83c1931",
+    "size": 10153,
+    "mtime_ns": 1792059740345112757
+  },
+  "docs/context-keeper/worklogs/2026-10-16-模型调用合同与调整范围修复收口.md": {
+    "type": "file",
+    "sha256": "2c018a3d1fd9f5d08d227ef6739d9b234e70de559605101a88525a987e07a770",
+    "size": 5852,
+    "mtime_ns": 1792122829793162614
+  },
+  "docs/context-keeper/worklogs/2026-10-19-客户端任务历史与连接提示改善.md": {
+    "type": "file",
+    "sha256": "d08fdf70c02ea1d970dc08110af525835dcdfbf00770f052b496ccb8a129349e",
+    "size": 4503,
+    "mtime_ns": 1792408916777791577
+  },
+  "docs/context-keeper/worklogs/2026-10-26-六项审查缺陷整合与10月19日勘误.md": {
+    "type": "file",
+    "sha256": "d55dd17d5e7f35146662058730161283184e4a2fc2d04a3391e2ed7cad5a878e",
+    "size": 24550,
+    "mtime_ns": 1793019702110029672
+  },
+  "docs/context-keeper/worklogs/2026-10-27-客户端020交付与模型温度参数移除.md": {
+    "type": "file",
+    "sha256": "02a9377b73e83d589db1a2e1aba2fda6d0af12c75b90893524e24d5ab90eb805",
+    "size": 17120,
+    "mtime_ns": 1793109778948529966
+  },
+  "docs/context-keeper/worklogs/2026-10-27-模型保存旧静态产物部署修复收口.md": {
+    "type": "file",
+    "sha256": "b5aca64481844274ca5da40b1f5820e620ca3f187a6219d866c43c1f591cb064",
+    "size": 6464,
+    "mtime_ns": 1793069490813618289
+  },
+  "docs/context-keeper/worklogs/2026-10-27-模型布局拒收纠正与视觉待验收口.md": {
+    "type": "file",
+    "sha256": "6f6cbc43cbc24dd57659b89bce8e51391e4fcb93936e6bce0c014af0bd917d9f",
+    "size": 35554,
+    "mtime_ns": 1793102031263899834
+  },
+  "docs/context-keeper/worklogs/2026-10-28-平台指标与小红书采集四项修复.md": {
+    "type": "file",
+    "sha256": "eaca78cf135f6592a3819e64fea8e0e23a3a1e4b594b90dd9cb39507b94c0590",
+    "size": 9820,
+    "mtime_ns": 1793152575068192035
+  },
+  "docs/context-keeper/worklogs/2026-10-28-采集效率主线收口与Git合并.md": {
+    "type": "file",
+    "sha256": "5c93a114a2b9827e0a9e8121b94cafe3f532e7dbd126de5f06d8be9efab0b18e",
+    "size": 5996,
+    "mtime_ns": 1793172094464930436
+  },
+  "docs/context-keeper/worklogs/2026-10-29-评分V2收口接替与工作流文案对齐.md": {
+    "type": "file",
+    "sha256": "4e1a0295df0d1e22471fa5d41b9c2cd99377a499a5db07d50536860fe1a1fbe9",
+    "size": 4881,
+    "mtime_ns": 1793260133564496161
+  },
+  "docs/design/project-creation-ai-final/01-intake-empty.png": {
+    "type": "file",
+    "sha256": "c0dd0d841c4caff0fc5de2ec92f6d8bd6d8995eab8120dc9031979b0a81c1d98",
+    "size": 899207,
+    "mtime_ns": 1786096842914626619
+  },
+  "docs/design/project-creation-ai-final/02-clarify-purpose.png": {
+    "type": "file",
+    "sha256": "dbd0bf4a221fd9a925dd9e8fbc6ceed7c7908f124138c953fb690fe79fada372",
+    "size": 780400,
+    "mtime_ns": 1786096842917252473
+  },
+  "docs/design/project-creation-ai-final/03-clarify-focus.png": {
+    "type": "file",
+    "sha256": "4f6393658bd702231f6776a102ab9a478a15bae06140bc76f6f9ea9e4a706329",
+    "size": 1194152,
+    "mtime_ns": 1786096842920077035
+  },
+  "docs/design/project-creation-ai-final/04-clarify-value.png": {
+    "type": "file",
+    "sha256": "1cc4465b916a22b93e61e91c296200a74969e00d5f799428f74e6513abe94ab5",
+    "size": 893893,
+    "mtime_ns": 1786096842922634432
+  },
+  "docs/design/project-creation-ai-final/05-understanding-confirm.png": {
+    "type": "file",
+    "sha256": "f8effe4297bbbfe333121d333b75abe969e3ee8b6aac7095570a31d8c4b29529",
+    "size": 916669,
+    "mtime_ns": 1786096842925170204
+  },
+  "docs/design/project-creation-ai-final/06-plan-generating.png": {
+    "type": "file",
+    "sha256": "25a0bec73685acd4c557b217b329df90ef9825c8b474a1a1e119db49d745272e",
+    "size": 973260,
+    "mtime_ns": 1786096842927387687
+  },
+  "docs/design/project-creation-ai-final/07-plan-generation-error.png": {
+    "type": "file",
+    "sha256": "5602c52860c2958d02d7da6dcf1f62e59a85cebc76d682145f21450a5437cfee",
+    "size": 1032037,
+    "mtime_ns": 1786096842930204498
+  },
+  "docs/design/project-creation-ai-final/08-multi-platform-plan-review.png": {
+    "type": "file",
+    "sha256": "d6958b4d87c41e8707b70994d4c358470d781a3e313739aa3782bb69d54daf49",
+    "size": 1229396,
+    "mtime_ns": 1786096842933780221
+  },
+  "docs/design/project-creation-ai-final/09-add-platform-drawer.png": {
+    "type": "file",
+    "sha256": "3507dae85928f28dcdabe41ffa3c6bf8460c819ace64d612b26087f6d5a2ff7d",
+    "size": 1252353,
+    "mtime_ns": 1786096842936710615
+  },
+  "docs/design/project-creation-ai-final/10-edit-xhs-source.png": {
+    "type": "file",
+    "sha256": "6478dcb45cb125b3aeb3dc233c16901f9251371635991e13ae1c26fb41bc7f84",
+    "size": 824604,
+    "mtime_ns": 1786096842939235428
+  },
+  "docs/design/project-creation-ai-final/11-ai-adjust-open.png": {
+    "type": "file",
+    "sha256": "470dbb73199ad9aedd870bc6fe6182eb6c0f5d80d4edf0b3e6b3bb9fe6a57a54",
+    "size": 1215944,
+    "mtime_ns": 1786096842942916608
+  },
+  "docs/design/project-creation-ai-final/12-ai-adjust-diff.png": {
+    "type": "file",
+    "sha256": "bdec359189886ab22b013334d82048eb783a6636a627803b875e3df91707f7bb",
+    "size": 1220819,
+    "mtime_ns": 1786096842946198208
+  },
+  "docs/design/project-creation-ai-final/13-final-confirmation.png": {
+    "type": "file",
+    "sha256": "271e17c317324c60dc9a57146e8360bb5263f90eaffc66e968c29def27139471",
+    "size": 1175106,
+    "mtime_ns": 1786096842949570765
+  },
+  "docs/design/project-creation-ai-final/14-insights-empty.png": {
+    "type": "file",
+    "sha256": "d6984e1aee65103a0f58898debf1643d8e3f385c65b89e765c6f800b90162d40",
+    "size": 628090,
+    "mtime_ns": 1786096842951524375
+  },
+  "docs/design/project-creation-ai-final/15-project-settings-monitoring.png": {
+    "type": "file",
+    "sha256": "ef00861e6f311844afc3c0b0e9768c1bab22dddb8248c7f8fa65ac512889e5c5",
+    "size": 957586,
+    "mtime_ns": 1786096842953720983
+  },
+  "docs/design/project-creation-ai-final/16-project-settings-output.png": {
+    "type": "file",
+    "sha256": "48763170edf2b7c6f0145243cba79ea028179e4e4d2e12e944601f4c4e363bbe",
+    "size": 1108697,
+    "mtime_ns": 1786096842956836126
+  },
+  "docs/design/project-creation-ai-final/17-save-impact-dialog.png": {
+    "type": "file",
+    "sha256": "990da2250aea5dd7da5318fd574760db21d20069dcd58a57aa21f129e2f82f12",
+    "size": 252275,
+    "mtime_ns": 1786096842958830110
+  },
+  "docs/design/project-creation-ai-final/18-project-settings-share-management.png": {
+    "type": "file",
+    "sha256": "b4099d0070d9c130db7e27395184d05040513f791f554d0f35ffd37f685a5847",
+    "size": 159820,
+    "mtime_ns": 1786096842960780762
+  },
+  "docs/design/project-creation-ai-final/README.md": {
+    "type": "file",
+    "sha256": "4ad407ea3a7e1793c3bf93bc329688b369e2b726501014b26437daab47d8a7bd",
+    "size": 4164,
+    "mtime_ns": 1786096871155427770
+  },
+  "docs/e2e/2026-09-03-bug-003-005-006-007-verification.md": {
+    "type": "file",
+    "sha256": "34d3f69a31716ab7658d9748702bf77c39e187125bc8da80ad016fc53766ff29",
+    "size": 3787,
+    "mtime_ns": 1788509082734834919
+  },
+  "docs/e2e/2026-09-04-collector-result-ui.md": {
+    "type": "file",
+    "sha256": "565e905bfc1a22619e4292e95174545cb4e3e9111f0572c3d0fe170122016363",
+    "size": 5080,
+    "mtime_ns": 1788520626430563533
+  },
+  "docs/e2e/2026-09-04-fresh-project.md": {
+    "type": "file",
+    "sha256": "d32c874b2f65af6c33d6f8a13b08836b763d884b11f7c7a996823f3b0c2f95e8",
+    "size": 6119,
+    "mtime_ns": 1788520670715395867
+  },
+  "docs/e2e/2026-09-04-pending-actions.md": {
+    "type": "file",
+    "sha256": "22720ccc2d2dcbaa1f9c5bc9a90b03074a0811fcd7723a732a4ba2c389b9cf26",
+    "size": 16987,
+    "mtime_ns": 1788517791821425775
+  },
+  "docs/e2e/2026-09-04-run-logs-fix.md": {
+    "type": "file",
+    "sha256": "f5a100e870c79ac4febed1b689a8be007a48825cb60dee68ea74ae9f801432d1",
+    "size": 4873,
+    "mtime_ns": 1788524357746679937
+  },
+  "docs/prd/README.md": {
+    "type": "file",
+    "sha256": "db9fc5d500eae2192c5f8471581af4e25fb07ed29fa5c1d4abf9c647cbde1cc7",
+    "size": 11381,
+    "mtime_ns": 1793250167266280856
+  },
+  "docs/prd/case-browser-use-x.md": {
+    "type": "file",
+    "sha256": "85d8d33ece1e33305ab2a04875d3c9ebf00aa3ae09b3feb48f8b6acaeaabc790",
+    "size": 15172,
+    "mtime_ns": 1783395027814607651
+  },
+  "docs/prd/case-browser-use-xhs.md": {
+    "type": "file",
+    "sha256": "41667310204af127da38ee9613b0f259d48ae48c4c7e5c89f2d74823020b6628",
+    "size": 43190,
+    "mtime_ns": 1782714923052266346
+  },
+  "docs/prd/contracts/README.md": {
+    "type": "file",
+    "sha256": "dd1bdd78e0148c3c4370c62f97d20b589297868e4aed2ee8383528db7861d685",
+    "size": 2417,
+    "mtime_ns": 1793172094465834194
+  },
+  "docs/prd/contracts/inbox/2026-10-28-collector-efficiency-reuse.md": {
+    "type": "file",
+    "sha256": "fb069bd6ac2de4fc4e51a18ad0a81e8dc0683ee39247fd313bdcc49118b03694",
+    "size": 11492,
+    "mtime_ns": 1793278080423119793
+  },
+  "docs/prd/contracts/local-collector-client.md": {
+    "type": "file",
+    "sha256": "a29cb46158f631b7d530ea137a38a29dda91cc673cce9bfb60eab78c4f660965",
+    "size": 46525,
+    "mtime_ns": 1793156030841765881
+  },
+  "docs/prd/contracts/x-local-collector.md": {
+    "type": "file",
+    "sha256": "4f7ad86e101b5ceb45c3d87c9493ec80e747a0da34315e2a9855ec23f749c8d4",
+    "size": 73555,
+    "mtime_ns": 1793249439915349844
+  },
+  "docs/prd/contracts/xhs-local-collector.md": {
+    "type": "file",
+    "sha256": "b53f9e13da5eb0b5997e4a0aad248b386edbae57cd03190075c71b18c25b4642",
+    "size": 123090,
+    "mtime_ns": 1793153960144574396
+  },
+  "docs/prd/homepage.md": {
+    "type": "file",
+    "sha256": "7b17970fba63c11dd1b26f94a90a72d08111f7fb6da6bb7b4968b85f98625b5b",
+    "size": 4010,
+    "mtime_ns": 1784773218562270121
+  },
+  "docs/prd/inbox/_archived/2026-09-02-requirement-fragments.md": {
+    "type": "file",
+    "sha256": "70b8879ac241ed9df0eb365943676e47569aed3b04d2981accf380c914b92bdf",
+    "size": 177,
+    "mtime_ns": 1788354048882698472
+  },
+  "docs/prd/inbox/_archived/2026-09-03-requirement-fragments.md": {
+    "type": "file",
+    "sha256": "e75dc79adeb7a8c521b2ce473c7fde2f3f18621298b6e9380b0d36bb843f205c",
+    "size": 3045,
+    "mtime_ns": 1788410037606619126
+  },
+  "docs/prd/inbox/_archived/2026-09-04-requirement-fragments.md": {
+    "type": "file",
+    "sha256": "4fe0b90586f712f48ce9ca9aac25d230475cb40725c23dfbb5c200e7fbc7a309",
+    "size": 2041,
+    "mtime_ns": 1788493170053740332
+  },
+  "docs/prd/insight-evaluation-v2.md": {
+    "type": "file",
+    "sha256": "ac56d730e7dc719462a0d1db6ab67da6ab3f01e83a6a4e645cea88fa7892c451",
+    "size": 34564,
+    "mtime_ns": 1793262492342515448
+  },
+  "docs/prd/insight-sharing.md": {
+    "type": "file",
+    "sha256": "f8085a316a89049f72e1b6f47e833a6c4857ba307973d5ba372f0198a6a8c66d",
+    "size": 16467,
+    "mtime_ns": 1786448591705619163
+  },
+  "docs/prd/insights-browsing.md": {
+    "type": "file",
+    "sha256": "8866135ee34ea5ebcbf1b97a455d042709be03855ea45c81ac0a5513bea5d2a7",
+    "size": 15491,
+    "mtime_ns": 1793249439916245715
+  },
+  "docs/prd/local-collector-architecture.md": {
+    "type": "file",
+    "sha256": "cafb35715c60ec2ef24c8c06aa5ec9f8a3d0952ea66bed4a407707c5e8e6ff12",
+    "size": 24384,
+    "mtime_ns": 1793172094466361240
+  },
+  "docs/prd/local-collector-client.md": {
+    "type": "file",
+    "sha256": "138fde984b4ea9d967f6d7165e71dd033ef6af34875a69affc3ab7414c59d73b",
+    "size": 43579,
+    "mtime_ns": 1793156030842219132
+  },
+  "docs/prd/local-collector-risk-strategy.md": {
+    "type": "file",
+    "sha256": "d725ddd194c63cf7d0f98fc592f003bb7dd819e6ce071e61cd483f7fa37f28ad",
+    "size": 11552,
+    "mtime_ns": 1785340119147336548
+  },
+  "docs/prd/local-collector-x.md": {
+    "type": "file",
+    "sha256": "7b8a9d8ca115d3b7a562d3c4cf67cc5500fb917927ae3a2fe83f95e5fb4384e1",
+    "size": 25529,
+    "mtime_ns": 1789378761819805106
+  },
+  "docs/prd/local-collector-xhs.md": {
+    "type": "file",
+    "sha256": "933a180984a2d67df9fba1a95838c51746bd2366e5340dd235427ba118b1d329",
+    "size": 34362,
+    "mtime_ns": 1792066604911998534
+  },
+  "docs/prd/market-positioning.md": {
+    "type": "file",
+    "sha256": "ff5086bc0f5cd678f9814982a36897347e0b20bc17550b3fe6219425b3186aa9",
+    "size": 4277,
+    "mtime_ns": 1784773218564546006
+  },
+  "docs/prd/model-configuration.md": {
+    "type": "file",
+    "sha256": "a5b393e2f8cdd849dd1f6010052b52f69148634da02a8f0800ae352aa316079f",
+    "size": 31159,
+    "mtime_ns": 1793104357289844604
+  },
+  "docs/prd/platform-collection.md": {
+    "type": "file",
+    "sha256": "540aaa953476081ab0240f90043094ae733a88f7f1fbf6fadb41c1d454e4dcaf",
+    "size": 9991,
+    "mtime_ns": 1785161470000854693
+  },
+  "docs/prd/product-core-workflow.md": {
+    "type": "file",
+    "sha256": "e792207a322313cd067a68e962e7b79dcf815a58f832b202681be6f8725a523f",
+    "size": 41053,
+    "mtime_ns": 1793249439916623573
+  },
+  "docs/prd/run-logs.md": {
+    "type": "file",
+    "sha256": "a9cb27e482b4da5b4d62796000cefffb91262380f668738eaec3899b570a6e1d",
+    "size": 17504,
+    "mtime_ns": 1793172094467421041
+  },
+  "docs/prd/structured-content.md": {
+    "type": "file",
+    "sha256": "3420bb3ef88b668d5e970ae194c39f15099dad4ce8426d766577a0b70665dbcb",
+    "size": 39968,
+    "mtime_ns": 1793249439917227262
+  },
+  "logo.png": {
+    "type": "file",
+    "sha256": "e18b4136872d55e96d2c08698dcc07f43f3e254d9cc44674c1e290a41bd2ffad",
+    "size": 99614,
+    "mtime_ns": 1778844317772383265
+  },
+  "pytest.ini": {
+    "type": "file",
+    "sha256": "6332aa4caa06bd17ccf5d9faefc830c23b870bdfe1c4c4d43d737dbe2bbb0a5c",
+    "size": 553,
+    "mtime_ns": 1780899751426741910
+  },
+  "requirements-dev.txt": {
+    "type": "file",
+    "sha256": "201200ad1d039b31f561d63604cdf12a3080aa125ce8cef199a677104df66b06",
+    "size": 83,
+    "mtime_ns": 1785246458063026629
+  },
+  "requirements.lock.txt": {
+    "type": "file",
+    "sha256": "250e13cac1aab2f731e1db092ec0a06f2712a4529005c2ecb3414e8103ce175c",
+    "size": 48298,
+    "mtime_ns": 1785246470555222688
+  },
+  "requirements.txt": {
+    "type": "file",
+    "sha256": "dc16a1e178f671c95c1f12f7dd00a0ac47747a8f4dbd9a5d13aa0c2eb0029a89",
+    "size": 118,
+    "mtime_ns": 1785246458062673178
+  },
+  "scripts/collector_mock_sidecar.py": {
+    "type": "file",
+    "sha256": "aeb91fc4e85bd0313917119af59c9bf13e2b36e72ea4f655dd0d5027457ff1a8",
+    "size": 3618,
+    "mtime_ns": 1780472376685606203
+  },
+  "scripts/collector_smoke_test.py": {
+    "type": "file",
+    "sha256": "2455d016f96c37edeec302c8c4ec80c5f805b02eb795fb615b58e5778ea816f9",
+    "size": 6689,
+    "mtime_ns": 1783937315860932879
+  },
+  "server/__init__.py": {
+    "type": "file",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "mtime_ns": 1778341434006367251
+  },
+  "server/analytics.py": {
+    "type": "file",
+    "sha256": "77460f6bd28a02fedd3e7870c61e997985a021ef072a1fa24bc43dac8b257032",
+    "size": 3056,
+    "mtime_ns": 1785912870348486048
+  },
+  "server/api/__init__.py": {
+    "type": "file",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "mtime_ns": 1778341434006450336
+  },
+  "server/api/auth.py": {
+    "type": "file",
+    "sha256": "265159f311c4204409c5b3c5d24ec631801b9bb8525946a4510d301184d1ce0f",
+    "size": 9048,
+    "mtime_ns": 1792395329708087801
+  },
+  "server/api/collector_schedules.py": {
+    "type": "file",
+    "sha256": "29fc969c970203084283221f806cc35a15287f50a8a18745dc70ea23b8c9e8bd",
+    "size": 3433,
+    "mtime_ns": 1788765819299630377
+  },
+  "server/api/collectors.py": {
+    "type": "file",
+    "sha256": "4c5771d52bbfdba70b5f8609af0da9efaabd32fbd0c24a1fa2caa94e989708a9",
+    "size": 110735,
+    "mtime_ns": 1793172094467980171
+  },
+  "server/api/feedback.py": {
+    "type": "file",
+    "sha256": "a302a767249ee0bc25b7a499bce93aea9414288efbfd5428fcde60c7a1394c8f",
+    "size": 1519,
+    "mtime_ns": 1778833103323881342
+  },
+  "server/api/insights.py": {
+    "type": "file",
+    "sha256": "880146c8a4b156fc051bfc39435a3fb514797841538f7f7c8c47a45b231b4298",
+    "size": 16048,
+    "mtime_ns": 1793262470816675365
+  },
+  "server/api/llm_errors.py": {
+    "type": "file",
+    "sha256": "71a3ff45360d27ddf835ec723ea51421c61f6a9859dd25bf9678e9c283ff8197",
+    "size": 2041,
+    "mtime_ns": 1793101388322588600
+  },
+  "server/api/plugins.py": {
+    "type": "file",
+    "sha256": "e876ad64b9dd59662d2b93376db276f8c28aa07e6abbe97280a0216cfb39d659",
+    "size": 3039,
+    "mtime_ns": 1785243707972516444
+  },
+  "server/api/project_creation.py": {
+    "type": "file",
+    "sha256": "d0e25ad1bee7fe0a1de9f817148de6562a02db186381b857d561f22a95ba8d26",
+    "size": 13513,
+    "mtime_ns": 1793101388322467933
+  },
+  "server/api/projects.py": {
+    "type": "file",
+    "sha256": "5a139d3d9ecb60dbbe75be3c59bdc4e5d812fa56a695a458db5f72165952ce1e",
+    "size": 34198,
+    "mtime_ns": 1793249439918942117
+  },
+  "server/api/providers.py": {
+    "type": "file",
+    "sha256": "99cc0cf063b256a33624f0fd0c36321b2d819cf653612e2db0f986e1548a5512",
+    "size": 34527,
+    "mtime_ns": 1792395329711099809
+  },
+  "server/api/settings.py": {
+    "type": "file",
+    "sha256": "6a504752bd246e23deea591fcf85411de35643c39c716e036f2dca239f6a5b1a",
+    "size": 5497,
+    "mtime_ns": 1785245105592441158
+  },
+  "server/api/share.py": {
+    "type": "file",
+    "sha256": "61c43b3e5ff11ee7862a10af5b71bf16af1fa45e83c2d967c4e2ebc8388d5c61",
+    "size": 6654,
+    "mtime_ns": 1786004521427661889
+  },
+  "server/api/sources.py": {
+    "type": "file",
+    "sha256": "4588e2d40499f1d89d507f8fa00c3d437f397579b393081ea87785a0448a0d8b",
+    "size": 63938,
+    "mtime_ns": 1793154350854310721
+  },
+  "server/api/third_party_apis.py": {
+    "type": "file",
+    "sha256": "9c5e1e335c495896fe0f9f9d818431af77484f2c9836b06ecf11dbd86d9bf059",
+    "size": 4785,
+    "mtime_ns": 1784773218569113943
+  },
+  "server/api/users.py": {
+    "type": "file",
+    "sha256": "d67c32c39d93d1824bf268ada51d51b9bcb84dcbb0778dc5e30fa3b1cbf909a2",
+    "size": 8930,
+    "mtime_ns": 1793096838167387544
+  },
+  "server/auth.py": {
+    "type": "file",
+    "sha256": "7e4383357989ace5ec4a1622f9683550e836cb28ac516555266a69e930291fe5",
+    "size": 5659,
+    "mtime_ns": 1785245059201833023
+  },
+  "server/collection_capabilities.py": {
+    "type": "file",
+    "sha256": "aaad67fc30a0d68ac3b24384d3445e0a4179a53e1f6a4043dab31e1537ae5e91",
+    "size": 2127,
+    "mtime_ns": 1792066604912295661
+  },
+  "server/collector_material_cache.py": {
+    "type": "file",
+    "sha256": "926ea20fb458f3828dfc3dc8138fab6d785c52c26588cf5a82f453ee49462535",
+    "size": 5347,
+    "mtime_ns": 1793172094468206256
+  },
+  "server/collector_progress.py": {
+    "type": "file",
+    "sha256": "b3ced940110b552bbffc006062d0ef818d620ca2b2e62f9f4f233af11232e7f7",
+    "size": 1336,
+    "mtime_ns": 1789039055941774255
+  },
+  "server/collector_trace.py": {
+    "type": "file",
+    "sha256": "acb8378eb0fb7ec6c0ce6678155884e2236aff36196d8a379333b9a81b96e48f",
+    "size": 2433,
+    "mtime_ns": 1793172094468595301
+  },
+  "server/config.py": {
+    "type": "file",
+    "sha256": "9ce10e8bf17521f1d00bf629dfe6ab5aa89d20f3b14a2296dd1c37b6f50b63b1",
+    "size": 1108,
+    "mtime_ns": 1786004236924491062
+  },
+  "server/db/__init__.py": {
+    "type": "file",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "mtime_ns": 1778341434006416669
+  },
+  "server/db/repository.py": {
+    "type": "file",
+    "sha256": "441262c041be9f6214470cf971b2bc5e2e67b5dfb471f3830498493945cf0e69",
+    "size": 414727,
+    "mtime_ns": 1793262422194897765
+  },
+  "server/db/schema.py": {
+    "type": "file",
+    "sha256": "53f7961bdd3237a9cf739b648218ca62e0106fa5a48ece79e85b05119d3efc24",
+    "size": 54447,
+    "mtime_ns": 1793249439920927329
+  },
+  "server/insight_scoring.py": {
+    "type": "file",
+    "sha256": "383d73d8f3027d372825df9bbc12af0e46b558e1ba7ca305d20d9b4e6623a564",
+    "size": 24724,
+    "mtime_ns": 1793249439921646475
+  },
+  "server/llm.py": {
+    "type": "file",
+    "sha256": "5d05e0c79bf3c04edcccb965d1906732f7c765e9c8c3727fa5e8970167c1892c",
+    "size": 46349,
+    "mtime_ns": 1793172094471304033
+  },
+  "server/main.py": {
+    "type": "file",
+    "sha256": "5a1f00ae52d2452d04ce155d84ad3ff1859abd713c782e5055f20af3b8d7b6c9",
+    "size": 15447,
+    "mtime_ns": 1793101388322264848
+  },
+  "server/mcp/__init__.py": {
+    "type": "file",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "mtime_ns": 1778341434006480795
+  },
+  "server/model_access.py": {
+    "type": "file",
+    "sha256": "caad9277c04e5785d1fd747b4dde944d356a1499b6f6a6d92e1c04d3ed42c8fa",
+    "size": 1866,
+    "mtime_ns": 1793101388322189556
+  },
+  "server/outbound_security.py": {
+    "type": "file",
+    "sha256": "2fadbe41350b88500ac6b56d326d2abd1bc81942414dba8a7c9a070550f9f4df",
+    "size": 2916,
+    "mtime_ns": 1786004807259217933
+  },
+  "server/project_creation_assistant.py": {
+    "type": "file",
+    "sha256": "58d226237862c90b6feac668c98c062dcfc001d07201d4400f4cafcad181ae2a",
+    "size": 60820,
+    "mtime_ns": 1793101388322363640
+  },
+  "server/project_insight_defaults.py": {
+    "type": "file",
+    "sha256": "3c54f3aac8de2e05f1b7bfb0a8a1882fa99a8986f27285ecd679a1c52d99823e",
+    "size": 2253,
+    "mtime_ns": 1784707326075034403
+  },
+  "server/security.py": {
+    "type": "file",
+    "sha256": "933f26dfec3517efdabb28158b687a514c38ccbb49fef518d7fe1ea012c898c5",
+    "size": 7541,
+    "mtime_ns": 1786523213507348503
+  },
+  "server/structured_content.py": {
+    "type": "file",
+    "sha256": "23bb2fa7758a1271208fb7558d67befe9d6369c94e0c1f6a061f1107b60be539",
+    "size": 57699,
+    "mtime_ns": 1793249439923791959
+  },
+  "server/worker/__init__.py": {
+    "type": "file",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "mtime_ns": 1778771749211732503
+  },
+  "server/worker/collector.py": {
+    "type": "file",
+    "sha256": "88f9bea1a258e7feda43ca86b99e3f423cf7c82d76dc898f72a595de7042f430",
+    "size": 25030,
+    "mtime_ns": 1785246931104884849
+  },
+  "server/worker/collector_schedule.py": {
+    "type": "file",
+    "sha256": "eded42187efbcd1717df306454a09c125da718640f961a4ed987fce80d53b301",
+    "size": 4574,
+    "mtime_ns": 1788147994090983781
+  },
+  "server/worker/extractor.py": {
+    "type": "file",
+    "sha256": "d2f0cd54a3910b0834bec8e9cb2be858742d0845bc95c4cfef121f84fa700257",
+    "size": 138621,
+    "mtime_ns": 1793249439924682916
+  },
+  "server/x_handles.py": {
+    "type": "file",
+    "sha256": "67374013eb8425a2fcaf9ae150d9ebe8216f617e8e321eb98a1621ae49c032f5",
+    "size": 1337,
+    "mtime_ns": 1784028221971153778
+  },
+  "server/x_queries.py": {
+    "type": "file",
+    "sha256": "dfc5bcb45eb58b47c1cc4a0cf14c9455d355a83063bda4711c7f22edc875f604",
+    "size": 708,
+    "mtime_ns": 1784094564933309347
+  },
+  "server/xhs_messages.py": {
+    "type": "file",
+    "sha256": "dd4550ef08335391bdfc5f30d51f93b4082f55eb9cd2f79c474a186a091c1494",
+    "size": 764,
+    "mtime_ns": 1792059740352470892
+  },
+  "tests/__init__.py": {
+    "type": "file",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "mtime_ns": 1778341434006511462
+  },
+  "tests/conftest.py": {
+    "type": "file",
+    "sha256": "7d9811d68dd73603f48649414213279240700c3988e146bdafdd93bed3494eef",
+    "size": 4206,
+    "mtime_ns": 1793249439925300225
+  },
+  "tests/fixtures/x_account_locked_visible.html": {
+    "type": "file",
+    "sha256": "dff771af74241f230e24a11176f9cfd602d7d775760da6fc3d0c5957ee79a685",
+    "size": 101,
+    "mtime_ns": 1784102965224634773
+  },
+  "tests/fixtures/x_home_hidden_recaptcha.html": {
+    "type": "file",
+    "sha256": "5a92d210a3370bfa743f791d884262398e33222be0ee09ad386cd56048b7a2d9",
+    "size": 414,
+    "mtime_ns": 1784101719597738477
+  },
+  "tests/fixtures/x_home_nonvisible_risk_signals.html": {
+    "type": "file",
+    "sha256": "25c127d8ac64e7d04aa82a8a7f43681a7652b485e7a6fce8fb0f5ce211fed5ed",
+    "size": 918,
+    "mtime_ns": 1784102965224132645
+  },
+  "tests/fixtures/x_login_visible.html": {
+    "type": "file",
+    "sha256": "1a7e26654730ebf66fbd94a85486fc2c447d5dc33acb700346f19bc1470fb08a",
+    "size": 187,
+    "mtime_ns": 1784102965224457564
+  },
+  "tests/fixtures/x_rate_limited_visible.html": {
+    "type": "file",
+    "sha256": "4759226c8df8659df6141b6c842b28994ead2137eeedef8f578ca29b0a4efc53",
+    "size": 98,
+    "mtime_ns": 1784102965224780024
+  },
+  "tests/fixtures/x_security_challenge_visible.html": {
+    "type": "file",
+    "sha256": "c568a645201bb046d75b93a05d881f7428c6ebe30b6871695597c29cb7106474",
+    "size": 189,
+    "mtime_ns": 1784101719597973896
+  },
+  "tests/fixtures/x_stale_search_login_modal.html": {
+    "type": "file",
+    "sha256": "b10b8a4979765d7bf698f8a45b0c8731d9623556dea5bb2a2bd351e27fac8160",
+    "size": 539,
+    "mtime_ns": 1784107590865344399
+  },
+  "tests/fixtures/x_stale_timeline_login_overlay.html": {
+    "type": "file",
+    "sha256": "0eb2b30f1c5aa510223de5c6fb28949c32b66447f38720caf7a1446cea5e7daa",
+    "size": 467,
+    "mtime_ns": 1784105924846355274
+  },
+  "tests/fixtures/x_timeline_article_risk_quotes.html": {
+    "type": "file",
+    "sha256": "cd8c72d272be6c97059115f80b7691f92dbe2eb311b98664fdd4e058ee37b752",
+    "size": 815,
+    "mtime_ns": 1784105924846954355
+  },
+  "tests/fixtures/xhs_preselect_duplicate_real_response.json": {
+    "type": "file",
+    "sha256": "ba503e5c03b884782b1909220b53a3609f90c149b3be1089793c2f13c53025c1",
+    "size": 3476,
+    "mtime_ns": 1788937206793363232
+  },
+  "tests/test_adjustment_field_scope.py": {
+    "type": "file",
+    "sha256": "2102fcda302df304783ed41ffa2f18befecb32bb76e2a7f4a62d6e03bce4b562",
+    "size": 5110,
+    "mtime_ns": 1793101388323464605
+  },
+  "tests/test_analytics.py": {
+    "type": "file",
+    "sha256": "5f683135cd78e168d2587af691719db4f5d22f89c22557188b8a83f9629460ce",
+    "size": 2860,
+    "mtime_ns": 1785912994213753107
+  },
+  "tests/test_api.py": {
+    "type": "file",
+    "sha256": "fff4b2bc906ca749b213d34e9aa120f9db7ace763335ee23e45d10d11150471c",
+    "size": 12802,
+    "mtime_ns": 1787304179011842411
+  },
+  "tests/test_auth_profile.py": {
+    "type": "file",
+    "sha256": "364a38ea4b22ad562391c14fea90ed3c7cd3e94d228f3a8d0e1384a0638a2b08",
+    "size": 5579,
+    "mtime_ns": 1785393737369376730
+  },
+  "tests/test_browser_worker_client.py": {
+    "type": "file",
+    "sha256": "5ab37f6d9760e56c0e4cf849ff268413b82194c3bcdc197d57e559b930e22f39",
+    "size": 19925,
+    "mtime_ns": 1788927041139095538
+  },
+  "tests/test_browser_worker_commands.py": {
+    "type": "file",
+    "sha256": "2e59f712cd88afc19733a5f99921664b929911d2008d5bc9b1a43a567c0f518e",
+    "size": 480466,
+    "mtime_ns": 1793152216790353184
+  },
+  "tests/test_browser_worker_efficiency.py": {
+    "type": "file",
+    "sha256": "dd564f4dddb9f1b7748c561c80daa1fe8c103969a9dde4de37e53b9a6a99aa65",
+    "size": 18379,
+    "mtime_ns": 1793172094471535077
+  },
+  "tests/test_browser_worker_protocol.py": {
+    "type": "file",
+    "sha256": "885cfeaa69c5e1e8b166b0d025051a43a8d6407ae8e3475d394f4f176e0e869f",
+    "size": 1319,
+    "mtime_ns": 1782799847228259927
+  },
+  "tests/test_browser_worker_routes.py": {
+    "type": "file",
+    "sha256": "c3dd75f52c6f6dcbca10491157b8f59ef6c3e2fafe19e0de2992dfa125840de0",
+    "size": 60074,
+    "mtime_ns": 1793153960145039018
+  },
+  "tests/test_business_model_source.py": {
+    "type": "file",
+    "sha256": "19bcb757982ba40da05ffa4abceb16130a5a318880a192032a4c5e5a9f427ddd",
+    "size": 15233,
+    "mtime_ns": 1793103477989443200
+  },
+  "tests/test_collect_dedup.py": {
+    "type": "file",
+    "sha256": "bcb1989deaf82341c887e28c405ffb83105ea4d97b2a310b8ccb2b52a1f30c99",
+    "size": 9057,
+    "mtime_ns": 1785138486816295759
+  },
+  "tests/test_collection_intent_contract.py": {
+    "type": "file",
+    "sha256": "e26ba7bffe73c7588a3ea51034496433fd189ef1545e99dd7bdfda589416d564",
+    "size": 4845,
+    "mtime_ns": 1792066604912530079
+  },
+  "tests/test_collector_invariants.py": {
+    "type": "file",
+    "sha256": "6102f747b9b63dedccaa29ba91d00ac94d7154192527f17fe1807862c406fc76",
+    "size": 39977,
+    "mtime_ns": 1793249439925625145
+  },
+  "tests/test_collector_llm_ledger_integration.py": {
+    "type": "file",
+    "sha256": "c1d4726738e2009c8ed72be11229fdefb02660d7f79cbfee4b886c042a557c5f",
+    "size": 8598,
+    "mtime_ns": 1793172094472305667
+  },
+  "tests/test_collector_material_cache.py": {
+    "type": "file",
+    "sha256": "2eb7982eb7e3dd77bc68c7c9536523f3836afa1e11fa11b04912899d89320c99",
+    "size": 19007,
+    "mtime_ns": 1793172094472711046
+  },
+  "tests/test_collector_model_pause.py": {
+    "type": "file",
+    "sha256": "18559355153aeead68430b592fbe00684ac3b2aa9734bffcb1c1e70c17c95c4a",
+    "size": 11700,
+    "mtime_ns": 1793101388323696522
+  },
+  "tests/test_collector_result_layout.py": {
+    "type": "file",
+    "sha256": "d1ed4bdd316544a9afb045de824073bb36b6addfb570caacd1177928258ace3b",
+    "size": 5141,
+    "mtime_ns": 1789012787494177670
+  },
+  "tests/test_collector_risk.py": {
+    "type": "file",
+    "sha256": "c57305b45fc92f73ec4b039015c365638f5ee8e6ee460ae3055cb447ea6769db",
+    "size": 17177,
+    "mtime_ns": 1788921228652600605
+  },
+  "tests/test_collector_schedules.py": {
+    "type": "file",
+    "sha256": "ccf1073801d3a6523f84c06431eef538763a3c30a795e1a6ab267655a49fa729",
+    "size": 84832,
+    "mtime_ns": 1788921135648591736
+  },
+  "tests/test_collector_sidecar.py": {
+    "type": "file",
+    "sha256": "d6a1c41de3815fc692402db0d91d2bfe1d1ae6dbb455c0d164a79ac861d16c6e",
+    "size": 500016,
+    "mtime_ns": 1793153960146218174
+  },
+  "tests/test_collector_upload_journal.py": {
+    "type": "file",
+    "sha256": "d803668c5b7c1f7ce13de6a7bf3fd1574f13ea3fda1f2b03822000e696e10d53",
+    "size": 13584,
+    "mtime_ns": 1793172094473148091
+  },
+  "tests/test_collectors.py": {
+    "type": "file",
+    "sha256": "604f30b3b6c4010078ac463d16efea1651eb6b5c5c2f97a1293b13b7d8c18074",
+    "size": 461241,
+    "mtime_ns": 1793249439926865178
+  },
+  "tests/test_creation_json_boundary.py": {
+    "type": "file",
+    "sha256": "6827d673ad4b3ed95b37414b5984d20a458d7d2cc6131a824f39c64eae3828a3",
+    "size": 4267,
+    "mtime_ns": 1792072146380197732
+  },
+  "tests/test_creation_quote_repair.py": {
+    "type": "file",
+    "sha256": "27d7044af4f0493739f89a779b471198f6814a30f2aa2ddfa919cc3ccc01e0a6",
+    "size": 2960,
+    "mtime_ns": 1793101388323403687
+  },
+  "tests/test_creation_root_contract.py": {
+    "type": "file",
+    "sha256": "03494cc9998885e4291931bada8d264b05167cf2f7c188b46b1a969e82c58013",
+    "size": 16144,
+    "mtime_ns": 1793101388323359937
+  },
+  "tests/test_custom_summary_output.py": {
+    "type": "file",
+    "sha256": "2c800c664db8eb938f39cc430f860395ba0cd2f1aecf4581e6908c9d82f00b9a",
+    "size": 11007,
+    "mtime_ns": 1793152078898567558
+  },
+  "tests/test_deployment_data.py": {
+    "type": "file",
+    "sha256": "22b3ea6895b188c0e9b7d3fd7ad45e00c3ee7db8950976eb9d3be1252942097d",
+    "size": 16354,
+    "mtime_ns": 1793249439927547380
+  },
+  "tests/test_directives.py": {
+    "type": "file",
+    "sha256": "d2e6c080959ced0b0874cebf6ea50a88463c4fa6a16638e6ae39f94309db8aff",
+    "size": 44282,
+    "mtime_ns": 1793249439927962557
+  },
+  "tests/test_extract_input_integrity.py": {
+    "type": "file",
+    "sha256": "58606114819b10f06b96acf39de12bd379c5ec20b5d44486503ee07add8a1c61",
+    "size": 1493,
+    "mtime_ns": 1788784719074005203
+  },
+  "tests/test_frontend.py": {
+    "type": "file",
+    "sha256": "ebf5d505d4359e5ff5ac62c4982a080ca28007b91e233db68a81dfdb155bb919",
+    "size": 8179,
+    "mtime_ns": 1788921508929551999
+  },
+  "tests/test_historical_collect_display.py": {
+    "type": "file",
+    "sha256": "23c34eeb9ef14398a0a04ceb715e102710fc9875b43a567a370e0e2e1c07fd9b",
+    "size": 1970,
+    "mtime_ns": 1788785884601233960
+  },
+  "tests/test_insight_scoring_v2.py": {
+    "type": "file",
+    "sha256": "64fcc4a565aa4b0fc8d92e91fdd2bf926f1a1536e459dea8d23c338eb23acd87",
+    "size": 34927,
+    "mtime_ns": 1793262517321613724
+  },
+  "tests/test_llm_attempt_sink.py": {
+    "type": "file",
+    "sha256": "dadb6a4ca95cb2418ea27975c03bcc1f2d388e8af05402ad252106744490edbc",
+    "size": 9393,
+    "mtime_ns": 1793172094475395319
+  },
+  "tests/test_llm_diagnostics.py": {
+    "type": "file",
+    "sha256": "4585357a846e3452be62d7bfb7d44ef88cd4937782deac96e7e5498e0cb4c25f",
+    "size": 10255,
+    "mtime_ns": 1793152078905816622
+  },
+  "tests/test_llm_protocols.py": {
+    "type": "file",
+    "sha256": "b9b2bef93e6a9d932f5789da548cd7cee15faf93f382d3d1bbb6afcbb4716711",
+    "size": 18006,
+    "mtime_ns": 1793152078906436658
+  },
+  "tests/test_macos_artifact_smoke_script.py": {
+    "type": "file",
+    "sha256": "593d802e49d0a9ce282647d749029982911010b4867e6c6fd0247ec2735ab115",
+    "size": 3498,
+    "mtime_ns": 1788101292651095472
+  },
+  "tests/test_message_original_content.py": {
+    "type": "file",
+    "sha256": "712fef670083715ffdf760f1bfdbed546caa8c74a971ee4a40c87c8e1af1beb5",
+    "size": 2166,
+    "mtime_ns": 1793109364391020485
+  },
+  "tests/test_model_access.py": {
+    "type": "file",
+    "sha256": "dbf4242f838b645d50ec369dec53827c666ec29591a6bfca97bf9b64ad605206",
+    "size": 27518,
+    "mtime_ns": 1793101388323113186
+  },
+  "tests/test_model_output_boundaries.py": {
+    "type": "file",
+    "sha256": "b6bfbedd8363bb3b03c198674d1ee88a14fdd87842ca842b0f5c072504fb495f",
+    "size": 7664,
+    "mtime_ns": 1793249439928828939
+  },
+  "tests/test_model_usage_fallback.py": {
+    "type": "file",
+    "sha256": "37916120c339612b54b46dcbaa2fc7e27d7c620d20ca67b0000794258c8eb589",
+    "size": 19021,
+    "mtime_ns": 1793249439929217960
+  },
+  "tests/test_native_creation_outputs.py": {
+    "type": "file",
+    "sha256": "756e0d8d2c888bd44d01a0a31fe94af30348d857e27d6bb87acd5eaef6a5c2f1",
+    "size": 5160,
+    "mtime_ns": 1793103445992572314
+  },
+  "tests/test_pipeline_recovery.py": {
+    "type": "file",
+    "sha256": "dbc78eca367fb9639731a707c6774f4ab7f8336f2448196c2c196af9b45ef50d",
+    "size": 15998,
+    "mtime_ns": 1793096838167525253
+  },
+  "tests/test_project_collect.py": {
+    "type": "file",
+    "sha256": "b700c6199c72cc4dca68cb4f82800b88ee4e4310c78ce452b5b44587372c4acc",
+    "size": 43318,
+    "mtime_ns": 1789375402274029148
+  },
+  "tests/test_project_creation_assistant.py": {
+    "type": "file",
+    "sha256": "863f5ff4ceef3e204cf813fdad82ef061e880dbd5e3dc1287aac3b61ac4f7130",
+    "size": 74363,
+    "mtime_ns": 1793101388323239853
+  },
+  "tests/test_project_insight_ui_invariants.py": {
+    "type": "file",
+    "sha256": "e23cb3fbad7758e72a1960083256862920e5dde189134039d0e093e0bbaa39e3",
+    "size": 41761,
+    "mtime_ns": 1793099991069476154
+  },
+  "tests/test_provider_configuration.py": {
+    "type": "file",
+    "sha256": "f661cad3bcd902b55281c27b456d5aeedd2232ae611a1e208b86ce2608ddcbd9",
+    "size": 13370,
+    "mtime_ns": 1792395329719063139
+  },
+  "tests/test_public_model_ui.py": {
+    "type": "file",
+    "sha256": "0090df54b20e70306f6a0e5b3c870737180f3a800bad257c6a7da028c471e4a5",
+    "size": 6916,
+    "mtime_ns": 1792395329719348594
+  },
+  "tests/test_public_model_usage.py": {
+    "type": "file",
+    "sha256": "09304463729d593f7a40e973e1ce62398429e2f82071fe2a21756c0469553ab3",
+    "size": 42491,
+    "mtime_ns": 1793101388323299270
+  },
+  "tests/test_public_security.py": {
+    "type": "file",
+    "sha256": "9072bb2267dba56dfefff87ecc95524a9a60e4fce23964a5fc9f973fb0484d7a",
+    "size": 16342,
+    "mtime_ns": 1785245412487928034
+  },
+  "tests/test_repository_connections.py": {
+    "type": "file",
+    "sha256": "f0ae9804dc07ffc8993cfb9844b34661ab71c334cefd321252f9d0e8f7d32912",
+    "size": 17551,
+    "mtime_ns": 1788778627855992769
+  },
+  "tests/test_run_logs_ui.py": {
+    "type": "file",
+    "sha256": "f8643a8ea526073cc944af20405756336fe66cdb79b64199a49f9044ff8c94b5",
+    "size": 3127,
+    "mtime_ns": 1789375346059469245
+  },
+  "tests/test_schedule_attempt_index.py": {
+    "type": "file",
+    "sha256": "35145a6ba541b87f1ec95ecb802cf58727d7bab8bda83b8da2d92024e2a41db8",
+    "size": 4252,
+    "mtime_ns": 1793101388323781440
+  },
+  "tests/test_security_fixes.py": {
+    "type": "file",
+    "sha256": "42dc3ca11449f1f644546288a81768055cd8c39598e39b2503cb71dff4fe8d77",
+    "size": 11403,
+    "mtime_ns": 1786004807259565854
+  },
+  "tests/test_server_access_logging.py": {
+    "type": "file",
+    "sha256": "1ea7bafaad4af8b96dcd640eb150609bcf4989d121d70700d32862cf0c109b59",
+    "size": 1487,
+    "mtime_ns": 1788865753813701170
+  },
+  "tests/test_share_api.py": {
+    "type": "file",
+    "sha256": "1f701885ece351c791897d4459317601bf92282473e53b8dd92a2206d03a803c",
+    "size": 19085,
+    "mtime_ns": 1793249439929708484
+  },
+  "tests/test_sidecar_local_security.py": {
+    "type": "file",
+    "sha256": "d0142b5125f67b33773bc744f373c85018d577e28582a8def4f6abebad49d896",
+    "size": 5133,
+    "mtime_ns": 1788162673979332615
+  },
+  "tests/test_sidecar_task_trace_integration.py": {
+    "type": "file",
+    "sha256": "3643e2402cd0caba557a757c43123fa180bd56ec125e408ab7632c9393c2c6d3",
+    "size": 26279,
+    "mtime_ns": 1793172094475651905
+  },
+  "tests/test_structured_content.py": {
+    "type": "file",
+    "sha256": "4ff206347adff90856bb1fb6c3b72abf2007cbdae1ebf9f0b1f00ea7dc0ec599",
+    "size": 45591,
+    "mtime_ns": 1793249439930162813
+  },
+  "tests/test_structured_content_repository.py": {
+    "type": "file",
+    "sha256": "f573bae368ec0b22a8c0832311d3378bf25ea6ab81de86cd720980f40ba92eba",
+    "size": 28212,
+    "mtime_ns": 1793206676046815777
+  },
+  "tests/test_structured_extraction_worker.py": {
+    "type": "file",
+    "sha256": "b59dd25fed09876a59027c3bf96abb81584a8ef2736332534c20e849e43c28d8",
+    "size": 20476,
+    "mtime_ns": 1793249439930346868
+  },
+  "tests/test_targeted_metadata_refresh.py": {
+    "type": "file",
+    "sha256": "08d52f1e5e944e26e5a9c343a345a8c623a89cb82fac2b768b700a179f197d0e",
+    "size": 24886,
+    "mtime_ns": 1793156030843849217
+  },
+  "tests/test_temporary_user_cleanup.py": {
+    "type": "file",
+    "sha256": "ade56cabec96b2ee151c111166b441227020932acaa246efc73383e8e2efbc24",
+    "size": 6362,
+    "mtime_ns": 1793011034997651250
+  },
+  "tests/test_timeout_runner.py": {
+    "type": "file",
+    "sha256": "ce9413c8a99d47e6d0d8d97b8e44d8f6f5d647b818486976951af0b22889faef",
+    "size": 5535,
+    "mtime_ns": 1788097993636781666
+  },
+  "tests/test_workflow_ui_invariants.py": {
+    "type": "file",
+    "sha256": "14f7b96a4403c182f743ae860edd13b7d7c1857e70c0199303d267b727bea622",
+    "size": 1841,
+    "mtime_ns": 1788784785406707257
+  },
+  "tests/test_x_enabled_removal.py": {
+    "type": "file",
+    "sha256": "a5e0408999838e8e45b06ab944ceea446048df1a3991f812e6b4ed241e474398",
+    "size": 6812,
+    "mtime_ns": 1783585764953771915
+  },
+  "tests/test_xhs_keyword_provenance.py": {
+    "type": "file",
+    "sha256": "d6a949852eecdaa5fa052fb60a2303b84afbfd040e15b856b3a3cd2806313c99",
+    "size": 4240,
+    "mtime_ns": 1792066604912841581
+  },
+  "tests/test_xhs_metadata_refresh.py": {
+    "type": "file",
+    "sha256": "78c6757fc50d1e1785ee03bfb058528db63be5ffb9d1fa6369b8fca58b0e1102",
+    "size": 9041,
+    "mtime_ns": 1793153960146458464
+  },
+  "ui/.env.example": {
+    "type": "file",
+    "sha256": "0a49c112d872f012e18fb5fc9eb8a4acb937c381424f963f7a56480815154abf",
+    "size": 73,
+    "mtime_ns": 1785391266873755726
+  },
+  "ui/index.html": {
+    "type": "file",
+    "sha256": "0b651b98220cce05a9f477dd2fd49615b3a6ed970e9e78dd6d5fb488ba296711",
+    "size": 445,
+    "mtime_ns": 1781615280236269838
+  },
+  "ui/package-lock.json": {
+    "type": "file",
+    "sha256": "cd29c27e9c316c11507320a9473eb138148f431b709e345153bb3ce02dd78ce0",
+    "size": 67770,
+    "mtime_ns": 1785246520966956063
+  },
+  "ui/package.json": {
+    "type": "file",
+    "sha256": "af14ef2e8fbca53ef2c0a2fd21466b33ccdc17558a714733b3e744ea9c0ac3b9",
+    "size": 524,
+    "mtime_ns": 1785244020984072574
+  },
+  "ui/pnpm-lock.yaml": {
+    "type": "file",
+    "sha256": "4663cf4f106a9535b455c161871259bfbb88598d4257598f97a09cbb880942f5",
+    "size": 41541,
+    "mtime_ns": 1779249086361294791
+  },
+  "ui/pnpm-workspace.yaml": {
+    "type": "file",
+    "sha256": "ac02d96368617c760f093cfe61fdec64b6244007ab3553e0d6621f706f54a353",
+    "size": 29,
+    "mtime_ns": 1779249433433972989
+  },
+  "ui/prototype/collector-state-board-v2.html": {
+    "type": "file",
+    "sha256": "4c30f8ffb81b7eb6b97b01e8862f101f19e6744b1d367cb6972a23675e596a40",
+    "size": 58228,
+    "mtime_ns": 1788084768315963721
+  },
+  "ui/prototype/index.html": {
+    "type": "file",
+    "sha256": "51dc03c759869d67ced808d2960a83b88c24acc87055912689991931b8930f37",
+    "size": 89442,
+    "mtime_ns": 1778747624928829010
+  },
+  "ui/public/favicon.svg": {
+    "type": "file",
+    "sha256": "9c8dbcc54473943189b3225fd1ee3994ddbec3e6093e35a9da1c155a4c3e8537",
+    "size": 375,
+    "mtime_ns": 1779262266112067338
+  },
+  "ui/public/logo-x.svg": {
+    "type": "file",
+    "sha256": "6cb581774f312291cb3d3284e63c46987b7ec85532334ab6d77070a771460997",
+    "size": 389,
+    "mtime_ns": 1779425761668190446
+  },
+  "ui/public/logo-xhs.svg": {
+    "type": "file",
+    "sha256": "9beb2c32df1c870bddc1349b80eeb1b0641219ce9e8d446d8db527906aaeb1e8",
+    "size": 3738,
+    "mtime_ns": 1779426199749596872
+  },
+  "ui/src/App.vue": {
+    "type": "file",
+    "sha256": "2792d0a2ea49c0cb7f5edfe425ffffb245ac01830d6273939507ad6ee1520fff",
+    "size": 26428,
+    "mtime_ns": 1793072959620686953
+  },
+  "ui/src/analytics.ts": {
+    "type": "file",
+    "sha256": "d378f60347b6437aa6529e3d386c308026cc346a02b3291f8981fbccbe19e38f",
+    "size": 1625,
+    "mtime_ns": 1785912870346123883
+  },
+  "ui/src/api.ts": {
+    "type": "file",
+    "sha256": "d7386bdf7cbf39ac1ff881ecf83eccdd96ea89924267dd326f9ab1e0f9de90e8",
+    "size": 36449,
+    "mtime_ns": 1793249439930713897
+  },
+  "ui/src/assets/logo-dark.svg": {
+    "type": "file",
+    "sha256": "a398a6fe8ea19d6f177c0be5bceea27601a7268dace21d834c41941c8333723b",
+    "size": 374,
+    "mtime_ns": 1778838628433349365
+  },
+  "ui/src/assets/logo-icon.svg": {
+    "type": "file",
+    "sha256": "7f994da4ff787da33fc12a052629da800f3b4e3afd57dfd75f1c19d4f01f3be5",
+    "size": 367,
+    "mtime_ns": 1779262213106817225
+  },
+  "ui/src/assets/logo-preview.html": {
+    "type": "file",
+    "sha256": "90bf7e04931019096dd167e0bfa6ab97b06afd49be331bdfbe37be6eb2660b18",
+    "size": 2809,
+    "mtime_ns": 1778838485549294448
+  },
+  "ui/src/assets/logo.png": {
+    "type": "file",
+    "sha256": "e18b4136872d55e96d2c08698dcc07f43f3e254d9cc44674c1e290a41bd2ffad",
+    "size": 99614,
+    "mtime_ns": 1778844416824217720
+  },
+  "ui/src/assets/logo.svg": {
+    "type": "file",
+    "sha256": "eea629697e20a87392935f382dd9197f089940e0ccc9a1433d994cb784991fa3",
+    "size": 779,
+    "mtime_ns": 1778838628433349240
+  },
+  "ui/src/components/CollectionPlan.vue": {
+    "type": "file",
+    "sha256": "93d17378eeaeb56336692fcedb29205105f463e4524f8a05b328b76e7491f7ef",
+    "size": 7637,
+    "mtime_ns": 1788770104832911493
+  },
+  "ui/src/components/CollectionScheduleFields.vue": {
+    "type": "file",
+    "sha256": "3022cb132294653d6a6e3039ecfe4f06497e533af123faa91f6524da0489e2be",
+    "size": 2419,
+    "mtime_ns": 1788765404940073663
+  },
+  "ui/src/components/InsightCard.vue": {
+    "type": "file",
+    "sha256": "27b76b4dd9db989e54fb8638975ec0e3e6f52a4beb1ed1600a5913c6b67ae1c6",
+    "size": 58014,
+    "mtime_ns": 1793249439931018116
+  },
+  "ui/src/components/project-creation/ConversationPanel.vue": {
+    "type": "file",
+    "sha256": "0d2a99b99ff97b4ab8134c4fd13108770b2ce1971f48070e782a8bc1b3c27389",
+    "size": 7763,
+    "mtime_ns": 1787292333022600082
+  },
+  "ui/src/components/project-creation/CreationProgress.vue": {
+    "type": "file",
+    "sha256": "430ed884530492805720fdbf2af3e15a14c23d2cfd5e95ac480bb13dcd1b00e7",
+    "size": 1996,
+    "mtime_ns": 1786527428043468614
+  },
+  "ui/src/components/project-creation/ModelRequestStatus.vue": {
+    "type": "file",
+    "sha256": "5923e5995b3f35f7c8f46f59896de807583bc12a5ece52cbfe8509aa4d15208c",
+    "size": 960,
+    "mtime_ns": 1788771109818340307
+  },
+  "ui/src/components/project-creation/OutputSettings.vue": {
+    "type": "file",
+    "sha256": "a5669c39c9ec0453d72d61cc339005bb7becc5d211f6c1481105f8573af2e654",
+    "size": 5117,
+    "mtime_ns": 1793097845318905278
+  },
+  "ui/src/components/project-creation/PlatformPickerDrawer.vue": {
+    "type": "file",
+    "sha256": "1b5ade1ea2ef602d4a49b537470bcb095e98316cac66e4a2e93217132c162814",
+    "size": 5703,
+    "mtime_ns": 1786527247630631379
+  },
+  "ui/src/components/project-creation/PlatformPlanCard.vue": {
+    "type": "file",
+    "sha256": "23ec6524506d9fcb13ac9949c713851885242e00d31cecfbec7ef118b93246d0",
+    "size": 3776,
+    "mtime_ns": 1787298025401935257
+  },
+  "ui/src/components/project-creation/PlatformPlanEditor.vue": {
+    "type": "file",
+    "sha256": "1a0006f95f5731d212e992d6496116696dfe064e7a3e075f78cee010553a4af1",
+    "size": 6587,
+    "mtime_ns": 1789383184791691655
+  },
+  "ui/src/components/project-creation/SettingsAdjustmentDrawer.vue": {
+    "type": "file",
+    "sha256": "6dade8218fe532e3c8cead5be3b850cd47f564322f5000a48b823eca52c97f3e",
+    "size": 9406,
+    "mtime_ns": 1788771309138407379
+  },
+  "ui/src/components/project-creation/state.ts": {
+    "type": "file",
+    "sha256": "a1418fb5140c2911dffc9f330b05a2a18c779b8cb70c4ccbbf198cd294a0eafd",
+    "size": 916,
+    "mtime_ns": 1786092986893358227
+  },
+  "ui/src/composables/useAuth.ts": {
+    "type": "file",
+    "sha256": "d38872955e4c65be7fc52d845c3e9f8c2519ead985afa97a343fa3323e32b75f",
+    "size": 1520,
+    "mtime_ns": 1785393387586904071
+  },
+  "ui/src/composables/useProjects.ts": {
+    "type": "file",
+    "sha256": "0adc8fe079078ebb2ac13ae35dbcbc7d7a5009284f59970c342f09e74c0f8bb2",
+    "size": 4462,
+    "mtime_ns": 1788403638648464281
+  },
+  "ui/src/env.d.ts": {
+    "type": "file",
+    "sha256": "5f18a384530e1b0958d5df555a42f9ed159359dd455dfa12ca3d7312054c170b",
+    "size": 314,
+    "mtime_ns": 1781526769284478578
+  },
+  "ui/src/main.ts": {
+    "type": "file",
+    "sha256": "30e970ad4f08e2d5fc7f646db7ec34cdf29a4fe38fa2b156898e2e535ad6925f",
+    "size": 1463,
+    "mtime_ns": 1785393387590969209
+  },
+  "ui/src/pages/Home.vue": {
+    "type": "file",
+    "sha256": "2822bf979b26d2176b4a949168dd0617b56178a79cc01339fe6f675a3cb1b286",
+    "size": 28945,
+    "mtime_ns": 1793249439931412051
+  },
+  "ui/src/pages/Login.vue": {
+    "type": "file",
+    "sha256": "1b5dadcecf1ab650dd8342a1cb25240c23b944940789514b8fdff7b181d3c7ae",
+    "size": 12464,
+    "mtime_ns": 1786613555829130523
+  },
+  "ui/src/pages/Models.vue": {
+    "type": "file",
+    "sha256": "f6182568782c2aec30bce2e914f8093e2c3f7932084b00fb04dab5f8d0247b13",
+    "size": 44645,
+    "mtime_ns": 1793096524308259072
+  },
+  "ui/src/pages/NewProject.vue": {
+    "type": "file",
+    "sha256": "7eacf9efebcf3fe1c91e2534133a88a1487052b367791dde2cc0887a9cd6ab33",
+    "size": 66216,
+    "mtime_ns": 1793100320976437253
+  },
+  "ui/src/pages/Platforms.vue": {
+    "type": "file",
+    "sha256": "2d985c7495d8f0c787d2230ef4f51e4a78192b84cf5453634204febbc5338dcd",
+    "size": 28012,
+    "mtime_ns": 1788163371384951957
+  },
+  "ui/src/pages/PluginFrame.vue": {
+    "type": "file",
+    "sha256": "0e80117e4ea243d634a171ed23dd5cc9f356e1d7b171ba58002cf097d32b4c5a",
+    "size": 487,
+    "mtime_ns": 1778833430768844335
+  },
+  "ui/src/pages/ProjectSettings.vue": {
+    "type": "file",
+    "sha256": "7106dbd05d23a09afe14b5fe90762601ed9d250902b8a16f28b3ac75c80b2db3",
+    "size": 55712,
+    "mtime_ns": 1793100320976828879
+  },
+  "ui/src/pages/Register.vue": {
+    "type": "file",
+    "sha256": "7f345a784888474843149347a734be3718461bc31db70575862f4ebb0465f237",
+    "size": 13315,
+    "mtime_ns": 1786613555827246549
+  },
+  "ui/src/pages/RunLogs.test.cjs": {
+    "type": "file",
+    "sha256": "e82cf30113e0ac86d36023cb5b6b3c2a6d8e825647e6e3dc84816f8933758037",
+    "size": 9338,
+    "mtime_ns": 1789039560153788353
+  },
+  "ui/src/pages/RunLogs.vue": {
+    "type": "file",
+    "sha256": "e3fc4c887e0698f2c05d0ec18e80b7faa5c1af8619fb707388b98ab87f33ad64",
+    "size": 61441,
+    "mtime_ns": 1789374930279889584
+  },
+  "ui/src/pages/Settings.vue": {
+    "type": "file",
+    "sha256": "d551e5ac395b3867bc25f21d83cdba2c366a0a6a62baa466fd0f2fdd995ffcd0",
+    "size": 5520,
+    "mtime_ns": 1793083557229655659
+  },
+  "ui/src/pages/Setup.vue": {
+    "type": "file",
+    "sha256": "484e61e6191a2c655851798b0a4e47462e4ed9fdbbac3db5d40dd383d0629896",
+    "size": 12563,
+    "mtime_ns": 1786613555828169681
+  },
+  "ui/src/pages/SharePage.vue": {
+    "type": "file",
+    "sha256": "d3aaa7f418d0b81cb6a67133f7fe043016984cbd92967c77fc35dfa20c9c1680",
+    "size": 24763,
+    "mtime_ns": 1785393472862525571
+  },
+  "ui/src/pages/Sources.test.cjs": {
+    "type": "file",
+    "sha256": "72d640ee39397f552aa4824f66a697133d0fe40afd5601d9df34482bcfed6aab",
+    "size": 2789,
+    "mtime_ns": 1789379350623714415
+  },
+  "ui/src/pages/Sources.vue": {
+    "type": "file",
+    "sha256": "30258c5db53824cf1ec179376f3a7b55e475c93cb7af12442886b9c9b9bb5d31",
+    "size": 64935,
+    "mtime_ns": 1789383184791100651
+  },
+  "ui/src/pages/ThirdPartyApis.vue": {
+    "type": "file",
+    "sha256": "fc279e4759dc3cbad5f3d3fa535cdfc11580691e9e85d4b5a869f8f8a3f2fb1c",
+    "size": 13381,
+    "mtime_ns": 1786613555829534734
+  },
+  "ui/src/pages/Users.vue": {
+    "type": "file",
+    "sha256": "6675f072d469d2fd89194755dbd48b8798a9337fe58f6c0ca444f0f49b95df1d",
+    "size": 17256,
+    "mtime_ns": 1793083843764677371
+  },
+  "ui/src/pages/Workflow.vue": {
+    "type": "file",
+    "sha256": "d67adce0bd2d499e1117d79ac2512b626488311a26e309e2aad433233d4caed1",
+    "size": 68658,
+    "mtime_ns": 1793257807222773886
+  },
+  "ui/src/pages/runLogsAuditFixture.json": {
+    "type": "file",
+    "sha256": "d8d577d17f0bcccfbec4aa6e2fbee19307982a6cc6e4d3b0e59bb4f7a8000a03",
+    "size": 1846,
+    "mtime_ns": 1788785710045888001
+  },
+  "ui/src/projectSchedule.ts": {
+    "type": "file",
+    "sha256": "9f6d98e5fad83d2731441dc4b6e404e77ec142b48f012e44122a9ebce648a522",
+    "size": 1792,
+    "mtime_ns": 1788148961569893437
+  },
+  "ui/src/router.ts": {
+    "type": "file",
+    "sha256": "4a18bd713a06d4a9332c140c16c4d038603e1f7a29c67f4ef4829e9bbda5cc9c",
+    "size": 4930,
+    "mtime_ns": 1792395329721669527
+  },
+  "ui/src/style.css": {
+    "type": "file",
+    "sha256": "9359d307b72dcb8cc13d8824e5f3734d4235f3805e21c66bf5fe1d31c33fce03",
+    "size": 11748,
+    "mtime_ns": 1786612767873900370
+  },
+  "ui/src/types/index.ts": {
+    "type": "file",
+    "sha256": "2ebdfef491b85d319c67a5c9b7f83c3764587e96ce5aa2f95c8a92c9750a3b18",
+    "size": 2092,
+    "mtime_ns": 1793249439932150065
+  },
+  "ui/src/utils/sourceForm.ts": {
+    "type": "file",
+    "sha256": "f5c9572e2ba508b86750747cdc7787ebed70a4b7b2372c9c4e5b116ec8b73fb5",
+    "size": 4768,
+    "mtime_ns": 1786518439113520868
+  },
+  "ui/src/utils/xHandles.ts": {
+    "type": "file",
+    "sha256": "a9a172e96d8203128bc7f2373baf903bbfe54fa333cab31c3d2ef27b8375ed3f",
+    "size": 1723,
+    "mtime_ns": 1784028221971770231
+  },
+  "ui/tests/home-empty-state.e2e.cjs": {
+    "type": "file",
+    "sha256": "ce043401fb4a48307b3ece0af9c7ad57c6e6dd7fb766b56d63572281622b767d",
+    "size": 3087,
+    "mtime_ns": 1788941593709509499
+  },
+  "ui/tests/home-empty-state.test.cjs": {
+    "type": "file",
+    "sha256": "a047ab65a994f8632ff84dd659d24d046bb5dd5ef153603cda662326e7899ab2",
+    "size": 1260,
+    "mtime_ns": 1788941538271677940
+  },
+  "ui/tests/home-manual-collection.test.mjs": {
+    "type": "file",
+    "sha256": "02d9d66a2a583463f8dfddcfc7576fce36bb2ed225a906eff131fcbe8be130b3",
+    "size": 1257,
+    "mtime_ns": 1788166800199300371
+  },
+  "ui/tests/model-mode-interaction.test.cjs": {
+    "type": "file",
+    "sha256": "b41b0f4a3b7d475a722e5cefadcfce7396ec668bb09227ed2e21c28e2fcd4f0f",
+    "size": 12969,
+    "mtime_ns": 1793096544313650038
+  },
+  "ui/tests/model-provider-save.test.cjs": {
+    "type": "file",
+    "sha256": "5358671323606b69400545302afa687afc040db111a8ab4c5ea7adae9c729278",
+    "size": 4462,
+    "mtime_ns": 1792395329723036137
+  },
+  "ui/tests/model-test-interaction.test.cjs": {
+    "type": "file",
+    "sha256": "03ac1ab6dd8a319b9f69f34acb2023706e0b5087c542569a62db731bf00089b0",
+    "size": 5975,
+    "mtime_ns": 1792059740357991733
+  },
+  "ui/tests/project-creation-source-change.test.cjs": {
+    "type": "file",
+    "sha256": "6afb114b90da14bbfd6d0613fc700aaf5323566b8136b180e3f6f4e0c7ea97e5",
+    "size": 5322,
+    "mtime_ns": 1793100320977303589
+  },
+  "ui/tests/project-creation-state.test.mjs": {
+    "type": "file",
+    "sha256": "73ef7cb871ca1ddf7430450d96bdc57cc58d9f049f02407f1b19bd1dff285961",
+    "size": 1717,
+    "mtime_ns": 1786093464072348167
+  },
+  "ui/tests/project-schedule-settings.test.mjs": {
+    "type": "file",
+    "sha256": "9cd72f056e6a9803aa9a82750e27844b32a9db051db27f1af19ad74584bbc47c",
+    "size": 3508,
+    "mtime_ns": 1788770652943915524
+  },
+  "ui/tests/project-settings-save.test.cjs": {
+    "type": "file",
+    "sha256": "56a2b16cea006bc302427b00134b8ba58f53b1cead6a3a65da239cdd45f6774a",
+    "size": 6945,
+    "mtime_ns": 1793100320977106797
+  },
+  "ui/tests/public-model-wait.test.mjs": {
+    "type": "file",
+    "sha256": "f08b3f20f27a0c560423ef9e4f1142ba3326e9c0bd1551fd2b570fb53df1543b",
+    "size": 4315,
+    "mtime_ns": 1788771292313132500
+  },
+  "ui/tests/shared-style-font-size.test.mjs": {
+    "type": "file",
+    "sha256": "e03ee978d363493e99a416189d9b5fc211e1173851d87e7b762f2e4bb9c8ee71",
+    "size": 1193,
+    "mtime_ns": 1786613601615379148
+  },
+  "ui/tests/source-recollect.test.mjs": {
+    "type": "file",
+    "sha256": "f95dcf081b742464ef22564e6e6d1e0f527f5a9d254d8c35301016cb5b2ceac3",
+    "size": 2849,
+    "mtime_ns": 1788773023193105885
+  },
+  "ui/tests/targeted-metadata-refresh.test.cjs": {
+    "type": "file",
+    "sha256": "2c90694a57cba6fa52a4c54ed023add24678897c6355e3916e752db7cbfbf98a",
+    "size": 5623,
+    "mtime_ns": 1793156030846071511
+  },
+  "ui/tests/user-row-focus.test.cjs": {
+    "type": "file",
+    "sha256": "31d5ca8829fd6920d5398cf5a0d1a8227c890f9493e29e8f78acd93871ca0d52",
+    "size": 3730,
+    "mtime_ns": 1792395329723275551
+  },
+  "ui/tsconfig.json": {
+    "type": "file",
+    "sha256": "b0044568de928db2c3d4948d63df508559172955695ea0ffdaae20cb41c238e3",
+    "size": 259,
+    "mtime_ns": 1779971036513268567
+  },
+  "ui/vite.config.ts": {
+    "type": "file",
+    "sha256": "09c7a581572f40b693b0772f1f488d4171f9f4c7d2435b93364e971777fdb843",
+    "size": 1039,
+    "mtime_ns": 1785238528210556724
+  }
+}

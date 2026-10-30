@@ -1,0 +1,70 @@
+--- before/recovery-approval-14.json
++++ after/recovery-approval-14.json
+@@ -0,0 +1,67 @@
++{
++  "action": "rollback",
++  "command": "recover-machine-upgrade",
++  "installation_plan_sha256": "c0908c204554196fa5a0ef991108b29f5b99f90589ba6b3990faaa9a441a1bef",
++  "journal": "/private/tmp/M4-09-10-jy9w60v3/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
++  "journal_sha256": "9c288a554cf4dbefcdf5dea0083489497b0542fa655f3a50f74e093fc4cf5e9e",
++  "migration_recovery": null,
++  "operation_id": "synthetic-fault-upgrade",
++  "plan_sha256": "4a44cabc1ac68d903f71b633ab5502455b0f6bad288753ce42f9320244ab0097",
++  "scene": {
++    "outputs": [
++      "before",
++      "after",
++      "before",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "before",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after"
++    ],
++    "target": "before"
++  },
++  "schema_version": 1,
++  "stale_locks": [
++    {
++      "device": 16777234,
++      "inode": 159636352,
++      "owner_sha256": "42199efbfe767e781a44f3695d7cd63426d62878c6e49058f6908dd1d98c3235",
++      "path": "/private/tmp/M4-09-10-jy9w60v3/home/.mem-sharing-install.lock"
++    },
++    {
++      "device": 16777234,
++      "inode": 159636354,
++      "owner_sha256": "42199efbfe767e781a44f3695d7cd63426d62878c6e49058f6908dd1d98c3235",
++      "path": "/private/tmp/M4-09-10-jy9w60v3/home/.mem-sharing/var/.agm.lock"
++    },
++    {
++      "device": 16777234,
++      "inode": 159636356,
++      "owner_sha256": "42199efbfe767e781a44f3695d7cd63426d62878c6e49058f6908dd1d98c3235",
++      "path": "/private/tmp/M4-09-10-jy9w60v3/home/.mem-sharing/var/.agm.lock/transaction"
++    }
++  ],
++  "confirmed_at": "2026-10-30T16:20:08.502851Z",
++  "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
++}

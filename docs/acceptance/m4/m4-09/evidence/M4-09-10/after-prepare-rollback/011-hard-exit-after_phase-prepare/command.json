@@ -1,0 +1,31 @@
+{
+  "label": "hard-exit-after_phase-prepare",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import json,sys,os\nsys.path.insert(0,sys.argv[1])\nfrom agm_core import upgrade\nplan=json.load(open(sys.argv[2]));approval=json.load(open(sys.argv[3]))\nevent=sys.argv[4];suffix=sys.argv[5]\ndef hook(stage,path):\n print(json.dumps({'event':stage,'path':str(path),'pid':os.getpid()}),flush=True)\n if stage==event and (not suffix or str(path).endswith(suffix)):os._exit(86)\nprint(json.dumps(upgrade.execute_upgrade(plan,approval,hook=hook)))\n",
+    "/private/tmp/M4-09-10-klh3vftr/source/scripts",
+    "/private/tmp/M4-09-10-klh3vftr/upgrade-plan.json",
+    "/private/tmp/M4-09-10-klh3vftr/fault-approval-9.json",
+    "after_phase:prepare",
+    ""
+  ],
+  "cwd": "/private/tmp/M4-09-10-klh3vftr/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-10-klh3vftr/home",
+    "PATH": "/private/tmp/M4-09-10-klh3vftr/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-10-klh3vftr/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:18:39.050937Z",
+  "ended_utc": "2026-10-30T16:18:39.355532Z",
+  "duration_seconds": 0.3045928750070743,
+  "exit_code": 1,
+  "stdin_base64": ""
+}

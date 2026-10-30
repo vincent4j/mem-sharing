@@ -1,0 +1,24 @@
+{
+  "label": "fixture-synthetic-target-source",
+  "argv": [
+    "fixture-operation",
+    "synthetic-target-source"
+  ],
+  "cwd": "/private/tmp/M4-09-12-ikvq5gtz/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-12-ikvq5gtz/home",
+    "PATH": "/private/tmp/M4-09-12-ikvq5gtz/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-12-ikvq5gtz/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:24:01.816750Z",
+  "ended_utc": "2026-10-30T16:24:01.851616Z",
+  "duration_seconds": 0.03486516699194908,
+  "fixture_operation": "synthetic-target-source",
+  "returned": "PosixPath('/private/tmp/M4-09-12-ikvq5gtz/target-source')"
+}

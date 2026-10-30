@@ -1,0 +1,9 @@
+--- before/home/.mem-sharing-install-20261030T161732Z-77ad91ebb7dc41edae534c996aebb2cc/journal.json
++++ after/home/.mem-sharing-install-20261030T161732Z-77ad91ebb7dc41edae534c996aebb2cc/journal.json
+@@ -3223,5 +3223,5 @@
+   "schema_version": 1,
+   "snapshot_complete": false,
+   "snapshot_location": null,
+-  "status": "committed"
++  "status": "outputs_verified"
+ }

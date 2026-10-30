@@ -1,0 +1,51 @@
+{
+  "verified_at": "2026-10-30T15:33:34.952314+00:00",
+  "head": "40cc1442aa99d30e38a34df0ef3143e0506f9ce0",
+  "unit": {
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests/unit"
+    ],
+    "started_at": "2026-10-30T15:29:43.282410+00:00",
+    "ended_at": "2026-10-30T15:32:03.137829+00:00",
+    "wall_seconds": 139.854,
+    "exit_code": 0,
+    "count": 441,
+    "unittest_seconds": 139.626,
+    "source_unchanged": true,
+    "count_source": "unit.log:3"
+  },
+  "integration": {
+    "command": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests/integration"
+    ],
+    "started_at": "2026-10-30T15:29:43.282415+00:00",
+    "ended_at": "2026-10-30T15:32:37.477103+00:00",
+    "wall_seconds": 174.193,
+    "exit_code": 0,
+    "count": 69,
+    "unittest_seconds": 174.024,
+    "source_unchanged": true,
+    "count_source": "integration.log:3"
+  },
+  "source_matches_both_runs": true,
+  "patch_matches_current_code": true,
+  "patch_sha256": "6553ff8540130ed5ac46a8188ec8cf73050274d4e0b2ee92d52badb01f120224",
+  "python39_grammar_files": 23,
+  "locked_documents_unchanged_from_dc0b38f": true,
+  "index_empty": true,
+  "ck_head": "695074ee4b6ddb9999be858093f833d6377bd641",
+  "ck_worktree_clean": true,
+  "measured_window_start": "2026-10-30T15:06:02+00:00",
+  "measured_window_seconds": 1652.952,
+  "initial_rule_reading_before_anchor": "not timed"
+}

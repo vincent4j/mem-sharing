@@ -1,0 +1,1765 @@
+diff --git a/docs/plan/decisions-m4.md b/docs/plan/decisions-m4.md
+index 2478ce6..d63c83a 100644
+--- a/docs/plan/decisions-m4.md
++++ b/docs/plan/decisions-m4.md
+@@ -280,3 +280,40 @@ M4-09 原始证据至少覆盖七现场、同名/异字节/目录外链接、来
+ 2. **运行时前置**(正文 §4 已含,记为用户确认):已有 Python≥3.9 与 Git 为前提;缺失时只说明安装步骤,不自动安装系统运行时。
+ 
+ 另:同日巴克队长交付 29-commit review([review-2026-10-29.md](review-2026-10-29.md)),R1–R5 分诊见任务书修订;R2/R3 修复排在 M4-03 之后、M4-04 之前,R1/R4 并入 M4-06 范围。
++
++## 12. M4-07 版本布局与回退合同（2026-10-30 主 Agent 批准）
++
++本节方案与提交后只收尾、隔离测试专用提交边界已获主 Agent 明确批准。本节在冲突处替代 §5.3“本期无常规降级功能”的旧限制，其余 before/after/第三态恢复约束不变。
++
++### 12.1 活动目录与版本库存
++
++- 活动代码 `C = H/.local/share/agent-group-memory` 保持真实目录，`layout.code`、产品 Skill 投影目标及所有现有调用路径均不变。C 和 home 以下的受管父链不得为符号链接。
++- 完整版本库存 `K = H/.local/share/agent-group-memory-versions`，与 C 同级，避免库存被活动代码清单误判为额外文件。版本槽固定为 `K/<SemVer>/<tree_sha256>/`，包含 `code/`（原始发布清单文件与活动代码清单标记）、`release.json`（产品 ID、三版本、source URL/commit/tree、逐文件路径/模式/哈希）及 `complete.json`（核验完成收据）。采用完整 64 位清单哈希；同 SemVer 异清单占不同槽，但不能因此绕过升级白名单。
++- 库存是回退能力的持久本体，与 backups/ 的操作恢复材料不同，不适用备份的 90 天提醒保留期，也不自动清理。库存中的文件由本产品独占管理，完成后只读保留，不自动 GC；“只读”不视为不可篡改保证，使用前仍逐字节/类型/模式复验。库存目标已存在且不精确匹配时停止，不覆盖、不补写凑齐。
++- 新库存先在本操作 bootstrap 暂存，完成清单、所需文件与 Python 3.9 语法核验后，在 K 内同文件系统的临时槽复验并原子 rename 为最终槽。每个目录创建、复制与 rename 前记 intent；中断同 op 重用并核验，不能因重试另造版本身份。不同挂载点不假设 bootstrap→K 的 rename 原子性。
++- K 仅是可信版本来源，V 是唯一活动版本权威；不增加与 V 竞争的 current/active.json 指针。完成收据证明库存完整，不单独证明当前活动版本。
++- 不把 C 改成符号链接，不整体 rename C 或 C/scripts；由已固定工具包从库存向 C 逐文件原子替换/删除、读回。活动目录允许出现短暂混版，因此不声称整版本切换原子。只有本次旧清单明确拥有、目标版本不再包含的文件可删除；额外未归属文件、Git 元数据、类型变化、dirty/异源先停。用户内容不纳入代码库存或代码删除集。
++
++### 12.2 升级、幂等与主动回退
++
++- 每次成功首装或升级，都在同一 op 内先登记并核验目标版本库存，再换 C，最后提交 V，保证每个已装版本有持久回退来源。首次升级既有旧 M4 单目录安装时，先核验 C 与原产品台账/清单一致，将当前发行纳入 K；补建旧版库存属于已批准升级的明示写集。同版、同清单且现场干净的重装不为补建库存而写入，不刷新任何时间戳；执行器新增接入缺口另给计划与批准。
++- 普通升级只允许目标发行转换表中精确列出的 `(schema, structure, code, source URL/commit/tree)` 前驱。任一未来版本、未知前驱、坏账或未知状态不回退到首装。M2/M3 来源保留 `m2-schema1` 身份，先执行 §6 的显式迁移，再完成代码落位；两阶段共享外层操作/批准绑定与恢复状态，不把迁移完成冒充整个升级完成。
++- 主动回退另列 `direction=rollback` 计划，单独批准，目标只能是本安装历史已成功提交并仍有完整核验库存/操作收据的旧版本。目标与当前须为兼容的 schema=2、structure=1，且精确转换表显式允许反向代码切换；不允许以“回退”安装未知发行、猜测结构逆迁移或覆盖未来台账。
++- 回退不是恢复旧 V 的整份历史快照：以当前 V 的 projects/shared_objects/migration/legacy_import 和 installation_id 为基底，保留升级后新增的项目、授权与消费者；仅按批准转换更新 product 的代码版本/来源/操作信息以及确有差异、仍具 created 证据的受管产品单元。用户内容、当前项目授权、机器接入范围和稳定指向 C 的投影不倒退。若目标代码不支持当前状态，停止。
++- 崩溃回滚仍恢复该 op 的精确 before 代码、台账和本次受管单元，不等于上述主动回退；两者的计划、批准及结果分别命名。
++
++### 12.3 暂存、备份、固定工具包与提交点
++
++- 操作目录保持 `H/.agents-group-install-<op>/`，保存批准计划、journal、完整目标暂存、固定恢复工具包及其指纹；恢复入口与依赖全部来自该工具包，不从 C 动态 import，不依赖尚未发布的目标版本脚本。
++- before 恢复材料固定为 `R/backups/upgrade-<op>/code-before/`、原始 V 字节及受管入口 before 材料；备份逐项核验，计划绑定原 V 哈希、当前/目标代码清单、受管单元 before/after、工具包和库存路径。K 中同版本副本不能代替本 op 的 code-before 证据。
++- 六阶段固定为：①工具包/目标暂存；②before 归档与当前版本库存；③目标库存落位及升级中标记；④C 代码逐文件切换；⑤受管单元核验/必要更新与 outputs_verified；⑥原子提交最终 V、journal/标记/锁收尾。每阶段均提供前后故障点；每个文件替换/删除、库存 rename、V 提交也提供细粒度前后故障点。
++- 持锁顺序为安装锁→已知旧 scripts 锁（按原合同顺序）→V 写锁→事务子锁；不搬动锁、tombstone 或恢复目录。专用升级中标记与持锁共同阻断协作写者；check 只诊断升级/恢复状态。写前检查继续遵守 R3，不声称消除非协作写者最后一刻的竞态。
++- 恢复仍按 §5.3 四类：V=before 且输出仅 before/after，可继续或逆序回滚；V=after 且输出全 after，仅收尾（不能再把已经提交的升级当未提交回滚，需另走主动回退）；V=after 且混合，或出现第三种字节/坏备份，停止。批准中须明确故障锁所有者已退出，才允许显式接管，不自动偷锁。提交后收尾中断测试的“回滚”请求应明确拒绝并指向单独回退计划，而非假报已回滚。
++
++### 12.4 P/T 真实前驱证据
++
++验收用 P 固定为当前真实开发提交 `27d6e26` 的可运行产品快照，T 为在此开发链上实现 M4-07 后冻结的真实代码快照；验收发行号暂用 P=0.4.0、T=0.4.1，不代表发布。T 的白名单绑定 P 精确三版本及清单，不用版本字符串大小代替来源校验。
++
++在隔离测试专用临时 Git clone 中保留 P 的真实祖先，将本任务真实代码导出为 T 并创建测试专用提交，从而记录不同的真实 commit/tree/代码清单与祖先关系；不在工作仓库 commit/push。先由 P 的真实安装内核安装 P 成完成台账，并用安装后的 P 命令做只读运行证明，再经 T 固定工具包执行 P→T 与恢复。不能仅改台账发行号或用占位脚本制造版本差。
++
++同版零写/零 mtime、P→T、T→P 主动回退、M2/M3→T、六阶段继续/回滚（提交后分支只许收尾）、每项 rename/提交窗口、坏账/未来/dirty/第三态拒绝均为隔离夹具验证；真实 HOME 与真实执行器会话不在本任务操作范围。
+diff --git a/scripts/agm.py b/scripts/agm.py
+index 9ef4f2c..309906e 100644
+--- a/scripts/agm.py
++++ b/scripts/agm.py
+@@ -28,6 +28,9 @@ import json
+ import os
+ import re
+ import sys
++
++# Installed release trees are manifest-closed; CLI use must not add cache files.
++sys.dont_write_bytecode = True
+ from datetime import datetime
+ from pathlib import Path
+ 
+diff --git a/scripts/agm_core/layout.py b/scripts/agm_core/layout.py
+index 0a58917..1686d71 100644
+--- a/scripts/agm_core/layout.py
++++ b/scripts/agm_core/layout.py
+@@ -86,4 +86,7 @@ def from_request(request):
+     if not isinstance(layout, RuntimeLayout) or layout.home != Path(request["home"]):
+         raise LayoutError("runtime_layout_invalid", "Injected layout must match request.home")
+     layout.validate_paths()
++    marker = layout.home / ".agents-group-upgrade.json"
++    if marker.exists() or marker.is_symlink():
++        raise LayoutError("machine_upgrade_pending", "Machine upgrade requires explicit recovery: " + str(marker))
+     return layout
+diff --git a/scripts/agm_core/user_install.py b/scripts/agm_core/user_install.py
+index dfbe98a..2518703 100644
+--- a/scripts/agm_core/user_install.py
++++ b/scripts/agm_core/user_install.py
+@@ -19,14 +19,14 @@ from contextlib import ExitStack
+ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+-from . import detect, legacy_import as legacy, migrate, paths, registry, user_entries
++from . import detect, legacy_import as legacy, migrate, paths, registry, user_entries, versions
+ from .layout import RuntimeLayout
+ from .transaction import Snapshot, TransactionError, _apply, _atomic_file, read_snapshot
+ 
+ PRODUCT = 'agent-group-memory'
+ SCHEMA = 1
+ JOURNAL_KEYS = 'schema_version product_id operation_id plan approval status intent created_directories completed snapshot_complete snapshot_location entry_registry_sha256 final_registry_sha256'
+-PLAN_KEYS = 'schema_version command operation_id channel layout source source_files tools versions requested_agents effective_agents entry_plan entry_inputs observations scene_sha256 legacy_identity legacy_import outputs directories bootstrap journal staged_registry metadata_scopes changes agent_facts source_tree_sha256 plan_sha256'
++PLAN_KEYS = 'schema_version command operation_id channel layout source source_files tools versions requested_agents effective_agents entry_plan entry_inputs observations scene_sha256 legacy_identity legacy_import outputs directories bootstrap journal staged_registry metadata_scopes changes agent_facts source_tree_sha256 inventory plan_sha256'
+ 
+ 
+ class InstallError(ValueError):
+@@ -168,9 +168,15 @@ def inspect_machine(request):
+     try:
+         runtime = _runtime(request)
+         result['layout'] = runtime.describe()
++        guard=runtime.home/'.agents-group-upgrade.json'
++        if os.path.lexists(guard):
++            result.update(scene='interrupted',errors=['upgrade marker: '+str(guard)])
++            return result
+         observations = result['observations']
+         observations.update(_walk(runtime.root))
+         observations.update(_walk(runtime.code))
++        _real_chain(versions.root(runtime),runtime.home)
++        observations.update(_walk(versions.root(runtime)))
+         for p in (runtime.code.parent,runtime.code.parent.parent):observations[str(p)]=_node(p)
+         known_old = sorted({Path(p).resolve() for p in request.get('legacy_registries', [])} |
+                            ({Path(request['source']['root'])/'scripts/registry.json'} if request.get('source') else set()))
+@@ -203,6 +209,9 @@ def inspect_machine(request):
+                 validated,_=_load_journal(opdir/'journal.json')
+             elif command=='migrate-machine':
+                 validated,_=migrate._load_journal(opdir/'journal.json')
++            elif command=='upgrade-machine':
++                from . import upgrade
++                validated,_=upgrade._load_journal(opdir/'journal.json')
+             else:
+                 _fail('Unexplained completed bootstrap metadata')
+         v = _node(runtime.registry)
+@@ -229,11 +238,21 @@ def inspect_machine(request):
+                     _fail('dual active ledgers require explicit migration recovery')
+                 if _node(old)['kind'] != 'absent' and str(old) not in (data.get('migration') or {}).get('tombstones',{}):
+                     _fail('unexplained legacy registry')
+-            source,_ = _source(request)
++            source,source_files = _source(request)
+             identity = {'url':source['url'],'commit':source['commit'],'tree_sha256':source['tree_sha256']}
+             if data['product']['product_code_version']==source['version'] and data['product']['source']==identity:
+                 result.update(scene='same',channel='upgrade')
++            elif 'conversions' in request:
++                from . import upgrade
++                try:
++                    upgrade._conversion(request,data,versions.descriptor(runtime,source,source_files),request.get('direction','upgrade'))
++                except ValueError:
++                    result.update(scene='future',errors=['no exact supported release conversion'])
++                else:
++                    result.update(scene='valid_old',channel='upgrade')
+             elif {'version':data['product']['product_code_version'],'source':data['product']['source']} in request.get('supported_sources',[]):
++                # Historical read-only callers; execution still requires the full
++                # exact conversion in upgrade.plan_upgrade, never this short list.
+                 result.update(scene='valid_old',channel='upgrade')
+             else:
+                 result.update(scene='future',errors=['no supported source conversion'])
+@@ -252,6 +271,8 @@ def inspect_machine(request):
+             else:
+                 _fail('Legacy product state: '+scene['scene'])
+             return result
++        if os.path.lexists(versions.root(runtime)):
++            _fail('Persistent product inventory without active ledger; explicit recovery required')
+         if _node(runtime.code)['kind']!='absent':
+             _fail('Product code without active ledger; not v0')
+         for old in known_old:
+@@ -366,7 +387,7 @@ def plan_install(request):
+         _real_chain(Path(directory),runtime.home)
+         if _node(directory)['kind'] not in ('absent','directory'): _fail('Directory conflict: '+directory)
+     saved_inputs={k:copy.deepcopy(request[k]) for k in ('platform_config','agents','search_paths','app_directories','user_candidates') if k in request}
+-    plan={'schema_version':1,'command':'install-machine','operation_id':op,'channel':scene['channel'],
++    plan={'schema_version':2,'command':'install-machine','operation_id':op,'channel':scene['channel'],
+           'layout':runtime.describe(),'source':source,'source_files':files,'tools':tools,
+           'versions':{'schema_version':2,'product_structure_version':1,'product_code_version':source['version']},
+           'requested_agents':(entry_result.get('agents') or {}).get('requested',paths.resolve_agents(request.get('agents'))),
+@@ -375,8 +396,10 @@ def plan_install(request):
+           'observations':scene['observations'],'scene_sha256':legacy.digest(legacy.encoded(scene['observations'])),
+           'legacy_identity':'confirmed_v0' if imported else None,'source_tree_sha256':imported['source_tree_sha256'] if imported else None,'legacy_import':imported,'outputs':outputs,
+           'directories':sorted(directories,key=lambda p:(len(Path(p).parts),p)),
++          'inventory':versions.descriptor(runtime,source,files),
+           'bootstrap':str(bootstrap),'journal':str(bootstrap/'journal.json'),'staged_registry':str(bootstrap/'staged-registry.json'),
+           'metadata_scopes':[str(bootstrap),str(runtime.backups/('v0-'+op))] if imported else [str(bootstrap)]}
++    plan['metadata_scopes'] += [str(versions.root(runtime))]
+     plan['changes']=([{'path':item['path'],'operation':'reuse' if item['before']==item['after'] else 'create' if item['before']['kind']=='absent' else 'legacy_index',
+                        'before':item['before'],'after':item['after']} for item in outputs]
+         + [{'path':p,'operation':'mkdir','before':_node(p)} for p in plan['directories'] if _node(p)['kind']=='absent']
+@@ -384,6 +407,7 @@ def plan_install(request):
+         + [{'path':str(runtime.registry),'operation':'commit_registry_last','before':{'kind':'absent'},
+             'after':{'product':_seed(plan)['product'],'machine_agents':plan['effective_agents'],
+                      'machine_objects':(entry_plan or {}).get('machine_objects',[]),'legacy_import':_seed(plan)['legacy_import']}}]
++        + [{'path':plan['inventory']['slot'],'operation':'register_persistent_version','before':_node(plan['inventory']['slot'])}]
+         + [{'path':scope,'operation':'operation_metadata','before':{'kind':'absent'}} for scope in plan['metadata_scopes']]
+         + [{'path':str(p),'operation':'writer_lock','before':{'kind':'absent'}} for p in
+            (runtime.home/'.agents-group-install.lock',runtime.lock,runtime.transaction_lock)])
+@@ -391,13 +415,17 @@ def plan_install(request):
+     return plan
+ 
+ 
+-def _validate(plan):
+-    registry._keys(plan,PLAN_KEYS,'install plan')
++def _validate(plan, *, historical=False):
++    old = historical and isinstance(plan,dict) and type(plan.get('schema_version')) is int and plan.get('schema_version')==1 and 'inventory' not in plan
++    registry._keys(plan,' '.join(k for k in PLAN_KEYS.split() if not old or k!='inventory'),'install plan')
+     body=dict(plan); digest=body.pop('plan_sha256')
+-    if legacy.digest(legacy.encoded(body))!=digest or plan['schema_version']!=1 or plan['command']!='install-machine':
++    if legacy.digest(legacy.encoded(body))!=digest or plan['schema_version']!=(1 if old else 2) or plan['command']!='install-machine':
+         _fail('Invalid installation plan')
+     runtime=RuntimeLayout(Path(plan['layout']['root']).parent)
+     runtime.validate_paths(); _real_chain(runtime.code,runtime.home)
++    if not old:
++        versions.validate(runtime,plan['inventory'])
++        if plan['inventory']!=versions.descriptor(runtime,plan['source'],plan['source_files']):_fail('Inventory/source mismatch')
+     op=migrate._op(plan['operation_id'])
+     bootstrap=runtime.home/('.agents-group-install-'+op)
+     if plan['layout']!=runtime.describe() or plan['bootstrap']!=str(bootstrap) or plan['journal']!=str(bootstrap/'journal.json') or plan['staged_registry']!=str(bootstrap/'staged-registry.json'):
+@@ -765,9 +793,13 @@ def _finish(journal,request,hook):
+         user_entries._preflight_machine_units(data)
+         if plan['legacy_import']:_snapshot_verify(plan,plan['legacy_import']['snapshot'])
+         _import_manifest(journal,'committed',hook)
++        versions.activate(runtime,plan['inventory'],plan['operation_id'],plan['journal'],journal['final_registry_sha256'],
++            mkdir=lambda p:_mkdir(journal,p,hook),intent=lambda k,p:_intent(journal,k,p,hook))
+         journal['status']='committed';_save(journal)
+         return {'status':'completed','journal':plan['journal'],'operation_id':plan['operation_id'],'finalized_only':True}
+     _toolkit(journal,hook);_stage_code(journal,hook)
++    versions.ensure(runtime,plan['inventory'],Path(plan['bootstrap'])/'code-source',plan['operation_id'],
++        mkdir=lambda p:_mkdir(journal,p,hook),intent=lambda k,p:_intent(journal,k,p,hook),hook=hook)
+     if plan['legacy_import']:
+         if not journal['snapshot_complete']:_import_manifest(journal,'prepared',hook)
+         _make_snapshot(journal,hook);_import_manifest(journal,'snapshot_complete',hook)
+@@ -794,6 +826,8 @@ def _finish(journal,request,hook):
+     if hook:hook('after_commit',runtime.registry)
+     if _node(runtime.registry).get('sha256')!=journal['final_registry_sha256']:_fail('Registry commit readback drift')
+     _verify_outputs(plan);_verify_entry_outputs(plan);user_entries._preflight_machine_units(data)
++    versions.activate(runtime,plan['inventory'],plan['operation_id'],plan['journal'],journal['final_registry_sha256'],
++        mkdir=lambda p:_mkdir(journal,p,hook),intent=lambda k,p:_intent(journal,k,p,hook))
+     _import_manifest(journal,'committed',hook);journal['status']='committed';_save(journal)
+     return {'status':'completed','journal':plan['journal'],'operation_id':plan['operation_id'],'legacy_import':plan['legacy_import'] is not None}
+ 
+@@ -837,7 +871,7 @@ def _load_journal(path):
+     if path.is_symlink() or path!=path.resolve():_fail('Unsafe journal path')
+     journal=migrate._json(path)
+     registry._keys(journal,JOURNAL_KEYS,'installation journal')
+-    runtime=_validate(journal['plan']);_approve(journal['plan'],journal['approval'])
++    runtime=_validate(journal['plan'],historical=journal['status'] in ('committed','rolled_back'));_approve(journal['plan'],journal['approval'])
+     if journal['schema_version']!=1 or journal['product_id']!=PRODUCT or journal['operation_id']!=journal['plan']['operation_id'] or str(path)!=journal['plan']['journal']:
+         _fail('Journal identity mismatch')
+     if type(journal['snapshot_complete']) is not bool:_fail('Invalid snapshot completion marker')
+@@ -974,7 +1008,7 @@ def _rollback_install(journal,request,hook):
+     # Keep bootstrap, tools and source snapshot evidence. Only remove ours if empty.
+     for directory in reversed(journal['created_directories']):
+         p=Path(directory)
+-        if p.is_relative_to(Path(plan['bootstrap'])) or plan['legacy_import'] and p.is_relative_to(Path(plan['legacy_import']['snapshot']).parent):continue
++        if p.is_relative_to(versions.root(runtime)) or p.is_relative_to(Path(plan['bootstrap'])) or plan['legacy_import'] and p.is_relative_to(Path(plan['legacy_import']['snapshot']).parent):continue
+         if p.is_dir() and not p.is_symlink():
+             try:p.rmdir()
+             except OSError:pass
+@@ -1011,7 +1045,7 @@ def recover_install(recovery_plan,approval,*,request=None,hook=None):
+     if result['status']=='rolled_back':
+         for raw in reversed(journal['created_directories']):
+             path=Path(raw)
+-            if path.is_relative_to(Path(plan['bootstrap'])) or plan['legacy_import'] and path.is_relative_to(Path(plan['legacy_import']['snapshot']).parent):continue
++            if path.is_relative_to(versions.root(runtime)) or path.is_relative_to(Path(plan['bootstrap'])) or plan['legacy_import'] and path.is_relative_to(Path(plan['legacy_import']['snapshot']).parent):continue
+             if path.is_dir() and not path.is_symlink():
+                 try:path.rmdir()
+                 except OSError:pass
+--- /dev/null
++++ b/scripts/agm_core/upgrade.py
+@@ -0,0 +1,694 @@
++"""Explicit release upgrade/rollback, registry-last commit and fixed-tool recovery.
++
++No CLI, import-time work, implicit migration, network, or default HOME. The exact
++conversion list is a release input (and part of approval), never SemVer guessing.
++"""
++import ast
++import copy
++import json
++import os
++import re
++import sys
++import uuid
++from contextlib import ExitStack
++from datetime import datetime, timezone
++from pathlib import Path
++
++from . import legacy_import as legacy, migrate, paths, registry, user_entries, versions
++from . import user_install as install
++from .layout import RuntimeLayout
++from .transaction import Snapshot, _apply, read_snapshot
++
++PRODUCT = 'agent-group-memory'
++PLAN_KEYS = ('schema_version command operation_id direction channel layout source source_files tools '
++             'before_registry before_registry_hex before_product after_registry_hex final_registry_sha256 '
++             'before_inventory target_inventory conversion migration_plan outputs obsolete_directories directories '
++             'bootstrap journal archive launcher_hex metadata_scopes allowed_user_paths entry_facts noop changes plan_sha256')
++JOURNAL_KEYS = ('schema_version product_id operation_id plan approval status intent created_directories '
++                'final_registry_sha256 phase')
++PHASES = ('prepare', 'archive', 'inventory', 'code', 'verify', 'commit')
++
++
++LAUNCHER = b'''import json, sys
++from pathlib import Path
++sys.path.insert(0, str(Path(__file__).parent / "tools"))
++from agm_core import upgrade
++if sys.argv[1] == "preview":
++    result = upgrade.plan_recovery(sys.argv[2], action=sys.argv[3])
++elif sys.argv[1] == "apply":
++    approval = json.loads(Path(sys.argv[2]).read_text())
++    plan = {k:v for k,v in approval.items() if k not in ("confirmed_at", "reference")}
++    result = upgrade.recover_upgrade(plan, approval)
++else:
++    raise ValueError("Use preview JOURNAL continue|rollback, or apply APPROVAL.json")
++print(json.dumps(result, ensure_ascii=False))
++'''
++
++
++class UpgradeError(ValueError):
++    def __init__(self, message, code='upgrade_conflict'):
++        super().__init__(message); self.code = code
++
++
++def _fail(message, code='upgrade_conflict'):
++    raise UpgradeError(message, code)
++
++
++def marker(runtime):
++    return runtime.home / '.agents-group-upgrade.json'
++
++
++def _seal(plan):
++    plan['plan_sha256'] = legacy.digest(legacy.encoded(plan)); return plan
++
++
++def _product(source, op, previous=None):
++    result = copy.deepcopy(previous) if previous else {
++        'product_id':PRODUCT, 'installation_id':op, 'product_structure_version':1}
++    result.update(product_code_version=source['version'], source={k:source[k] for k in ('url','commit','tree_sha256')},
++                  installation_status='complete', last_operation_id=op)
++    return result
++
++
++def _entry_facts(data):
++    """Exact observed machine objects; release conversions cannot broaden ownership."""
++    user_entries._preflight_machine_units(data)
++    return {obj['path']:install._node(obj['path']) for obj in data['machine']['objects'].values()}
++
++
++def _conversion(request, data, target, direction):
++    before = {'schema_version':data['schema_version'],
++              'product_structure_version':data['product']['product_structure_version'],
++              'product_code_version':data['product']['product_code_version'],
++              'source':data['product']['source']}
++    after = dict(target['release']['versions'], source=target['release']['source'])
++    old_version=before['product_code_version'];new_version=after['product_code_version']
++    if not re.fullmatch(r'\d+\.\d+\.\d+',old_version):_fail('Unknown predecessor version','upgrade_unsupported')
++    old_tuple=tuple(map(int,old_version.split('.')));new_tuple=tuple(map(int,new_version.split('.')))
++    if (direction=='upgrade' and old_tuple>=new_tuple) or (direction=='rollback' and old_tuple<=new_tuple):
++        _fail('Future/same-version replacement is not an upgrade; rollback must be an older installed release','upgrade_unsupported')
++    matches = []
++    for item in request.get('conversions', []):
++        registry._keys(item, 'before after direction entries', 'release conversion')
++        if item == dict(before=before, after=after, direction=direction, entries='preserve'):
++            matches.append(item)
++    if len(matches) != 1:
++        _fail('Future/unknown release or no exact supported conversion', 'upgrade_unsupported')
++    return matches[0]
++
++
++def _raw_meta(raw, mode=0o600):
++    return {'kind':'file', 'sha256':legacy.digest(raw), 'mode':mode}
++
++
++def _source(request, runtime):
++    target = request.get('rollback_target')
++    if target is None:
++        return install._source(request)
++    if request.get('direction') != 'rollback': _fail('Inventory targets are only for explicit rollback')
++    registry._keys(target, 'version tree_sha256', 'rollback target')
++    if not isinstance(target['version'], str) or not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', target['version']):
++        _fail('Invalid rollback version')
++    registry._digest(target['tree_sha256'])
++    slot=versions.root(runtime)/target['version']/target['tree_sha256']
++    versions._chain(slot,runtime.home)
++    release=migrate._json(slot/'release.json')
++    item={'slot':str(slot),'release':release,'marker_hex':legacy.encoded({
++        'product_id':PRODUCT,'source':release['source'],'files':release['files']}).hex()}
++    versions.verify(runtime,item)
++    if release['versions']['product_code_version']!=target['version'] or release['source']['tree_sha256']!=target['tree_sha256']:
++        _fail('Rollback inventory identity mismatch')
++    source=dict(release['source'],root=str(slot/'code'),version=target['version'],
++        files={f['path']:f['sha256'] for f in release['files']})
++    for f in release['files']:
++        if f['path'].endswith('.py'):ast.parse((slot/'code'/f['path']).read_bytes(),filename=f['path'],feature_version=(3,9))
++    return source,release['files']
++
++
++def _plan(request, *, allow_marker=False):
++    if sys.platform != 'darwin': _fail('Only macOS is supported', 'platform_unsupported')
++    runtime = install._runtime(request)
++    if os.path.lexists(marker(runtime)) and not allow_marker:
++        _fail('Unfinished machine upgrade requires explicit recovery', 'recovery_required')
++    for opdir in sorted(runtime.home.glob('.agents-group-install-*')):
++        if opdir.is_symlink() or not opdir.is_dir(): _fail('Unsafe existing operation')
++        saved=migrate._json(opdir/'journal.json')
++        if saved.get('product_id')!=PRODUCT or saved.get('status') not in ('committed','rolled_back'):
++            _fail('Pending operation requires explicit recovery','recovery_required')
++    source, files = _source(request, runtime)
++    if Path(source['root']).is_relative_to(runtime.code) or Path(source['root']).is_relative_to(runtime.root):
++        _fail('Source overlaps managed runtime')
++    target = versions.descriptor(runtime, source, files)
++    allowed = paths.allowed_user_paths(request['platform_config'], None, home=str(runtime.home))
++    op = migrate._op(request.get('operation_id') or datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex)
++    bootstrap = runtime.home/('.agents-group-install-'+op)
++    direction = request.get('direction', 'upgrade')
++    if direction not in ('upgrade','rollback'): _fail('Unknown direction')
++    current = read_snapshot(runtime.registry)
++    migration_plan = None; old_inventory = None; old_product = None; noop = False
++    if current.kind == 'absent':
++        if direction != 'upgrade': _fail('Cannot roll back an uninstalled machine')
++        legacy_sources = request.get('legacy_registries', [])
++        if not legacy_sources: _fail('No product ledger; use explicit first installation')
++        product = _product(source, op)
++        migration_plan = migrate.plan_migration(runtime, legacy_sources,
++            source_commits=request.get('legacy_source_commits', {}), product=product,
++            allowed_user_paths=allowed, evidence_files=request.get('evidence_files', []), operation_id=op+'-migration')
++        if install._node(runtime.code)['kind'] != 'absent': _fail('Unexplained code with legacy ledger')
++        data = copy.deepcopy(migration_plan['after_registry'])
++        conversion = {'source_version':'m2-schema1', 'entries':'preserve'}
++    else:
++        data = registry.require_installed(registry.load_registry(runtime.registry, allowed_user_paths=allowed))
++        install._code_matches(runtime, data['product'])
++        old_product = copy.deepcopy(data['product'])
++        meta = migrate._json(runtime.code/'.agm-code-manifest.json')
++        old_source = dict(old_product['source'], version=old_product['product_code_version'])
++        old_inventory = versions.descriptor(runtime, old_source, meta['files'])
++        noop = old_inventory == target
++        if direction == 'rollback' and noop: _fail('Already at requested rollback version')
++        if direction == 'rollback' and not versions.installed_before(runtime, target):
++            _fail('Rollback target has no verified successful installation receipt')
++        conversion = None if noop else _conversion(request, data, target, direction)
++        # Current templates must remain compatible. This release supports code-only
++        # conversions, not silently changing native discovery or user entry policy.
++        old_files = {x['path']:x['sha256'] for x in meta['files']}
++        for name in ('scripts/agents.json','scripts/agm_core/user_entries.py'):
++            if old_files.get(name) != source['files'].get(name):
++                _fail('Conversion has no handler for changed entry contract')
++        if not noop: data['product'] = _product(source, op, old_product)
++    if not noop and os.path.lexists(bootstrap): _fail('Operation exists; use recovery')
++    facts = _entry_facts(data)
++    outputs = []
++    old_files = {} if old_inventory is None else {x['path']:x for x in old_inventory['release']['files']}
++    new_files = {x['path']:x for x in files}
++    for rel in sorted(set(old_files)|set(new_files)|{'.agm-code-manifest.json'}):
++        path = runtime.code/rel; before = install._node(path)
++        if rel == '.agm-code-manifest.json':
++            after = _raw_meta(bytes.fromhex(target['marker_hex']))
++        elif rel in new_files: after = {'kind':'file','sha256':new_files[rel]['sha256'],'mode':new_files[rel]['mode']}
++        else: after = {'kind':'absent'}
++        outputs.append({'path':str(path), 'before':before, 'after':after})
++    after_raw = current.data if noop else legacy.encoded(data) if migration_plan else registry.serialize_registry(data, allowed_user_paths=allowed)
++    archive = runtime.backups/('upgrade-'+op)
++    dirs = {str(runtime.backups)}
++    for output in outputs:
++        p = Path(output['path']).parent
++        while p != runtime.home:
++            dirs.add(str(p)); p = p.parent
++    for path in (runtime.home/'.agents-group-install.lock', runtime.lock, runtime.transaction_lock):
++        if os.path.lexists(path): _fail('Existing writer lock', 'lock_conflict')
++    # A still-regular legacy ledger cannot coexist with V; tombstones stay intact.
++    if current.kind != 'absent':
++        for path in request.get('legacy_registries', []):
++            if install._node(path)['kind'] != 'directory' or str(Path(path).resolve()) not in (data.get('migration') or {}).get('tombstones',{}):
++                _fail('Dual/unexplained legacy ledger')
++    target_dirs={str(runtime.code)}
++    for item in files:
++        parent=(runtime.code/item['path']).parent
++        while parent!=runtime.code.parent:
++            target_dirs.add(str(parent));parent=parent.parent
++    obsolete=sorted((d for d in dirs if Path(d).is_relative_to(runtime.code) and d not in target_dirs),
++                    key=lambda p:(len(Path(p).parts),p),reverse=True)
++    plan = {'schema_version':1, 'command':'upgrade-machine', 'operation_id':op,
++        'direction':direction, 'channel':'upgrade', 'layout':runtime.describe(), 'source':source,'source_files':files,
++        'tools':[{'path':p.name,'sha256':legacy.digest(p.read_bytes()),'mode':0o600} for p in sorted(Path(__file__).parent.glob('*.py'))],
++        'before_registry':install._node(runtime.registry), 'before_registry_hex':(current.data or b'').hex(),
++        'before_product':old_product, 'after_registry_hex':after_raw.hex(), 'final_registry_sha256':legacy.digest(after_raw),
++        'before_inventory':old_inventory, 'target_inventory':target, 'conversion':conversion, 'migration_plan':migration_plan,
++        'outputs':outputs, 'obsolete_directories':obsolete, 'directories':sorted(dirs,key=lambda p:(len(Path(p).parts),p)),
++        'bootstrap':str(bootstrap), 'journal':str(bootstrap/'journal.json'), 'archive':str(archive), 'launcher_hex':LAUNCHER.hex(),
++        'metadata_scopes':[str(bootstrap),str(archive),str(versions.root(runtime))],
++        'allowed_user_paths':allowed, 'entry_facts':facts, 'noop':noop, 'changes':[]}
++    if not noop:
++        plan['changes'] = ([dict(x,operation='remove' if x['after']['kind']=='absent' else 'create' if x['before']['kind']=='absent' else 'update')
++                            for x in outputs if x['before']!=x['after']]
++             + [{'path':p,'operation':'remove_owned_empty_code_directory'} for p in obsolete]
++             + [{'path':target['slot'],'operation':'register_persistent_version'},
++                {'path':str(runtime.registry),'operation':'commit_registry_last'},
++                {'path':str(marker(runtime)),'operation':'upgrade_guard'},
++                {'path':str(archive),'operation':'before_archive'},
++                {'path':str(bootstrap),'operation':'fixed_toolkit_and_journal'}]
++             + (migration_plan or {}).get('changes',[]))
++    return _seal(plan)
++
++
++def plan_upgrade(request):
++    """Pure planning. Exact release inputs and all writes appear in the approval."""
++    return _plan(request)
++
++
++def _validate(plan):
++    registry._keys(plan, PLAN_KEYS, 'upgrade plan')
++    body = dict(plan); digest = body.pop('plan_sha256')
++    if legacy.digest(legacy.encoded(body)) != digest or plan['command'] != 'upgrade-machine' or plan['schema_version'] != 1:
++        _fail('Invalid upgrade plan')
++    runtime = RuntimeLayout(Path(plan['layout']['root']).parent); runtime.validate_paths()
++    install._real_chain(runtime.code, runtime.home)
++    op = migrate._op(plan['operation_id']); bootstrap = runtime.home/('.agents-group-install-'+op)
++    if (plan['layout']!=runtime.describe() or plan['bootstrap']!=str(bootstrap)
++            or plan['journal']!=str(bootstrap/'journal.json') or plan['archive']!=str(runtime.backups/('upgrade-'+op))):
++        _fail('Upgrade path scope mismatch')
++    if plan['metadata_scopes'] != [str(bootstrap),plan['archive'],str(versions.root(runtime))]:
++        _fail('Upgrade metadata scope mismatch')
++    if plan['direction'] not in ('upgrade','rollback') or type(plan['noop']) is not bool: _fail('Invalid upgrade type')
++    if plan['launcher_hex']!=LAUNCHER.hex():_fail('Recovery launcher drift')
++    versions.validate(runtime,plan['target_inventory'])
++    if plan['before_inventory'] is not None: versions.validate(runtime,plan['before_inventory'])
++    if legacy.digest(bytes.fromhex(plan['after_registry_hex'])) != plan['final_registry_sha256']:
++        _fail('After registry digest mismatch')
++    if plan['before_registry']['kind']=='file' and legacy.digest(bytes.fromhex(plan['before_registry_hex'])) != plan['before_registry']['sha256']:
++        _fail('Before registry digest mismatch')
++    expected_files={x['path'] for x in plan['source_files']} | {'.agm-code-manifest.json'}
++    if plan['before_inventory']: expected_files |= {x['path'] for x in plan['before_inventory']['release']['files']}
++    if {str(Path(x['path']).relative_to(runtime.code)) for x in plan['outputs']}!=expected_files:
++        _fail('Output scope mismatch')
++    for item in plan['outputs']:
++        registry._keys(item,'path before after','upgrade output')
++        p=Path(item['path']); install._real_chain(p.parent,runtime.home)
++        if not p.is_relative_to(runtime.code) or '..' in p.parts: _fail('Output escapes code')
++    for directory in plan['obsolete_directories']:
++        p=Path(directory)
++        if p==runtime.code or not p.is_relative_to(runtime.code) or directory not in plan['directories']:
++            _fail('Obsolete directory escapes code ownership')
++    for directory in plan['directories']:
++        p=Path(directory)
++        if not (p.is_relative_to(runtime.code) or p in (runtime.code.parent,runtime.code.parent.parent,runtime.root,runtime.var,runtime.backups)):
++            _fail('Unapproved code parent directory')
++        install._real_chain(p,runtime.home)
++    for item in plan['tools']:
++        registry._keys(item,'path sha256 mode','upgrade tool')
++        if Path(item['path']).name!=item['path'] or not item['path'].endswith('.py'): _fail('Tool escapes toolkit')
++        registry._digest(item['sha256'])
++    if plan['migration_plan']:
++        migrate._validate_plan(plan['migration_plan'])
++        if plan['after_registry_hex'] != legacy.encoded(plan['migration_plan']['after_registry']).hex():
++            _fail('Migration target mismatch')
++    return runtime
++
++
++def _save(journal):
++    migrate._put(Path(journal['plan']['journal']),legacy.encoded(journal),0o600)
++
++
++def _intent(journal,kind,path,hook):
++    journal['intent']={'kind':kind,'path':str(path)}; _save(journal)
++    if hook: hook('intent:'+kind,Path(path))
++
++
++def _mkdir(journal,path,hook):
++    install._mkdir(journal,path,hook)
++
++
++def _phase(journal,name,when,hook):
++    journal['phase']=name; _save(journal)
++    if hook: hook(when+'_phase:'+name,Path(journal['plan']['bootstrap']))
++
++
++def _node_snapshot(meta, data=None):
++    if meta['kind']=='absent': return Snapshot('absent')
++    if meta['kind']=='file': return Snapshot('file',data,meta['mode'])
++    _fail('Unsupported upgrade node')
++
++
++def _backup_path(plan,item):
++    runtime=_validate(plan)
++    return Path(plan['archive'])/'code-before'/Path(item['path']).relative_to(runtime.code)
++
++
++def _put_bound(journal,path,raw,mode,hook,kind):
++    path=Path(path);_mkdir(journal,path.parent,hook)
++    snap=read_snapshot(path)
++    if snap.kind=='file' and snap.data==raw and snap.mode==mode:return
++    if snap.kind!='absent':_fail('Archive/staging drift: '+str(path))
++    _intent(journal,kind,path,hook)
++    _apply(path,Snapshot('file',raw,mode),expected=Snapshot('absent'))
++    if read_snapshot(path)!=Snapshot('file',raw,mode):_fail('Archive readback mismatch')
++
++
++def _entry_unchanged(plan):
++    if any(install._node(path)!=before for path,before in plan['entry_facts'].items()):
++        _fail('Machine entry drift since preview', 'source_drift')
++
++
++def _guard(journal,hook):
++    runtime=_validate(journal['plan']);path=marker(runtime)
++    raw=legacy.encoded({'product_id':PRODUCT,'operation_id':journal['operation_id'],
++        'plan_sha256':journal['plan']['plan_sha256'],'journal':journal['plan']['journal']})
++    _put_bound(journal,path,raw,0o600,hook,'upgrade_marker')
++
++
++def _prepare(journal,hook):
++    plan=journal['plan'];runtime=_validate(plan)
++    _phase(journal,'prepare','before',hook)
++    install._toolkit(journal,hook)
++    _put_bound(journal,Path(plan['bootstrap'])/'recover.py',bytes.fromhex(plan['launcher_hex']),0o600,hook,'recovery_launcher')
++    # Freeze full code payload before the first active file replacement.
++    for item in plan['source_files']:
++        source=Path(plan['source']['root'])/item['path']
++        staged=Path(plan['bootstrap'])/'code-source'/item['path']
++        if staged.exists():
++            if install._node(staged)!= {'kind':'file','sha256':item['sha256'],'mode':0o600}:
++                _fail('Staged target drift')
++            continue
++        raw=source.read_bytes()
++        if legacy.digest(raw)!=item['sha256']:_fail('Source drift during staging')
++        if item['path'].endswith('.py'):ast.parse(raw,filename=item['path'],feature_version=(3,9))
++        _put_bound(journal,staged,raw,0o600,hook,'stage_code')
++    _phase(journal,'prepare','after',hook)
++    _phase(journal,'archive','before',hook)
++    for item in plan['outputs']:
++        if item['before']['kind']!='file':continue
++        dest=_backup_path(plan,item)
++        if dest.exists():
++            if install._node(dest)!=dict(item['before'],mode=0o400):_fail('Before code archive drift')
++            continue
++        if install._node(item['path'])!=item['before']:_fail('Before code unavailable')
++        _put_bound(journal,dest,Path(item['path']).read_bytes(),0o400,hook,'code_before')
++    _put_bound(journal,Path(plan['archive'])/'registry-before.json',bytes.fromhex(plan['before_registry_hex']),0o400,hook,'registry_before')
++    if plan['before_inventory']:
++        versions.ensure(runtime,plan['before_inventory'],Path(plan['archive'])/'code-before',plan['operation_id'],
++            mkdir=lambda p:_mkdir(journal,p,hook),intent=lambda k,p:_intent(journal,k,p,hook),hook=hook)
++    _phase(journal,'archive','after',hook)
++    _phase(journal,'inventory','before',hook)
++    versions.ensure(runtime,plan['target_inventory'],Path(plan['bootstrap'])/'code-source',plan['operation_id'],
++        mkdir=lambda p:_mkdir(journal,p,hook),intent=lambda k,p:_intent(journal,k,p,hook),hook=hook)
++    _guard(journal,hook)
++    _phase(journal,'inventory','after',hook)
++
++
++def _target_bytes(plan,item):
++    runtime=_validate(plan)
++    rel=str(Path(item['path']).relative_to(runtime.code))
++    raw=(Path(plan['target_inventory']['slot'])/'code'/rel).read_bytes()
++    if legacy.digest(raw)!=item['after']['sha256']:_fail('Target payload drift')
++    return raw
++
++
++def _write_code(journal,hook):
++    plan=journal['plan'];runtime=_validate(plan)
++    _phase(journal,'code','before',hook)
++    versions.verify(runtime,plan['target_inventory'])
++    # Install the dependency-free gate before other executable code can mix.
++    ordered=sorted(plan['outputs'],key=lambda x:(0 if Path(x['path']).relative_to(runtime.code).as_posix()=='scripts/agm_core/layout.py' else 1,x['path']))
++    for item in ordered:
++        path=Path(item['path']);current=install._node(path)
++        if current==item['after']:continue
++        if current!=item['before']:_fail('Third-state code: '+str(path))
++        before=read_snapshot(path)
++        _mkdir(journal,path.parent,hook)
++        raw=_target_bytes(plan,item) if item['after']['kind']=='file' else None
++        _intent(journal,'code_replace',path,hook)
++        if hook:hook('before_code_replace',path)
++        _apply(path,_node_snapshot(item['after'],raw),expected=before)
++        if hook:hook('after_code_replace',path)
++        if install._node(path)!=item['after']:_fail('Code readback drift')
++    for directory in plan['obsolete_directories']:
++        p=Path(directory)
++        if not p.exists():continue
++        _intent(journal,'obsolete_directory',p,hook)
++        if hook:hook('before_directory_remove',p)
++        if p.is_symlink() or not p.is_dir():_fail('Obsolete code parent type drift')
++        p.rmdir();migrate._sync_directory(p.parent)
++        if hook:hook('after_directory_remove',p)
++    _phase(journal,'code','after',hook)
++    _phase(journal,'verify','before',hook)
++    _verify_outputs(plan)
++    _phase(journal,'verify','after',hook)
++
++
++def _verify_before(plan, *, required):
++    for item in plan['outputs']:
++        if item['before']['kind']!='file':continue
++        meta=install._node(_backup_path(plan,item))
++        if required or meta['kind']!='absent':
++            if meta!=dict(item['before'],mode=0o400):_fail('Before code archive missing/corrupt')
++    path=Path(plan['archive'])/'registry-before.json'
++    if required or path.exists():
++        if read_snapshot(path)!=Snapshot('file',bytes.fromhex(plan['before_registry_hex']),0o400):_fail('Before registry archive missing/corrupt')
++
++
++def _verify_outputs(plan):
++    runtime=_validate(plan)
++    _verify_before(plan,required=True)
++    _tools_verify({'plan':plan},required=True)
++    if any(install._node(x['path'])!=x['after'] for x in plan['outputs']):_fail('Mixed/incomplete code outputs')
++    after=json.loads(bytes.fromhex(plan['after_registry_hex']))
++    install._code_matches(runtime,after['product']);_entry_unchanged(plan)
++    versions.verify(runtime,plan['target_inventory'])
++
++
++def _tools_verify(journal, *, required):
++    launcher=Path(journal['plan']['bootstrap'])/'recover.py'
++    if required or launcher.exists():
++        if read_snapshot(launcher)!=Snapshot('file',bytes.fromhex(journal['plan']['launcher_hex']),0o600):_fail('Recovery launcher changed')
++    for item in journal['plan']['tools']:
++        p=Path(journal['plan']['bootstrap'])/'tools/agm_core'/item['path'];meta=install._node(p)
++        if meta['kind']=='absent' and not required:continue
++        if meta!={'kind':'file','sha256':item['sha256'],'mode':0o600}:_fail('Fixed recovery toolkit missing/changed')
++
++
++def _finalize(journal,hook):
++    plan=journal['plan'];runtime=_validate(plan)
++    _verify_outputs(plan)
++    if install._node(runtime.registry).get('sha256')!=plan['final_registry_sha256']:_fail('Final V changed')
++    for phase,item,hash_value in [('after',plan['target_inventory'],plan['final_registry_sha256']),
++                                ('before',plan['before_inventory'],plan['before_registry'].get('sha256'))]:
++        if item:
++            versions.activate(runtime,item,plan['operation_id'],plan['journal'],hash_value,
++                mkdir=lambda p:_mkdir(journal,p,hook),intent=lambda k,p:_intent(journal,k,p,hook),phase=phase)
++    path=marker(runtime)
++    if os.path.lexists(path):
++        expected=read_snapshot(path)
++        _guard(journal,hook)
++        _intent(journal,'remove_upgrade_marker',path,hook)
++        _apply(path,Snapshot('absent'),expected=expected)
++    journal['status']='committed';_save(journal)
++    if hook:hook('after_phase:commit',runtime.registry)
++    return {'status':'completed','operation_id':plan['operation_id'],'journal':plan['journal'],
++            'version':plan['source']['version'],'direction':plan['direction']}
++
++
++def _finish(journal,hook):
++    plan=journal['plan'];runtime=_validate(plan)
++    v=install._node(runtime.registry)
++    if v.get('sha256')==plan['final_registry_sha256']:
++        result=_finalize(journal,hook);result['finalized_only']=True;return result
++    _prepare(journal,hook);_write_code(journal,hook)
++    _phase(journal,'commit','before',hook)
++    raw=bytes.fromhex(plan['after_registry_hex'])
++    _intent(journal,'registry_commit',runtime.registry,hook)
++    if hook:hook('before_registry_commit',runtime.registry)
++    _verify_outputs(plan)
++    _apply(runtime.registry,Snapshot('file',raw,0o600),expected=_node_snapshot(plan['before_registry'],bytes.fromhex(plan['before_registry_hex'])))
++    if hook:hook('after_registry_commit',runtime.registry)
++    if read_snapshot(runtime.registry).data!=raw:_fail('V readback mismatch')
++    return _finalize(journal,hook)
++
++
++def _journal(plan,approval):
++    return {'schema_version':1,'product_id':PRODUCT,'operation_id':plan['operation_id'],
++        'plan':plan,'approval':approval,'status':'prepared','intent':None,'created_directories':[],
++        'final_registry_sha256':plan['final_registry_sha256'],'phase':None}
++
++
++def _lock_paths(runtime,plan):
++    old=sorted((plan.get('migration_plan') or {}).get('source_commits',{}))
++    if not old:
++        after=json.loads(bytes.fromhex(plan['after_registry_hex']))
++        old=sorted((after.get('migration') or {}).get('tombstones',{}))
++    return [runtime.home/'.agents-group-install.lock']+[Path(p).parent/'.agm.lock' for p in old]+[runtime.lock,runtime.transaction_lock]
++
++
++def _open_locks(stack,runtime,plan):
++    for path in _lock_paths(runtime,plan):stack.enter_context(migrate._lock(path,plan))
++
++
++def execute_upgrade(plan,approval=None,*,request=None,hook=None):
++    runtime=_validate(plan)
++    if plan['noop']:
++        # No journal, locks, version backfill, entries or timestamps on this path.
++        _check_same(plan,runtime)
++        return {'status':'completed','noop':True,'changes':[],'version':plan['source']['version']}
++    migrate._approval(plan,approval)
++    req=dict(request or {},home=str(runtime.home),operation_id=plan['operation_id'],direction=plan['direction'])
++    if plan_upgrade(req)!=plan:_fail('Scene/source/plan drift before writes','source_drift')
++    journal=_journal(plan,approval)
++    if plan['migration_plan']:
++        return _execute_legacy(journal,hook)
++    with ExitStack() as stack:
++        _open_locks(stack,runtime,plan)
++        if install._node(runtime.registry)!=plan['before_registry']:_fail('V drift under locks')
++        install._code_matches(runtime,plan['before_product']);_entry_unchanged(plan)
++        Path(plan['bootstrap']).mkdir(mode=0o700);_save(journal)
++        try:return _finish(journal,hook)
++        except BaseException:
++            journal['status']='recovery_required';_save(journal);raise
++
++
++def _check_same(plan,runtime):
++    if os.path.lexists(marker(runtime)) or any(os.path.lexists(p) for p in _lock_paths(runtime,plan)):
++        _fail('Machine operation is active','recovery_required')
++    if install._node(runtime.registry)!=plan['before_registry']:_fail('Same-version ledger changed')
++    data=registry.require_installed(registry.load_registry(runtime.registry,allowed_user_paths=plan['allowed_user_paths']))
++    install._code_matches(runtime,data['product']);_entry_unchanged(plan)
++    install._source_unchanged(plan)
++
++
++def run_same_version_entries(request):
++    plan=plan_upgrade(request)
++    if not plan['noop']:_fail('Separate entry assembly requires an identical installed release')
++    return user_entries.run_user_entries(request)
++
++
++def _legacy_hook(journal,hook):
++    initialized=[Path(journal['plan']['journal']).exists()]
++    def observer(event,path):
++        if not initialized[0]:
++            Path(journal['plan']['bootstrap']).mkdir(mode=0o700);_save(journal);initialized[0]=True
++        if event=='before_commit':
++            _prepare(journal,hook);_write_code(journal,hook)
++            _phase(journal,'commit','before',hook)
++            if hook:hook('before_registry_commit',path)
++            _verify_outputs(journal['plan'])
++        elif event=='after_commit':
++            if hook:hook('after_registry_commit',path)
++        elif event=='after_finish':
++            _finalize(journal,hook)
++        if hook:hook('migration:'+event,path)
++    return observer
++
++
++def _execute_legacy(journal,hook):
++    plan=journal['plan'];child=plan['migration_plan']
++    approval=dict(child,confirmed_at=journal['approval']['confirmed_at'],reference=journal['approval']['reference'])
++    try:
++        migrate.execute_migration(child,approval,hook=_legacy_hook(journal,hook))
++        if journal['status']!='committed':return _finalize(journal,hook)
++        return {'status':'completed','journal':plan['journal'],'operation_id':plan['operation_id'],'source_version':'m2-schema1'}
++    except BaseException:
++        if Path(plan['journal']).exists():journal['status']='recovery_required';_save(journal)
++        raise
++
++
++def _load_journal(path):
++    path=Path(path);install._real_chain(path,path.parent.parent)
++    journal=migrate._json(path);registry._keys(journal,JOURNAL_KEYS,'upgrade journal')
++    runtime=_validate(journal['plan']);migrate._approval(journal['plan'],journal['approval'])
++    if (str(path)!=journal['plan']['journal'] or journal['schema_version']!=1 or journal['product_id']!=PRODUCT
++            or journal['operation_id']!=journal['plan']['operation_id'] or journal['final_registry_sha256']!=journal['plan']['final_registry_sha256']
++            or journal['status'] not in ('prepared','recovery_required','committed','rolled_back')):
++        _fail('Invalid upgrade journal identity/status')
++    for raw in journal['created_directories']:
++        p=Path(raw)
++        if not any(p.is_relative_to(Path(scope)) for scope in journal['plan']['metadata_scopes']+journal['plan']['directories']):
++            _fail('Created directory escapes operation')
++    return journal,runtime
++
++
++def _scene(journal):
++    plan=journal['plan'];runtime=_validate(plan)
++    observed=[];changed=False
++    for item in plan['outputs']:
++        current=install._node(item['path'])
++        if current not in (item['before'],item['after']):_fail('Third-state output; manual recovery required')
++        state='after' if current==item['after'] else 'before';observed.append(state)
++        changed |= current!=item['before']
++        if item['before']['kind']=='file':
++            backup=install._node(_backup_path(plan,item))
++            if backup['kind']!='absent' or current!=item['before']:
++                if backup!=dict(item['before'],mode=0o400):_fail('Missing/corrupt code-before')
++    v=install._node(runtime.registry)
++    if v.get('sha256')==plan['final_registry_sha256']:target='after'
++    elif v==plan['before_registry']:target='before'
++    else:_fail('V third state; do not overwrite external changes')
++    if target=='after' and 'before' in observed:_fail('V after with mixed code; manual recovery required')
++    _entry_unchanged(plan);_tools_verify(journal,required=changed)
++    _verify_before(plan,required=changed)
++    expected_files={x['path'] for x in plan['outputs']}
++    for path in list(expected_files):
++        parent=Path(path).parent
++        while parent!=runtime.code.parent:expected_files.add(str(parent));parent=parent.parent
++    if runtime.code.exists() and set(install._walk(runtime.code))-expected_files:_fail('Foreign code in partial upgrade')
++    if changed:
++        versions.verify(runtime,plan['target_inventory'])
++        if plan['before_inventory']:versions.verify(runtime,plan['before_inventory'])
++    archived=Path(plan['archive'])/'registry-before.json'
++    if archived.exists() or changed:
++        if read_snapshot(archived)!=Snapshot('file',bytes.fromhex(plan['before_registry_hex']),0o400):_fail('Registry-before archive corrupt')
++    guard=marker(runtime)
++    if os.path.lexists(guard):
++        expected={'product_id':PRODUCT,'operation_id':plan['operation_id'],'plan_sha256':plan['plan_sha256'],'journal':plan['journal']}
++        if migrate._json(guard)!=expected:_fail('Upgrade guard identity drift')
++    return {'target':target,'outputs':observed}
++
++
++def plan_recovery(journal_path,*,action):
++    if action not in ('continue','rollback'):_fail('Unknown recovery action')
++    journal,runtime=_load_journal(journal_path);plan=journal['plan'];scene=_scene(journal)
++    if action=='rollback' and scene['target']=='after':
++        _fail('Committed V is authoritative; finish only, then request a separately approved release rollback')
++    if journal['status']=='rolled_back':_fail('Operation already rolled back')
++    child=None
++    if plan['migration_plan']:
++        inner=Path(plan['migration_plan']['journal'])
++        state=migrate._json(inner)
++        if state['status'] not in ('committed','rolled_back'):
++            child=migrate.plan_recovery(inner,action=action)
++        locks=[]
++    else:locks=[x for x in (migrate._stale_observation(p,plan) for p in _lock_paths(runtime,plan)) if x]
++    result={'schema_version':1,'command':'recover-machine-upgrade','operation_id':plan['operation_id'],
++        'journal':str(journal_path),'journal_sha256':install._node(journal_path)['sha256'],
++        'installation_plan_sha256':plan['plan_sha256'],'action':action,'scene':scene,'stale_locks':locks,'migration_recovery':child}
++    return _seal(result)
++
++
++def _rollback(journal,hook):
++    plan=journal['plan'];runtime=_validate(plan)
++    if install._node(runtime.registry)!=plan['before_registry']:_fail('Rollback requires original V')
++    for item in reversed(plan['outputs']):
++        path=Path(item['path']);current=install._node(path)
++        if current==item['before']:continue
++        if current!=item['after']:_fail('Rollback would overwrite third-state bytes')
++        raw=_backup_path(plan,item).read_bytes() if item['before']['kind']=='file' else None
++        if raw is not None and legacy.digest(raw)!=item['before']['sha256']:_fail('Before archive corrupt')
++        _mkdir(journal,path.parent,hook)
++        _intent(journal,'rollback_code',path,hook)
++        _apply(path,_node_snapshot(item['before'],raw),expected=_node_snapshot(item['after'],_target_bytes(plan,item) if item['after']['kind']=='file' else None))
++    guard=marker(runtime)
++    if os.path.lexists(guard):
++        snap=read_snapshot(guard);_guard(journal,hook);_intent(journal,'rollback_guard',guard,hook)
++        _apply(guard,Snapshot('absent'),expected=snap)
++    journal['status']='rolled_back';_save(journal)
++    # Only newly created, still empty code directories; never inventory/backups.
++    for directory in reversed(journal['created_directories']):
++        p=Path(directory)
++        if p.is_relative_to(runtime.code) and p.is_dir():
++            try:p.rmdir()
++            except OSError:pass
++    return {'status':'rolled_back','journal':plan['journal'],'operation_id':plan['operation_id']}
++
++
++def recover_upgrade(recovery_plan,approval,*,request=None,hook=None):
++    migrate._approval(recovery_plan,approval)
++    fresh=plan_recovery(recovery_plan['journal'],action=recovery_plan['action'])
++    if fresh!=recovery_plan:_fail('Recovery scene changed since approval','source_drift')
++    journal,runtime=_load_journal(recovery_plan['journal']);plan=journal['plan']
++    if plan['migration_plan']:
++        child=recovery_plan['migration_recovery']
++        if child:
++            migrate.recover_migration(child,dict(child,confirmed_at=approval['confirmed_at'],reference=approval['reference']),
++                hook=_legacy_hook(journal,hook) if recovery_plan['action']=='continue' else None)
++        if recovery_plan['action']=='rollback':return _rollback(journal,hook)
++        return _finalize(journal,hook)
++    for lock in reversed(recovery_plan['stale_locks']):
++        p=Path(lock['path'])
++        _intent(journal,'remove_stale_lock',p,hook)
++        if migrate._stale_observation(p,plan)!=lock:_fail('Stale lock changed')
++        (p/'migration-owner.json').unlink();p.rmdir()
++    with ExitStack() as stack:
++        _open_locks(stack,runtime,plan);_scene(journal)
++        try:
++            if recovery_plan['action']=='rollback':return _rollback(journal,hook)
++            return _finish(journal,hook)
++        except BaseException:
++            journal['status']='recovery_required';_save(journal);raise
+--- /dev/null
++++ b/scripts/agm_core/versions.py
+@@ -0,0 +1,227 @@
++"""Persistent, verified release inventory. Never the active-version authority.
++
++Slots are complete releases, independent of operation backups. Creating a slot
++never authorizes activation; V is committed separately and last by the caller.
++"""
++import json
++import os
++from pathlib import Path
++
++from . import legacy_import as legacy, migrate, registry
++from .transaction import read_snapshot
++
++PRODUCT = 'agent-group-memory'
++
++
++def root(runtime):
++    return runtime.code.parent / (PRODUCT + '-versions')
++
++
++def _chain(path, home):
++    path = Path(path)
++    if not path.is_relative_to(home):
++        raise ValueError('Version path outside HOME')
++    current = Path(home)
++    for part in path.relative_to(home).parts:
++        current /= part
++        if current.is_symlink():
++            raise ValueError('Version path symlink: ' + str(current))
++        if current.exists() and current != path and not current.is_dir():
++            raise ValueError('Version parent is not a directory')
++
++
++def descriptor(runtime, source, files):
++    identity = {k: source[k] for k in ('url', 'commit', 'tree_sha256')}
++    release = {'schema_version': 1, 'product_id': PRODUCT,
++               'versions': {'schema_version': 2, 'product_structure_version': 1,
++                            'product_code_version': source['version']},
++               'source': identity, 'files': files}
++    marker = legacy.encoded({'product_id': PRODUCT, 'source': identity, 'files': files})
++    slot = root(runtime) / source['version'] / source['tree_sha256']
++    _chain(slot, runtime.home)
++    result = {'slot': str(slot), 'release': release, 'marker_hex': marker.hex()}
++    if slot.exists():
++        verify(runtime, result)
++    return result
++
++
++def validate(runtime, item):
++    registry._keys(item, 'slot release marker_hex', 'version slot')
++    release = item['release']
++    registry._keys(release, 'schema_version product_id versions source files', 'release')
++    versions = release['versions']
++    product = {'product_id': PRODUCT, 'installation_id': 'inventory-validation',
++               'product_structure_version': versions['product_structure_version'],
++               'product_code_version': versions['product_code_version'],
++               'source': release['source'], 'installation_status': 'complete', 'last_operation_id': 'inventory-validation'}
++    data = registry.empty_registry(); data['product'] = product
++    registry.validate_registry(data)
++    if release['schema_version'] != 1 or release['product_id'] != PRODUCT or versions != {
++            'schema_version': 2, 'product_structure_version': 1,
++            'product_code_version': product['product_code_version']}:
++        raise ValueError('Unknown release versions')
++    files = release['files']; seen = set()
++    if not isinstance(files, list): raise ValueError('Invalid release files')
++    for file in files:
++        registry._keys(file, 'path sha256 mode', 'release file')
++        rel = file['path']; p = Path(rel)
++        if (not isinstance(rel, str) or str(p) != rel or p.is_absolute() or '..' in p.parts
++                or not p.parts or p.parts[0] == '.git' or rel == '.agm-code-manifest.json' or rel in seen):
++            raise ValueError('Unsafe/duplicate version file')
++        registry._digest(file['sha256'])
++        if type(file['mode']) is not int or file['mode'] < 0 or file['mode'] > 0o777:
++            raise ValueError('Invalid release file mode')
++        seen.add(rel)
++    if not {'SKILL.md', 'scripts/agm.py', 'scripts/agm_core/__init__.py'} <= seen:
++        raise ValueError('Incomplete release')
++    if legacy.digest(legacy.encoded(files)) != release['source']['tree_sha256']:
++        raise ValueError('Release tree mismatch')
++    expected = root(runtime)/product['product_code_version']/release['source']['tree_sha256']
++    if str(expected) != item['slot']: raise ValueError('Version slot scope mismatch')
++    marker = legacy.encoded({'product_id': PRODUCT, 'source': release['source'], 'files': files})
++    if item['marker_hex'] != marker.hex(): raise ValueError('Version marker mismatch')
++    _chain(expected, runtime.home)
++    return expected
++
++
++def _files(item):
++    result = {f['path']: (f['sha256'], f['mode'] & 0o555) for f in item['release']['files']}
++    result['.agm-code-manifest.json'] = (legacy.digest(bytes.fromhex(item['marker_hex'])), 0o400)
++    return result
++
++
++def verify(runtime, item, *, location=None):
++    slot = validate(runtime, item) if location is None else Path(location)
++    _chain(slot, runtime.home)
++    if not slot.is_dir(): raise ValueError('Missing version slot')
++    expected = {'release.json': legacy.encoded(item['release']),
++                'complete.json': legacy.encoded({'schema_version': 1, 'release_sha256': legacy.digest(legacy.encoded(item['release']))})}
++    allowed = {str(slot), str(slot/'code')}
++    for rel, (digest, mode) in _files(item).items():
++        path = slot/'code'/rel; allowed.add(str(path))
++        parent = path.parent
++        while parent != slot:
++            allowed.add(str(parent)); parent = parent.parent
++        snap = read_snapshot(path)
++        if snap.kind != 'file' or snap.fingerprint != digest or snap.mode != mode:
++            raise ValueError('Version bytes/type/mode drift: ' + str(path))
++    for rel, content in expected.items():
++        path = slot/rel; allowed.add(str(path)); snap = read_snapshot(path)
++        if snap.kind != 'file' or snap.data != content or snap.mode != 0o400:
++            raise ValueError('Version receipt drift')
++    for path in [slot, *slot.rglob('*')]:
++        if path.is_symlink() or str(path) not in allowed:
++            raise ValueError('Foreign node in version slot')
++        if str(path) not in {str(slot/'code'/rel) for rel in _files(item)} | {str(slot/k) for k in expected} and not path.is_dir():
++            raise ValueError('Version parent type conflict')
++    return item
++
++
++def ensure(runtime, item, source_root, op, *, mkdir, intent, hook=None):
++    """Idempotent slot registration, before touching active C. Caller owns locks."""
++    slot = validate(runtime, item)
++    if slot.exists(): return verify(runtime, item)
++    stage = slot.parent / ('.' + slot.name + '-' + op + '.tmp')
++    _chain(stage, runtime.home)
++    mkdir(stage/'code')
++    payloads = [(rel, Path(source_root)/rel, digest, mode) for rel,(digest,mode) in _files(item).items()]
++    for rel, source, digest, mode in payloads:
++        content = bytes.fromhex(item['marker_hex']) if rel == '.agm-code-manifest.json' else source.read_bytes()
++        if legacy.digest(content) != digest: raise ValueError('Version source drift: ' + rel)
++        target = stage/'code'/rel; mkdir(target.parent)
++        snap = read_snapshot(target)
++        if snap.kind != 'absent':
++            if snap.kind != 'file' or snap.fingerprint != digest or snap.mode != mode:
++                raise ValueError('Partial inventory drift')
++            continue
++        intent('version_file', target)
++        if read_snapshot(target).kind != 'absent': raise ValueError('Version target appeared')
++        migrate._put(target, content, mode)
++    for name, data in [('release.json', item['release']), ('complete.json', {
++            'schema_version':1, 'release_sha256':legacy.digest(legacy.encoded(item['release']))})]:
++        target = stage/name; content = legacy.encoded(data); snap = read_snapshot(target)
++        if snap.kind != 'absent':
++            if snap.kind != 'file' or snap.data != content or snap.mode != 0o400: raise ValueError('Partial receipt drift')
++            continue
++        intent('version_receipt', target); migrate._put(target, content, 0o400)
++    verify(runtime, item, location=stage)
++    intent('version_rename', slot)
++    if hook: hook('before_version_rename', slot)
++    verify(runtime, item, location=stage)
++    if os.path.lexists(slot): raise ValueError('Version target appeared before rename')
++    os.rename(stage, slot); migrate._sync_directory(slot.parent)
++    if hook: hook('after_version_rename', slot)
++    return verify(runtime, item)
++
++
++def activate(runtime, item, op, journal, registry_sha256, *, mkdir, intent, phase="after"):
++    """Durable history receipt. Called only after active V has been read back."""
++    if phase not in ("before", "after"): raise ValueError("Unknown activation phase")
++    migrate._op(op)
++    verify(runtime, item)
++    path = root(runtime)/'activations'/(op+'-'+phase+'.json'); _chain(path, runtime.home)
++    saved=migrate._json(Path(journal))
++    proof={k:saved[k] for k in ('plan','approval','final_registry_sha256')}
++    if saved.get('product_id')!=PRODUCT or saved.get('operation_id')!=op:
++        raise ValueError('Activation operation mismatch')
++    if read_snapshot(runtime.registry).fingerprint!=proof['final_registry_sha256']:
++        raise ValueError('Activation requires committed V')
++    _proof(runtime,proof,op)
++    body = {'schema_version':1,'operation_id':op,'release':item,'journal':str(journal),
++            'registry_sha256':registry_sha256, 'phase':phase, 'proof':proof}
++    content = legacy.encoded(body); mkdir(path.parent)
++    snap = read_snapshot(path)
++    if snap.kind != 'absent':
++        if snap.kind != 'file' or snap.data != content or snap.mode != 0o400:
++            raise ValueError('Activation receipt changed')
++        return
++    intent('activation_receipt', path)
++    if read_snapshot(path).kind != 'absent': raise ValueError('Activation target appeared')
++    migrate._put(path, content, 0o400)
++
++
++def _proof(runtime, proof, op):
++    """Self-contained installed-history proof, not a dependency on old backups."""
++    registry._keys(proof,'plan approval final_registry_sha256','activation proof')
++    plan=proof['plan'];command=plan.get('command') if isinstance(plan,dict) else None
++    if command=='install-machine':
++        from . import user_install
++        bound=user_install._validate(plan,historical=True)
++    elif command=='upgrade-machine':
++        from . import upgrade
++        bound=upgrade._validate(plan)
++    else:raise ValueError('Unknown activation operation')
++    migrate._approval(plan,proof['approval'])
++    registry._digest(proof['final_registry_sha256'])
++    if bound!=runtime or plan['operation_id']!=op:
++        raise ValueError('Activation proof identity mismatch')
++    if command=='upgrade-machine' and plan['final_registry_sha256']!=proof['final_registry_sha256']:
++        raise ValueError('Activation proof commit mismatch')
++    return plan
++
++
++def installed_before(runtime, item):
++    verify(runtime, item)
++    directory = root(runtime)/'activations'; _chain(directory, runtime.home)
++    if not directory.exists(): return False
++    for path in sorted(directory.iterdir()):
++        snap = read_snapshot(path)
++        if snap.kind != 'file': raise ValueError('Invalid activation receipt type')
++        receipt = migrate._json(path)
++        registry._keys(receipt, 'schema_version operation_id release journal registry_sha256 phase proof', 'activation receipt')
++        if (type(receipt['schema_version']) is not int or receipt['schema_version']!=1
++                or receipt['phase'] not in ('before','after')):raise ValueError('Invalid activation schema/phase')
++        registry._digest(receipt['registry_sha256']);migrate._op(receipt['operation_id'])
++        if path.name!=receipt['operation_id']+'-'+receipt['phase']+'.json':raise ValueError('Activation filename mismatch')
++        if receipt['release'] != item: continue
++        journal = Path(receipt['journal'])
++        if journal != runtime.home/('.agents-group-install-'+receipt['operation_id'])/'journal.json':
++            raise ValueError('Activation journal scope conflict')
++        _chain(journal, runtime.home)
++        planned = _proof(runtime,receipt['proof'],receipt['operation_id'])
++        phase = receipt['phase']
++        digest = receipt['proof']['final_registry_sha256'] if phase == 'after' else planned.get('before_registry', {}).get('sha256')
++        release = planned.get('inventory', planned.get('target_inventory')) if phase == 'after' else planned.get('before_inventory')
++        if digest == receipt['registry_sha256'] and release == item:
++            return True
++    return False
+--- /dev/null
++++ b/tests/unit/test_m407_upgrade.py
+@@ -0,0 +1,312 @@
++"""Upgrade protocol fixtures. Real P/T Git snapshots live in integration tests."""
++import copy
++import json
++import os
++import shutil
++import subprocess
++import sys
++import unittest
++from pathlib import Path
++
++sys.path.insert(0,str(Path(__file__).resolve().parent))
++from test_m404_install import InstallFixture, approved
++from agm_core import upgrade, versions, user_install as install, legacy_import as legacy, registry
++
++
++class UpgradeFixture(InstallFixture):
++    def setUp(self):
++        super().setUp()
++        self.execute()
++        self.p=copy.deepcopy(self.request['source'])
++        self.target=self.area/'target';shutil.copytree(self.source,self.target)
++        (self.target/'scripts/agm_core/revision.py').write_text('def recovery_features():\n    return ("upgrade", "rollback")\n')
++        self.t=dict(self.p,root=str(self.target),version='0.4.1',commit='b'*40,
++            files={str(p.relative_to(self.target)):legacy.digest(p.read_bytes()) for p in self.target.rglob('*') if p.is_file()})
++        self.req=dict(self.request,source=self.t,operation_id='fixture-m407')
++        old=self.product();target,_=install._source(self.req)
++        self.forward={'before':{'schema_version':2,'product_structure_version':1,
++            'product_code_version':old['product_code_version'],'source':old['source']},
++            'after':{'schema_version':2,'product_structure_version':1,'product_code_version':target['version'],
++                     'source':{k:target[k] for k in ('url','commit','tree_sha256')}},'direction':'upgrade','entries':'preserve'}
++        self.req['conversions']=[self.forward]
++
++    def product(self):return json.loads(self.runtime.registry.read_bytes())['product']
++    def plan_upgrade(self):return upgrade.plan_upgrade(self.req)
++    def execute_upgrade(self,plan=None,hook=None):
++        plan=plan or self.plan_upgrade()
++        return upgrade.execute_upgrade(plan,approved(plan),request=self.req,hook=hook)
++    def recover_upgrade(self,path,action):
++        plan=upgrade.plan_recovery(path,action=action)
++        return upgrade.recover_upgrade(plan,approved(plan))
++    def snapshot(self,root=None):
++        root=root or self.home
++        return {str(p.relative_to(root)):(p.lstat().st_mode,p.lstat().st_mtime_ns,p.read_bytes() if p.is_file() else None)
++                for p in [root,*root.rglob('*')] if not p.is_symlink()}
++
++
++class UpgradeTests(UpgradeFixture):
++    def test_preview_and_same_version_are_zero_writes_and_mtimes(self):
++        before=self.snapshot();self.assertEqual(install.inspect_machine(self.req)['scene'],'valid_old')
++        plan=self.plan_upgrade();self.assertEqual(before,self.snapshot())
++        self.assertTrue(plan['changes']);self.assertEqual(plan['channel'],'upgrade')
++        request=dict(self.req,source=self.p)
++        same=upgrade.plan_upgrade(request);self.assertTrue(same['noop'])
++        self.assertEqual(upgrade.execute_upgrade(same)['changes'],[])
++        self.assertEqual(before,self.snapshot())
++
++    def test_first_install_has_durable_inventory_and_activation(self):
++        source,files=install._source(self.request);item=versions.descriptor(self.runtime,source,files)
++        versions.verify(self.runtime,item)
++        self.assertTrue(versions.installed_before(self.runtime,item))
++        self.assertFalse(Path(item['slot']).is_relative_to(self.runtime.backups))
++
++    def test_upgrade_preserves_user_bytes_and_separate_versions(self):
++        for name in ('memories/user.txt','references/ref.txt','skills/other/file','mcp/config'):
++            p=self.runtime.root/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b'user\xff\r\n')
++        content={name:(self.runtime.root/name).read_bytes() for name in ('memories/user.txt','references/ref.txt','skills/other/file','mcp/config')}
++        plan=self.plan_upgrade();installation_id=self.product()['installation_id']
++        self.assertEqual(self.execute_upgrade(plan)['status'],'completed')
++        self.assertEqual(self.product()['product_code_version'],'0.4.1')
++        self.assertEqual(self.product()['installation_id'],installation_id)
++        self.assertEqual(self.product()['product_structure_version'],1)
++        self.assertEqual({name:(self.runtime.root/name).read_bytes() for name in content},content)
++        self.assertTrue(versions.installed_before(self.runtime,plan['before_inventory']))
++        self.assertTrue(versions.installed_before(self.runtime,plan['target_inventory']))
++        self.assertEqual(install.inspect_machine(self.req)['scene'],'same')
++        self.assertFalse(upgrade.marker(self.runtime).exists())
++        for item in plan['outputs']:
++            if item['before']['kind']=='file':self.assertEqual((Path(plan['archive'])/'code-before'/Path(item['path']).relative_to(self.runtime.code)).read_bytes(),(self.source/Path(item['path']).relative_to(self.runtime.code)).read_bytes() if Path(item['path']).name!='.agm-code-manifest.json' else bytes.fromhex(plan['before_inventory']['marker_hex']))
++
++    def test_explicit_rollback_uses_installed_inventory_and_keeps_current_metadata(self):
++        self.execute_upgrade()
++        data=json.loads(self.runtime.registry.read_bytes());data['product']['installation_id']='current-installation'
++        self.runtime.registry.write_bytes(registry.serialize_registry(data))
++        reverse={'before':self.forward['after'],'after':self.forward['before'],'direction':'rollback','entries':'preserve'}
++        old_source,_=install._source({'source':self.p})
++        self.req.update(direction='rollback',operation_id='rollback-m407',conversions=[reverse],
++            rollback_target={'version':'0.4.0','tree_sha256':old_source['tree_sha256']})
++        self.req.pop('source');shutil.rmtree(self.source)
++        # Persistent inventory is sufficient after historical recovery material cleanup.
++        for op in self.home.glob('.agents-group-install-*'):shutil.rmtree(op)
++        shutil.rmtree(self.runtime.backups)
++        plan=self.plan_upgrade();result=self.execute_upgrade(plan)
++        self.assertEqual(result['status'],'completed');self.assertEqual(self.product()['product_code_version'],'0.4.0')
++        self.assertEqual(self.product()['installation_id'],'current-installation')
++        self.assertFalse((self.runtime.code/'scripts/agm_core/revision.py').exists())
++
++    def test_unknown_future_dirty_and_approval_drift_rejected_before_writes(self):
++        before=self.snapshot();bad=dict(self.req,conversions=[])
++        with self.assertRaises(ValueError):upgrade.plan_upgrade(bad)
++        self.assertEqual(before,self.snapshot())
++        (self.runtime.code/'foreign.txt').write_text('foreign')
++        before=self.snapshot()
++        with self.assertRaises(ValueError):self.plan_upgrade()
++        self.assertEqual(before,self.snapshot());(self.runtime.code/'foreign.txt').unlink()
++        plan=self.plan_upgrade();data=json.loads(self.runtime.registry.read_bytes());data['product']['last_operation_id']='changed'
++        self.runtime.registry.write_bytes(registry.serialize_registry(data));before=self.snapshot()
++        with self.assertRaises(ValueError):self.execute_upgrade(plan)
++        self.assertEqual(before,self.snapshot())
++        data['schema_version']=3;self.runtime.registry.write_text(json.dumps(data));before=self.snapshot()
++        with self.assertRaises(ValueError):self.plan_upgrade()
++        self.assertEqual(before,self.snapshot())
++
++    def test_bad_ledger_and_foreign_inventory_are_never_repaired(self):
++        raw=self.runtime.registry.read_bytes();self.runtime.registry.write_bytes(b'{broken')
++        before=self.snapshot()
++        with self.assertRaises(ValueError):self.plan_upgrade()
++        self.assertEqual(before,self.snapshot());self.runtime.registry.write_bytes(raw)
++        plan=self.plan_upgrade();slot=Path(plan['target_inventory']['slot']);slot.mkdir(parents=True);(slot/'foreign').write_text('foreign')
++        before=self.snapshot()
++        with self.assertRaises(ValueError):self.plan_upgrade()
++        self.assertEqual(before,self.snapshot())
++
++    def test_six_phases_before_after_continue_and_rollback(self):
++        for phase in upgrade.PHASES:
++            for when in ('before','after'):
++                for action in ('continue','rollback'):
++                    with self.subTest(phase=phase,when=when,action=action):
++                        fixture=UpgradeFixture();fixture.setUp()
++                        try:
++                            plan=fixture.plan_upgrade();seen=[]
++                            def hook(event,path):
++                                if event==when+'_phase:'+phase and not seen:
++                                    seen.append(True);raise RuntimeError('fault '+event)
++                            with self.assertRaises(RuntimeError):fixture.execute_upgrade(plan,hook)
++                            self.assertTrue(seen)
++                            if phase=='commit' and when=='after' and action=='rollback':
++                                with self.assertRaises(upgrade.UpgradeError):fixture.recover_upgrade(plan['journal'],action)
++                                result=fixture.recover_upgrade(plan['journal'],'continue')
++                                self.assertTrue(result['finalized_only']);expected='0.4.1'
++                            else:
++                                result=fixture.recover_upgrade(plan['journal'],action)
++                                self.assertEqual(result['status'],'completed' if action=='continue' else 'rolled_back')
++                                expected='0.4.1' if action=='continue' else '0.4.0'
++                            self.assertEqual(fixture.product()['product_code_version'],expected)
++                            install._code_matches(fixture.runtime,fixture.product())
++                            self.assertFalse(upgrade.marker(fixture.runtime).exists())
++                            print('PHASE',phase,when,action,result['status'],expected)
++                        finally:fixture.doCleanups()
++
++    def test_every_file_and_inventory_registry_rename_window(self):
++        for event in ('before_code_replace','after_code_replace','before_version_rename','after_version_rename','before_registry_commit','after_registry_commit'):
++            for action in ('continue','rollback'):
++                with self.subTest(event=event,action=action):
++                    fixture=UpgradeFixture();fixture.setUp()
++                    try:
++                        plan=fixture.plan_upgrade();seen=[]
++                        def hook(stage,path):
++                            if stage==event and not seen:seen.append(True);raise RuntimeError(stage)
++                        with self.assertRaises(RuntimeError):fixture.execute_upgrade(plan,hook)
++                        if event=='after_registry_commit' and action=='rollback':
++                            with self.assertRaises(ValueError):fixture.recover_upgrade(plan['journal'],action)
++                            fixture.recover_upgrade(plan['journal'],'continue')
++                        else:fixture.recover_upgrade(plan['journal'],action)
++                        install._code_matches(fixture.runtime,fixture.product())
++                    finally:fixture.doCleanups()
++
++    def test_third_state_bad_backup_or_after_mixed_requires_manual_recovery(self):
++        plan=self.plan_upgrade()
++        def fault(event,path):
++            if event=='after_phase:code':raise RuntimeError('fault')
++        with self.assertRaises(RuntimeError):self.execute_upgrade(plan,fault)
++        output=next(x for x in plan['outputs'] if x['before']!=x['after'] and x['after']['kind']=='file')
++        path=Path(output['path']);raw=path.read_bytes();path.write_bytes(b'third state')
++        before=self.snapshot()
++        with self.assertRaises(ValueError):upgrade.plan_recovery(plan['journal'],action='continue')
++        self.assertEqual(before,self.snapshot());path.write_bytes(raw)
++        backup=Path(plan['archive'])/'registry-before.json';backup.chmod(0o600);backup.write_bytes(b'bad backup')
++        with self.assertRaises(ValueError):upgrade.plan_recovery(plan['journal'],action='rollback')
++
++    def test_fixed_toolkit_recovers_without_source_or_active_installer(self):
++        plan=self.plan_upgrade()
++        def fault(event,path):
++            if event=='after_phase:code':raise RuntimeError('fault')
++        with self.assertRaises(RuntimeError):self.execute_upgrade(plan,fault)
++        shutil.rmtree(self.target)
++        launcher=Path(plan['bootstrap'])/'recover.py'
++        env=dict(os.environ,HOME=str(self.home),PYTHONDONTWRITEBYTECODE='1')
++        preview=subprocess.run([sys.executable,'-B',str(launcher),'preview',plan['journal'],'continue'],capture_output=True,text=True,env=env)
++        self.assertEqual(preview.returncode,0,preview.stderr)
++        recovery=json.loads(preview.stdout);approval=self.area/'recovery.json';approval.write_text(json.dumps(approved(recovery)))
++        result=subprocess.run([sys.executable,'-B',str(launcher),'apply',str(approval)],capture_output=True,text=True,env=env)
++        self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(json.loads(result.stdout)['status'],'completed')
++
++    def test_hard_exit_requires_approved_stale_lock_handoff(self):
++        plan=self.plan_upgrade();saved=self.area/'request.json';saved.write_text(json.dumps(self.req))
++        script='''import json,os,sys
++from agm_core import upgrade
++request=json.load(open(sys.argv[1]));plan=upgrade.plan_upgrade(request)
++def hook(event,path):
++    if event=="after_code_replace":os._exit(79)
++upgrade.execute_upgrade(plan,dict(plan,confirmed_at="2026-10-30T00:00:00Z",reference="isolated crash"),request=request,hook=hook)
++'''
++        env=dict(os.environ,HOME=str(self.home),PYTHONDONTWRITEBYTECODE='1',PYTHONPATH=str(Path(__file__).resolve().parents[2]/'scripts'))
++        result=subprocess.run([sys.executable,'-B','-c',script,str(saved)],env=env,capture_output=True,text=True)
++        self.assertEqual(result.returncode,79,result.stderr)
++        recovery=upgrade.plan_recovery(plan['journal'],action='continue');self.assertEqual(len(recovery['stale_locks']),3)
++        self.assertTrue(self.runtime.lock.exists())
++        done=upgrade.recover_upgrade(recovery,approved(recovery));self.assertEqual(done['status'],'completed')
++        self.assertFalse(self.runtime.lock.exists())
++
++
++    def test_repeated_successful_operation_is_readonly_noop(self):
++        self.execute_upgrade();before=self.snapshot()
++        plan=self.plan_upgrade();self.assertTrue(plan['noop'])
++        self.assertTrue(upgrade.execute_upgrade(plan)['noop'])
++        self.assertEqual(before,self.snapshot())
++
++    def test_even_whitelisted_future_ledger_is_not_downgraded(self):
++        data=json.loads(self.runtime.registry.read_bytes());data['product']['product_code_version']='9.0.0'
++        self.runtime.registry.write_bytes(registry.serialize_registry(data))
++        rule=copy.deepcopy(self.forward);rule['before']['product_code_version']='9.0.0'
++        before=self.snapshot()
++        with self.assertRaises(upgrade.UpgradeError):upgrade.plan_upgrade(dict(self.req,conversions=[rule]))
++        self.assertEqual(before,self.snapshot())
++
++    def test_v_after_with_mixed_code_never_replays_conversion(self):
++        plan=self.plan_upgrade()
++        def fault(event,path):
++            if event=='after_registry_commit':raise RuntimeError('committed')
++        with self.assertRaises(RuntimeError):self.execute_upgrade(plan,fault)
++        item=next(x for x in plan['outputs'] if x['before']!=x['after'] and x['before']['kind']=='file')
++        path=Path(item['path']);archive=Path(plan['archive'])/'code-before'/path.relative_to(self.runtime.code)
++        path.write_bytes(archive.read_bytes());path.chmod(item['before']['mode'])
++        before=self.snapshot()
++        for action in ('continue','rollback'):
++            with self.assertRaises(upgrade.UpgradeError):upgrade.plan_recovery(plan['journal'],action=action)
++        self.assertEqual(before,self.snapshot())
++
++    def test_upgrade_guard_blocks_all_project_and_machine_entries_readonly(self):
++        from agm_core import enable,remove,check,user_entries
++        guard=upgrade.marker(self.runtime);guard.write_text('upgrade interrupted')
++        before=self.snapshot()
++        request=dict(self.request,project=str(self.area),agents=None)
++        for entry in (enable.run,remove.run,check.run,user_entries.run_user_entries):
++            result=entry(request)
++            self.assertEqual(result['errors'][0]['code'],'machine_upgrade_pending',result)
++        self.assertEqual(before,self.snapshot())
++
++    def test_new_agent_same_version_uses_separately_approved_entry_transaction(self):
++        from runtime_fixture import seed_project_executors
++        self.execute_upgrade();request=dict(self.req,agents=['codex'],**seed_project_executors(self.home))
++        before=self.product();preview=upgrade.run_same_version_entries(request)
++        self.assertEqual(preview['status'],'approval_required',preview)
++        request['approval']=approved(json.loads(preview['next_action']))
++        result=upgrade.run_same_version_entries(request);self.assertEqual(result['status'],'completed',result)
++        self.assertEqual(self.product(),before)
++        self.assertTrue((self.home/'.codex/skills/agent-group-memory').is_symlink())
++        self.assertFalse(registry.load_registry(self.runtime.registry,allowed_user_paths=install.paths.allowed_user_paths(self.config,None,home=str(self.home)))['projects'])
++
++    def test_first_install_inventory_rename_precedes_any_active_code(self):
++        for event in ('before_version_rename','after_version_rename'):
++            for action in ('continue','rollback'):
++                with self.subTest(event=event,action=action):
++                    fixture=InstallFixture();fixture.setUp()
++                    try:
++                        plan=fixture.plan();seen=[]
++                        def fault(stage,path):
++                            if stage==event and not seen:
++                                self.assertFalse(fixture.runtime.code.exists());seen.append(True)
++                                raise RuntimeError('version slot window')
++                        with self.assertRaises(RuntimeError):fixture.execute(plan,fault)
++                        self.assertTrue(seen)
++                        result=fixture.recover(plan['journal'],action)
++                        self.assertEqual(result['status'],'completed' if action=='continue' else 'rolled_back')
++                    finally:fixture.doCleanups()
++
++    def test_owned_obsolete_directory_removed_and_recovered_without_touching_user_dirs(self):
++        for event in ('before_directory_remove','after_directory_remove'):
++            for action in ('continue','rollback'):
++                fixture=InstallFixture();fixture.setUp()
++                try:
++                    obsolete=fixture.source/'retired/helper.py';obsolete.parent.mkdir();obsolete.write_text('def previous_release():\n    return True\n')
++                    fixture.request['source']['files']['retired/helper.py']=legacy.digest(obsolete.read_bytes())
++                    fixture.execute();target=fixture.area/'next';shutil.copytree(fixture.source,target);shutil.rmtree(target/'retired')
++                    source=dict(fixture.request['source'],root=str(target),version='0.4.1',commit='b'*40,
++                        files={str(p.relative_to(target)):legacy.digest(p.read_bytes()) for p in target.rglob('*') if p.is_file()})
++                    new,_=install._source({'source':source});old=registry.load_registry(fixture.runtime.registry)['product']
++                    request=dict(fixture.request,source=source,operation_id='obsolete-dir',conversions=[{
++                        'before':{'schema_version':2,'product_structure_version':1,'product_code_version':'0.4.0','source':old['source']},
++                        'after':{'schema_version':2,'product_structure_version':1,'product_code_version':'0.4.1','source':{k:new[k] for k in ('url','commit','tree_sha256')}},
++                        'direction':'upgrade','entries':'preserve'}])
++                    user=fixture.runtime.root/'memories/user-directory';user.mkdir();(user/'record').write_text('user')
++                    plan=upgrade.plan_upgrade(request)
++                    def fault(stage,path):
++                        if stage==event:raise RuntimeError('directory window')
++                    with self.assertRaises(RuntimeError):upgrade.execute_upgrade(plan,approved(plan),request=request,hook=fault)
++                    recovery=upgrade.plan_recovery(plan['journal'],action=action)
++                    upgrade.recover_upgrade(recovery,approved(recovery))
++                    self.assertEqual((fixture.runtime.code/'retired/helper.py').exists(),action=='rollback')
++                    self.assertEqual((fixture.runtime.code/'retired').exists(),action=='rollback')
++                    self.assertEqual((user/'record').read_text(),'user')
++                    install._code_matches(fixture.runtime,registry.load_registry(fixture.runtime.registry)['product'])
++                finally:fixture.doCleanups()
++
++
++    def test_persistent_inventory_is_product_evidence_when_active_ledger_is_deleted(self):
++        self.runtime.registry.unlink();shutil.rmtree(self.runtime.code)
++        before=self.snapshot()
++        scene=install.inspect_machine(self.req)
++        self.assertEqual(scene['channel'],'stop',scene)
++        self.assertNotIn(scene['scene'],('empty','v0'))
++        self.assertEqual(before,self.snapshot())
+--- /dev/null
++++ b/tests/unit/test_m407_legacy_upgrade.py
+@@ -0,0 +1,58 @@
++"""M2/M3 migration plus code install share one V-last upgrade boundary."""
++import json
++import sys
++from pathlib import Path
++
++sys.path.insert(0,str(Path(__file__).resolve().parent))
++from test_m403_migrate import MigrationFixture, OLD_COMMIT, approved
++from agm_core import upgrade, registry, legacy_import as legacy, user_install as install
++
++
++class LegacyUpgradeTests(MigrationFixture):
++    def request(self):
++        source=self.area/'new-product';(source/'scripts/agm_core').mkdir(parents=True)
++        for rel,raw in {'SKILL.md':b'# product\n','scripts/agm.py':b'print("installed")\n','scripts/agm_core/__init__.py':b''}.items():
++            (source/rel).write_bytes(raw)
++        return {'home':str(self.home),'platform_config':self.config,'operation_id':'m407-legacy',
++            'source':{'root':str(source),'url':'fixture://same-development','commit':'c'*40,'version':'0.4.1',
++                      'files':{str(p.relative_to(source)):legacy.digest(p.read_bytes()) for p in source.rglob('*') if p.is_file()}},
++            'legacy_registries':[str(self.old)],'legacy_source_commits':{str(self.old):OLD_COMMIT},
++            'evidence_files':[str(self.evidence)]}
++
++    def test_m2_schema1_to_target_commits_code_before_v_and_preserves_authorization(self):
++        request=self.request();plan=upgrade.plan_upgrade(request)
++        self.assertEqual(plan['conversion']['source_version'],'m2-schema1')
++        observed=[]
++        def hook(event,path):
++            if event=='before_registry_commit':
++                self.assertFalse(self.runtime.registry.exists())
++                self.assertTrue((self.runtime.code/'SKILL.md').is_file());self.assertTrue(self.old.is_dir())
++                observed.append(True)
++        result=upgrade.execute_upgrade(plan,approved(plan),request=request,hook=hook)
++        self.assertEqual(result['status'],'completed');self.assertTrue(observed)
++        data=registry.require_installed(self.load())
++        self.assertEqual(data['projects'][str(self.repo)]['memory_authorization'],self.original['projects'][str(self.repo)]['memory_authorization'])
++        self.assertEqual(data['product']['product_code_version'],'0.4.1')
++        install._code_matches(self.runtime,data['product'])
++        self.assertEqual(data['migration']['reference_map'],plan['migration_plan']['reference_map'])
++        self.assertEqual(install.inspect_machine(request)['scene'],'same')
++
++    def test_legacy_half_upgrade_can_continue_or_restore_single_old_ledger(self):
++        for action in ('continue','rollback'):
++            with self.subTest(action=action):
++                fixture=LegacyUpgradeTests();fixture.setUp()
++                try:
++                    request=fixture.request();plan=upgrade.plan_upgrade(request)
++                    def hook(event,path):
++                        if event=='after_phase:code':raise RuntimeError('fault')
++                    with self.assertRaises(RuntimeError):upgrade.execute_upgrade(plan,approved(plan),request=request,hook=hook)
++                    recovery=upgrade.plan_recovery(plan['journal'],action=action)
++                    result=upgrade.recover_upgrade(recovery,approved(recovery))
++                    if action=='continue':
++                        self.assertEqual(result['status'],'completed');self.assertTrue(fixture.old.is_dir())
++                        registry.require_installed(fixture.load())
++                    else:
++                        self.assertEqual(result['status'],'rolled_back');self.assertTrue(fixture.old.is_file())
++                        self.assertEqual(fixture.old.read_bytes(),fixture.before_raw)
++                        self.assertFalse(fixture.runtime.registry.exists());self.assertFalse(fixture.runtime.code.exists())
++                finally:fixture.doCleanups()
+--- /dev/null
++++ b/tests/integration/test_m407_real_upgrade.py
+@@ -0,0 +1,210 @@
++"""Real P=27d6e26 -> T development snapshots, temporary Git commits only.
++
++P installs itself in a synthetic HOME. T contains the actual changed product
++files, with P as its Git parent. No version-string-only fixture proves upgrade.
++"""
++import copy
++import json
++import os
++import shutil
++import subprocess
++import sys
++import tempfile
++import unittest
++from pathlib import Path
++
++REPO=Path(__file__).resolve().parents[2]
++sys.path.insert(0,str(REPO/'scripts'))
++sys.path.insert(0,str(REPO/'tests/unit'))
++from agm_core import upgrade, user_install as install, registry, legacy_import as legacy, paths, versions, enable
++from test_m404_install import approved
++from runtime_fixture import seed_project_executors
++
++P_COMMIT='27d6e26'
++
++
++def git(*args,cwd):
++    return subprocess.run(['git','-C',str(cwd),*args],check=True,capture_output=True,text=True,
++        env=dict(os.environ,GIT_AUTHOR_DATE='2026-10-30T00:00:00Z',GIT_COMMITTER_DATE='2026-10-30T00:00:00Z')).stdout.strip()
++
++
++def source(root,version):
++    names=git('ls-tree','-r','--name-only','HEAD','--','scripts','SKILL.md',cwd=root).splitlines()
++    return {'root':str(root),'version':version,'url':'fixture://agent-group-memory-development',
++            'commit':git('rev-parse','HEAD',cwd=root),
++            'files':{name:legacy.digest((root/name).read_bytes()) for name in names}}
++
++
++class RealUpgradeTests(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        cls.bundle=tempfile.TemporaryDirectory();cls.base=Path(cls.bundle.name).resolve()
++        cls.p=cls.base/'P';cls.t=cls.base/'T'
++        subprocess.run(['git','clone','--quiet','--no-hardlinks',str(REPO),str(cls.p)],check=True,capture_output=True)
++        git('checkout','--quiet','--detach',P_COMMIT,cwd=cls.p)
++        subprocess.run(['git','clone','--quiet','--no-hardlinks',str(cls.p),str(cls.t)],check=True,capture_output=True)
++        for original in [REPO/'SKILL.md',*(REPO/'scripts').rglob('*.py'),REPO/'scripts/agents.json']:
++            rel=original.relative_to(REPO);target=cls.t/rel;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(original,target)
++        git('add','--','scripts','SKILL.md',cwd=cls.t)
++        git('-c','user.name=AGM isolated fixture','-c','user.email=fixture@invalid',
++            '-c','commit.gpgsign=false','commit','--quiet','-m','Actual M4-07 implementation snapshot for isolated acceptance',cwd=cls.t)
++        cls.p_source=source(cls.p,'0.4.0');cls.t_source=source(cls.t,'0.4.1')
++        cls.parent=git('rev-parse','HEAD^',cwd=cls.t)
++        cls.changed=git('diff','--name-only',cls.parent,'HEAD',cwd=cls.t).splitlines()
++        export=os.environ.get('AGM_M407_EXPORT')
++        if export:
++            output=Path(export);output.mkdir(parents=True,exist_ok=True)
++            git('bundle','create',str(output/'T.bundle'),'HEAD','^'+cls.parent,cwd=cls.t)
++            for name,checkout in [('P',cls.p),('T',cls.t)]:
++                subprocess.run(['git','-C',str(checkout),'-c','tar.umask=0022','archive','--format=tar','--output='+str(output/(name+'.tar')),'HEAD','scripts','SKILL.md'],check=True,capture_output=True)
++            metadata={name:{k:v for k,v in package.items() if k!='root'} for name,package in [('P',cls.p_source),('T',cls.t_source)]}
++            metadata.update(T_parent=cls.parent,changed_files=cls.changed)
++            (output/'releases.json').write_text(json.dumps(metadata,indent=2)+'\n')
++        if cls.parent!=cls.p_source['commit']:raise AssertionError('T must be a real child of P')
++        if not {'scripts/agm_core/upgrade.py','scripts/agm_core/versions.py'}<=set(cls.changed):
++            raise AssertionError('T must include actual executable implementation changes')
++
++    @classmethod
++    def tearDownClass(cls):cls.bundle.cleanup()
++
++    def setUp(self):
++        self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
++        self.area=Path(self.temp.name).resolve();self.home=self.area/'home';self.home.mkdir()
++        self.config=paths.select_platform(paths.load_agents_table(),'darwin')
++        self.request={'home':str(self.home),'platform_config':self.config,'agents':None,'search_paths':[],
++                      'app_directories':[],'operation_id':'actual-p-install','source':copy.deepcopy(self.p_source)}
++        request_file=self.area/'p-request.json';request_file.write_text(json.dumps(self.request))
++        program='''import json,sys
++sys.path.insert(0,sys.argv[1]+"/scripts")
++from agm_core import user_install
++request=json.load(open(sys.argv[2]));plan=user_install.plan_install(request)
++result=user_install.execute_install(plan,dict(plan,confirmed_at="2026-10-30T00:00:00Z",reference="real P self-install"),request=request)
++print(json.dumps(result))
++'''
++        result=subprocess.run([sys.executable,'-B','-c',program,str(self.p),str(request_file)],
++            env=dict(os.environ,HOME=str(self.home),PYTHONDONTWRITEBYTECODE='1'),capture_output=True,text=True)
++        self.assertEqual(result.returncode,0,result.stderr)
++        self.runtime=install._runtime(self.request)
++        self.assertFalse(versions.root(self.runtime).exists(),'Historical P really uses its original installer')
++        result=self.command('check-memory','--all')
++        self.assertEqual(result.returncode,0,result.stderr)
++        self.assertEqual(json.loads(result.stdout)['command'],'check-memory')
++        before=json.loads(self.runtime.registry.read_bytes())['product']
++        target,_=install._source({'source':self.t_source})
++        self.conversion={'before':{'schema_version':2,'product_structure_version':1,
++            'product_code_version':before['product_code_version'],'source':before['source']},
++            'after':{'schema_version':2,'product_structure_version':1,'product_code_version':'0.4.1',
++            'source':{k:target[k] for k in ('url','commit','tree_sha256')}},'direction':'upgrade','entries':'preserve'}
++        self.request.update(source=copy.deepcopy(self.t_source),operation_id='actual-p-to-t',conversions=[self.conversion])
++        for name in ('memories/user.bin','references/user.bin','skills/other/user.bin','mcp/user.bin'):
++            target=self.runtime.root/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(b'user bytes\x00\xff\r\n')
++        self.user_before={name:(self.runtime.root/name).read_bytes() for name in ('memories/user.bin','references/user.bin','skills/other/user.bin','mcp/user.bin')}
++
++    def command(self,*args):
++        return subprocess.run([sys.executable,'-B',str(self.runtime.code/'scripts/agm.py'),*args],
++            env=dict(os.environ,HOME=str(self.home),PYTHONDONTWRITEBYTECODE='1'),capture_output=True,text=True)
++
++    def plan(self):return upgrade.plan_upgrade(self.request)
++    def apply(self,plan=None,hook=None):
++        plan=plan or self.plan()
++        return upgrade.execute_upgrade(plan,approved(plan),request=self.request,hook=hook)
++    def snapshot(self):
++        return {str(p.relative_to(self.home)):(p.lstat().st_mode,p.lstat().st_mtime_ns,p.read_bytes() if p.is_file() else None)
++                for p in [self.home,*self.home.rglob('*')] if not p.is_symlink()}
++
++    def verify(self,version):
++        data=registry.require_installed(registry.load_registry(self.runtime.registry))
++        self.assertEqual(data['product']['product_code_version'],version)
++        self.assertEqual(data['schema_version'],2);self.assertEqual(data['product']['product_structure_version'],1)
++        install._code_matches(self.runtime,data['product'])
++        self.assertEqual(self.user_before,{name:(self.runtime.root/name).read_bytes() for name in self.user_before})
++        result=self.command('--help');self.assertEqual(result.returncode,0,result.stderr)
++        self.assertFalse(upgrade.marker(self.runtime).exists())
++        return data
++
++    def test_actual_development_chain_upgrade_noop_and_persistent_rollback(self):
++        plan=self.plan();result=self.apply(plan);self.assertEqual(result['status'],'completed')
++        self.verify('0.4.1')
++        self.assertEqual(install.inspect_machine(self.request)['scene'],'same')
++        # Ordinary CLI use must not create foreign __pycache__ files in C.
++        result=subprocess.run([sys.executable,str(self.runtime.code/'scripts/agm.py'),'check-memory','--all'],
++            env=dict(os.environ,HOME=str(self.home)),capture_output=True,text=True)
++        self.assertEqual(result.returncode,0,result.stderr)
++        self.assertFalse(list(self.runtime.code.rglob('__pycache__')))
++        versions.verify(self.runtime,plan['before_inventory']);versions.verify(self.runtime,plan['target_inventory'])
++        before=self.snapshot();same=upgrade.plan_upgrade(dict(self.request,operation_id='same-t'))
++        self.assertTrue(same['noop']);self.assertTrue(upgrade.execute_upgrade(same)['noop'])
++        self.assertEqual(before,self.snapshot())
++        print('REAL_CHAIN',json.dumps({'P_commit':self.p_source['commit'],'T_commit':self.t_source['commit'],
++            'T_parent':self.parent,'P_manifest':plan['before_inventory']['release']['source']['tree_sha256'],
++            'T_manifest':plan['target_inventory']['release']['source']['tree_sha256'],'changed_files':self.changed,
++            'P_self_installed':True,'P_command_ran':True,'T_command_ran':True,'same_version_zero_mtime':True}))
++        # Register a project after upgrading. A release rollback must retain it.
++        project=self.area/'project';project.mkdir();git('init','--quiet',cwd=project)
++        request=dict(home=str(self.home),project=str(project),platform_config=self.config,agents=['codex'],memory_choice='no',
++                     **seed_project_executors(self.home))
++        preview=enable.run(request);self.assertEqual(preview['status'],'approval_required',preview)
++        request['approval']=approved(json.loads(preview['next_action']))
++        result=enable.run(request);self.assertEqual(result['status'],'completed',result)
++        projects=copy.deepcopy(registry.load_registry(self.runtime.registry)['projects'])
++        self.request.update(rollback_target={'version':'0.4.0','tree_sha256':plan['before_inventory']['release']['source']['tree_sha256']},direction='rollback',operation_id='actual-t-to-p',
++            conversions=[{'before':self.conversion['after'],'after':self.conversion['before'],'direction':'rollback','entries':'preserve'}])
++        self.apply();data=self.verify('0.4.0');self.assertEqual(data['projects'],projects)
++        print('REAL_ROLLBACK version=0.4.0; post-upgrade project and authorization preserved; user bytes unchanged')
++
++    def test_real_six_phase_faults_continue_or_rollback(self):
++        for phase in upgrade.PHASES:
++            for action in ('continue','rollback'):
++                with self.subTest(phase=phase,action=action):
++                    fixture=RealUpgradeTests();fixture.setUp()
++                    try:
++                        plan=fixture.plan()
++                        def fault(event,path):
++                            if event=='after_phase:'+phase:raise RuntimeError('real phase fault')
++                        with self.assertRaises(RuntimeError):fixture.apply(plan,fault)
++                        if phase=='commit' and action=='rollback':
++                            with self.assertRaises(upgrade.UpgradeError):upgrade.plan_recovery(plan['journal'],action=action)
++                            action_to_run='continue'
++                        else:action_to_run=action
++                        recovery=upgrade.plan_recovery(plan['journal'],action=action_to_run)
++                        result=upgrade.recover_upgrade(recovery,approved(recovery))
++                        fixture.verify('0.4.1' if action_to_run=='continue' else '0.4.0')
++                        print('REAL_PHASE',phase,action,result['status'],'finish_only' if result.get('finalized_only') else '')
++                    finally:fixture.doCleanups()
++
++    def test_each_real_code_file_replacement_window_and_registry_commit(self):
++        initial=self.plan();changed=[x['path'] for x in initial['outputs'] if x['before']!=x['after']]
++        for relative in [str(Path(p).relative_to(self.runtime.code)) for p in changed]:
++            for when in ('before','after'):
++                for action in ('continue','rollback'):
++                    with self.subTest(file=relative,when=when,action=action):
++                        fixture=RealUpgradeTests();fixture.setUp()
++                        try:
++                            plan=fixture.plan()
++                            def fault(event,path):
++                                if event==when+'_code_replace' and str(path.relative_to(fixture.runtime.code))==relative:
++                                    raise RuntimeError('actual file window')
++                            with self.assertRaises(RuntimeError):fixture.apply(plan,fault)
++                            recovery=upgrade.plan_recovery(plan['journal'],action=action)
++                            upgrade.recover_upgrade(recovery,approved(recovery))
++                            fixture.verify('0.4.1' if action=='continue' else '0.4.0')
++                            print('REAL_FILE_WINDOW',relative,when,action)
++                        finally:fixture.doCleanups()
++
++    def test_recovery_runs_from_fixed_toolkit_after_installer_self_replacement(self):
++        plan=self.plan()
++        def fault(event,path):
++            if event=='after_code_replace' and path.name=='user_install.py':raise RuntimeError('self overwrite')
++        with self.assertRaises(RuntimeError):self.apply(plan,fault)
++        unavailable=self.base/'T-unavailable';self.t.rename(unavailable)
++        try:
++            launcher=Path(plan['bootstrap'])/'recover.py'
++            env=dict(os.environ,HOME=str(self.home),PYTHONDONTWRITEBYTECODE='1')
++            preview=subprocess.run([sys.executable,'-B',str(launcher),'preview',plan['journal'],'continue'],env=env,capture_output=True,text=True)
++            self.assertEqual(preview.returncode,0,preview.stderr)
++            approved_file=self.area/'recovery.json';approved_file.write_text(json.dumps(approved(json.loads(preview.stdout))))
++            result=subprocess.run([sys.executable,'-B',str(launcher),'apply',str(approved_file)],env=env,capture_output=True,text=True)
++            self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(json.loads(result.stdout)['status'],'completed')
++            self.verify('0.4.1')
++            print('REAL_FIXED_TOOLKIT source unavailable; installer replaced; fixed launcher recovered; T CLI runs')
++        finally:unavailable.rename(self.t)

@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "git",
+    "diff",
+    "--",
+    "docs/context-keeper/"
+  ],
+  "exit_code": 0
+}

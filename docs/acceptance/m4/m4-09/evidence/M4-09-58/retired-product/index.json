@@ -1,0 +1,78 @@
+{
+  "case": "M4-09-58",
+  "name": "旧桥接整停",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-58-b3gqmpj9",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "007-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "008-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "009-fixture-unregistered-old-bridge",
+      "label": "fixture-unregistered-old-bridge",
+      "exit_code": null
+    },
+    {
+      "path": "010-fixture-retired-product-marker",
+      "label": "fixture-retired-product-marker",
+      "exit_code": null
+    },
+    {
+      "path": "011-whole-plan-stop",
+      "label": "whole-plan-stop",
+      "exit_code": 2
+    },
+    {
+      "path": "012-check",
+      "label": "check",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:23:06.724399Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-58-b3gqmpj9/home/.mem-sharing-install-20261030T162303Z-3825f66f7fa64ceda54946e94802105e/journal.json",
+    "/private/tmp/M4-09-58-b3gqmpj9/home/.mem-sharing-install-20261030T162303Z-3825f66f7fa64ceda54946e94802105e/entry-backups/20261030T162304Z-4273938cb74048bab0f511bd2fac4afc/manifest.json",
+    "/private/tmp/M4-09-58-b3gqmpj9/home/.mem-sharing/backups/20261030T162305Z-177455abf454448ea9944c069ee65c24/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

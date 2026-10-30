@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "operation": "enable-memory",
+  "status": "committed",
+  "registry_path": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/registry.json",
+  "created_directories": [],
+  "entries": [
+    {
+      "path": "/private/tmp/M4-09-27-47628ifz/project/.workbuddy/memory/MEMORY.md",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 420,
+        "link_target": null,
+        "fingerprint": "1822b4a9d415df3ee168e5984e3fd69f4a64eefa145ee71c20ec7d71912e6929",
+        "backup": "0.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 420,
+        "link_target": null,
+        "fingerprint": "6e23989c1e126ed9af77e657a51531e966dba27b8db2f9d04d169e4946d79f8a",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    }
+  ],
+  "error": null
+}

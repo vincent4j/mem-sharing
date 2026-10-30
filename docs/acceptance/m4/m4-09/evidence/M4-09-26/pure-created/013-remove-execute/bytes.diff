@@ -1,0 +1,385 @@
+--- before/home/.mem-sharing/backups/20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2/0.before
++++ after/home/.mem-sharing/backups/20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2/0.before
+@@ -0,0 +1,8 @@
++# project
++
++## 项目规则
++<!-- mem-sharing:project-experience:start -->
++位置：项目经历记录库由 Context Keeper 管理，默认位于 docs/context-keeper/。
++入口：使用 /context-keeper，首次保存按 CK 流程确认位置并初始化。
++职责：命令、记录格式、保存与查找流程由 Context Keeper 自行定义。
++<!-- mem-sharing:project-experience:end -->--- before/home/.mem-sharing/backups/20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2/1.before
++++ after/home/.mem-sharing/backups/20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2/1.before
+@@ -0,0 +1 @@
++@AGENTS.md
+--- before/home/.mem-sharing/backups/20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2/2.before
++++ after/home/.mem-sharing/backups/20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2/2.before
+@@ -0,0 +1,186 @@
++{
++  "schema_version": 3,
++  "projects": {
++    "/private/tmp/M4-09-26-8tngjfjq/project": {
++      "main_checkout": "/private/tmp/M4-09-26-8tngjfjq/project",
++      "memory_policy": "follow_ck",
++      "checkouts": {
++        "/private/tmp/M4-09-26-8tngjfjq/project": {
++          "git_common_dir": "/private/tmp/M4-09-26-8tngjfjq/project/.git",
++          "agents": [
++            "claude"
++          ],
++          "objects": {
++            "/private/tmp/M4-09-26-8tngjfjq/project/AGENTS.md#experience": {
++              "kind": "block",
++              "path": "/private/tmp/M4-09-26-8tngjfjq/project/AGENTS.md",
++              "scope": "project",
++              "agents": [
++                "claude"
++              ],
++              "ownership": "created",
++              "marker": {
++                "start": "<!-- mem-sharing:project-experience:start -->",
++                "end": "<!-- mem-sharing:project-experience:end -->"
++              },
++              "fingerprint": {
++                "algorithm": "sha256",
++                "basis": "block_bytes",
++                "value": "c5b66fc63bac19e8501c2d941475b1def7f38f02e9bbe402fcba348674043a65"
++              },
++              "original_existed": false,
++              "link_target": null,
++              "backup_manifest": "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing/backups/20261030T162208Z-9d47d07f4f1f4f5a8a529615f7fd33c0/manifest.json",
++              "consumers": [
++                "/private/tmp/M4-09-26-8tngjfjq/project"
++              ],
++              "lifecycle": {
++                "version": 1,
++                "unit_hex": "3c212d2d206d656d2d73686172696e673a70726f6a6563742d657870657269656e63653a7374617274202d2d3e0ae4bd8de7bdaeefbc9ae9a1b9e79baee7bb8fe58e86e8aeb0e5bd95e5ba93e794b120436f6e74657874204b656570657220e7aea1e79086efbc8ce9bb98e8aea4e4bd8de4ba8e20646f63732f636f6e746578742d6b65657065722fe380820ae585a5e58fa3efbc9ae4bdbfe794a8202f636f6e746578742d6b6565706572efbc8ce9a696e6aca1e4bf9de5ad98e68c8920434b20e6b581e7a88be7a1aee8aea4e4bd8de7bdaee5b9b6e5889de5a78be58c96e380820ae8818ce8b4a3efbc9ae591bde4bba4e38081e8aeb0e5bd95e6a0bce5bc8fe38081e4bf9de5ad98e4b88ee69fa5e689bee6b581e7a88be794b120436f6e74657874204b656570657220e887aae8a18ce5ae9ae4b989e380820a3c212d2d206d656d2d73686172696e673a70726f6a6563742d657870657269656e63653a656e64202d2d3e",
++                "prefix_hex": "",
++                "suffix_hex": "",
++                "file_created": true,
++                "operation_id": "20261030T162208Z-9d47d07f4f1f4f5a8a529615f7fd33c0",
++                "container_units": [
++                  "/private/tmp/M4-09-26-8tngjfjq/project/AGENTS.md#experience"
++                ]
++              }
++            },
++            "/private/tmp/M4-09-26-8tngjfjq/project/CLAUDE.md#import": {
++              "kind": "import",
++              "path": "/private/tmp/M4-09-26-8tngjfjq/project/CLAUDE.md",
++              "scope": "project",
++              "agents": [
++                "claude"
++              ],
++              "ownership": "created",
++              "marker": null,
++              "fingerprint": {
++                "algorithm": "sha256",
++                "basis": "reference_line",
++                "value": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
++              },
++              "original_existed": false,
++              "link_target": null,
++              "backup_manifest": "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing/backups/20261030T162208Z-9d47d07f4f1f4f5a8a529615f7fd33c0/manifest.json",
++              "consumers": [
++                "/private/tmp/M4-09-26-8tngjfjq/project"
++              ],
++              "lifecycle": {
++                "version": 1,
++                "unit_hex": "404147454e54532e6d640a",
++                "prefix_hex": "",
++                "suffix_hex": "",
++                "file_created": true,
++                "operation_id": "20261030T162208Z-9d47d07f4f1f4f5a8a529615f7fd33c0",
++                "container_units": [
++                  "/private/tmp/M4-09-26-8tngjfjq/project/CLAUDE.md#import"
++                ]
++              }
++            }
++          },
++          "shared_object_ids": [],
++          "runtime_acceptance": {
++            "status": "pending",
++            "evidence_path": null
++          }
++        }
++      }
++    }
++  },
++  "shared_objects": {},
++  "product": {
++    "product_id": "mem-sharing",
++    "installation_id": "20261030T162206Z-19b53ec83ba04e5e83250c1f9a8b3a4c",
++    "product_structure_version": 1,
++    "product_code_version": "0.4.0",
++    "source": {
++      "url": "https://github.com/vincent4j/mem-sharing",
++      "commit": "de9cc4fdd0c7c5088267b9ff3bf0ff10ad52a40b",
++      "tree_sha256": "772da065e1e2472c950ba02f5fc4745a34e9186898cba75a999fe8478964b872"
++    },
++    "installation_status": "complete",
++    "last_operation_id": "20261030T162206Z-19b53ec83ba04e5e83250c1f9a8b3a4c"
++  },
++  "machine": {
++    "agents": {
++      "codex": {
++        "installation": {
++          "status": "installed",
++          "observed_at": "2026-10-30T16:22:07Z",
++          "evidence": "detect m4-05/1: 解析到 @openai/codex 1.0.0 的真实包入口,bin 入口存在"
++        },
++        "static": {
++          "status": "unknown",
++          "observed_at": null,
++          "evidence": null
++        },
++        "runtime_acceptance": {
++          "status": "pending",
++          "evidence_path": null
++        }
++      },
++      "claude": {
++        "installation": {
++          "status": "installed",
++          "observed_at": "2026-10-30T16:22:07Z",
++          "evidence": "detect m4-05/1: 解析到 @anthropic-ai/claude-code 1.0.0 的真实包入口,bin 入口存在"
++        },
++        "static": {
++          "status": "unknown",
++          "observed_at": null,
++          "evidence": null
++        },
++        "runtime_acceptance": {
++          "status": "pending",
++          "evidence_path": null
++        }
++      }
++    },
++    "objects": {
++      "/private/tmp/M4-09-26-8tngjfjq/home/.codex/AGENTS.md#public-source": {
++        "kind": "user_convention",
++        "path": "/private/tmp/M4-09-26-8tngjfjq/home/.codex/AGENTS.md",
++        "scope": "machine",
++        "agents": [
++          "codex"
++        ],
++        "ownership": "created",
++        "marker": {
++          "start": "<!-- mem-sharing:rules:start -->",
++          "end": "<!-- mem-sharing:rules:end -->"
++        },
++        "fingerprint": {
++          "algorithm": "sha256",
++          "basis": "block_bytes",
++          "value": "65613991513cc91db9fdc314b6041a390e7bdccf8af4d554cdd5b57084c336b3"
++        },
++        "original_existed": false,
++        "link_target": null,
++        "backup_manifest": "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing-install-20261030T162206Z-19b53ec83ba04e5e83250c1f9a8b3a4c/entry-backups/20261030T162207Z-08f30e26aada49c3a88925f153a11943/manifest.json",
++        "consumers": []
++      },
++      "/private/tmp/M4-09-26-8tngjfjq/home/.claude/CLAUDE.md#import": {
++        "kind": "import",
++        "path": "/private/tmp/M4-09-26-8tngjfjq/home/.claude/CLAUDE.md",
++        "scope": "machine",
++        "agents": [
++          "claude"
++        ],
++        "ownership": "reused",
++        "marker": null,
++        "fingerprint": {
++          "algorithm": "sha256",
++          "basis": "file_bytes",
++          "value": "4cdfde5155cacd77eb94043bdeb6d1a28b2463a91b8387771933043f26c20577"
++        },
++        "original_existed": true,
++        "link_target": null,
++        "backup_manifest": null,
++        "consumers": []
++      }
++    }
++  },
++  "migration": null,
++  "legacy_import": null
++}
+--- before/home/.mem-sharing/backups/20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2/manifest.json
++++ after/home/.mem-sharing/backups/20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2/manifest.json
+@@ -0,0 +1,73 @@
++{
++  "schema_version": 1,
++  "operation": "remove-memory",
++  "status": "committed",
++  "registry_path": "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing/var/registry.json",
++  "created_directories": [],
++  "entries": [
++    {
++      "path": "/private/tmp/M4-09-26-8tngjfjq/project/AGENTS.md",
++      "before": {
++        "existed": true,
++        "kind": "file",
++        "mode": 384,
++        "link_target": null,
++        "fingerprint": "85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406",
++        "backup": "0.before"
++      },
++      "after": {
++        "existed": true,
++        "kind": "file",
++        "mode": 384,
++        "link_target": null,
++        "fingerprint": "d3017a75ee18512f5c832d3cee84a8abf8e612b50ead6a8df5e838437f1da9be",
++        "backup": null
++      },
++      "attempted": true,
++      "restoration": "not_needed"
++    },
++    {
++      "path": "/private/tmp/M4-09-26-8tngjfjq/project/CLAUDE.md",
++      "before": {
++        "existed": true,
++        "kind": "file",
++        "mode": 384,
++        "link_target": null,
++        "fingerprint": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
++        "backup": "1.before"
++      },
++      "after": {
++        "existed": false,
++        "kind": "absent",
++        "mode": null,
++        "link_target": null,
++        "fingerprint": null,
++        "backup": null
++      },
++      "attempted": true,
++      "restoration": "not_needed"
++    },
++    {
++      "path": "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing/var/registry.json",
++      "before": {
++        "existed": true,
++        "kind": "file",
++        "mode": 384,
++        "link_target": null,
++        "fingerprint": "ff8732dbf44ff89cb36731a691d0bba93648ff6c54a255362fa2b15cdf6b91d5",
++        "backup": "2.before"
++      },
++      "after": {
++        "existed": true,
++        "kind": "file",
++        "mode": 384,
++        "link_target": null,
++        "fingerprint": "6c8e5b1cc105e9dd3323b5322dd1761561144057630588ee29d513099f72b41b",
++        "backup": null
++      },
++      "attempted": true,
++      "restoration": "not_needed"
++    }
++  ],
++  "error": null
++}
+--- before/home/.mem-sharing/var/registry.json
++++ after/home/.mem-sharing/var/registry.json
+@@ -3,7 +3,7 @@
+   "projects": {
+     "/private/tmp/M4-09-26-8tngjfjq/project": {
+       "main_checkout": "/private/tmp/M4-09-26-8tngjfjq/project",
+-      "memory_policy": "follow_ck",
++      "memory_policy": "disabled",
+       "checkouts": {
+         "/private/tmp/M4-09-26-8tngjfjq/project": {
+           "git_common_dir": "/private/tmp/M4-09-26-8tngjfjq/project/.git",
+@@ -11,7 +11,7 @@
+             "claude"
+           ],
+           "objects": {
+-            "/private/tmp/M4-09-26-8tngjfjq/project/AGENTS.md#experience": {
++            "/private/tmp/M4-09-26-8tngjfjq/project/AGENTS.md#memory-denied": {
+               "kind": "block",
+               "path": "/private/tmp/M4-09-26-8tngjfjq/project/AGENTS.md",
+               "scope": "project",
+@@ -20,61 +20,29 @@
+               ],
+               "ownership": "created",
+               "marker": {
+-                "start": "<!-- mem-sharing:project-experience:start -->",
+-                "end": "<!-- mem-sharing:project-experience:end -->"
++                "start": "<!-- mem-sharing:memory-denied:start -->",
++                "end": "<!-- mem-sharing:memory-denied:end -->"
+               },
+               "fingerprint": {
+                 "algorithm": "sha256",
+                 "basis": "block_bytes",
+-                "value": "c5b66fc63bac19e8501c2d941475b1def7f38f02e9bbe402fcba348674043a65"
++                "value": "21ad972b06f37eb78d9415abdee4268d329778be1a78eb26fbf717f0ab55ba2e"
+               },
+               "original_existed": false,
+               "link_target": null,
+-              "backup_manifest": "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing/backups/20261030T162208Z-9d47d07f4f1f4f5a8a529615f7fd33c0/manifest.json",
++              "backup_manifest": "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing/backups/20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2/manifest.json",
+               "consumers": [
+                 "/private/tmp/M4-09-26-8tngjfjq/project"
+               ],
+               "lifecycle": {
+                 "version": 1,
+-                "unit_hex": "3c212d2d206d656d2d73686172696e673a70726f6a6563742d657870657269656e63653a7374617274202d2d3e0ae4bd8de7bdaeefbc9ae9a1b9e79baee7bb8fe58e86e8aeb0e5bd95e5ba93e794b120436f6e74657874204b656570657220e7aea1e79086efbc8ce9bb98e8aea4e4bd8de4ba8e20646f63732f636f6e746578742d6b65657065722fe380820ae585a5e58fa3efbc9ae4bdbfe794a8202f636f6e746578742d6b6565706572efbc8ce9a696e6aca1e4bf9de5ad98e68c8920434b20e6b581e7a88be7a1aee8aea4e4bd8de7bdaee5b9b6e5889de5a78be58c96e380820ae8818ce8b4a3efbc9ae591bde4bba4e38081e8aeb0e5bd95e6a0bce5bc8fe38081e4bf9de5ad98e4b88ee69fa5e689bee6b581e7a88be794b120436f6e74657874204b656570657220e887aae8a18ce5ae9ae4b989e380820a3c212d2d206d656d2d73686172696e673a70726f6a6563742d657870657269656e63653a656e64202d2d3e",
++                "unit_hex": "3c212d2d206d656d2d73686172696e673a6d656d6f72792d64656e6965643a7374617274202d2d3e0ae69cace9a1b9e79baee5b7b2e692a4e99480e887aae58aa8e8aeb0e5bf86e68e88e69d83e38082e69cace6aeb5e4bc98e58588e4ba8ee69cace69687e4bbb6e4b8ade79a84e58e86e58fb220636f6e746578742d6b656570657220e6a1a5e68ea5e5928c20536b696c6c20e8a7a6e58f91e8afb4e6988eefbc9ae4b88de5be97e887aae58aa8e8aeb0e5bd95e69cace9a1b9e79baee7bb8fe58e86e38081e5889de5a78be58c96e68896e5bbbae5ba93efbc8ce4b88de5be97e59ba0e6ae8be7959920536b696c6c2fe6a1a5e68ea5e681a2e5a48de697a7e68e88e69d83efbc9b434b20e5ae89e8a385e4b88ee5b7b2e69c89e8aeb0e5bd95e5ba93e4bf9de79599efbc9be6898be58aa820434b20e6938de4bd9ce4bb8de68c89e794a8e688b7e6988ee7a1aee8afb7e6b182e4b88e20434b20e887aae8baabe6b581e7a88be689a7e8a18ce38082e58faae69c89e794a8e688b7e9878de696b0e6988ee7a1aee689b9e58786e69cace9a1b9e79bae20656e61626c652d6d656d6f7279202d2d6d656d6f727920e5908ee6898de58fafe681a2e5a48de887aae58aa8e8aeb0e5bd95e380820a3c212d2d206d656d2d73686172696e673a6d656d6f72792d64656e6965643a656e64202d2d3e",
+                 "prefix_hex": "",
+                 "suffix_hex": "",
+-                "file_created": true,
+-                "operation_id": "20261030T162208Z-9d47d07f4f1f4f5a8a529615f7fd33c0",
++                "file_created": false,
++                "operation_id": "20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2",
+                 "container_units": [
+-                  "/private/tmp/M4-09-26-8tngjfjq/project/AGENTS.md#experience"
+-                ]
+-              }
+-            },
+-            "/private/tmp/M4-09-26-8tngjfjq/project/CLAUDE.md#import": {
+-              "kind": "import",
+-              "path": "/private/tmp/M4-09-26-8tngjfjq/project/CLAUDE.md",
+-              "scope": "project",
+-              "agents": [
+-                "claude"
+-              ],
+-              "ownership": "created",
+-              "marker": null,
+-              "fingerprint": {
+-                "algorithm": "sha256",
+-                "basis": "reference_line",
+-                "value": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
+-              },
+-              "original_existed": false,
+-              "link_target": null,
+-              "backup_manifest": "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing/backups/20261030T162208Z-9d47d07f4f1f4f5a8a529615f7fd33c0/manifest.json",
+-              "consumers": [
+-                "/private/tmp/M4-09-26-8tngjfjq/project"
+-              ],
+-              "lifecycle": {
+-                "version": 1,
+-                "unit_hex": "404147454e54532e6d640a",
+-                "prefix_hex": "",
+-                "suffix_hex": "",
+-                "file_created": true,
+-                "operation_id": "20261030T162208Z-9d47d07f4f1f4f5a8a529615f7fd33c0",
+-                "container_units": [
+-                  "/private/tmp/M4-09-26-8tngjfjq/project/CLAUDE.md#import"
++                  "/private/tmp/M4-09-26-8tngjfjq/project/AGENTS.md#memory-denied"
+                 ]
+               }
+             }
+--- before/project/AGENTS.md
++++ after/project/AGENTS.md
+@@ -1,8 +1,6 @@
+ # project
+ 
+ ## 项目规则
+-<!-- mem-sharing:project-experience:start -->
+-位置：项目经历记录库由 Context Keeper 管理，默认位于 docs/context-keeper/。
+-入口：使用 /context-keeper，首次保存按 CK 流程确认位置并初始化。
+-职责：命令、记录格式、保存与查找流程由 Context Keeper 自行定义。
+-<!-- mem-sharing:project-experience:end -->+<!-- mem-sharing:memory-denied:start -->
++本项目已撤销自动记忆授权。本段优先于本文件中的历史 context-keeper 桥接和 Skill 触发说明：不得自动记录本项目经历、初始化或建库，不得因残留 Skill/桥接恢复旧授权；CK 安装与已有记录库保留；手动 CK 操作仍按用户明确请求与 CK 自身流程执行。只有用户重新明确批准本项目 enable-memory --memory 后才可恢复自动记录。
++<!-- mem-sharing:memory-denied:end -->--- before/project/CLAUDE.md
++++ after/project/CLAUDE.md
+@@ -1 +0,0 @@
+-@AGENTS.md

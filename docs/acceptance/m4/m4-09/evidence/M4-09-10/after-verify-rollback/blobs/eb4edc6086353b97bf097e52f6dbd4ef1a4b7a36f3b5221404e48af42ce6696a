@@ -1,0 +1,81 @@
+{
+  "status": "passed",
+  "file_bytes_modes_restored": true,
+  "created_links_removed": true,
+  "created_parent_directories_removed": true,
+  "user_entries_unchanged": true,
+  "source_unchanged": true,
+  "store_absent": true,
+  "registry_absent": true,
+  "mtime_restored": false,
+  "manifest": "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/backups/20261029T105159Z-m1-03-install/manifest.json",
+  "after": [
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/AGENTS.md",
+      "exists": true,
+      "mode": "0o644",
+      "type": "file",
+      "sha256": "19cb9618d3143105afad563892d9dabbe0944c79cbeae0a9aa5a601faa035e12",
+      "bytes": 621,
+      "mtime_ns": 1793271157830932036
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md",
+      "exists": true,
+      "mode": "0o644",
+      "type": "file",
+      "sha256": "70afa4fc982436a3d7478874404a0455b8c2b6202a79ded7ad75a70c3e2d04a6",
+      "bytes": 81,
+      "mtime_ns": 1793271157831123952
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.agents/skills/context-keeper",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.codex/skills/context-keeper",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.claude/skills/context-keeper",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/skills/context-keeper",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.agents/skills",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.codex/skills",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.claude/skills",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/skills",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.agents",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.codex",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.claude",
+      "exists": false
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy",
+      "exists": false
+    }
+  ],
+  "observed_at": "2026-10-29T10:52:37.855190Z"
+}

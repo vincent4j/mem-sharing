@@ -1,0 +1,68 @@
+{
+  "case": "M4-09-45",
+  "name": "schema 3 活动基线",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-45-72gbdb7d",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "007-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "008-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "009-check",
+      "label": "check",
+      "exit_code": 0
+    },
+    {
+      "path": "010-read-schema-and-plan",
+      "label": "read-schema-and-plan",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source is an exact git-archive export of baseline; source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:17:38.733344Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-45-72gbdb7d/home/.mem-sharing-install-20261030T161735Z-d19ed2f675b04d178a5ed91650aac529/journal.json",
+    "/private/tmp/M4-09-45-72gbdb7d/home/.mem-sharing/backups/20261030T161737Z-3827c32342c24d73b353a040ad886a19/manifest.json",
+    "/private/tmp/M4-09-45-72gbdb7d/home/.mem-sharing-install-20261030T161735Z-d19ed2f675b04d178a5ed91650aac529/entry-backups/20261030T161736Z-f5f5e225c3cc4b3dbbef2e7a86bbe2b2/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

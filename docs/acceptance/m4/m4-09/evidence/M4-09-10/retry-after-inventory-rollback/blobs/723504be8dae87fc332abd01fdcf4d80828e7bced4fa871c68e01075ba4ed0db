@@ -1,0 +1,1 @@
+claude -p '查看本项目记忆现状，只汇报，禁止保存/写入任何内容。不要修改项目文件、记录库、执行器入口或用户级文件，不提交或推送。CLI 自身会话运行元数据不在项目写入范围。' --output-format stream-json --verbose --session-id b2c4cfc7-35b9-4323-8db3-4e81d2b9ec20 --permission-mode acceptEdits --allowedTools 'Read,Edit,Write,Bash(python3 *),Bash(cat *),Bash(rg *),Bash(git status *),Bash(sed *),Bash(ls *)'

@@ -1,0 +1,24 @@
+{
+  "label": "fixture-old-body-sentinel",
+  "argv": [
+    "fixture-operation",
+    "old-body-sentinel"
+  ],
+  "cwd": "/private/tmp/M4-09-21-uw1f59jv/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-21-uw1f59jv/home",
+    "PATH": "/private/tmp/M4-09-21-uw1f59jv/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-21-uw1f59jv/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:19:02.315374Z",
+  "ended_utc": "2026-10-30T16:19:02.373669Z",
+  "duration_seconds": 0.05829512499622069,
+  "fixture_operation": "old-body-sentinel",
+  "returned": "None"
+}

@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "diff",
+    "-u",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m1-07/store-before.json",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m1-07/store-after-n1-claude.json"
+  ],
+  "exit_code": 0,
+  "stderr": ""
+}

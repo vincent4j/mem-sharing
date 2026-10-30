@@ -1,0 +1,9 @@
+...................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 387 tests in 130.739s
+
+OK
+SOURCE {"source_status": "missing", "gap_codes": ["source_missing", "source_missing"]}
+DECLINE {"authorization": "no", "created_bridges_removed": true, "denial_guard": true, "store_preserved": true, "plan_changes": 6}
+REBUILD {"projects_before": 2, "preview_rebuild": {"classification": "registry_project_corrupt", "reason": "unknown fact status", "registry_sha256": "6dd072cba8f9c3e075cb9d0e2e80f643962a5dac132a4fc61819b6942c705986", "registry_bytes": 8117, "project_count": 2, "removed_projects": [{"main_checkout": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmpq6x8k_hm/project with spaces", "record_sha256": "8366fda93c88eaf89fadc0f983c7170b3df5fa974856c622512b0ba55e51ee9a"}, {"main_checkout": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmpq6x8k_hm/second-project", "record_sha256": "562ff038e13a9514654cddbc91868e5c96146d88bbdf26da2dbe45501889f665"}], "removed_shared_objects": ["/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmpq6x8k_hm/home/.workbuddy/MEMORY.md#rules"], "scope": "reset all project registrations and shared consumer indexes; preserve machine identity and all user files"}, "without_separate_approval": "approval_required", "result": "completed", "projects_after": 1}
+RACE recovery_required external edit

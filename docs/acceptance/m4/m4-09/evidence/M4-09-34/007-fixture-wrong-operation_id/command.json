@@ -1,0 +1,24 @@
+{
+  "label": "fixture-wrong-operation_id",
+  "argv": [
+    "fixture-operation",
+    "wrong-operation_id"
+  ],
+  "cwd": "/private/tmp/M4-09-34-q2iwo36p/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-34-q2iwo36p/home",
+    "PATH": "/private/tmp/M4-09-34-q2iwo36p/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-34-q2iwo36p/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:15:50.360076Z",
+  "ended_utc": "2026-10-30T16:15:50.419325Z",
+  "duration_seconds": 0.059244042000500485,
+  "fixture_operation": "wrong-operation_id",
+  "returned": "None"
+}

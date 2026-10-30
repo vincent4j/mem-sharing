@@ -1,0 +1,9 @@
+ M AGENTS.md
+ M docs/context-keeper/plans/2026-10-19-五节点用户说明层审查与证据转持久.md
+ M docs/context-keeper/plans/2026-10-19-五节点阶段B留档与有限收尾.md
+?? docs/audits/2026-10-13-context-loading-review.md
+?? products/E14-metersbonwe-light-blue-striped-polo/approvals/E14-BOOKSTORE-COMPARE-FLARE-01-human-accepted-20261013.json
+?? products/E14-metersbonwe-light-blue-striped-polo/approvals/E14-BOOKSTORE-PICK-FLARE-01-human-accepted-20261013.json
+?? products/E14-metersbonwe-light-blue-striped-polo/approvals/E14-BOOKSTORE-READING-FLARE-01-human-accepted-20261013.json
+?? products/E14-metersbonwe-light-blue-striped-polo/approvals/E14-BOOKSTORE-WALKING-FLARE-01-human-accepted-20261013.json
+?? scripts/audit_context_loading.py

@@ -1,0 +1,1 @@
+{"error_type": "MigrationError", "code": "migration_unsupported", "message": "Development ledger migration and journal replay are unsupported; preserve materials for diagnosis"}

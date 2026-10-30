@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "runtime_layout": {
+    "root": "/private/tmp/M4-09-59-thrsm7z9/home/.mem-sharing",
+    "code": "/private/tmp/M4-09-59-thrsm7z9/home/.local/share/mem-sharing",
+    "registry": "/private/tmp/M4-09-59-thrsm7z9/home/.mem-sharing/var/registry.json",
+    "lock": "/private/tmp/M4-09-59-thrsm7z9/home/.mem-sharing/var/.agm.lock",
+    "transaction_lock": "/private/tmp/M4-09-59-thrsm7z9/home/.mem-sharing/var/.agm.lock/transaction",
+    "backups": "/private/tmp/M4-09-59-thrsm7z9/home/.mem-sharing/backups"
+  },
+  "command": "enable-memory",
+  "status": "completed",
+  "projects": [
+    {
+      "main_checkout": "/private/tmp/M4-09-59-thrsm7z9/project",
+      "checkout": "/private/tmp/M4-09-59-thrsm7z9/project",
+      "memory_policy": "follow_ck",
+      "agents": [
+        "codex",
+        "claude"
+      ],
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      },
+      "evidence": [
+        "/private/tmp/M4-09-59-thrsm7z9/home/.mem-sharing/var/registry.json"
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "path": "/private/tmp/M4-09-59-thrsm7z9/project/CLAUDE.md",
+      "operation": "update",
+      "before_fingerprint": "adff9c77b8d67d650355d72fd9d7cddbc8e2fb481ec394d5aa89ea17c2d0fe55",
+      "after_fingerprint": "5b93c81a9376060b548fbd759688123c2dbe0a82a47c3686ddf534ce7468931c",
+      "ownership": "created",
+      "applied": true
+    }
+  ],
+  "warnings": [
+    "Runtime acceptance pending; CK installation and record data are retained and not inspected."
+  ],
+  "errors": [],
+  "approval_required": false,
+  "next_action": null
+}

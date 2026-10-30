@@ -1,0 +1,13 @@
+import json, sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent / "tools"))
+from agm_core import upgrade
+if sys.argv[1] == "preview":
+    result = upgrade.plan_recovery(sys.argv[2], action=sys.argv[3])
+elif sys.argv[1] == "apply":
+    approval = json.loads(Path(sys.argv[2]).read_text())
+    plan = {k:v for k,v in approval.items() if k not in ("confirmed_at", "reference")}
+    result = upgrade.recover_upgrade(plan, approval)
+else:
+    raise ValueError("Use preview JOURNAL continue|rollback, or apply APPROVAL.json")
+print(json.dumps(result, ensure_ascii=False))

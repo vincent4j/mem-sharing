@@ -1,0 +1,30 @@
+{
+  "label": "fetch-local-frozen-object",
+  "argv": [
+    "/usr/bin/git",
+    "-C",
+    "/private/tmp/M4-09-39-1h2o9gn4/scan/linked-main",
+    "fetch",
+    "--quiet",
+    "--depth=1",
+    "/Users/vincent4j/Tools/Source/agent-group-memory",
+    "de9cc4fdd0c7c5088267b9ff3bf0ff10ad52a40b"
+  ],
+  "cwd": "/private/tmp/M4-09-39-1h2o9gn4/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-39-1h2o9gn4/home",
+    "PATH": "/private/tmp/M4-09-39-1h2o9gn4/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-39-1h2o9gn4/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:23:58.387997Z",
+  "ended_utc": "2026-10-30T16:23:58.741342Z",
+  "duration_seconds": 0.35334108301321976,
+  "exit_code": 0,
+  "stdin_base64": ""
+}

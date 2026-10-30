@@ -1,0 +1,24 @@
+{
+  "label": "fixture-preexisting-unmanaged-ck-auto-instructions",
+  "argv": [
+    "fixture-operation",
+    "preexisting-unmanaged-ck-auto-instructions"
+  ],
+  "cwd": "/private/tmp/M4-09-49-f1ks1ez6/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-49-f1ks1ez6/home",
+    "PATH": "/private/tmp/M4-09-49-f1ks1ez6/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-49-f1ks1ez6/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:28:35.284106Z",
+  "ended_utc": "2026-10-30T16:28:35.304716Z",
+  "duration_seconds": 0.020606207981472835,
+  "fixture_operation": "preexisting-unmanaged-ck-auto-instructions",
+  "returned": "None"
+}

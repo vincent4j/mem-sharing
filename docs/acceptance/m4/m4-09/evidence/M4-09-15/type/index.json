@@ -1,0 +1,39 @@
+{
+  "case": "M4-09-15",
+  "name": "目标冲突",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-15-wnaoowy5",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-v0-seed",
+      "label": "fixture-v0-seed",
+      "exit_code": null
+    },
+    {
+      "path": "003-fixture-target-type",
+      "label": "fixture-target-type",
+      "exit_code": null
+    },
+    {
+      "path": "004-install-preview",
+      "label": "install-preview",
+      "exit_code": 2
+    },
+    {
+      "path": "005-check",
+      "label": "check",
+      "exit_code": 1
+    }
+  ],
+  "notes": [
+    "Source is an exact git-archive export of baseline; source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:17:31.117488Z",
+  "recovery_locations": [],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

@@ -1,0 +1,65 @@
+{
+  "label": "explicit-old-bridge-retire-preview",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import runpy,sys;from pathlib import Path;sys.path.insert(0,str(Path(sys.argv[1]).parent));from agm_core import detect;detect.STANDARD_APP_DIRECTORIES=();sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+    "/private/tmp/M4-09-57-gmwgtdpv/home/.local/share/mem-sharing/scripts/agm.py",
+    "enable-memory",
+    "--project",
+    "/private/tmp/M4-09-57-gmwgtdpv/project"
+  ],
+  "cwd": "/private/tmp/M4-09-57-gmwgtdpv/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-57-gmwgtdpv/home",
+    "PATH": "/private/tmp/M4-09-57-gmwgtdpv/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-57-gmwgtdpv/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:22:56.545831Z",
+  "ended_utc": "2026-10-30T16:22:56.799295Z",
+  "duration_seconds": 0.25346945799537934,
+  "exit_code": 5,
+  "stdin_base64": "",
+  "json": {
+    "schema_version": 1,
+    "runtime_layout": {
+      "root": "/private/tmp/M4-09-57-gmwgtdpv/home/.mem-sharing",
+      "code": "/private/tmp/M4-09-57-gmwgtdpv/home/.local/share/mem-sharing",
+      "registry": "/private/tmp/M4-09-57-gmwgtdpv/home/.mem-sharing/var/registry.json",
+      "lock": "/private/tmp/M4-09-57-gmwgtdpv/home/.mem-sharing/var/.agm.lock",
+      "transaction_lock": "/private/tmp/M4-09-57-gmwgtdpv/home/.mem-sharing/var/.agm.lock/transaction",
+      "backups": "/private/tmp/M4-09-57-gmwgtdpv/home/.mem-sharing/backups"
+    },
+    "command": "enable-memory",
+    "status": "approval_required",
+    "projects": [
+      {
+        "main_checkout": "/private/tmp/M4-09-57-gmwgtdpv/project",
+        "checkout": "/private/tmp/M4-09-57-gmwgtdpv/project",
+        "memory_policy": "follow_ck",
+        "agents": [
+          "codex"
+        ],
+        "runtime_acceptance": {
+          "status": "pending",
+          "evidence_path": null
+        },
+        "evidence": [
+          "/private/tmp/M4-09-57-gmwgtdpv/home/.mem-sharing/var/registry.json"
+        ]
+      }
+    ],
+    "changes": [],
+    "warnings": [],
+    "errors": [],
+    "approval_required": true,
+    "next_action": "{\"schema_version\": 1, \"command\": \"enable-memory\", \"main_checkout\": \"/private/tmp/M4-09-57-gmwgtdpv/project\", \"checkout\": \"/private/tmp/M4-09-57-gmwgtdpv/project\", \"git_common_dir\": \"/private/tmp/M4-09-57-gmwgtdpv/project/.git\", \"agents\": [\"codex\"], \"memory_policy\": \"follow_ck\", \"changes\": [{\"path\": \"/private/tmp/M4-09-57-gmwgtdpv/project/AGENTS.md\", \"operation\": \"update\", \"before_fingerprint\": \"c73ea9d4f65286265956d662f10194b26110f05d4200f1d29ba3171aaef247d9\", \"after_fingerprint\": \"e992cb4c6858f7b2c2746e57b07f6a0c116626fab03e819c8bc5738cca30f3f5\"}], \"installation\": {\"codex\": {\"status\": \"installed\", \"fingerprint\": \"edb352bf76c7ab89e04b24bbe6e2bb137da6257d0c2edaa6ba167616e4327bb4\"}, \"claude\": {\"status\": \"absent\", \"fingerprint\": \"e70206f4bd9c34f5853941b459d0f74f6bfffaf77f70c4ca4982b98d54727da0\"}, \"workbuddy\": {\"status\": \"absent\", \"fingerprint\": \"b8578b30f409aa222869634572f38e21bf4dfe6c9b0572b6b393fedf05cd6c7c\"}}, \"native_pending\": [], \"legacy_bridge_transition\": [{\"path\": \"/private/tmp/M4-09-57-gmwgtdpv/project/AGENTS.md\", \"ownership\": \"reused\", \"before_hex\": \"3c212d2d20636f6e746578742d6b65657065723a7374617274202d2d3e0a73796e74686574696320726575736564206f6c6420434b0a3c212d2d20636f6e746578742d6b65657065723a656e64202d2d3e\", \"fingerprint\": \"5ab44d9ccf7f1b0984c9831004bee39e63cccd949a859362b924e249160be415\", \"action\": \"review exact bytes and replace\"}], \"confirmed_at\": \"<UTC timestamp>\", \"reference\": \"<user confirmation reference>\"}"
+  }
+}

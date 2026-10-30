@@ -1,0 +1,4 @@
+--- before/home/.mem-sharing/memories
++++ after/home/.mem-sharing/memories
+@@ -0,0 +1 @@
++file-instead-of-directory

@@ -1,0 +1,36 @@
+Binary delta home/.mem-sharing/backups/20261030T162226Z-3e706d324d734a86b758d6356e5d213f/0.before: exact bytes in blobs; before=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 after=1822b4a9d415df3ee168e5984e3fd69f4a64eefa145ee71c20ec7d71912e6929
+--- before/home/.mem-sharing/backups/20261030T162226Z-3e706d324d734a86b758d6356e5d213f/manifest.json
++++ after/home/.mem-sharing/backups/20261030T162226Z-3e706d324d734a86b758d6356e5d213f/manifest.json
+@@ -0,0 +1,31 @@
++{
++  "schema_version": 1,
++  "operation": "enable-memory",
++  "status": "committed",
++  "registry_path": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/registry.json",
++  "created_directories": [],
++  "entries": [
++    {
++      "path": "/private/tmp/M4-09-27-47628ifz/project/.workbuddy/memory/MEMORY.md",
++      "before": {
++        "existed": true,
++        "kind": "file",
++        "mode": 420,
++        "link_target": null,
++        "fingerprint": "1822b4a9d415df3ee168e5984e3fd69f4a64eefa145ee71c20ec7d71912e6929",
++        "backup": "0.before"
++      },
++      "after": {
++        "existed": true,
++        "kind": "file",
++        "mode": 420,
++        "link_target": null,
++        "fingerprint": "6e23989c1e126ed9af77e657a51531e966dba27b8db2f9d04d169e4946d79f8a",
++        "backup": null
++      },
++      "attempted": true,
++      "restoration": "not_needed"
++    }
++  ],
++  "error": null
++}
+Binary delta project/.workbuddy/memory/MEMORY.md: exact bytes in blobs; before=1822b4a9d415df3ee168e5984e3fd69f4a64eefa145ee71c20ec7d71912e6929 after=6e23989c1e126ed9af77e657a51531e966dba27b8db2f9d04d169e4946d79f8a

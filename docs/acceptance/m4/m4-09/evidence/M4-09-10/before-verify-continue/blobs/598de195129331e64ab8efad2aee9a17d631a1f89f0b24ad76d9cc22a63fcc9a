@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "python3",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/.claude/skills/context-keeper/scripts/install.py",
+    "--ensure-bridge",
+    "--skill-dir",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/.claude/skills/context-keeper",
+    "--root",
+    "/Users/vincent4j/Tools/Source/agent-group-memory",
+    "--claude"
+  ],
+  "rc": 0,
+  "stdout": "{\"scope\": \"project\", \"agent\": \"claude\", \"bridge\": \"/Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md\", \"action\": \"unchanged\"}\n",
+  "stderr": "",
+  "observed_at": "2026-10-29T10:51:59.375348Z"
+}

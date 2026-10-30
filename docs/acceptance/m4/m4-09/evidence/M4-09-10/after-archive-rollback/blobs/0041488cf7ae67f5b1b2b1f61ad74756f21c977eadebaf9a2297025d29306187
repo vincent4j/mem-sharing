@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "command": "enable-memory",
+  "status": "completed",
+  "projects": [
+    {
+      "main_checkout": "/Users/vincent4j/Tools/Source/poster-fit",
+      "checkout": "/Users/vincent4j/Tools/Source/poster-fit",
+      "states": {
+        "source_available": {
+          "status": "ready",
+          "observed_at": "2026-10-29T13:53:14.992495Z",
+          "evidence": "Keeper source sha256: 371f64f2edfc424fc3617137a941323fe3762af11819e221b94d002fb2a96039"
+        },
+        "skill_installed": {
+          "codex": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:15.354678Z",
+            "evidence": "verified project links: /Users/vincent4j/Tools/Source/context-keeper"
+          },
+          "claude": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:15.354708Z",
+            "evidence": "verified project links: /Users/vincent4j/Tools/Source/context-keeper"
+          },
+          "workbuddy": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:15.354711Z",
+            "evidence": "verified project links: /Users/vincent4j/Tools/Source/context-keeper"
+          }
+        },
+        "bridge_assembled": {
+          "codex": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:15.354705Z",
+            "evidence": "{project}/AGENTS.md"
+          },
+          "claude": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:15.354710Z",
+            "evidence": "{project}/CLAUDE.md"
+          },
+          "workbuddy": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:15.354712Z",
+            "evidence": "{project}/.workbuddy/memory/MEMORY.md"
+          }
+        },
+        "store_authorized_ready": {
+          "status": "ready",
+          "observed_at": "2026-10-29T13:53:15.354713Z",
+          "evidence": "Keeper init + metadata readback: /Users/vincent4j/Tools/Source/poster-fit/docs/context-keeper"
+        }
+      },
+      "agents": [
+        "codex",
+        "claude",
+        "workbuddy"
+      ],
+      "evidence": [
+        "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/registry.json"
+      ],
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      }
+    }
+  ],
+  "changes": [],
+  "warnings": [
+    "Runtime acceptance pending; same-path replacement of .git cannot be reliably detected by schema v1."
+  ],
+  "errors": [],
+  "approval_required": false,
+  "next_action": null
+}

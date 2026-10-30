@@ -1,0 +1,21 @@
+[
+  {
+    "path": "home/.mem-sharing/backups/upgrade-synthetic-fault-upgrade/registry-before.json",
+    "before": {
+      "mode": 33024,
+      "permissions": "0o400",
+      "mtime_ns": 1793377431145835386,
+      "size": 2131,
+      "kind": "file",
+      "sha256": "b0a81571402f2d3443571a6832dc8c56a565d7fc4930219d52707584d0270a0a"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377431426604031,
+      "size": 13,
+      "kind": "file",
+      "sha256": "31030a8aff565ffd22fea515f48c8bd6c57f8162022d4005c7a5b5fbed10b260"
+    }
+  }
+]

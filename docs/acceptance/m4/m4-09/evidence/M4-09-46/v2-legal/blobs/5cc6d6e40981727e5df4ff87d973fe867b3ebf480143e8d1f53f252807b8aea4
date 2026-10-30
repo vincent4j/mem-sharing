@@ -1,0 +1,5 @@
+{
+  "error": "AssertionError('marker conflict: /Users/vincent4j/Tools/Source/agent-group-memory/scripts/registry.json')",
+  "observed_at": "2026-10-29T10:57:40.892795Z",
+  "policy": "record -> recover -> exit; store never removed"
+}

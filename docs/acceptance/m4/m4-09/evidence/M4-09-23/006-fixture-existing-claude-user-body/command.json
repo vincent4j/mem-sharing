@@ -1,0 +1,24 @@
+{
+  "label": "fixture-existing-claude-user-body",
+  "argv": [
+    "fixture-operation",
+    "existing-claude-user-body"
+  ],
+  "cwd": "/private/tmp/M4-09-23-bl6cu4kq/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-23-bl6cu4kq/home",
+    "PATH": "/private/tmp/M4-09-23-bl6cu4kq/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-23-bl6cu4kq/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:21:43.843755Z",
+  "ended_utc": "2026-10-30T16:21:43.860787Z",
+  "duration_seconds": 0.01703250000718981,
+  "fixture_operation": "existing-claude-user-body",
+  "returned": "None"
+}

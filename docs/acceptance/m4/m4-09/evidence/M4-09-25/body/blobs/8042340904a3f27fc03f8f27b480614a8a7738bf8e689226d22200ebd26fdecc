@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "command": "remove-memory",
+  "main_checkout": "/private/tmp/M4-09-25-56x83qu1/project",
+  "checkout": "/private/tmp/M4-09-25-56x83qu1/project",
+  "git_common_dir": "/private/tmp/M4-09-25-56x83qu1/project/.git",
+  "agents": [
+    "codex"
+  ],
+  "memory_policy": "disabled",
+  "registry_sha256": "074531c87bcbf0b867923609ef3bd2107725608d4e11bfc8e913d6447c145794",
+  "changes": [
+    {
+      "path": "/private/tmp/M4-09-25-56x83qu1/project/AGENTS.md",
+      "operation": "update",
+      "before_fingerprint": "3faa803577b260b49a8aea9dabfbf12f547d728dab7f0e503bcbcfa7cb1b94ea",
+      "after_fingerprint": "2565a5af8e1fc36e087f11faf2bb00db3ffc49a6563e79fd69b92d3d34572795"
+    }
+  ],
+  "confirmed_at": "2026-10-30T16:21:55.732941Z",
+  "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
+}

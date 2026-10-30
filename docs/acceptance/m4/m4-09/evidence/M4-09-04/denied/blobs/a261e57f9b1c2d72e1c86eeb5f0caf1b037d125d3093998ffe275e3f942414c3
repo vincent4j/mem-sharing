@@ -1,0 +1,25 @@
+<!-- context-keeper: session-id=zcode-paseo-04b5a5e9-20261019-ux-closeout -->
+# 五节点用户说明层审查与证据转持久
+
+## 用户需求
+
+用户本轮原话：『$prd-distill 整理 /context-keeper 提交和推送』。主 Agent 委派补充边界：本轮已明确授权保存的文档整理、提交与推送——保存五节点用户体验改进（用户说明层）的需求、结果、验证证据与待办，核对 PRD 合同一致后提交推送当前分支 `tututu/five-node-ux-closeout-20261019`（基线 main `0e5548c`），主 Agent 随后 review 整合 main。本轮是项目通用改进收尾，非单品生产。
+
+## 范围
+
+做：五节点用户说明层（上轮呱唧实现、7 通用文件、提交 `0e5548c` 已入 main）的审查与验证证据转为项目内可持续引用的通用证据（脱敏、无单品内容，不复制整包/日志正文）；PRD 索引补留档链接；context-keeper 存档（本 plan/worklog＋memory 时间线）；PRD Distill 提交前收尾；精确 allowlist 单 commit＋push 当前分支＋远端 SHA 读回。
+
+不做：不改实现/测试/schema；不重跑旧测试（复用上轮回执）；不动主仓、不 merge main、不动主仓 3 项未跟踪内容；不新增 bridge（仅预览，unchanged 继续）；不压缩历史（compact 门禁未触发，触发须先给预览）；无知识 registry 晋升、无商品模型调用、无无关工作树删除。
+
+## 实施计划
+
+1. 读 AGENTS、`~/.agents-group/memories/MEMORY.md`、prd-distill 与 context-keeper SKILL 原文及 save.md/pre-commit-closeout.md。2. 核对工作树 git 状态与 `/tmp/poster-fit-five-node-ux-20261019/` 证据。3. 建 `docs/reviews/2026-10-19-五节点用户说明层实现审查与离线验证留档.md`（结论/统计/指纹/边界，区分任务分支发布回执与父 Agent main 整合观察）。4. PRD README 补留档链接。5. record-path 建 plan/worklog，更新 memory-keeper 时间线，save-report＋coverage。6. prd_distill check＋受影响合同语义核对。7. 精确 allowlist 单 commit、push、ls-remote 读回，最终报告。
+
+## 验证方式
+
+record-path/record-guard/save-report/coverage 真实退出码；`prd_distill.py check` 结构门禁；`git diff --name-only` 与提交文件清单一致；push 后 `ls-remote` 读回分支 SHA 与本地一致；远端 main 只读复核记录。
+
+## 待确认
+
+- todo9 真实收益观察：须等用户下次明确完整生图授权后按口径观察（重复说明、选方向往返、漏检、总耗时与调用、等待/执行/未知分开；无可比基线不称提速）。
+- memory-keeper 时间线加 1 条后共 9 条，未超 15 条，compact 未触发；若后续触发按门禁先给预览。

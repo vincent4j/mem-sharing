@@ -1,0 +1,29 @@
+.....................
+----------------------------------------------------------------------
+Ran 21 tests in 18.223s
+
+OK
+PHASE prepare before continue completed 0.4.1
+PHASE prepare before rollback rolled_back 0.4.0
+PHASE prepare after continue completed 0.4.1
+PHASE prepare after rollback rolled_back 0.4.0
+PHASE archive before continue completed 0.4.1
+PHASE archive before rollback rolled_back 0.4.0
+PHASE archive after continue completed 0.4.1
+PHASE archive after rollback rolled_back 0.4.0
+PHASE inventory before continue completed 0.4.1
+PHASE inventory before rollback rolled_back 0.4.0
+PHASE inventory after continue completed 0.4.1
+PHASE inventory after rollback rolled_back 0.4.0
+PHASE code before continue completed 0.4.1
+PHASE code before rollback rolled_back 0.4.0
+PHASE code after continue completed 0.4.1
+PHASE code after rollback rolled_back 0.4.0
+PHASE verify before continue completed 0.4.1
+PHASE verify before rollback rolled_back 0.4.0
+PHASE verify after continue completed 0.4.1
+PHASE verify after rollback rolled_back 0.4.0
+PHASE commit before continue completed 0.4.1
+PHASE commit before rollback rolled_back 0.4.0
+PHASE commit after continue completed 0.4.1
+PHASE commit after rollback completed 0.4.1

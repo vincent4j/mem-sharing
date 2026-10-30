@@ -1,0 +1,2 @@
+cwd: /Users/vincent4j/Tools/Source/agent-group-memory
+claude -p '继续这个项目上次的工作，先告诉我当前进度和未完成事项，再把接力测试待办推进到进行中并保存。只处理这次进度续接，不修改项目规则、执行器入口或用户级文件，不提交或推送。' --output-format stream-json --verbose --session-id 892391b4-d896-437e-886e-ab742abf4c8c --permission-mode acceptEdits --allowedTools 'Read,Edit,Write,Bash(python3 *),Bash(cat *),Bash(rg *),Bash(git status *),Bash(sed *),Bash(ls *)'

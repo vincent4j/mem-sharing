@@ -1,0 +1,80 @@
+{
+  "case": "M4-09-39",
+  "name": "第二项目故障与先前项目保留",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-39-8fdc3eis",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-git-init-a",
+      "label": "git-init-a",
+      "exit_code": 0
+    },
+    {
+      "path": "007-git-init-b",
+      "label": "git-init-b",
+      "exit_code": 0
+    },
+    {
+      "path": "008-git-init-c",
+      "label": "git-init-c",
+      "exit_code": 0
+    },
+    {
+      "path": "009-partial-batch-preview",
+      "label": "partial-batch-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "010-fixture-batch-approval",
+      "label": "fixture-batch-approval",
+      "exit_code": null
+    },
+    {
+      "path": "011-partial-batch-execute",
+      "label": "partial-batch-execute",
+      "exit_code": 2
+    },
+    {
+      "path": "012-partial-batch-readback",
+      "label": "partial-batch-readback",
+      "exit_code": 5
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "Second-project failure injected in one subprocess only; first-project and not-started third-project raw states remain in output. No cross-project atomicity claim."
+  ],
+  "ended_utc": "2026-10-30T16:28:29.123260Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-39-8fdc3eis/home/.mem-sharing-install-20261030T162823Z-2a127ff9fd314cd0a00c451ae13bb09a/journal.json",
+    "/private/tmp/M4-09-39-8fdc3eis/home/.mem-sharing/backups/20261030T162827Z-2b226c07bf7f4d92983f458e86ca98be/manifest.json",
+    "/private/tmp/M4-09-39-8fdc3eis/home/.mem-sharing/backups/20261030T162828Z-3ab0c18124af4db99ced4fa137d40944/manifest.json",
+    "/private/tmp/M4-09-39-8fdc3eis/home/.mem-sharing-install-20261030T162823Z-2a127ff9fd314cd0a00c451ae13bb09a/entry-backups/20261030T162824Z-175abd8319184ba2bb4c28c9fddfc20e/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

@@ -1,0 +1,4 @@
+--- before/home/.mem-sharing/references/same.md
++++ after/home/.mem-sharing/references/same.md
+@@ -0,0 +1 @@
++different

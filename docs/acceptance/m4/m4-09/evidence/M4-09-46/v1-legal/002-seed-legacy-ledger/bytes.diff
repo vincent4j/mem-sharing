@@ -1,0 +1,4 @@
+--- before/home/.mem-sharing/var/registry.json
++++ after/home/.mem-sharing/var/registry.json
+@@ -0,0 +1 @@
++{"schema_version": 1, "projects": {}, "shared_objects": {}}

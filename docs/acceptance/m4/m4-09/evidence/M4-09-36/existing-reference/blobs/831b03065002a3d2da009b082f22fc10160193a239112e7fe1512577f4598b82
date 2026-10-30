@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "command": "enable-memory",
+  "main_checkout": "/private/tmp/M4-09-36-f0ae2igz/project",
+  "checkout": "/private/tmp/M4-09-36-f0ae2igz/project",
+  "git_common_dir": "/private/tmp/M4-09-36-f0ae2igz/project/.git",
+  "agents": [
+    "claude"
+  ],
+  "memory_policy": "follow_ck",
+  "changes": [],
+  "installation": {
+    "claude": {
+      "status": "installed",
+      "fingerprint": "fa1910a54ef2129cdb4c3847a217f1930d4bda7e0fc961954a79270bb9f686a7"
+    }
+  },
+  "native_pending": [],
+  "confirmed_at": "2026-10-30T16:23:20.486581Z",
+  "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
+}

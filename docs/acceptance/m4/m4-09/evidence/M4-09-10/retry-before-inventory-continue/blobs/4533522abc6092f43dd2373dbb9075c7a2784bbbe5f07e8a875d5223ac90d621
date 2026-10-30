@@ -1,0 +1,6 @@
+{
+  "operation_id": "synthetic-fault-upgrade",
+  "pid": 9428,
+  "plan_sha256": "efd913c1a00d259c804a20f9abd0d9fecda78ce6aa23369e11b51726a3010e0a",
+  "product_id": "mem-sharing"
+}

@@ -1,0 +1,47 @@
+--- before/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json
++++ after/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json
+@@ -1142,8 +1142,8 @@
+   ],
+   "final_registry_sha256": "8d2a52d4b050f0dd8012742a9079a07e90eda3ac202e88832dcdaf73572ae2be",
+   "intent": {
+-    "kind": "registry_before",
+-    "path": "/private/tmp/M4-09-10-6si82ebj/home/.mem-sharing/backups/upgrade-synthetic-fault-upgrade/registry-before.json"
++    "kind": "remove_stale_lock",
++    "path": "/private/tmp/M4-09-10-6si82ebj/home/.mem-sharing-install.lock"
+   },
+   "operation_id": "synthetic-fault-upgrade",
+   "phase": "archive",
+@@ -2277,5 +2277,5 @@
+   },
+   "product_id": "mem-sharing",
+   "schema_version": 1,
+-  "status": "prepared"
++  "status": "rolled_back"
+ }
+--- before/home/.mem-sharing-install.lock/migration-owner.json
++++ after/home/.mem-sharing-install.lock/migration-owner.json
+@@ -1,6 +0,0 @@
+-{
+-  "operation_id": "synthetic-fault-upgrade",
+-  "pid": 9095,
+-  "plan_sha256": "28dd010711003453790d014930aede225cc69e91b3a096bbcc28e7368ab5a13a",
+-  "product_id": "mem-sharing"
+-}
+--- before/home/.mem-sharing/var/.agm.lock/migration-owner.json
++++ after/home/.mem-sharing/var/.agm.lock/migration-owner.json
+@@ -1,6 +0,0 @@
+-{
+-  "operation_id": "synthetic-fault-upgrade",
+-  "pid": 9095,
+-  "plan_sha256": "28dd010711003453790d014930aede225cc69e91b3a096bbcc28e7368ab5a13a",
+-  "product_id": "mem-sharing"
+-}
+--- before/home/.mem-sharing/var/.agm.lock/transaction/migration-owner.json
++++ after/home/.mem-sharing/var/.agm.lock/transaction/migration-owner.json
+@@ -1,6 +0,0 @@
+-{
+-  "operation_id": "synthetic-fault-upgrade",
+-  "pid": 9095,
+-  "plan_sha256": "28dd010711003453790d014930aede225cc69e91b3a096bbcc28e7368ab5a13a",
+-  "product_id": "mem-sharing"
+-}

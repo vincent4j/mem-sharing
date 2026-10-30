@@ -1,0 +1,17 @@
+{
+  "captured_at_utc": "2026-10-29T11:12:24Z",
+  "head": "0d402e8bb1160611c16e61e67eb3900d8316eefa",
+  "git_status_short_untracked_all": "",
+  "store_files": {
+    "docs/context-keeper/evolution/index.md": {
+      "sha256": "275017ec2cbb13403e3799d4f616bc2c224c4de2fbb3dc3f0dba515e4c44f564",
+      "bytes": 78
+    },
+    "docs/context-keeper/memory-keeper.md": {
+      "sha256": "e77e710cad26a722a81b818ad465111aebbc94b4ffc79af0e22a5add1847ee7a",
+      "bytes": 192
+    }
+  },
+  "worklogs_dir_entries": [],
+  "note": "record-path/guard/save-report not run: they write ~/.cache/context-keeper (user-level), outside dispatch boundary; manual write per store worklog spec, probe-based acceptance left to main agent"
+}

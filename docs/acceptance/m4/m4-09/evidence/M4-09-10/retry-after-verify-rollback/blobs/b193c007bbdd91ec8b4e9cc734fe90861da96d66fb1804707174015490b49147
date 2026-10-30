@@ -1,0 +1,6 @@
+{
+  "journal": "/private/tmp/M4-09-10-dy9_e14a/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
+  "operation_id": "synthetic-fault-upgrade",
+  "plan_sha256": "7643ab3f72a94fa7df982bbf141543cb48dde3b50881e98778f75458650aed44",
+  "product_id": "mem-sharing"
+}

@@ -1,0 +1,113 @@
+[
+  {
+    "path": "worktree-scan/linked-main/.git",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377456023716385,
+      "size": 288,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377456378869708,
+      "size": 352,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "worktree-scan/linked-main/.git/FETCH_HEAD",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377456379204419,
+      "size": 137,
+      "kind": "file",
+      "sha256": "f21b45adda6d0d5590132d5c29b59dbf2dd488abfc8c030814b9566053edae48"
+    }
+  },
+  {
+    "path": "worktree-scan/linked-main/.git/objects",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377456023841761,
+      "size": 128,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377456386571028,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "worktree-scan/linked-main/.git/objects/pack",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377456023777594,
+      "size": 64,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377456379121127,
+      "size": 160,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "worktree-scan/linked-main/.git/objects/pack/pack-e8a77e0dd1f46dc0589c7067a432aa7abe2e3b40.idx",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377456366234967,
+      "size": 17312,
+      "kind": "file",
+      "sha256": "94d571744c1a3635e46b47525b5714f04d57fa181b8924474f0ddfddc5b43d12"
+    }
+  },
+  {
+    "path": "worktree-scan/linked-main/.git/objects/pack/pack-e8a77e0dd1f46dc0589c7067a432aa7abe2e3b40.pack",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377456365913589,
+      "size": 1828931,
+      "kind": "file",
+      "sha256": "f3a2e8847ceaec26a15c0f8e54df3cd4eebcad9317cebc499f0ec38bce08ca55"
+    }
+  },
+  {
+    "path": "worktree-scan/linked-main/.git/objects/pack/pack-e8a77e0dd1f46dc0589c7067a432aa7abe2e3b40.rev",
+    "before": null,
+    "after": {
+      "mode": 33060,
+      "permissions": "0o444",
+      "mtime_ns": 1793377456366532345,
+      "size": 2372,
+      "kind": "file",
+      "sha256": "99692e85996f834774891c85133eff7f067feafd6b594007c20b95727c1d1e8a"
+    }
+  },
+  {
+    "path": "worktree-scan/linked-main/.git/shallow",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377456102815856,
+      "size": 41,
+      "kind": "file",
+      "sha256": "a6b5d59b8e57a54ea0e8d56882f24dbef6654c1f37390c1efe28c4431859c8b8"
+    }
+  }
+]

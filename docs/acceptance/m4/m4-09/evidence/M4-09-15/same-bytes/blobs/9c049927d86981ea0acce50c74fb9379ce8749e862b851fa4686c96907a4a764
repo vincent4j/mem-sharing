@@ -1,0 +1,3 @@
+Reading additional input from stdin...
+2026-10-29T11:50:18.747206Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=OAuth tokens for server scys-mcp cannot be refreshed; authorization required
+2026-10-29T11:50:20.369334Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=OAuth tokens for server scys-mcp cannot be refreshed; authorization required

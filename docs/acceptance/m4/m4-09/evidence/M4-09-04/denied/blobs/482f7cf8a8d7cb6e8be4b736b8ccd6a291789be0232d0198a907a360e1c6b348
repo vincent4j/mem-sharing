@@ -1,0 +1,52 @@
+diff --git "a/Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper/worklogs/2026-10-29-M1\350\264\237\345\220\221\351\252\214\350\257\201\344\270\216\346\224\266\345\217\243.md" "b/Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper/worklogs/2026-10-29-M1\350\264\237\345\220\221\351\252\214\350\257\201\344\270\216\346\224\266\345\217\243.md"
+new file mode 100644
+index 0000000..818a3e0
+--- /dev/null
++++ "b/Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper/worklogs/2026-10-29-M1\350\264\237\345\220\221\351\252\214\350\257\201\344\270\216\346\224\266\345\217\243.md"
+@@ -0,0 +1,46 @@
++<!-- context-keeper: session-id=m1-07-26251c70-68c6-48ca-a58f-4005052263c1 -->
++# M1 负向验证与收口
++
++- **来源：** 主 Agent 收口汇总；受托执行者呱唧，任务消息 `26251c70-68c6-48ca-a58f-4005052263c1`。session-id 使用本轮稳定任务标识，不冒充宿主运行会话 UUID。
++- **记录时间：** 2026-10-29T19:56:36+08:00。
++- **记录方式：** 按用户明确要求沿 M1-05 先例手动创建并挂索引；不修改其他日志/经验/计划，未运行会写用户缓存的 record-path/guard。规范及校验边界见 [格式说明](../../acceptance/m1-07/format-compliance.md)。
++
++## 本轮目标、实际操作与结果
++
++完成 Codex、Claude 各两个全新无头负向会话；完整 argv、UTC、stdout JSONL 工具轨迹、stderr、进程退出码、文件集合/SHA 与系统 diff 落于 [M1-07 证据](../../acceptance/m1-07/evidence.md)。四会话均退出 0，各只运行一次。N1 两家明确禁止保存，前后真实库 5 文件集合与 SHA 一致，轨迹未见写入。N2 只对获授权合成 fixture 查询，两家均 resume rc=3 后停读写并提示，只运行未批准迁移预览；未读旧正文、未自动迁移、未替换为外层真实库。fixture 前后文件/目录集合和 SHA 一致；负向阶段真实库全树文件集合与 SHA 零差异。
++
++N2 是显式给定 fixture 根的限定用例，不代表完全自动发现。零差异不单独证明未读，以工具轨迹及上游预览跳过源 mapping 的静态证据补强，非 OS 访问审计。Claude 出现只读命令权限拒绝，改为普通命令后完成，没有扩大权限或重跑覆盖失败现场。详见证据报告。
++
++WorkBuddy N1/N2 未执行，已交 [用户操作单](../../acceptance/m1-07/workbuddy-user-script.md)。因此 M1-07 仅部分通过，不能因为两家通过称三家全过。
++
++## M1 各任务收口
++
++| 任务 | 实际结果与边界 |
++|---|---|
++| M1-01 | [预检](../../acceptance/m1-01/preflight.md)完成，路径/接口/授权/恢复方案有记录；不是实际接力验收 |
++| M1-02 | [规则基座](../../acceptance/m1-02/evidence.md)已装配；不扩大为所有宿主自动加载 |
++| M1-03 | 两轮验收辅助脚本失败及恢复现场保留；[第三轮](../../acceptance/m1-03/20261029T110112Z-round3/handoff.md)操作回执 00～12 rc=0，四链接/两桥接/registry 静态装配完成；第三轮未重做所有幂等/schema/runtime 判定 |
++| M1-04 | [第三轮桥接回执](../../acceptance/m1-04/20261029T110112Z-round3/handoff.md)证明 WorkBuddy 项目块与获批用户例外部署；运行验收受接力污染和负向缺证限制 |
++| M1-05 | [公开 legacy 样本](../../acceptance/m1-05/evidence.md)搬运与格式/来源说明已交；标准 record-path/guard/save-report 当时未运行 |
++| M1-06 | 四环数据读回链成立；P1/P2 保存流程偏差、P3 答案污染保留，不是标准无污染闭环 passed |
++| M1-07 | Codex/Claude N1/N2 通过；WorkBuddy 两负向 not-run；当前整体部分通过 |
++
++## 四环接力证据与后续纠正
++
++- P1 Codex `01a18762-a4f3-7413-bd7a-8a6811222ea0` 保存 F1（标识 `AGM-M1-20261029T111910Z-1c6de08c`，纸鹤青绿色）与 T1 未开始；[轨迹](../../acceptance/m1-06/codex.stdout.jsonl)。动态改历史缓存路径、写入后重建保护基线等偏差见 [原报告](../../acceptance/m1-06/evidence.md)，不抹掉。
++- P2 Claude `892391b4-d896-437e-886e-ab742abf4c8c` 从库读回 F1/T1，推进进行中；[轨迹](../../acceptance/m1-06/claude.stdout.jsonl)。未运行 Keeper 门禁/保护，直接 Edit 并跨会话追加 Codex 旧日志，流程未通过。
++- P3 WorkBuddy `2fe54cc9-ee23-4971-88b0-38ea1564e03c` 恢复 F1/T1、标 T1 已完成、新增 F2 `AGM-M1-WB3-20261029T1141Z-1155e99b`（赭石色/OCHRE-07）；[第三环日志](2026-10-29-三执行器记忆接力测试-WorkBuddy第三环.md)。之后读取答案验收文件，完成判定/F2 受影响，不算盲测；未取得独立完整会话导出，日志自述不能当完整轨迹。
++- P4 Codex `01a1877b-22ff-7e32-9971-2735980081fa` 已通过 search 和实际记录库读回 F1/F2/T1 已完成，见 [原始轨迹](../../acceptance/m1-06/p4/codex.stdout.jsonl)；turn.completed 已记录。前后 SHA 只覆盖 memory-keeper 一文件；argv/进程 rc/全树快照未独立记录，不补造。
++- **本轮纠正：** 原索引、P3 日志与 P4 输出中的“P4 未执行”沿用旧快照；现在依据真实 P4 工具轨迹明确已执行。只在本新日志及收口主题说明，不覆盖旧正文。T1 测试待办已完成，不等于 M1 验收已通过。
++
++## M2-02/03 当前进展（收口时点）
++
++M2-02 四模块 project/registry/entries/transaction 与两测试文件已提交于 `fb5e98054b27f702165dc36fb819e89c15730969`，提交说明记载 54 tests；本轮只核对提交和文件存在，没有复跑测试，不称本轮实测。M2-03 正并行实施路径加载/CLI/SKILL/test_cli，本轮见 paths.py/test_cli.py 新文件及 agm.py/SKILL.md 修改；未触碰这些文件，是否通过待其执行者交付，不把进行中当 passed。
++
++## 当前判断与下一步
++
++**M1 不可标 passed，结论部分通过。** 静态装配、公开样本与四环读回有证据；P2/P3 偏差、WorkBuddy N1/N2、标准保护验收仍需补齐。后续另行授权处理原因并用新 run 做完整无污染验收，保留本次失败，不手工修旧日志制造通过。真实记录库本轮仅新增本 worklog 与 memory-keeper 的收口入口；执行器入口、用户级文件、上游和并行代码均未修改。没有 commit/push。
++
++## 追加记录 2026-10-29T19:58:15+08:00
++
++收尾读回发现并行方已提交 M2-03：`d5784154aa6e5d30d9606d8296348ed83dd6e876`（提交时间 2026-10-29T19:55:32+08:00），涉及 SKILL.md、agm.py、paths.py、test_cli.py；提交说明记载 104 tests。本轮核对 commit/stat，不复跑测试，不称本轮实测。此前“并行实施待交付”为当时观测，当前更新为代码已提交、运行与测试结论以该执行者交付为准。本受托会话没有 commit/push，也未编辑这些文件。

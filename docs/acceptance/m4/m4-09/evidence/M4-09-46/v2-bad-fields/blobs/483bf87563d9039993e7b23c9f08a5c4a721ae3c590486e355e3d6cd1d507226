@@ -1,0 +1,7 @@
+........................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 360 tests in 86.125s
+
+OK
+REBUILD {"projects_before": 2, "preview_rebuild": {"classification": "registry_project_corrupt", "reason": "unknown fact status", "registry_sha256": "9e028518e1c84de1eaceda83723f272c2303b645a65c0176bee4a8c92df335ea", "registry_bytes": 7839, "project_count": 2, "removed_projects": [{"main_checkout": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmpp5mpc_zh/project with spaces", "record_sha256": "b48ce124390006b0b27fefbb175bdeef4ee82eeface304d629dab3693cdd2bcf"}, {"main_checkout": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmpp5mpc_zh/second-project", "record_sha256": "0c524a6689445e7031ff01bad111a2a17f214223bb1025bb137fbd83032f34a1"}], "removed_shared_objects": ["/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmpp5mpc_zh/home/.workbuddy/MEMORY.md#rules"], "scope": "reset all project registrations and shared consumer indexes; preserve machine identity and all user files"}, "without_separate_approval": "approval_required", "result": "completed", "projects_after": 1}
+RACE recovery_required external edit

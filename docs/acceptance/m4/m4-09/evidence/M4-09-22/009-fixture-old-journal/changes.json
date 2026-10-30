@@ -1,0 +1,31 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377144574011403,
+      "size": 352,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377145939440149,
+      "size": 384,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "old-journal.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377145939506608,
+      "size": 99,
+      "kind": "file",
+      "sha256": "89c48af93fe448a6029115bc8516b7facb70bbc27eb73485a8dd01d5c52f9d8b"
+    }
+  }
+]

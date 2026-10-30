@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "runtime_layout": {
+    "root": "/private/tmp/M4-09-36-f0ae2igz/home/.mem-sharing",
+    "code": "/private/tmp/M4-09-36-f0ae2igz/home/.local/share/mem-sharing",
+    "registry": "/private/tmp/M4-09-36-f0ae2igz/home/.mem-sharing/var/registry.json",
+    "lock": "/private/tmp/M4-09-36-f0ae2igz/home/.mem-sharing/var/.agm.lock",
+    "transaction_lock": "/private/tmp/M4-09-36-f0ae2igz/home/.mem-sharing/var/.agm.lock/transaction",
+    "backups": "/private/tmp/M4-09-36-f0ae2igz/home/.mem-sharing/backups"
+  },
+  "command": "enable-memory",
+  "status": "approval_required",
+  "projects": [
+    {
+      "main_checkout": "/private/tmp/M4-09-36-f0ae2igz/project",
+      "checkout": "/private/tmp/M4-09-36-f0ae2igz/project",
+      "memory_policy": "follow_ck",
+      "agents": [
+        "codex"
+      ],
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      },
+      "evidence": [
+        "/private/tmp/M4-09-36-f0ae2igz/home/.mem-sharing/var/registry.json"
+      ]
+    }
+  ],
+  "changes": [],
+  "warnings": [],
+  "errors": [],
+  "approval_required": true,
+  "next_action": "{\"schema_version\": 1, \"command\": \"enable-memory\", \"main_checkout\": \"/private/tmp/M4-09-36-f0ae2igz/project\", \"checkout\": \"/private/tmp/M4-09-36-f0ae2igz/project\", \"git_common_dir\": \"/private/tmp/M4-09-36-f0ae2igz/project/.git\", \"agents\": [\"codex\"], \"memory_policy\": \"follow_ck\", \"changes\": [{\"path\": \"/private/tmp/M4-09-36-f0ae2igz/project/AGENTS.md\", \"operation\": \"create\", \"before_fingerprint\": null, \"after_fingerprint\": \"85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406\"}], \"installation\": {\"codex\": {\"status\": \"installed\", \"fingerprint\": \"5641f9927fe9a730c5d9c3cf1426961a89ab5a848e6b8d6c23d84aff57035e06\"}}, \"native_pending\": [], \"confirmed_at\": \"<UTC timestamp>\", \"reference\": \"<user confirmation reference>\"}"
+}

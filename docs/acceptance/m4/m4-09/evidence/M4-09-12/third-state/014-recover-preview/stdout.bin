@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "upgrade_conflict", "message": "Third-state output; manual recovery required"}], "schema_version": 1, "status": "failed"}

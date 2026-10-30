@@ -1,0 +1,24 @@
+{
+  "label": "fixture-synthetic-target-delta",
+  "argv": [
+    "fixture-operation",
+    "synthetic-target-delta"
+  ],
+  "cwd": "/private/tmp/M4-09-11-laj2gpdg/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-11-laj2gpdg/home",
+    "PATH": "/private/tmp/M4-09-11-laj2gpdg/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-11-laj2gpdg/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:22:02.786272Z",
+  "ended_utc": "2026-10-30T16:22:02.807892Z",
+  "duration_seconds": 0.02162229100940749,
+  "fixture_operation": "synthetic-target-delta",
+  "returned": "(None, None)"
+}

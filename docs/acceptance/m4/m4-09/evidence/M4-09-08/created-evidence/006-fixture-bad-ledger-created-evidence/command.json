@@ -1,0 +1,24 @@
+{
+  "label": "fixture-bad-ledger-created-evidence",
+  "argv": [
+    "fixture-operation",
+    "bad-ledger-created-evidence"
+  ],
+  "cwd": "/private/tmp/M4-09-08-ik6_p8b5/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-08-ik6_p8b5/home",
+    "PATH": "/private/tmp/M4-09-08-ik6_p8b5/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-08-ik6_p8b5/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:17:26.788654Z",
+  "ended_utc": "2026-10-30T16:17:26.856653Z",
+  "duration_seconds": 0.06799779200810008,
+  "fixture_operation": "bad-ledger-created-evidence",
+  "returned": "None"
+}

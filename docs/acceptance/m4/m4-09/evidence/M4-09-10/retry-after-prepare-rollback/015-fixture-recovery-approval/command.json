@@ -1,0 +1,24 @@
+{
+  "label": "fixture-recovery-approval",
+  "argv": [
+    "fixture-operation",
+    "recovery-approval"
+  ],
+  "cwd": "/private/tmp/M4-09-10-6wb4agno/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-10-6wb4agno/home",
+    "PATH": "/private/tmp/M4-09-10-6wb4agno/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-10-6wb4agno/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:20:27.689989Z",
+  "ended_utc": "2026-10-30T16:20:27.823224Z",
+  "duration_seconds": 0.13323658300214447,
+  "fixture_operation": "recovery-approval",
+  "returned": "None"
+}

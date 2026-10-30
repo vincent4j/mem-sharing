@@ -1,0 +1,239 @@
+{
+  "approval": {
+    "confirmed_at": "2026-10-30T16:16:44.927018Z",
+    "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
+  },
+  "excluded": [
+    {
+      "disposition": "preserved_in_place",
+      "path": "skills",
+      "type": "directory"
+    },
+    {
+      "disposition": "preserved_in_place",
+      "path": "mcp",
+      "type": "directory"
+    }
+  ],
+  "items": [
+    {
+      "after": null,
+      "before": {
+        "fingerprint": null,
+        "kind": "absent"
+      },
+      "completed": true,
+      "disposition": "copy",
+      "mode": 493,
+      "path": "memories",
+      "sha256": null,
+      "sha256_or_link_text_hash": null,
+      "size": null,
+      "source_relative_path": "memories",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.mem-sharing/memories/legacy-v0-20261030T161644Z-73fe3ef492fb43baa5d4288ab4c5f494/memories",
+      "type": "directory"
+    },
+    {
+      "after": null,
+      "before": {
+        "fingerprint": null,
+        "kind": "directory"
+      },
+      "completed": true,
+      "disposition": "reuse",
+      "mode": 493,
+      "path": "memories",
+      "sha256": null,
+      "sha256_or_link_text_hash": null,
+      "size": null,
+      "source_relative_path": "memories",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.agents-group/memories",
+      "type": "directory"
+    },
+    {
+      "after": "ab93dff472476a4288674273875499555c58aba0e484bd2dffbbdc6f53120647",
+      "before": {
+        "fingerprint": null,
+        "kind": "absent"
+      },
+      "completed": true,
+      "disposition": "copy",
+      "mode": 420,
+      "path": "memories/MEMORY.md",
+      "sha256": "ab93dff472476a4288674273875499555c58aba0e484bd2dffbbdc6f53120647",
+      "sha256_or_link_text_hash": "ab93dff472476a4288674273875499555c58aba0e484bd2dffbbdc6f53120647",
+      "size": 101,
+      "source_relative_path": "memories/MEMORY.md",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.mem-sharing/memories/legacy-v0-20261030T161644Z-73fe3ef492fb43baa5d4288ab4c5f494/memories/MEMORY.md",
+      "type": "file"
+    },
+    {
+      "after": "ab93dff472476a4288674273875499555c58aba0e484bd2dffbbdc6f53120647",
+      "before": {
+        "fingerprint": "ab93dff472476a4288674273875499555c58aba0e484bd2dffbbdc6f53120647",
+        "kind": "file"
+      },
+      "completed": true,
+      "disposition": "reuse",
+      "mode": 420,
+      "path": "memories/MEMORY.md",
+      "sha256": "ab93dff472476a4288674273875499555c58aba0e484bd2dffbbdc6f53120647",
+      "sha256_or_link_text_hash": "ab93dff472476a4288674273875499555c58aba0e484bd2dffbbdc6f53120647",
+      "size": 101,
+      "source_relative_path": "memories/MEMORY.md",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.agents-group/memories/MEMORY.md",
+      "type": "file"
+    },
+    {
+      "active": true,
+      "after": "09c7233e9ffddac20bdef988cddd45189a0bb9691b7dbb0db57a9419063b2d4f",
+      "before": {
+        "fingerprint": null,
+        "kind": "absent"
+      },
+      "completed": true,
+      "disposition": "copy",
+      "mode": 493,
+      "path": "memories/relative",
+      "sha256": "09c7233e9ffddac20bdef988cddd45189a0bb9691b7dbb0db57a9419063b2d4f",
+      "sha256_or_link_text_hash": "09c7233e9ffddac20bdef988cddd45189a0bb9691b7dbb0db57a9419063b2d4f",
+      "size": 9,
+      "source_relative_path": "memories/relative",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.mem-sharing/memories/legacy-v0-20261030T161644Z-73fe3ef492fb43baa5d4288ab4c5f494/memories/relative",
+      "text": "主题.md",
+      "type": "symlink"
+    },
+    {
+      "active": true,
+      "after": "09c7233e9ffddac20bdef988cddd45189a0bb9691b7dbb0db57a9419063b2d4f",
+      "before": {
+        "fingerprint": "09c7233e9ffddac20bdef988cddd45189a0bb9691b7dbb0db57a9419063b2d4f",
+        "kind": "symlink"
+      },
+      "completed": true,
+      "disposition": "reuse",
+      "mode": 493,
+      "path": "memories/relative",
+      "sha256": "09c7233e9ffddac20bdef988cddd45189a0bb9691b7dbb0db57a9419063b2d4f",
+      "sha256_or_link_text_hash": "09c7233e9ffddac20bdef988cddd45189a0bb9691b7dbb0db57a9419063b2d4f",
+      "size": 9,
+      "source_relative_path": "memories/relative",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.agents-group/memories/relative",
+      "text": "主题.md",
+      "type": "symlink"
+    },
+    {
+      "after": "e2cb2a1227c5bff5602c58154a9f67c3d185f7f3d969073bb258ece5f57986b5",
+      "before": {
+        "fingerprint": null,
+        "kind": "absent"
+      },
+      "completed": true,
+      "disposition": "copy",
+      "mode": 420,
+      "path": "memories/主题.md",
+      "sha256": "e2cb2a1227c5bff5602c58154a9f67c3d185f7f3d969073bb258ece5f57986b5",
+      "sha256_or_link_text_hash": "e2cb2a1227c5bff5602c58154a9f67c3d185f7f3d969073bb258ece5f57986b5",
+      "size": 21,
+      "source_relative_path": "memories/主题.md",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.mem-sharing/memories/legacy-v0-20261030T161644Z-73fe3ef492fb43baa5d4288ab4c5f494/memories/主题.md",
+      "type": "file"
+    },
+    {
+      "after": "e2cb2a1227c5bff5602c58154a9f67c3d185f7f3d969073bb258ece5f57986b5",
+      "before": {
+        "fingerprint": "e2cb2a1227c5bff5602c58154a9f67c3d185f7f3d969073bb258ece5f57986b5",
+        "kind": "file"
+      },
+      "completed": true,
+      "disposition": "reuse",
+      "mode": 420,
+      "path": "memories/主题.md",
+      "sha256": "e2cb2a1227c5bff5602c58154a9f67c3d185f7f3d969073bb258ece5f57986b5",
+      "sha256_or_link_text_hash": "e2cb2a1227c5bff5602c58154a9f67c3d185f7f3d969073bb258ece5f57986b5",
+      "size": 21,
+      "source_relative_path": "memories/主题.md",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.agents-group/memories/主题.md",
+      "type": "file"
+    },
+    {
+      "after": null,
+      "before": {
+        "fingerprint": null,
+        "kind": "absent"
+      },
+      "completed": true,
+      "disposition": "copy",
+      "mode": 493,
+      "path": "references",
+      "sha256": null,
+      "sha256_or_link_text_hash": null,
+      "size": null,
+      "source_relative_path": "references",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.mem-sharing/memories/legacy-v0-20261030T161644Z-73fe3ef492fb43baa5d4288ab4c5f494/references",
+      "type": "directory"
+    },
+    {
+      "after": null,
+      "before": {
+        "fingerprint": null,
+        "kind": "directory"
+      },
+      "completed": true,
+      "disposition": "reuse",
+      "mode": 493,
+      "path": "references",
+      "sha256": null,
+      "sha256_or_link_text_hash": null,
+      "size": null,
+      "source_relative_path": "references",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.agents-group/references",
+      "type": "directory"
+    },
+    {
+      "after": "31b21810de38f32201bd31bec75aeb968e86ad4070c70ccd5f9698a0bf484cab",
+      "before": {
+        "fingerprint": null,
+        "kind": "absent"
+      },
+      "completed": true,
+      "disposition": "copy",
+      "mode": 420,
+      "path": "references/手册.md",
+      "sha256": "31b21810de38f32201bd31bec75aeb968e86ad4070c70ccd5f9698a0bf484cab",
+      "sha256_or_link_text_hash": "31b21810de38f32201bd31bec75aeb968e86ad4070c70ccd5f9698a0bf484cab",
+      "size": 11,
+      "source_relative_path": "references/手册.md",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.mem-sharing/memories/legacy-v0-20261030T161644Z-73fe3ef492fb43baa5d4288ab4c5f494/references/手册.md",
+      "type": "file"
+    },
+    {
+      "after": "31b21810de38f32201bd31bec75aeb968e86ad4070c70ccd5f9698a0bf484cab",
+      "before": {
+        "fingerprint": "31b21810de38f32201bd31bec75aeb968e86ad4070c70ccd5f9698a0bf484cab",
+        "kind": "file"
+      },
+      "completed": true,
+      "disposition": "reuse",
+      "mode": 420,
+      "path": "references/手册.md",
+      "sha256": "31b21810de38f32201bd31bec75aeb968e86ad4070c70ccd5f9698a0bf484cab",
+      "sha256_or_link_text_hash": "31b21810de38f32201bd31bec75aeb968e86ad4070c70ccd5f9698a0bf484cab",
+      "size": 11,
+      "source_relative_path": "references/手册.md",
+      "target": "/private/tmp/M4-09-05-tap9u5q8/home/.agents-group/references/手册.md",
+      "type": "file"
+    }
+  ],
+  "operation_id": "20261030T161644Z-73fe3ef492fb43baa5d4288ab4c5f494",
+  "plan_sha256": "9ed85d005bcd9d090c7a5abeeb8dcc46063a9c23d5bcdf284fe7d77a3902da9c",
+  "product_id": "mem-sharing",
+  "registry_sha256": "2470e099e8c33be1eea1cbaf47208acf1e1e59d995aebada41e19a6182401f2d",
+  "schema_version": 1,
+  "snapshot": "/private/tmp/M4-09-05-tap9u5q8/home/.mem-sharing/backups/v0-20261030T161644Z-73fe3ef492fb43baa5d4288ab4c5f494/source",
+  "snapshot_complete": true,
+  "source_root": "/private/tmp/M4-09-05-tap9u5q8/home/.agents-group",
+  "source_tree_sha256": "72263951d9dc87305e91983facfa8c1ca8181e5d89a06fd513258cbae003e306",
+  "status": "committed",
+  "target_root": "/private/tmp/M4-09-05-tap9u5q8/home/.mem-sharing"
+}

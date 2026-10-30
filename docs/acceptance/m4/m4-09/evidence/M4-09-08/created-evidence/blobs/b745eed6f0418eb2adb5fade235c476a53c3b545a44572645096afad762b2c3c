@@ -1,0 +1,496 @@
+diff --git a/SKILL.md b/SKILL.md
+index f50ec28..252acaa 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -22,13 +22,13 @@ Git 源码仓库是唯一真实副本；各宿主 Skill 目录都从源码加载
+ 
+ ## 首次使用：补齐自动入口
+ 
+-当前宿主是 Codex 或 Claude Code 时，本会话首次调用本 Skill 先运行只读预览，说明将写入的文件和范围，等待确认后再加 `--approved` 执行；未确认则继续原操作。`<skill-dir>` 用当前实际加载目录，`<repo>` 为当前项目，按宿主选 `--codex` 或 `--claude`（只选一个）：
++当前宿主是 Codex、Claude Code 或 WorkBuddy 时，本会话首次调用本 Skill 先运行只读预览，说明将写入的文件和范围，等待确认后再加 `--approved` 执行；未确认则继续原操作。`<skill-dir>` 用当前实际加载目录，`<repo>` 为当前项目，按宿主选 `--codex`、`--claude` 或 `--workbuddy`（只选一个）：
+ 
+ ```bash
+ python3 <skill-dir>/scripts/install.py --ensure-bridge --skill-dir <skill-dir> --root <repo> --codex
+ ```
+ 
+-返回 `created/appended/updated` 时简短告知后继续原操作；`unchanged` 静默继续；同一会话复用结果不重复检查。失败时如实说明，按需读 [安装说明](references/install.md)，不擅自扩大为全局安装；不把配置成功说成模型行为已验证。其余宿主只依赖原生 Skill 发现机制，不写未验证的自动入口。
++返回 `created/appended/prepended/updated` 时简短告知后继续原操作；`unchanged` 静默继续；同一会话复用结果不重复检查。失败时如实说明，按需读 [安装说明](references/install.md)，不擅自扩大为全局安装；不把配置成功说成模型行为已验证。WorkBuddy 项目入口为 `.workbuddy/memory/MEMORY.md` 顶部受控块，兼容既有 AGM 块；配置接管不代表 WorkBuddy 新会话已完成运行时验收。其余四个宿主只依赖原生 Skill 发现机制，不写未验证的自动入口。
+ 
+ ## 事实边界
+ 
+diff --git a/references/install.md b/references/install.md
+index 7dde53f..9f174c6 100644
+--- a/references/install.md
++++ b/references/install.md
+@@ -24,7 +24,7 @@ python3 <source-dir>/scripts/install.py --all
+ python3 <skill-dir>/scripts/install.py --ensure-bridge --skill-dir <skill-dir> --root <repo> --codex
+ ```
+ 
+-当前宿主是 Claude Code 时使用 `--claude`。得到用户确认后再加 `--approved` 写入。Cursor、WorkBuddy、Hermes、OpenCode 和 OpenClaw 当前只安装原生 Skill 目录，不写自动入口规则。
++当前宿主是 Claude Code 时使用 `--claude`，WorkBuddy 使用 `--workbuddy`。得到用户确认后再加 `--approved` 写入。Cursor、Hermes、OpenCode 和 OpenClaw 当前只安装原生 Skill 目录，不写自动入口规则。
+ 
+ - 用户级安装对应用户级规则；项目级安装对应安装项目的规则，不以当前工作目录猜安装范围。
+ - 目标 Agent 必须显式选择，安装器不会根据 PATH、用户目录或项目文件猜测宿主。
+@@ -46,7 +46,7 @@ python3 <skill-dir>/scripts/install.py --ensure-bridge --skill-dir <skill-dir> -
+ python3 scripts/install.py --all
+ ```
+ 
+-也可指定 `--codex`、`--claude`、`--cursor`、`--workbuddy`、`--hermes`、`--opencode` 或 `--openclaw`。用户级入口目前只写入 Codex 和 Claude Code 的用户规则文件，项目历史仍存放在各项目自己的记录目录，不跨项目自动混合。
++也可指定 `--codex`、`--claude`、`--cursor`、`--workbuddy`、`--hermes`、`--opencode` 或 `--openclaw`。用户级入口写入 Codex、Claude Code 和 WorkBuddy 的用户规则文件（WorkBuddy 为 `~/.workbuddy/MEMORY.md`），项目历史仍存放在各项目自己的记录目录，不跨项目自动混合。
+ 
+ ## 项目级
+ 
+@@ -56,9 +56,9 @@ python3 scripts/install.py --all
+ python3 scripts/install.py --project <repo> --all
+ ```
+ 
+-项目级安装让项目的 Agent Skill 目录从源码仓库加载；选择 Codex 或 Claude Code 时，才会把短入口规则写入项目根目录的规则文件。用户级和项目级同时存在时，Agent 只执行一次检索或沉淀流程。
++项目级安装让项目的 Agent Skill 目录从源码仓库加载；选择 Codex 或 Claude Code 时，把短入口规则写入项目根目录的规则文件；选择 WorkBuddy 时，写入项目 `.workbuddy/memory/MEMORY.md` 顶部。用户级和项目级同时存在时，Agent 只执行一次检索或沉淀流程。
+ 
+-Skill 已通过统一安装或其他方式可用，只需启用 Codex 或 Claude Code 自动入口时：
++Skill 已通过统一安装或其他方式可用，只需启用 Codex、Claude Code 或 WorkBuddy 自动入口时：
+ 
+ ```bash
+ python3 scripts/install.py --codex --claude --bridge-only
+@@ -85,7 +85,7 @@ python3 scripts/install.py --all --uninstall
+ | Codex | `~/.agents/skills`、`~/.codex/skills` | `.agents/skills`、`.codex/skills` | 支持 |
+ | Claude Code | `~/.claude/skills` | `.claude/skills` | 支持 |
+ | Cursor | `~/.cursor/skills` | `.cursor/skills` | 未启用 |
+-| WorkBuddy | `~/.workbuddy/skills` | `.workbuddy/skills` | 未启用 |
++| WorkBuddy | `~/.workbuddy/skills` | `.workbuddy/skills` | 支持配置，待新会话运行时验收 |
+ | Hermes | `~/.hermes/skills` | `.agents/skills` | 未启用 |
+ | OpenCode | `~/.config/opencode/skills` | `.opencode/skills` | 未启用 |
+ | OpenClaw | `~/.agents/skills` | `.agents/skills` | 未启用 |
+@@ -105,3 +105,9 @@ python3 scripts/install.py --all --uninstall
+ ## 当前实测限制
+ 
+ 2026-09-16：Codex/gpt-6-astra 的普通任务、自动沉淀、跨任务复用及失败后检索用例通过。本机 Claude Code/MiniMax-M3 显式保存可用，但自然纠正未自动沉淀，检索也未严格遵守读取预算。不得将安装成功描述为所有模型均可自动运行。详见仓库 `behavior-verification.md`。
++
++## WorkBuddy 既有块接管
++
++使用 `context-keeper:workbuddy:start/end` 标记识别既有 AGM 桥接块。模板与三项目已部署块逐字节兼容；当前块位于顶部时返回 `unchanged`，不写文件。旧文案在批准后原位更新；块不在顶部时移至顶部，保留块外原文；缺失时前置，不追加第二块。损坏、倒置或重复标记在写入 Skill 和规则前停止。此安装门禁不读取记录库，也不绕过记录库迁移门禁。
++
++WorkBuddy 真机新会话自动读取与续接仍需用户另行验收，文件配置成功不构成该结论。
+diff --git a/scripts/install.py b/scripts/install.py
+index e0fdbd2..63a6825 100755
+--- a/scripts/install.py
++++ b/scripts/install.py
+@@ -25,6 +25,25 @@ BRIDGE = f"""{BRIDGE_START}
+ """
+ 
+ 
++# Adopt AGM-deployed blocks byte-for-byte; runtime behavior is still unverified.
++WORKBUDDY_BRIDGE_START = "<!-- context-keeper:workbuddy:start -->"
++WORKBUDDY_BRIDGE_END = "<!-- context-keeper:workbuddy:end -->"
++WORKBUDDY_BRIDGE = """<!-- context-keeper:workbuddy:start -->
++## Context Keeper（WorkBuddy 桥接，待运行时验收）
++
++项目规则读取项目根 AGENTS.md；项目记忆遵守已安装的 context-keeper SKILL.md，使用用户确认的实际记录库路径，不假设固定目录。未获记录库授权不得写入；遵守 record-path / record-guard、会话标识与 save-report 要求。此入口不存项目历史。
++
++- 无项目聊天不启动自动保存、状态检查或建库询问；仅用户明确要求保存时进入保存路由。本边界优先于所有自动记录触发；临时目录和讨论仓库文件都不自动把聊天变成项目会话。
++- 脚本报告“需要迁移”（退出码 3）时立即停止读写；先展示 migrate 预览，用户确认后才执行 --approved，不绕过门禁读旧目录。
++- 用户提及以前、上次、重复问题，失败准备重试或换路线且证据不足，或准备推翻旧决策依据不清时，做一次限量历史检索；普通新需求不检索，同一问题本轮不重复。
++- 仅在已确认项目、已有授权记录库、无用户禁止保存/改文件且有新事实时，于阶段工作或成果、技术选择、影响路线的失败、用户纠正、新证据、暂停交接或阻塞等待的自然节点记录，交付或暂停回复前完成；失败也记，不等成功，不自动建库或询问。琐碎问答、无影响工具调用和重复状态跳过，不创建空日志；不保存原始凭据或无关隐私，不违反立即停止指令。
++- 工作日志只追加：同会话同主题追加带时间新段，跨会话新建并关联；已有操作、错误方案、当时判断和旧摘要不覆盖、不删除，纠正另追加。主题记忆可更新：当前进度/待办/偏好在 memory-keeper，经验在 evolution，保留来源与替代关系；记录事实不等于新增编号经验。
++- 整理先更新 memory-keeper 当前进度、要求、待办和来源；同主题更新，不按日期堆近似条目。经验先判断下次场景、建议动作与依据，再补证据/修范围或新建主题，不机械生成经验。续接命令通过迁移门禁后先看相关当前主题和待办，旧摘要只是历史线索；必要时有限追溯来源。save-report 只检查结构和链接，本轮反馈由 Agent 核对说明，旧反馈不复播；日志只追加由指令约束，不增加段 ID、锁或回执。
++- 历史事实只来自记录，区分原文、摘要和推断；未找到就说明未找到。采用前核验当前适用性，历史下一步不构成当前授权；不重复提出已被拒绝的保存询问。
++<!-- context-keeper:workbuddy:end -->
++"""
++
++
+ def _home() -> Path:
+     return Path(os.environ.get("HOME") or str(Path.home())).expanduser().resolve()
+ 
+@@ -126,44 +145,65 @@ def _check_remove_target(target_root: Path) -> Path:
+     raise RuntimeError(f"拒绝删除无法确认由安装器创建的目录：{target}；请先核对其中的本地修改")
+ 
+ 
+-def _upsert_bridge(path: Path) -> str:
++def _bridge_spec(agent: str) -> tuple[str, str, str]:
++    if agent == "workbuddy":
++        return WORKBUDDY_BRIDGE_START, WORKBUDDY_BRIDGE_END, WORKBUDDY_BRIDGE
++    return BRIDGE_START, BRIDGE_END, BRIDGE
++
++
++def _bridge_path(agent: str, base: Path, *, user: bool = False) -> Path:
++    if agent == "workbuddy":
++        return base / (".workbuddy/MEMORY.md" if user else ".workbuddy/memory/MEMORY.md")
++    return base / ({"codex": ".codex/AGENTS.md", "claude": ".claude/CLAUDE.md"}[agent]
++                   if user else {"codex": "AGENTS.md", "claude": "CLAUDE.md"}[agent])
++
++
++def _upsert_bridge(path: Path, agent: str = "codex") -> str:
++    _check_bridge(path, agent)
++    first, last, bridge = _bridge_spec(agent)
+     path.parent.mkdir(parents=True, exist_ok=True)
+     if not path.exists():
+-        path.write_text(BRIDGE + "\n", encoding="utf-8")
++        path.write_text(bridge + "\n", encoding="utf-8")
+         return "created"
+-    text = path.read_text(encoding="utf-8")
+-    start = text.find(BRIDGE_START)
+-    end = text.find(BRIDGE_END)
+-    if text.count(BRIDGE_START) != text.count(BRIDGE_END) or text.count(BRIDGE_START) > 1 or (end >= 0 and end < start):
+-        raise RuntimeError(f"入口标记不完整或重复，停止修改：{path}")
++    # Decode bytes directly so block-external CRLF and trailing bytes survive.
++    text = path.read_bytes().decode("utf-8")
++    start, end = text.find(first), text.find(last)
++    replacement = bridge.rstrip("\n")
+     if start >= 0:
+-        end += len(BRIDGE_END)
+-        replacement = BRIDGE.rstrip("\n")
+-        if text[start:end] == replacement:
++        end += len(last)
++        if text[start:end] == replacement and (agent != "workbuddy" or start == 0):
+             return "unchanged"
+-        path.write_text(text[:start] + replacement + text[end:], encoding="utf-8")
++        if agent == "workbuddy" and start != 0:
++            updated = replacement + "\n\n" + text[:start] + text[end:]
++        else:
++            updated = text[:start] + replacement + text[end:]
++        path.write_bytes(updated.encode("utf-8"))
+         return "updated"
+-    path.write_text(text + ("\n" if text.endswith("\n") else "\n\n") + BRIDGE, encoding="utf-8")
++    if agent == "workbuddy":
++        path.write_bytes((bridge + "\n" + text).encode("utf-8"))
++        return "prepended"
++    path.write_bytes((text + ("\n" if text.endswith("\n") else "\n\n") + bridge).encode("utf-8"))
+     return "appended"
+ 
+ 
+-def _check_bridge(path: Path) -> None:
++def _check_bridge(path: Path, agent: str = "codex") -> None:
+     if not path.exists():
+         return
+-    text = path.read_text(encoding="utf-8")
+-    start = text.find(BRIDGE_START)
+-    end = text.find(BRIDGE_END)
+-    if text.count(BRIDGE_START) != text.count(BRIDGE_END) or text.count(BRIDGE_START) > 1 or (end >= 0 and end < start):
++    text = path.read_bytes().decode("utf-8")
++    first, last, _ = _bridge_spec(agent)
++    start, end = text.find(first), text.find(last)
++    if text.count(first) != text.count(last) or text.count(first) > 1 or (end >= 0 and end < start):
+         raise RuntimeError(f"入口标记不完整或重复，停止修改：{path}")
+ 
+ 
+-def _bridge_is_current(path: Path) -> bool:
++def _bridge_is_current(path: Path, agent: str = "codex") -> bool:
+     if not path.exists():
+         return False
+-    text = path.read_text(encoding="utf-8")
+-    start = text.find(BRIDGE_START)
+-    end = text.find(BRIDGE_END)
+-    return start >= 0 and end >= start and text[start:end + len(BRIDGE_END)] == BRIDGE.rstrip("\n")
++    text = path.read_bytes().decode("utf-8")
++    first, last, bridge = _bridge_spec(agent)
++    start, end = text.find(first), text.find(last)
++    return (start >= 0 and end >= start and (agent != "workbuddy" or start == 0)
++            and text[start:end + len(last)] == bridge.rstrip("\n"))
+ 
+ 
+ def _ensure_bridge(args: argparse.Namespace) -> int:
+@@ -172,10 +212,11 @@ def _ensure_bridge(args: argparse.Namespace) -> int:
+     if args.all or len(selected_agents) != 1 or args.uninstall or args.project or args.codex_dir or args.claude_dir:
+         raise RuntimeError("首次入口配置只接受一个当前 Agent，不混用安装、卸载或项目级选项。")
+     agent = selected_agents[0]
+-    if agent not in ("codex", "claude"):
++    if agent not in ("codex", "claude", "workbuddy"):
+         raise RuntimeError(f"{agent} 当前只安装原生 Skill 目录；自动入口尚未完成运行时验证，停止写入规则文件。")
+     home = _home()
+-    roots = (".agents", ".codex") if agent == "codex" else (".claude", ".agents")
++    roots = {"codex": (".agents", ".codex"), "claude": (".claude", ".agents"),
++             "workbuddy": (".workbuddy",)}[agent]
+     loaded = Path(os.path.abspath(Path(args.skill_dir).expanduser()))
+     if loaded.resolve() != SOURCE.resolve():
+         raise RuntimeError("传入的 Skill 路径与正在运行的安装器不一致，停止配置。")
+@@ -200,35 +241,41 @@ def _ensure_bridge(args: argparse.Namespace) -> int:
+     if selected is None:
+         raise RuntimeError("无法确认安装范围，未修改任何入口。请提供已安装 Skill 的路径，或按安装说明显式选择范围。")
+     scope, base = selected
+-    if scope == "user":
+-        bridge = home / (".codex/AGENTS.md" if agent == "codex" else ".claude/CLAUDE.md")
+-    else:
+-        bridge = base / ("AGENTS.md" if agent == "codex" else "CLAUDE.md")
+-    _check_bridge(bridge)
+-    if _bridge_is_current(bridge):
++    bridge = _bridge_path(agent, base, user=scope == "user")
++    _check_bridge(bridge, agent)
++    if _bridge_is_current(bridge, agent):
+         print(json.dumps({"scope": scope, "agent": agent, "bridge": str(bridge), "action": "unchanged"}, ensure_ascii=False))
+         return 0
+     if not args.approved:
+         print(json.dumps({"approval_required": True, "operation": "配置自动入口", "file": str(bridge),
+                           "effect": "新增或更新 Context Keeper 受控规则区块；保留文件中的其他内容"}, ensure_ascii=False))
+         return 0
+-    action = _upsert_bridge(bridge)
+-    actual = bridge.read_text(encoding="utf-8")
+-    if actual.count(BRIDGE_START) != 1 or BRIDGE.rstrip("\n") not in actual:
++    action = _upsert_bridge(bridge, agent)
++    first, _, template = _bridge_spec(agent)
++    actual = bridge.read_bytes().decode("utf-8")
++    if actual.count(first) != 1 or template.rstrip("\n") not in actual:
+         raise RuntimeError(f"入口读回校验失败：{bridge}")
+     print(json.dumps({"scope": scope, "agent": agent, "bridge": str(bridge), "action": action}, ensure_ascii=False))
+     return 0
+ 
+ 
+-def _remove_bridge(path: Path) -> str:
++def _remove_bridge(path: Path, agent: str = "codex") -> str:
+     if not path.exists():
+         return "absent"
+-    original = path.read_text(encoding="utf-8")
+-    start = original.find(BRIDGE_START)
+-    end = original.find(BRIDGE_END)
++    original = path.read_bytes().decode("utf-8")
++    first, last, _ = _bridge_spec(agent)
++    start = original.find(first)
++    end = original.find(last)
+     if start < 0 or end < start:
+         return "absent"
+-    end += len(BRIDGE_END)
++    end += len(last)
++    if agent == "workbuddy":
++        updated = original[:start] + original[end:]
++        if updated:
++            path.write_bytes(updated.encode("utf-8"))
++            return "removed"
++        path.unlink()
++        return "removed_file"
+     updated = (original[:start].rstrip() + "\n\n" + original[end:].lstrip("\n")).strip()
+     if updated:
+         path.write_text(updated + "\n", encoding="utf-8")
+@@ -273,19 +320,17 @@ def main(argv: list[str] | None = None) -> int:
+         raise RuntimeError("请显式选择目标 Agent（例如 --codex），或使用 --all；安装器不会根据目录或命令猜测宿主。")
+ 
+     selected_agents = [agent for agent in agents if getattr(args, agent)]
+-    unsupported_bridges = [agent for agent in selected_agents if agent not in ("codex", "claude")]
++    unsupported_bridges = [agent for agent in selected_agents if agent not in ("codex", "claude", "workbuddy")]
+     if args.bridge_only and unsupported_bridges:
+-        raise RuntimeError("Cursor、WorkBuddy、Hermes、OpenCode 和 OpenClaw 当前只安装 Skill 目录；自动入口尚未完成运行时验证。")
++        raise RuntimeError("Cursor、Hermes、OpenCode 和 OpenClaw 当前只安装 Skill 目录；自动入口尚未完成运行时验证。")
+ 
+     project = Path(args.project).expanduser().resolve() if args.project else None
+     home = _home()
+     installed: list[str] = []
+     removed: list[dict[str, str]] = []
+     bridges: list[dict[str, str]] = []
+-    bridge_paths = {
+-        "codex": project / "AGENTS.md" if project else home / ".codex" / "AGENTS.md",
+-        "claude": project / "CLAUDE.md" if project else home / ".claude" / "CLAUDE.md",
+-    }
++    bridge_paths = {agent: _bridge_path(agent, project or home, user=project is None)
++                    for agent in ("codex", "claude", "workbuddy")}
+     roots_by_agent = {
+         agent: ([Path(args.codex_dir)] if agent == "codex" and args.codex_dir else
+                 [Path(args.claude_dir)] if agent == "claude" and args.claude_dir else
+@@ -314,7 +359,7 @@ def main(argv: list[str] | None = None) -> int:
+             _check_install_target(skill_root)
+     for agent in selected_agents:
+         if agent in bridge_paths:
+-            _check_bridge(bridge_paths[agent])
++            _check_bridge(bridge_paths[agent], agent)
+ 
+     if not args.approved:
+         print(json.dumps({
+@@ -323,7 +368,7 @@ def main(argv: list[str] | None = None) -> int:
+             "skill_entries": [str(root.expanduser() / "context-keeper") for root in selected_roots] if not args.bridge_only else [],
+             "rule_files": [str(bridge_paths[agent]) for agent in selected_agents if agent in bridge_paths],
+             "effect": "仅移除当前源码创建的入口和自身规则区块" if args.uninstall else
+-                      "新增或复用 Skill 入口，并在 Codex/Claude Code 规则文件中新增或更新自身区块",
++                      "新增或复用 Skill 入口，并在 Codex/Claude Code/WorkBuddy 规则文件中新增或更新自身区块",
+         }, ensure_ascii=False, indent=2))
+         return 0
+ 
+@@ -334,7 +379,7 @@ def main(argv: list[str] | None = None) -> int:
+         for agent in selected_agents:
+             if agent in bridge_paths:
+                 bridge = bridge_paths[agent]
+-                bridges.append({"file": str(bridge), "action": _remove_bridge(bridge)})
++                bridges.append({"file": str(bridge), "action": _remove_bridge(bridge, agent)})
+     else:
+         created: list[Path] = []
+         saved_bridges: list[tuple[Path, bytes | None]] = []
+@@ -350,7 +395,7 @@ def main(argv: list[str] | None = None) -> int:
+                 if agent in bridge_paths:
+                     bridge = bridge_paths[agent]
+                     saved_bridges.append((bridge, bridge.read_bytes() if bridge.exists() else None))
+-                    bridges.append({"file": str(bridge), "action": _upsert_bridge(bridge)})
++                    bridges.append({"file": str(bridge), "action": _upsert_bridge(bridge, agent)})
+         except (RuntimeError, OSError):
+             try:
+                 for bridge, original in reversed(saved_bridges):
+diff --git a/tests/test_install.py b/tests/test_install.py
+index befe045..841f5d2 100644
+--- a/tests/test_install.py
++++ b/tests/test_install.py
+@@ -278,7 +278,7 @@ class InstallTests(unittest.TestCase):
+             payload = json.loads(result.stdout)
+             self.assertEqual(payload["scope"], "user")
+             self.assertEqual(len(payload["installed"]), 7)
+-            self.assertEqual(len(payload["bridges"]), 2)
++            self.assertEqual(len(payload["bridges"]), 3)
+             self.assertTrue((home / ".agents" / "skills" / "context-keeper").is_symlink())
+             self.assertTrue((home / ".codex" / "skills" / "context-keeper").is_symlink())
+             self.assertTrue((home / ".claude" / "skills" / "context-keeper").is_symlink())
+@@ -414,10 +414,10 @@ class InstallTests(unittest.TestCase):
+             agents_file.write_text("# Existing rules\n", encoding="utf-8")
+             original_upsert = installer._upsert_bridge
+ 
+-            def fail_on_claude(path):
++            def fail_on_claude(path, agent="codex"):
+                 if path.name == "CLAUDE.md":
+                     raise OSError("simulated write failure")
+-                return original_upsert(path)
++                return original_upsert(path, agent)
+ 
+             with patch.object(installer, "_upsert_bridge", side_effect=fail_on_claude):
+                 with self.assertRaises(OSError):
+diff --git a/tests/test_workbuddy_install.py b/tests/test_workbuddy_install.py
+new file mode 100644
+index 0000000..2dcf6c9
+--- /dev/null
++++ b/tests/test_workbuddy_install.py
+@@ -0,0 +1,143 @@
++"""WorkBuddy bridge ownership, compatibility and approval boundaries."""
++import importlib.util
++import json
++import os
++import subprocess
++import tempfile
++import unittest
++from pathlib import Path
++
++INSTALLER = Path(__file__).parents[1] / "scripts/install.py"
++spec = importlib.util.spec_from_file_location("workbuddy_installer", INSTALLER)
++installer = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(installer)
++
++
++class WorkBuddyInstallTests(unittest.TestCase):
++    def setUp(self):
++        self.temp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temp.cleanup)
++        self.root = Path(self.temp.name).resolve()
++        self.home = self.root / "home"
++        self.project = self.root / "project"
++        self.home.mkdir()
++        self.project.mkdir()
++        self.bridge = self.project / ".workbuddy/memory/MEMORY.md"
++        self.alias = self.project / ".workbuddy/skills/context-keeper"
++        self.alias.parent.mkdir(parents=True)
++        self.alias.symlink_to(INSTALLER.parents[1])
++
++    def run_install(self, *args):
++        return subprocess.run(["python3", str(INSTALLER), *args], text=True, capture_output=True,
++                              env=dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1"))
++
++    def ensure(self, approved=False):
++        args = ["--ensure-bridge", "--workbuddy", "--skill-dir", str(self.alias), "--root", str(self.project)]
++        return self.run_install(*args, *(["--approved"] if approved else []))
++
++    def write_bridge(self, data):
++        self.bridge.parent.mkdir(parents=True, exist_ok=True)
++        self.bridge.write_bytes(data)
++
++    def test_preview_then_create_and_idempotent_ensure(self):
++        preview = self.ensure()
++        self.assertEqual(preview.returncode, 0, preview.stdout + preview.stderr)
++        self.assertTrue(json.loads(preview.stdout)["approval_required"])
++        self.assertFalse(self.bridge.exists())
++        first = self.ensure(True)
++        self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
++        self.assertEqual(json.loads(first.stdout)["action"], "created")
++        before = self.bridge.read_bytes(), self.bridge.stat().st_mtime_ns
++        again = self.ensure()
++        self.assertEqual(json.loads(again.stdout)["action"], "unchanged")
++        self.assertEqual((self.bridge.read_bytes(), self.bridge.stat().st_mtime_ns), before)
++        self.assertFalse((self.home / ".workbuddy").exists())
++        self.assertFalse((self.project / "docs").exists())
++
++    def test_legacy_agm_block_adopted_without_rewrite(self):
++        # Frozen legacy contract: the deployed marker-to-marker bytes have this hash.
++        import hashlib
++        block = installer.WORKBUDDY_BRIDGE.rstrip("\n").encode()
++        self.assertEqual(hashlib.sha256(block).hexdigest(),
++                         "5d464acc40d0bf2b30fc02dcffda1fdbf1cee80c5e3e742da9e85a1c871a8315")
++        for suffix in (b"", b"\n\n# existing notes\r\nkeep bytes\r\n"):
++            with self.subTest(suffix=suffix):
++                self.write_bridge(block + suffix)
++                before = self.bridge.read_bytes(), self.bridge.stat().st_mtime_ns
++                result = self.ensure(True)
++                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++                self.assertEqual(json.loads(result.stdout)["action"], "unchanged")
++                self.assertEqual((self.bridge.read_bytes(), self.bridge.stat().st_mtime_ns), before)
++
++    def test_prepend_and_update_preserve_external_bytes(self):
++        tail = b"# notes\r\nkeep exact\r\n"
++        self.write_bridge(tail)
++        result = self.ensure(True)
++        self.assertEqual(json.loads(result.stdout)["action"], "prepended")
++        self.assertTrue(self.bridge.read_bytes().endswith(tail))
++        old = (installer.WORKBUDDY_BRIDGE_START + "\nold rule\n" + installer.WORKBUDDY_BRIDGE_END).encode()
++        self.write_bridge(b"prefix\r\n" + old + tail)
++        preview = self.ensure()
++        self.assertTrue(json.loads(preview.stdout)["approval_required"])
++        self.assertIn(old, self.bridge.read_bytes())
++        result = self.ensure(True)
++        self.assertEqual(json.loads(result.stdout)["action"], "updated")
++        data = self.bridge.read_bytes()
++        self.assertTrue(data.startswith(installer.WORKBUDDY_BRIDGE.encode().rstrip(b"\n")))
++        self.assertIn(b"prefix\r\n", data)
++        self.assertTrue(data.endswith(tail))
++        self.assertEqual(data.count(installer.WORKBUDDY_BRIDGE_START.encode()), 1)
++        self.assertEqual(json.loads(self.ensure(True).stdout)["action"], "unchanged")
++
++    def test_invalid_markers_stop_before_any_install_writes(self):
++        first, last, _ = installer._bridge_spec("workbuddy")
++        for text in (first, last, last + first, first + last + first + last):
++            with self.subTest(text=text):
++                self.write_bridge(text.encode())
++                before = self.bridge.read_bytes()
++                result = self.run_install("--project", str(self.project), "--codex", "--workbuddy", "--approved")
++                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
++                self.assertEqual(self.bridge.read_bytes(), before)
++                self.assertFalse((self.project / "AGENTS.md").exists())
++                self.assertFalse((self.project / ".agents").exists())
++                self.assertEqual(self.ensure(True).returncode, 2)
++
++    def test_project_bridge_only_preview_install_uninstall(self):
++        self.write_bridge(b"# retained\r\n")
++        args = ["--project", str(self.project), "--workbuddy", "--bridge-only"]
++        preview = self.run_install(*args)
++        self.assertEqual(json.loads(preview.stdout)["rule_files"], [str(self.bridge)])
++        self.assertEqual(self.bridge.read_bytes(), b"# retained\r\n")
++        result = self.run_install(*args, "--approved")
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++        self.assertEqual(json.loads(result.stdout)["bridges"][0]["action"], "prepended")
++        result = self.run_install("--project", str(self.project), "--workbuddy", "--uninstall", "--approved")
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++        self.assertTrue(self.bridge.read_bytes().endswith(b"# retained\r\n"))
++        self.assertNotIn(installer.WORKBUDDY_BRIDGE_START, self.bridge.read_text())
++
++    def test_unsupported_agents_still_rejected(self):
++        for agent in ("cursor", "hermes", "opencode", "openclaw"):
++            with self.subTest(agent=agent):
++                self.assertEqual(self.run_install("--ensure-bridge", "--" + agent).returncode, 2)
++                self.assertEqual(self.run_install("--bridge-only", "--" + agent).returncode, 2)
++        self.assertFalse(self.bridge.exists())
++
++    def test_user_alias_uses_user_entry_and_unknown_scope_is_rejected(self):
++        self.alias.unlink()
++        result = self.ensure(True)
++        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
++        alias = self.home / ".workbuddy/skills/context-keeper"
++        alias.parent.mkdir(parents=True)
++        alias.symlink_to(INSTALLER.parents[1])
++        result = self.run_install("--ensure-bridge", "--workbuddy", "--skill-dir", str(alias),
++                                  "--root", str(self.project), "--approved")
++        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
++        data = json.loads(result.stdout)
++        self.assertEqual(data["scope"], "user")
++        self.assertEqual(data["bridge"], str(self.home / ".workbuddy/MEMORY.md"))
++        self.assertFalse(self.bridge.exists())
++
++
++if __name__ == "__main__":
++    unittest.main()

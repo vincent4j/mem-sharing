@@ -1,0 +1,89 @@
+{
+  "case": "M4-09-26",
+  "name": "CLAUDE 生命周期",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-26-8tngjfjq",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-fixture-synthetic-claude-package",
+      "label": "fixture-synthetic-claude-package",
+      "exit_code": null
+    },
+    {
+      "path": "004-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "005-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "006-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "007-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "008-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "009-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "010-remove-preview",
+      "label": "remove-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "011-remove-kernel-preview",
+      "label": "remove-kernel-preview",
+      "exit_code": 0
+    },
+    {
+      "path": "012-fixture-remove-approval",
+      "label": "fixture-remove-approval",
+      "exit_code": null
+    },
+    {
+      "path": "013-remove-execute",
+      "label": "remove-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "014-check",
+      "label": "check",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:22:10.121024Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing-install-20261030T162206Z-19b53ec83ba04e5e83250c1f9a8b3a4c/journal.json",
+    "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing/backups/20261030T162208Z-9d47d07f4f1f4f5a8a529615f7fd33c0/manifest.json",
+    "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing/backups/20261030T162209Z-fdf3ba81c1a642d0a4106b8c49dc92c2/manifest.json",
+    "/private/tmp/M4-09-26-8tngjfjq/home/.mem-sharing-install-20261030T162206Z-19b53ec83ba04e5e83250c1f9a8b3a4c/entry-backups/20261030T162207Z-08f30e26aada49c3a88925f153a11943/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

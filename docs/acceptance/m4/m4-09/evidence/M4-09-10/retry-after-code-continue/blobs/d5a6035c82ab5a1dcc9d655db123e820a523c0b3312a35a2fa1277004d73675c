@@ -1,0 +1,62 @@
+--- before
++++ after-enable
+@@ -1,4 +1,19 @@
+ {
++  ".agents/skills/context-keeper": {
++    "type": "symlink",
++    "target": "/Users/vincent4j/Tools/Source/context-keeper",
++    "mtime_ns": 1793281915615377139
++  },
++  ".claude/skills/context-keeper": {
++    "type": "symlink",
++    "target": "/Users/vincent4j/Tools/Source/context-keeper",
++    "mtime_ns": 1793281915616941768
++  },
++  ".codex/skills/context-keeper": {
++    "type": "symlink",
++    "target": "/Users/vincent4j/Tools/Source/context-keeper",
++    "mtime_ns": 1793281915616226308
++  },
+   ".dockerignore": {
+     "type": "file",
+     "sha256": "4ba46f87224676f85a5a5189a884e9b114c112ddc10f14556096e8d448de61ab",
+@@ -17,6 +32,17 @@
+     "size": 662,
+     "mtime_ns": 1785138723192006139
+   },
++  ".workbuddy/memory/MEMORY.md": {
++    "type": "file",
++    "sha256": "5d464acc40d0bf2b30fc02dcffda1fdbf1cee80c5e3e742da9e85a1c871a8315",
++    "size": 2672,
++    "mtime_ns": 1793281915617945812
++  },
++  ".workbuddy/skills/context-keeper": {
++    "type": "symlink",
++    "target": "/Users/vincent4j/Tools/Source/context-keeper",
++    "mtime_ns": 1793281915617525019
++  },
+   ".zcode/acp/sandbox.json": {
+     "type": "file",
+     "sha256": "e94fd72fbeb942ed6c1a84d306b0cda508c85560cc3baa220ada47ad70d4ce1b",
+@@ -25,15 +51,15 @@
+   },
+   "AGENTS.md": {
+     "type": "file",
+-    "sha256": "22d192dc313e08bfd37614f3ac66c8dc6db95d86f36d937f6f5c7d9733357b58",
+-    "size": 3464,
+-    "mtime_ns": 1784773218545423836
++    "sha256": "6258f7c70147f79ba7faf41aee73f80ee2a2e2aa54d24ce6f5e470ec98662c2b",
++    "size": 5766,
++    "mtime_ns": 1793281915613070176
+   },
+   "CLAUDE.md": {
+     "type": "file",
+-    "sha256": "54134fb03cc201fe5cc500302f1ce9db49635c9fb9bfb97d3299c305d3d2ad79",
+-    "size": 32,
+-    "mtime_ns": 1783567206375386815
++    "sha256": "ada96f0b9db80e75cbd3493b60ab29576819a76debdd51bc8b2231a1cf036ac1",
++    "size": 2345,
++    "mtime_ns": 1793281915614346429
+   },
+   "DESIGN.md": {
+     "type": "file",

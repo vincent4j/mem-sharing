@@ -1,0 +1,78 @@
+{
+  "case": "M4-09-43",
+  "name": "新标识与旧现场拒绝",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-43-iz4473ja",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "007-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "008-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "009-fixture-old-markers",
+      "label": "fixture-old-markers",
+      "exit_code": null
+    },
+    {
+      "path": "010-naming-install-preview",
+      "label": "naming-install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "011-naming-enable-preview",
+      "label": "naming-enable-preview",
+      "exit_code": 2
+    },
+    {
+      "path": "012-check",
+      "label": "check",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:24:44.669231Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-43-iz4473ja/home/.mem-sharing-install-20261030T162441Z-52e583e584534c16b068ac6bce5f7356/journal.json",
+    "/private/tmp/M4-09-43-iz4473ja/home/.mem-sharing-install-20261030T162441Z-52e583e584534c16b068ac6bce5f7356/entry-backups/20261030T162442Z-4fd09a0e460b41fa82de7d4e897473b9/manifest.json",
+    "/private/tmp/M4-09-43-iz4473ja/home/.mem-sharing/backups/20261030T162443Z-a596e6a59aea49fe9c5dc32ec06e50cd/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

@@ -1,0 +1,31 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377506967318550,
+      "size": 384,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377508362984946,
+      "size": 416,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "invalid-ck-envelope.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377508363067156,
+      "size": 237,
+      "kind": "file",
+      "sha256": "3f71c5dda6c893426c731fe0ebf599e19bb478e4745ea4954655809a9a37abe2"
+    }
+  }
+]

@@ -1,0 +1,69 @@
+{
+  "case": "M4-09-51",
+  "name": "CK 独立封皮路由与源门禁",
+  "status": "blocked",
+  "area": "/private/tmp/M4-09-51-6wfuj0lw",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-fixture-synthetic-claude-package",
+      "label": "fixture-synthetic-claude-package",
+      "exit_code": null
+    },
+    {
+      "path": "004-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "005-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "006-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "007-fixture-synthetic-ck-source",
+      "label": "fixture-synthetic-ck-source",
+      "exit_code": null
+    },
+    {
+      "path": "008-ck-route-preview",
+      "label": "ck-route-preview",
+      "exit_code": 2
+    },
+    {
+      "path": "009-ck-discovery-without-source",
+      "label": "ck-discovery-without-source",
+      "exit_code": 2
+    },
+    {
+      "path": "010-check",
+      "label": "check",
+      "exit_code": 1
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "CK fixture is the existing UPSTREAM literal from tests/unit/test_ck_install.py. No upstream real source or real HOME is read/executed. No temporary Git commit is created. Production CK source rejects OS-temp locations; no monkeypatch of source trust gates is used.",
+    "Positive CK independent-plan/execution cannot be constructed under temp-only synthetic source + no Git commits: production _durable_source rejects OS-temp, then requires its fixed clean pinned checkout. Exact source-gate refusal recorded; no fictional CK envelope or source-trust override."
+  ],
+  "ended_utc": "2026-10-30T16:25:06.531845Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-51-6wfuj0lw/home/.mem-sharing-install-20261030T162504Z-08b640aa71604f6084db253520732978/journal.json",
+    "/private/tmp/M4-09-51-6wfuj0lw/home/.mem-sharing-install-20261030T162504Z-08b640aa71604f6084db253520732978/entry-backups/20261030T162505Z-b9d00ad6318049b5b984ac9ecde851a6/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

@@ -1,0 +1,53 @@
+[
+  {
+    "path": "project",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377464567798984,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377466082231339,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/custom-ck-store",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377466082287339,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/custom-ck-store/worklogs",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377466082351715,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/custom-ck-store/worklogs/old.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377466082411298,
+      "size": 23,
+      "kind": "file",
+      "sha256": "be4264e9567183a5338b3171a4a438a0c6b09bbcfd0785f91a84a82bd095f404"
+    }
+  }
+]

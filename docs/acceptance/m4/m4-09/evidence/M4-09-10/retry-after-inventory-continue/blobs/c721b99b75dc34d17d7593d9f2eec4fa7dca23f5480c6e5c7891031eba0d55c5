@@ -1,0 +1,26 @@
+{
+  "docs": {
+    "type": "directory"
+  },
+  "docs/memory-keeper.md": {
+    "type": "file",
+    "sha256": "ea11d6839a53aaa12299f20e1033e082db56ea44d1a7fefdb93e452df251470a",
+    "bytes": 97
+  },
+  "docs/plans": {
+    "type": "directory"
+  },
+  "docs/plans/2026-01-01-旧计划.md": {
+    "type": "file",
+    "sha256": "4944595ce45959870ccea56cb0dceee6c1c24d2d79bd3814b4722c62fe035384",
+    "bytes": 63
+  },
+  "docs/worklogs": {
+    "type": "directory"
+  },
+  "docs/worklogs/2026-01-01-旧日志.md": {
+    "type": "file",
+    "sha256": "223b5d52e7e41218fa46633df6b647dab5b8dcdf94d55447a9c24b381ad4d792",
+    "bytes": 66
+  }
+}

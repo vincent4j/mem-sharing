@@ -1,0 +1,29 @@
+{
+  "commands": [
+    [
+      "git",
+      "clone",
+      "--shared",
+      "--no-checkout",
+      "--quiet",
+      "/Users/vincent4j/Tools/Source/agent-group-memory",
+      "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/agm-m403-isolated-tv21bhn0/repo"
+    ],
+    [
+      "git",
+      "-C",
+      "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/agm-m403-isolated-tv21bhn0/repo",
+      "checkout",
+      "--quiet",
+      "cfe0ac1bb0f4aa6fe1ec934cdc2f03b5e3fab203"
+    ]
+  ],
+  "base_commit": "cfe0ac1bb0f4aa6fe1ec934cdc2f03b5e3fab203",
+  "copied_files": [
+    "scripts/agm_core/registry.py",
+    "scripts/agm_core/migrate.py",
+    "tests/unit/test_m403_migrate.py",
+    "tests/integration/test_m403_migration.py"
+  ],
+  "path": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/agm-m403-isolated-tv21bhn0/repo"
+}

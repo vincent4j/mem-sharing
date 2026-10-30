@@ -1,0 +1,64 @@
+{
+  "case": "M4-09-33",
+  "name": "本地获取成功后入口故障原始报告",
+  "status": "blocked",
+  "area": "/private/tmp/M4-09-33-qmzwtkpy",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-fixture-local-only-git-rewrite",
+      "label": "fixture-local-only-git-rewrite",
+      "exit_code": null
+    },
+    {
+      "path": "004-acquire-preview",
+      "label": "acquire-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "005-fixture-acquisition-approval",
+      "label": "fixture-acquisition-approval",
+      "exit_code": null
+    },
+    {
+      "path": "006-acquire-execute",
+      "label": "acquire-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "007-acquired-install-preview",
+      "label": "acquired-install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "008-fixture-main-approval",
+      "label": "fixture-main-approval",
+      "exit_code": null
+    },
+    {
+      "path": "009-acquired-then-entry-failure",
+      "label": "acquired-then-entry-failure",
+      "exit_code": 2
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "Git insteadOf forces the official acquisition URL to the existing local frozen repository; no network, remote webpage, real credential or Git commit is used. Mid-entry failure is injected only in this child process; source code remains unchanged.",
+    "Acquisition/partial underlying reports now executed. Full outer user-facing conversation remains unavailable as documented in 40; no success dialogue fabricated."
+  ],
+  "ended_utc": "2026-10-30T16:26:36.263188Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-33-qmzwtkpy/home/.mem-sharing-install-20261030T162634Z-47f71167744a47ef86021e81c8eec2a0/journal.json",
+    "/private/tmp/M4-09-33-qmzwtkpy/home/.mem-sharing-install-20261030T162634Z-47f71167744a47ef86021e81c8eec2a0/entry-backups/20261030T162636Z-1d57aa083cd546c381120f3be71f330c/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

@@ -1,0 +1,40 @@
+{
+  "label": "install-preview",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "/private/tmp/M4-09-18-v5w89hvv/source/scripts/install.py",
+    "--source-manifest",
+    "/private/tmp/M4-09-18-v5w89hvv/source.json",
+    "--request-file",
+    "/private/tmp/M4-09-18-v5w89hvv/request.json"
+  ],
+  "cwd": "/private/tmp/M4-09-18-v5w89hvv/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-18-v5w89hvv/home",
+    "PATH": "/private/tmp/M4-09-18-v5w89hvv/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-18-v5w89hvv/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:18:05.556748Z",
+  "ended_utc": "2026-10-30T16:18:05.824115Z",
+  "duration_seconds": 0.26736554101807997,
+  "exit_code": 2,
+  "stdin_base64": "",
+  "json": {
+    "command": "install-machine",
+    "errors": [
+      {
+        "code": "machine_route_bad_registry",
+        "message": "Machine scene bad_registry: ['Code/ledger identity mismatch']"
+      }
+    ],
+    "schema_version": 1,
+    "status": "failed"
+  }
+}

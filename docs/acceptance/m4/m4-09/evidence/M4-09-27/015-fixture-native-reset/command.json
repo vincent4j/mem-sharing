@@ -1,0 +1,24 @@
+{
+  "label": "fixture-native-reset",
+  "argv": [
+    "fixture-operation",
+    "native-reset"
+  ],
+  "cwd": "/private/tmp/M4-09-27-47628ifz/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-27-47628ifz/home",
+    "PATH": "/private/tmp/M4-09-27-47628ifz/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-27-47628ifz/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:22:25.368759Z",
+  "ended_utc": "2026-10-30T16:22:25.387680Z",
+  "duration_seconds": 0.018921167007647455,
+  "fixture_operation": "native-reset",
+  "returned": "None"
+}

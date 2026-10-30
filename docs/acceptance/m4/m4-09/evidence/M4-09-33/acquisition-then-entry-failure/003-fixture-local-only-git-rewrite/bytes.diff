@@ -1,0 +1,5 @@
+--- before/local-transport.gitconfig
++++ after/local-transport.gitconfig
+@@ -0,0 +1,2 @@
++[url "/Users/vincent4j/Tools/Source/agent-group-memory"]
++	insteadOf = https://github.com/vincent4j/mem-sharing

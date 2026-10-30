@@ -1,0 +1,92 @@
+{
+  "label": "remove-execute",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import runpy,sys;from pathlib import Path;sys.path.insert(0,str(Path(sys.argv[1]).parent));from agm_core import detect;detect.STANDARD_APP_DIRECTORIES=();sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+    "/private/tmp/M4-09-26-x6cg8emb/home/.local/share/mem-sharing/scripts/agm.py",
+    "remove-memory",
+    "--project",
+    "/private/tmp/M4-09-26-x6cg8emb/project",
+    "--approval-file",
+    "/private/tmp/M4-09-26-x6cg8emb/remove-approval-12.json"
+  ],
+  "cwd": "/private/tmp/M4-09-26-x6cg8emb/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-26-x6cg8emb/home",
+    "PATH": "/private/tmp/M4-09-26-x6cg8emb/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-26-x6cg8emb/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:22:13.094982Z",
+  "ended_utc": "2026-10-30T16:22:13.843843Z",
+  "duration_seconds": 0.7488573330047075,
+  "exit_code": 0,
+  "stdin_base64": "",
+  "json": {
+    "schema_version": 1,
+    "runtime_layout": {
+      "root": "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing",
+      "code": "/private/tmp/M4-09-26-x6cg8emb/home/.local/share/mem-sharing",
+      "registry": "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing/var/registry.json",
+      "lock": "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing/var/.agm.lock",
+      "transaction_lock": "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing/var/.agm.lock/transaction",
+      "backups": "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing/backups"
+    },
+    "command": "remove-memory",
+    "status": "completed",
+    "projects": [
+      {
+        "main_checkout": "/private/tmp/M4-09-26-x6cg8emb/project",
+        "checkout": "/private/tmp/M4-09-26-x6cg8emb/project",
+        "memory_policy": "disabled",
+        "agents": [
+          "claude"
+        ],
+        "evidence": [
+          "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing/var/registry.json"
+        ],
+        "runtime_acceptance": {
+          "status": "pending",
+          "evidence_path": null
+        }
+      }
+    ],
+    "changes": [
+      {
+        "path": "/private/tmp/M4-09-26-x6cg8emb/project/AGENTS.md",
+        "operation": "update",
+        "ownership": "created",
+        "before_fingerprint": "85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406",
+        "after_fingerprint": "d3017a75ee18512f5c832d3cee84a8abf8e612b50ead6a8df5e838437f1da9be",
+        "applied": true
+      },
+      {
+        "path": "/private/tmp/M4-09-26-x6cg8emb/project/CLAUDE.md",
+        "operation": "update",
+        "ownership": "created",
+        "before_fingerprint": "87ab3efae513e8f31e17ae69dbb9d4936dcbeb23c408577c2483c963bc2cdab6",
+        "after_fingerprint": "d50f58ce7a174da0793eb82e0754f309f99333c8e378330a0e280dcf6ac70861",
+        "applied": true
+      },
+      {
+        "path": "/private/tmp/M4-09-26-x6cg8emb/home/.mem-sharing/var/registry.json",
+        "operation": "update",
+        "ownership": "registry",
+        "before_fingerprint": "f37c0cf204bf8fe2ab3fc03627b7a77f2ebd8429dfdded04a00640dc4143c806",
+        "after_fingerprint": "7c0f830f07a53ab06bd764bdd8a2d5be109887647435c327b88067c54c0ef1b7",
+        "applied": true
+      }
+    ],
+    "warnings": [],
+    "errors": [],
+    "approval_required": false,
+    "next_action": null
+  }
+}

@@ -1,0 +1,53 @@
+[
+  {
+    "path": "project",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377408442086718,
+      "size": 128,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377409333889936,
+      "size": 160,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/.workbuddy",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377409333946062,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/.workbuddy/memory",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377409334009062,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/.workbuddy/memory/MEMORY.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377409334060896,
+      "size": 10,
+      "kind": "file",
+      "sha256": "89c820abdf90eec2d02fad2f1f28bb7766e365c4756e0be2580268a14dba6bb4"
+    }
+  }
+]

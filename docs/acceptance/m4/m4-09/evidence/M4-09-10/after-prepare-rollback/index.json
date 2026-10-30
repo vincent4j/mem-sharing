@@ -1,0 +1,93 @@
+{
+  "case": "M4-09-10",
+  "name": "六阶段独立硬退出与恢复",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-10-klh3vftr",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-fixture-synthetic-target-source",
+      "label": "fixture-synthetic-target-source",
+      "exit_code": null
+    },
+    {
+      "path": "007-fixture-synthetic-target-delta",
+      "label": "fixture-synthetic-target-delta",
+      "exit_code": null
+    },
+    {
+      "path": "008-fixture-target-manifest",
+      "label": "fixture-target-manifest",
+      "exit_code": null
+    },
+    {
+      "path": "009-kernel-upgrade-plan",
+      "label": "kernel-upgrade-plan",
+      "exit_code": 0
+    },
+    {
+      "path": "010-fixture-fault-approval",
+      "label": "fixture-fault-approval",
+      "exit_code": null
+    },
+    {
+      "path": "011-hard-exit-after_phase-prepare",
+      "label": "hard-exit-after_phase-prepare",
+      "exit_code": 1
+    },
+    {
+      "path": "012-ordinary-after-crash",
+      "label": "ordinary-after-crash",
+      "exit_code": 5
+    },
+    {
+      "path": "013-check-after-crash",
+      "label": "check-after-crash",
+      "exit_code": 1
+    },
+    {
+      "path": "014-recover-preview",
+      "label": "recover-preview",
+      "exit_code": 2
+    },
+    {
+      "path": "015-check-after-recovery",
+      "label": "check-after-recovery",
+      "exit_code": 1
+    }
+  ],
+  "notes": [
+    "Source is an exact git-archive export of baseline; source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "§26 generic recovery exercise only: original baseline code plus an explicitly synthetic README/module delta, exact manifest conversion injected to the existing upgrade kernel. Synthetic commit is not a Git release identity and this is not evidence for a frozen T0→release upgrade."
+  ],
+  "ended_utc": "2026-10-30T16:18:41.439510Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-10-klh3vftr/home/.mem-sharing-install-20261030T161835Z-52831f45c75544b4b63881adfc84bedf/journal.json",
+    "/private/tmp/M4-09-10-klh3vftr/home/.mem-sharing-install-20261030T161835Z-52831f45c75544b4b63881adfc84bedf/entry-backups/20261030T161836Z-a49fa6690ccd4d9b92651b1f68e064d0/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

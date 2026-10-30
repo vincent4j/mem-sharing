@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# 各种 Agent 默认目录
+.agents/
+.codex/
+.claude/
+.workbuddy/
+.zcode/
+
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+
+# AGM 本机装配状态与恢复材料（不是项目记忆）
+/scripts/registry.json
+/scripts/registry.json.*
+/scripts/.agm.lock
+/scripts/backups/
+
+

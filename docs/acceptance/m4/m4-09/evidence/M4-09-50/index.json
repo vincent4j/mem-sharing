@@ -1,0 +1,105 @@
+{
+  "case": "M4-09-50",
+  "name": "显式恢复批准边界",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-50-4ltwuvco",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "007-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "008-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "009-disable-preview",
+      "label": "disable-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "010-fixture-disable-approval",
+      "label": "fixture-disable-approval",
+      "exit_code": null
+    },
+    {
+      "path": "011-disable-execute",
+      "label": "disable-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "012-restore-missing-approval",
+      "label": "restore-missing-approval",
+      "exit_code": 5
+    },
+    {
+      "path": "013-fixture-wrong-project-approval",
+      "label": "fixture-wrong-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "014-wrong-project-restore",
+      "label": "wrong-project-restore",
+      "exit_code": 5
+    },
+    {
+      "path": "015-fixture-restore-approval",
+      "label": "fixture-restore-approval",
+      "exit_code": null
+    },
+    {
+      "path": "016-valid-exact-restore",
+      "label": "valid-exact-restore",
+      "exit_code": 0
+    },
+    {
+      "path": "017-check",
+      "label": "check",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:22:50.312581Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-50-4ltwuvco/home/.mem-sharing-install-20261030T162245Z-f9ecfbfa110a44d4b5a09b77ca4be683/journal.json",
+    "/private/tmp/M4-09-50-4ltwuvco/home/.mem-sharing/backups/20261030T162248Z-bc2cb6e6119947479a34c547896c7b94/manifest.json",
+    "/private/tmp/M4-09-50-4ltwuvco/home/.mem-sharing/backups/20261030T162247Z-38530f5dea0a4c1dbdc345c61a620483/manifest.json",
+    "/private/tmp/M4-09-50-4ltwuvco/home/.mem-sharing/backups/20261030T162249Z-9780859cb1af4a1896d8e84a1c906db5/manifest.json",
+    "/private/tmp/M4-09-50-4ltwuvco/home/.mem-sharing-install-20261030T162245Z-f9ecfbfa110a44d4b5a09b77ca4be683/entry-backups/20261030T162246Z-111a315075a34e44873ddaafdc716c43/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

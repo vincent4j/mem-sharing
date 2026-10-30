@@ -1,0 +1,24 @@
+{
+  "label": "fixture-synthetic-codex-package",
+  "argv": [
+    "fixture-operation",
+    "synthetic-codex-package"
+  ],
+  "cwd": "/private/tmp/M4-09-28-n99gt0mr/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-28-n99gt0mr/home",
+    "PATH": "/private/tmp/M4-09-28-n99gt0mr/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-28-n99gt0mr/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:22:27.772053Z",
+  "ended_utc": "2026-10-30T16:22:27.778645Z",
+  "duration_seconds": 0.0065977499762084335,
+  "fixture_operation": "synthetic-codex-package",
+  "returned": "None"
+}

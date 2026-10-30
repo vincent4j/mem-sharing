@@ -1,0 +1,21 @@
+[
+  {
+    "path": "source.json",
+    "before": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377078306308717,
+      "size": 2915,
+      "kind": "file",
+      "sha256": "5faf5ef36c256abdea05594aa21e606375dc8a70c0636cba5800b0ce1ef50a65"
+    },
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377078591409568,
+      "size": 3001,
+      "kind": "file",
+      "sha256": "1ffb40481a5f777c19cdafae108cfc0f57c2717dc8324f878defa02c1f3250ab"
+    }
+  }
+]

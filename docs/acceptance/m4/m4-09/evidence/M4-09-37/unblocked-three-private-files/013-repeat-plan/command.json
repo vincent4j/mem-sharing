@@ -1,0 +1,43 @@
+{
+  "label": "repeat-plan",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import sys,json\nsys.path.insert(0,sys.argv[1])\nfrom agm_core import user_rules_organize as org,paths\nrequest=json.load(open(sys.argv[2]));request['platform_config']=paths.select_platform(paths.load_agents_table(),'darwin')\nresult=org.plan_organize(request)\nif sys.argv[3]!='preview':\n approval=json.load(open(sys.argv[3]));plan={k:v for k,v in approval.items() if k not in ('confirmed_at','reference')}\n result=org.execute_organize(plan,approval,request=request)\nprint(json.dumps(result,ensure_ascii=False))\n",
+    "/private/tmp/M4-09-37-cfylbggd/source/scripts",
+    "/private/tmp/M4-09-37-cfylbggd/organize-request.json",
+    "preview"
+  ],
+  "cwd": "/private/tmp/M4-09-37-cfylbggd/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-37-cfylbggd/home",
+    "PATH": "/private/tmp/M4-09-37-cfylbggd/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-37-cfylbggd/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:28:23.391009Z",
+  "ended_utc": "2026-10-30T16:28:23.521625Z",
+  "duration_seconds": 0.13061270798789337,
+  "exit_code": 0,
+  "stdin_base64": "",
+  "json": {
+    "command": "organize-user-rules",
+    "status": "failed",
+    "approval_required": false,
+    "next_action": null,
+    "errors": [
+      {
+        "code": "stale_decision",
+        "message": "Decision item absent or changed since scan"
+      }
+    ],
+    "changes": [],
+    "blocked_entries": []
+  }
+}

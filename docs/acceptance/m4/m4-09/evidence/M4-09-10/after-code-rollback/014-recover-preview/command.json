@@ -1,0 +1,40 @@
+{
+  "label": "recover-preview",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "/private/tmp/M4-09-10-yttp6jwb/source/scripts/install.py",
+    "--recover",
+    "/private/tmp/M4-09-10-yttp6jwb/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
+    "--action",
+    "rollback"
+  ],
+  "cwd": "/private/tmp/M4-09-10-yttp6jwb/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-10-yttp6jwb/home",
+    "PATH": "/private/tmp/M4-09-10-yttp6jwb/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-10-yttp6jwb/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:20:02.117929Z",
+  "ended_utc": "2026-10-30T16:20:02.417763Z",
+  "duration_seconds": 0.2998358750191983,
+  "exit_code": 2,
+  "stdin_base64": "",
+  "json": {
+    "command": "install-machine",
+    "errors": [
+      {
+        "code": "install_failed",
+        "message": "[Errno 2] No such file or directory: '/private/tmp/M4-09-10-yttp6jwb/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json'"
+      }
+    ],
+    "schema_version": 1,
+    "status": "failed"
+  }
+}

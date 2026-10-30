@@ -1,0 +1,14 @@
+............................................./private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/agm-m403-isolated-tv21bhn0/repo/tests/integration/test_m207_cli_cycle.py:184: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+../private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/agm-m403-isolated-tv21bhn0/repo/tests/integration/test_m207_cli_cycle.py:184: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/agm-m403-isolated-tv21bhn0/repo/tests/integration/test_m207_cli_cycle.py:457: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..........
+----------------------------------------------------------------------
+Ran 57 tests in 55.090s
+
+OK

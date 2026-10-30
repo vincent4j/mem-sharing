@@ -1,0 +1,11 @@
+--- before/scan/linked-main/.git/FETCH_HEAD
++++ after/scan/linked-main/.git/FETCH_HEAD
+@@ -0,0 +1 @@
++de9cc4fdd0c7c5088267b9ff3bf0ff10ad52a40b		'de9cc4fdd0c7c5088267b9ff3bf0ff10ad52a40b' of /Users/vincent4j/Tools/Source/agent-group-memory
+Binary delta scan/linked-main/.git/objects/pack/pack-e8a77e0dd1f46dc0589c7067a432aa7abe2e3b40.idx: exact bytes in blobs; before=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 after=94d571744c1a3635e46b47525b5714f04d57fa181b8924474f0ddfddc5b43d12
+Binary delta scan/linked-main/.git/objects/pack/pack-e8a77e0dd1f46dc0589c7067a432aa7abe2e3b40.pack: exact bytes in blobs; before=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 after=f3a2e8847ceaec26a15c0f8e54df3cd4eebcad9317cebc499f0ec38bce08ca55
+Binary delta scan/linked-main/.git/objects/pack/pack-e8a77e0dd1f46dc0589c7067a432aa7abe2e3b40.rev: exact bytes in blobs; before=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 after=99692e85996f834774891c85133eff7f067feafd6b594007c20b95727c1d1e8a
+--- before/scan/linked-main/.git/shallow
++++ after/scan/linked-main/.git/shallow
+@@ -0,0 +1 @@
++de9cc4fdd0c7c5088267b9ff3bf0ff10ad52a40b

@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "machine_route_abnormal", "message": "Machine scene abnormal: ['Product code without active ledger; not v0']"}], "schema_version": 1, "status": "failed"}

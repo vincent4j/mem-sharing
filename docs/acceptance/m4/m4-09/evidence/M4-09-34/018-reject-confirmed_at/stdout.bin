@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "approval_invalid", "message": "Real confirmation evidence required: confirmed_at"}], "schema_version": 1, "status": "failed"}

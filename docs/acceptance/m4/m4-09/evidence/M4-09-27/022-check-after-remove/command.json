@@ -1,0 +1,125 @@
+{
+  "label": "check-after-remove",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import runpy,sys;from pathlib import Path;sys.path.insert(0,str(Path(sys.argv[1]).parent));from agm_core import detect;detect.STANDARD_APP_DIRECTORIES=();sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+    "/private/tmp/M4-09-27-47628ifz/home/.local/share/mem-sharing/scripts/agm.py",
+    "check-memory",
+    "--project",
+    "/private/tmp/M4-09-27-47628ifz/project"
+  ],
+  "cwd": "/private/tmp/M4-09-27-47628ifz/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-27-47628ifz/home",
+    "PATH": "/private/tmp/M4-09-27-47628ifz/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-27-47628ifz/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:22:27.371772Z",
+  "ended_utc": "2026-10-30T16:22:27.617316Z",
+  "duration_seconds": 0.24554362500202842,
+  "exit_code": 0,
+  "stdin_base64": "",
+  "json": {
+    "schema_version": 1,
+    "runtime_layout": {
+      "root": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing",
+      "code": "/private/tmp/M4-09-27-47628ifz/home/.local/share/mem-sharing",
+      "registry": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/registry.json",
+      "lock": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/.agm.lock",
+      "transaction_lock": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/.agm.lock/transaction",
+      "backups": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/backups"
+    },
+    "command": "check-memory",
+    "status": "completed",
+    "projects": [
+      {
+        "main_checkout": "/private/tmp/M4-09-27-47628ifz/project",
+        "checkout": "/private/tmp/M4-09-27-47628ifz/project",
+        "registered": true,
+        "worktree": false,
+        "agents": [
+          "workbuddy"
+        ],
+        "states": {
+          "entries": {
+            "/private/tmp/M4-09-27-47628ifz/project/AGENTS.md": "ok"
+          }
+        },
+        "runtime_acceptance": {
+          "status": "pending",
+          "evidence_path": null
+        },
+        "objects": [
+          {
+            "id": "/private/tmp/M4-09-27-47628ifz/project/AGENTS.md#memory-denied",
+            "kind": "block",
+            "path": "/private/tmp/M4-09-27-47628ifz/project/AGENTS.md",
+            "scope": "project",
+            "agents": [
+              "workbuddy"
+            ],
+            "ownership": "created",
+            "status": "ok",
+            "detail": "块指纹相符"
+          }
+        ],
+        "agent_discovery": [
+          {
+            "agent": "codex",
+            "signals": [
+              {
+                "kind": "directory_exists",
+                "path": "/private/tmp/M4-09-27-47628ifz/home/.codex",
+                "strength": "hint",
+                "exists": true
+              }
+            ]
+          },
+          {
+            "agent": "claude",
+            "signals": [
+              {
+                "kind": "directory_exists",
+                "path": "/private/tmp/M4-09-27-47628ifz/home/.claude",
+                "strength": "hint",
+                "exists": false
+              }
+            ]
+          },
+          {
+            "agent": "workbuddy",
+            "signals": [
+              {
+                "kind": "directory_exists",
+                "path": "/private/tmp/M4-09-27-47628ifz/home/.workbuddy",
+                "strength": "hint",
+                "exists": true
+              }
+            ]
+          }
+        ],
+        "gaps": [],
+        "warnings": [
+          "identity_limit: v1 无法识别同路径重 clone(architecture §2.4);已知更换实例需重新核对授权"
+        ],
+        "evidence": [],
+        "memory_policy": "disabled"
+      }
+    ],
+    "changes": [],
+    "warnings": [
+      "project: identity_limit: v1 无法识别同路径重 clone(architecture §2.4);已知更换实例需重新核对授权"
+    ],
+    "errors": [],
+    "approval_required": false,
+    "next_action": null
+  }
+}

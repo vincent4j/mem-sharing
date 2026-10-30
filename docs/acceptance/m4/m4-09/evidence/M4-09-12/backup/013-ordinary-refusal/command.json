@@ -1,0 +1,40 @@
+{
+  "label": "ordinary-refusal",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "/private/tmp/M4-09-12-6ij22cr1/source/scripts/install.py",
+    "--source-manifest",
+    "/private/tmp/M4-09-12-6ij22cr1/source.json",
+    "--request-file",
+    "/private/tmp/M4-09-12-6ij22cr1/request.json"
+  ],
+  "cwd": "/private/tmp/M4-09-12-6ij22cr1/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-12-6ij22cr1/home",
+    "PATH": "/private/tmp/M4-09-12-6ij22cr1/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-12-6ij22cr1/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:23:51.488649Z",
+  "ended_utc": "2026-10-30T16:23:51.682848Z",
+  "duration_seconds": 0.19420245799119584,
+  "exit_code": 2,
+  "stdin_base64": "",
+  "json": {
+    "command": "install-machine",
+    "errors": [
+      {
+        "code": "machine_route_interrupted",
+        "message": "Machine scene interrupted: ['upgrade marker: /private/tmp/M4-09-12-6ij22cr1/home/.mem-sharing-upgrade.json']"
+      }
+    ],
+    "schema_version": 1,
+    "status": "failed"
+  }
+}

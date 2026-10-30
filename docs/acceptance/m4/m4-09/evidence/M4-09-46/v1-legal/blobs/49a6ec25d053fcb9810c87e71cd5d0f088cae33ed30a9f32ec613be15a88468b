@@ -1,0 +1,10 @@
+<!-- context-keeper: session-id=m2-08-ba2d7261-b5d6-44db-a455-e067307afb3f -->
+# M2-08两项目盘点与装配阻断
+
+# M2-08 两项目盘点与装配阻断
+
+## 追加记录 2026-10-29T13:34:25.106460+00:00
+
+任务来源 Paseo ba2d7261-b5d6-44db-a455-e067307afb3f。已盘点 knowwind/poster-fit Git、入口、记录库、旧管理器痕迹。poster-fit AGENTS.md 与两份记录库计划 dirty，按硬条件停止；knowwind 仅 .zcode 配置未跟踪，CLI 初次预览 rc=5，补充真实源码定位的提案在前检查返回 rc=2 drift（用户级 WorkBuddy MEMORY.md 已登记模板变化），停止且未修复。两项目均未进入装配/幂等/新会话，M2-08 阻断未通过。已采集范围的文件 SHA-256/mtime 与 Git 前后 diff 均为空。进度插件缺 zod 无法启动，未改插件。没有业务代码修改、commit 或 push。后续由用户处理 poster-fit dirty、负责人审查用户级模板 drift 后重新预览。原始证据与操作单见 [M2-08 报告](../../acceptance/m2-08/README.md)。本次不新增编号经验。
+
+收尾校验补充：首次 save-report 未显式指定 --worklog，默认选中另一会话日志，返回“当前会话不能保存其他会话的工作日志”；未编辑该日志。核对 --help 后对当前日志显式指定 --worklog 重验。coverage 遗留提示 missing_summary=5、missing_session=1，其余计数为 0；不批量改写旧记录。

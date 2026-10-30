@@ -1,0 +1,21 @@
+Base HEAD: fb980d6203d93adac231298eafec8f0651f87168; initial git status --short was empty.
+
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/unit
+exit_code=0; stdout+stderr: unit.log; unittest reports 250 tests.
+
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/integration
+exit_code=0; stdout+stderr: integration.log; unittest reports 53 tests.
+The PTY harness emits ResourceWarning for an unclosed BufferedReader; retained unfiltered.
+
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/unit -p test_m402_layout_registry.py
+exit_code=0; stdout+stderr: targeted.log; unittest reports 18 tests (included in the 250).
+
+Python standard-library ast.parse(feature_version=(3,9)) on agm.py and agm_core/{layout,registry,enable,remove,check}.py
+exit_code=0; output: Python 3.9 syntax check: 6 modules.
+This checks grammar only; tests executed with host Python 3.14, not Python 3.9 runtime.
+
+git diff --check
+exit_code=0; stdout+stderr empty.
+
+No machine installer/migration/upgrade was executed. Fixtures use temporary HOME and synthetic installed metadata.
+All verdicts, real installation acceptance and new-session behavior remain for the main Agent.

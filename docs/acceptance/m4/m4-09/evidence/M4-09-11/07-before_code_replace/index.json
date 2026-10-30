@@ -1,0 +1,96 @@
+{
+  "case": "M4-09-11",
+  "name": "库存 rename、逐文件替换、V 提交窗口",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-11-xcijdfnm",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-fixture-synthetic-target-source",
+      "label": "fixture-synthetic-target-source",
+      "exit_code": null
+    },
+    {
+      "path": "007-fixture-synthetic-target-delta",
+      "label": "fixture-synthetic-target-delta",
+      "exit_code": null
+    },
+    {
+      "path": "008-fixture-target-manifest",
+      "label": "fixture-target-manifest",
+      "exit_code": null
+    },
+    {
+      "path": "009-kernel-upgrade-plan",
+      "label": "kernel-upgrade-plan",
+      "exit_code": 0
+    },
+    {
+      "path": "010-fixture-fault-approval",
+      "label": "fixture-fault-approval",
+      "exit_code": null
+    },
+    {
+      "path": "011-hard-exit-before_code_replace",
+      "label": "hard-exit-before_code_replace",
+      "exit_code": 86
+    },
+    {
+      "path": "012-fixture-make-original-sources-inaccessible",
+      "label": "fixture-make-original-sources-inaccessible",
+      "exit_code": null
+    },
+    {
+      "path": "013-fixed-recovery-preview",
+      "label": "fixed-recovery-preview",
+      "exit_code": 0
+    },
+    {
+      "path": "014-fixture-recovery-approval",
+      "label": "fixture-recovery-approval",
+      "exit_code": null
+    },
+    {
+      "path": "015-fixed-recovery-apply",
+      "label": "fixed-recovery-apply",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "§26 generic recovery exercise only: original baseline code plus an explicitly synthetic README/module delta, exact manifest conversion injected to the existing upgrade kernel. Synthetic commit is not a Git release identity and this is not evidence for a frozen T0→release upgrade.",
+    "Original source paths renamed inside this synthetic area; fixed bootstrap tool uses its own copied dependency tree. Preserved sources are at source-unavailable and target-unavailable."
+  ],
+  "ended_utc": "2026-10-30T16:22:24.315733Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-11-xcijdfnm/home/.mem-sharing-install-20261030T162218Z-b5175bef2c314670a11ceabd67ec900b/journal.json",
+    "/private/tmp/M4-09-11-xcijdfnm/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
+    "/private/tmp/M4-09-11-xcijdfnm/home/.mem-sharing-install-synthetic-fault-upgrade/recover.py",
+    "/private/tmp/M4-09-11-xcijdfnm/home/.mem-sharing-install-20261030T162218Z-b5175bef2c314670a11ceabd67ec900b/entry-backups/20261030T162219Z-d40e382d879c43d3945c8ae45a62364e/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

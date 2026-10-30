@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "command": "enable-memory",
+  "status": "approval_required",
+  "projects": [
+    {
+      "main_checkout": "/Users/vincent4j/Tools/Source/poster-fit",
+      "checkout": "/Users/vincent4j/Tools/Source/poster-fit",
+      "states": {
+        "source_available": {
+          "status": "missing",
+          "observed_at": "2026-10-29T13:51:09.733090Z",
+          "evidence": "No confirmed Keeper checkout"
+        },
+        "skill_installed": {
+          "codex": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:09.733097Z",
+            "evidence": "project link preflight"
+          },
+          "claude": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:09.733100Z",
+            "evidence": "project link preflight"
+          },
+          "workbuddy": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:09.733103Z",
+            "evidence": "project link preflight"
+          }
+        },
+        "bridge_assembled": {
+          "codex": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:09.733099Z",
+            "evidence": "project bridge preflight"
+          },
+          "claude": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:09.733102Z",
+            "evidence": "project bridge preflight"
+          },
+          "workbuddy": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:09.733104Z",
+            "evidence": "project bridge preflight"
+          }
+        },
+        "store_authorized_ready": {
+          "status": "unknown",
+          "observed_at": null,
+          "evidence": null
+        }
+      },
+      "agents": [
+        "codex",
+        "claude",
+        "workbuddy"
+      ],
+      "evidence": [
+        "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/registry.json"
+      ],
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      }
+    }
+  ],
+  "changes": [],
+  "warnings": [],
+  "errors": [],
+  "approval_required": true,
+  "next_action": "{\"schema_version\": 1, \"command\": \"enable-memory\", \"main_checkout\": \"/Users/vincent4j/Tools/Source/poster-fit\", \"checkout\": \"/Users/vincent4j/Tools/Source/poster-fit\", \"git_common_dir\": \"/Users/vincent4j/Tools/Source/poster-fit/.git\", \"agents\": [\"codex\", \"claude\", \"workbuddy\"], \"memory_authorization\": \"yes\", \"store_path\": null, \"provider_source\": null, \"provider_fingerprints\": [], \"changes\": [{\"path\": \"/Users/vincent4j/Tools/Source/poster-fit/CLAUDE.md\", \"operation\": \"create\", \"before_fingerprint\": null, \"after_fingerprint\": \"336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49\"}], \"confirmed_at\": \"<UTC timestamp>\", \"reference\": \"<user confirmation reference>\"}"
+}

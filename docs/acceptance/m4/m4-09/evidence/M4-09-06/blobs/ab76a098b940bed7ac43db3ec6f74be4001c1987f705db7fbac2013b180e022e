@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "python3",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/.codex/skills/context-keeper/scripts/context_keeper_probe.py",
+    "resume",
+    "--root",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m1-07/fixture-old",
+    "--query",
+    "当前进度"
+  ],
+  "exit_code": 3,
+  "utc": "2026-10-29T11:50:55.588864+00:00"
+}

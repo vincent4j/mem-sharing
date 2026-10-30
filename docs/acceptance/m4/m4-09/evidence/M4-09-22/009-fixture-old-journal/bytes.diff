@@ -1,0 +1,10 @@
+--- before/old-journal.json
++++ after/old-journal.json
+@@ -0,0 +1,7 @@
++{
++  "schema_version": 1,
++  "plan": {
++    "command": "migrate-machine"
++  },
++  "status": "running"
++}

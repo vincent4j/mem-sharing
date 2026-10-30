@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "command": "enable-memory",
+  "status": "approval_required",
+  "projects": [
+    {
+      "main_checkout": "/Users/vincent4j/Tools/Source/knowwind",
+      "checkout": "/Users/vincent4j/Tools/Source/knowwind",
+      "states": {
+        "source_available": {
+          "status": "missing",
+          "observed_at": "2026-10-29T13:51:03.340685Z",
+          "evidence": "No confirmed Keeper checkout"
+        },
+        "skill_installed": {
+          "codex": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:03.340691Z",
+            "evidence": "project link preflight"
+          },
+          "claude": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:03.340694Z",
+            "evidence": "project link preflight"
+          },
+          "workbuddy": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:03.340697Z",
+            "evidence": "project link preflight"
+          }
+        },
+        "bridge_assembled": {
+          "codex": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:03.340693Z",
+            "evidence": "project bridge preflight"
+          },
+          "claude": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:03.340695Z",
+            "evidence": "project bridge preflight"
+          },
+          "workbuddy": {
+            "status": "missing",
+            "observed_at": "2026-10-29T13:51:03.340698Z",
+            "evidence": "project bridge preflight"
+          }
+        },
+        "store_authorized_ready": {
+          "status": "unknown",
+          "observed_at": null,
+          "evidence": null
+        }
+      },
+      "agents": [
+        "codex",
+        "claude",
+        "workbuddy"
+      ],
+      "evidence": [
+        "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/registry.json"
+      ],
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      }
+    }
+  ],
+  "changes": [],
+  "warnings": [],
+  "errors": [],
+  "approval_required": true,
+  "next_action": "{\"schema_version\": 1, \"command\": \"enable-memory\", \"main_checkout\": \"/Users/vincent4j/Tools/Source/knowwind\", \"checkout\": \"/Users/vincent4j/Tools/Source/knowwind\", \"git_common_dir\": \"/Users/vincent4j/Tools/Source/knowwind/.git\", \"agents\": [\"codex\", \"claude\", \"workbuddy\"], \"memory_authorization\": \"yes\", \"store_path\": null, \"provider_source\": null, \"provider_fingerprints\": [], \"changes\": [{\"path\": \"/Users/vincent4j/Tools/Source/knowwind/CLAUDE.md\", \"operation\": \"update\", \"before_fingerprint\": \"54134fb03cc201fe5cc500302f1ce9db49635c9fb9bfb97d3299c305d3d2ad79\", \"after_fingerprint\": \"fcec3b0230245ad46850f5b646237940526a46de0cface22d3793af503dca466\"}], \"confirmed_at\": \"<UTC timestamp>\", \"reference\": \"<user confirmation reference>\"}"
+}

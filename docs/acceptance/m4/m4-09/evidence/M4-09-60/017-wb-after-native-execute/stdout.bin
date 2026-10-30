@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "runtime_layout": {
+    "root": "/private/tmp/M4-09-60-4ju0ajer/home/.mem-sharing",
+    "code": "/private/tmp/M4-09-60-4ju0ajer/home/.local/share/mem-sharing",
+    "registry": "/private/tmp/M4-09-60-4ju0ajer/home/.mem-sharing/var/registry.json",
+    "lock": "/private/tmp/M4-09-60-4ju0ajer/home/.mem-sharing/var/.agm.lock",
+    "transaction_lock": "/private/tmp/M4-09-60-4ju0ajer/home/.mem-sharing/var/.agm.lock/transaction",
+    "backups": "/private/tmp/M4-09-60-4ju0ajer/home/.mem-sharing/backups"
+  },
+  "command": "enable-memory",
+  "status": "completed",
+  "projects": [
+    {
+      "main_checkout": "/private/tmp/M4-09-60-4ju0ajer/project",
+      "checkout": "/private/tmp/M4-09-60-4ju0ajer/project",
+      "memory_policy": "follow_ck",
+      "agents": [
+        "codex",
+        "workbuddy"
+      ],
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      },
+      "evidence": [
+        "/private/tmp/M4-09-60-4ju0ajer/home/.mem-sharing/var/registry.json"
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "path": "/private/tmp/M4-09-60-4ju0ajer/project/.workbuddy/memory/MEMORY.md",
+      "operation": "update",
+      "before_fingerprint": "89c820abdf90eec2d02fad2f1f28bb7766e365c4756e0be2580268a14dba6bb4",
+      "after_fingerprint": "bc6963179884b0072c03ffb261df5146d3456a32713bef729613e465a81b0a8d",
+      "ownership": "created",
+      "applied": true
+    }
+  ],
+  "warnings": [
+    "Runtime acceptance pending; CK installation and record data are retained and not inspected."
+  ],
+  "errors": [],
+  "approval_required": false,
+  "next_action": null
+}

@@ -1,0 +1,50 @@
+{
+  "case": "M4-09-46",
+  "name": "旧 schema 诊断与升级拒绝",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-46-lq96tpp2",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-seed-legacy-ledger",
+      "label": "seed-legacy-ledger",
+      "exit_code": 0
+    },
+    {
+      "path": "003-fixture-old-body-sentinel",
+      "label": "fixture-old-body-sentinel",
+      "exit_code": null
+    },
+    {
+      "path": "004-fixture-bad-old-fields",
+      "label": "fixture-bad-old-fields",
+      "exit_code": null
+    },
+    {
+      "path": "005-diagnostic-old-ledger",
+      "label": "diagnostic-old-ledger",
+      "exit_code": 1
+    },
+    {
+      "path": "006-install-preview",
+      "label": "install-preview",
+      "exit_code": 2
+    },
+    {
+      "path": "007-check",
+      "label": "check",
+      "exit_code": 1
+    }
+  ],
+  "notes": [
+    "Source is an exact git-archive export of baseline; source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "§25/§26 replacement: strict read-only diagnosis and refused development-ledger writes. No pre-release schema conversion is claimed."
+  ],
+  "ended_utc": "2026-10-30T16:19:20.744740Z",
+  "recovery_locations": [],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

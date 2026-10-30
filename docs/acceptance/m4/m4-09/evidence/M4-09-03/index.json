@@ -1,0 +1,67 @@
+{
+  "case": "M4-09-03",
+  "name": "同版零写",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-03-7wmswztl",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-same-preview",
+      "label": "same-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "007-fixture-same-approval",
+      "label": "fixture-same-approval",
+      "exit_code": null
+    },
+    {
+      "path": "008-same-execute",
+      "label": "same-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "009-same-repeat",
+      "label": "same-repeat",
+      "exit_code": 5
+    },
+    {
+      "path": "010-check",
+      "label": "check",
+      "exit_code": 1
+    }
+  ],
+  "notes": [
+    "Source is an exact git-archive export of baseline; source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:16:01.615459Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-03-7wmswztl/home/.mem-sharing-install-20261030T161557Z-2c1b155bfec34dd49dee65090828d5b7/journal.json",
+    "/private/tmp/M4-09-03-7wmswztl/home/.mem-sharing-install-20261030T161557Z-2c1b155bfec34dd49dee65090828d5b7/entry-backups/20261030T161558Z-14aa9d0b0da742e29bc5458a2f24fe34/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

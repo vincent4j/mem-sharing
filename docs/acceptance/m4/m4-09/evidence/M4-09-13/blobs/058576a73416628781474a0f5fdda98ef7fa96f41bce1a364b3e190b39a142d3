@@ -1,0 +1,44 @@
+<!-- context-keeper: session-id=tututu-paseo-delivery-closeout-20261019 -->
+# 五节点阶段B留档与有限收尾
+
+## 用户需求
+
+用户原话要点（2026-10-19，本树 tututu-paseo-delivery-closeout-20261019，分支 tututu/paseo-delivery-closeout-20261019，基线 b3ac0449）：
+
+- 本轮只做有限 PRD/context 收尾，不重做此前阶段A。A 已完成四项代码/文档修复与独立三职责验收，父 commit/remote `b3ac0449fecb6d523060bb8170135782701d7190`，回执 `/tmp/five-node-stage-a-parent-sync-20261019/receipt.json`、独立报告 `/tmp/five-node-stage-a-independent-20261019/REVIEW.md`；PRD 已准确写A，不重复改。
+- 阶段B在实现树 `/Users/vincent4j/.paseo/worktrees/0jvz9f7e/guaji-paseo-delivery-adapter-20261019`：已写接收端/runner/默认未安装的非商品 offline 诊断插件。真实 Paseo 0.11.4 没有找到可信 rendered/decoded 回执，普通 onLoad/插件 RPC 不授信，缺应用核心受控观察通道。B 真实接入未完成，安装诊断插件也不能单独完成，不写 B 全通过、不让下次直接生图。当前不需要再调查，只据明确证据准备极短增量，等待最终回执更新。
+- 2026-10-19 用户补充（B 最新状态）：完整 SDK 0.11.4 typecheck 已补齐——缺 `argumentHint` 已一行修复，精确新源 exit 0、SDK 合同 2/2 exit 0（`/tmp/paseo-delivery-stage-b-20261019/argumentHint-delta/REVIEW.md`）；不要再写 tsc 未验证。B 仍缺真正应用核心可信观察通道，真实展示未验、未安装；独立复验仍进行，暂不提交。
+- 2026-10-19 用户修正（第三轮）：B 独立复验发现 R1 登记竞态、R3 跨语言签名字节缺口，已交实现者修，暂不提交。草案修两点：①「Paseo 0.11.4 无可信回执」收窄为「本轮核查到的现有接口未提供可用可信渲染回执」，不绝对推断全平台；②memory 未完成项拆分——代码文档提交读回是本轮交付；真实应用核心 producer/受控观察/宿主注入为另一未完成项，不能把 PRD 更新＋push 作为真实接入完成条件。仅改本轮新记录，不动旧正确历史。
+- 用户本次明确授权收尾与提交 push，但等父控终验证据后才提交；context 脚本 rc3 停止时不绕过。
+- 2026-10-19 用户终态指令（最终轮）：B 最终独立回执已到 `/tmp/paseo-delivery-stage-b-independent-20261019/REVIEW.md`——本地代码可发布通过（R1/R3 关闭、24 文件 SHA 匹配）；阶段B真实闭环仍未完成（缺可信应用核心观察/回传/宿主启动注入/真实展示），准确区分不写 B 全通过。按最终报告收口 4 文件：PRD 指向操作说明相对路径（供父树整合后读取，不仅实现树临时路径）；未完成拆开——真实接入依赖准确 Paseo 源码构建入口与隔离实例、安装当前诊断插件不能完成，代码文档发布为单独本轮交付项；A 父 SHA `b3ac0449` 已完成不重写；B 代码提交 SHA 稍后给，不预填自身 commit（后已提供 `557fb2730abda1c2d582cef878d16af918adbe96` 并补记）。执行 prd-distill/context 最小收尾，历史 coverage 告警如实说明不冒全库 pass；随后授权精确 4 文件 commit 自己的 tututu 分支＋普通 push＋ls-remote 读回＋核 clean；不扩经验、不改旧记录/代码、不等无关验证；回传 diff 重点与 SHA/exit。
+
+## 范围
+
+已确认要做：
+
+- 五节点 PRD（`docs/prd/五节点需求验收.md`）第 4 节加必要 B 状态/API 入口指向（实现树、REVIEW、操作说明路径，真实接入未完成边界）。
+- 新增本轮 context plan/worklog、memory-keeper 当期一条及必要索引。
+
+不做（明确禁止/保留）：
+
+- 不改 8 条经验、不新增经验编号；不改旧完整方案；不重写正确历史；不改 scripts/test/adapter/操作说明（属呱唧）。
+- 不复制庞大测试表或过程复盘，一条证据链接即可。
+- 真实通知 R12/R13 未实现保留；旧图单独视觉审核延期、真实质量/live60 未验保持。
+- 本轮不生图、无全局安装/重启/真实资产，不 main merge 不清理。
+
+## 实施计划
+
+1. 读用户规则（`~/.agents-group/memories/MEMORY.md`）、AGENTS、prd-distill/context-keeper 技能；确认基线与工作区干净。
+2. context-keeper status → record-path 建 plan/worklog；coverage 结构校验。
+3. PRD 第 4 节最小 B 增量注；memory-keeper 时间线当期条目；worklog 定稿；save-report。
+4. 报告实际文件清单与待最终证据；提交 push 等父控终验，不在本轮预填。
+
+## 验证方式
+
+- coverage/save-report rc=0 或如实报告历史遗留缺口（不新增本轮缺项）；context 脚本 rc3 即停止不绕过。
+- `git status/diff --name-only` 文件清单与允许清单一致（PRD 一处＋context-keeper 新记录/索引）。
+- 最终 commit/push 以父控终验证据为准，本日志只记录到"待提交"状态。
+
+## 待确认
+
+无。最终独立回执（/tmp/paseo-delivery-stage-b-independent-20261019/REVIEW.md）、B 发布证据（commit `557fb2730abda1c2d582cef878d16af918adbe96`，回执 /tmp/paseo-delivery-stage-b-20261019/commit-branch-sync/final-receipt.json）与提交授权均已到达；本分支发布最终 SHA 由外部回执 `/tmp/tututu-paseo-delivery-closeout-20261019/final-receipt.json` 承载，不写入记录自身。

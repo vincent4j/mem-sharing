@@ -1,0 +1,42 @@
+[
+  {
+    "path": "home",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377303763249219,
+      "size": 192,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377303843811037,
+      "size": 224,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.claude",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377303843873371,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.claude/CLAUDE.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377303843923830,
+      "size": 20,
+      "kind": "file",
+      "sha256": "aa1c9b3c37ce252e11233e67b37fa2378b7ebf27cfc77e2ac1cf67a574602e80"
+    }
+  }
+]

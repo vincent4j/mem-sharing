@@ -1,0 +1,7 @@
+--- before/home/.codex/AGENTS.md
++++ after/home/.codex/AGENTS.md
+@@ -16,3 +16,4 @@
+ - codex 专属：使用专用执行器路径。
+ - 回答应简洁明确。
+ - 未明确归属的 abc 约定。
++new source body

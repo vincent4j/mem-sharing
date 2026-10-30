@@ -1,0 +1,120 @@
+{
+  "case": "M4-09-62",
+  "name": "停用层次与显式重启",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-62-rll8vzqn",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-fixture-existing-ck-data",
+      "label": "fixture-existing-ck-data",
+      "exit_code": null
+    },
+    {
+      "path": "007-fixture-existing-user-ck-install",
+      "label": "fixture-existing-user-ck-install",
+      "exit_code": null
+    },
+    {
+      "path": "008-project-preview",
+      "label": "project-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "009-fixture-project-approval",
+      "label": "fixture-project-approval",
+      "exit_code": null
+    },
+    {
+      "path": "010-project-execute",
+      "label": "project-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "011-remove-preview",
+      "label": "remove-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "012-remove-kernel-preview",
+      "label": "remove-kernel-preview",
+      "exit_code": 0
+    },
+    {
+      "path": "013-fixture-remove-approval",
+      "label": "fixture-remove-approval",
+      "exit_code": null
+    },
+    {
+      "path": "014-remove-execute",
+      "label": "remove-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "015-default-reenter",
+      "label": "default-reenter",
+      "exit_code": 5
+    },
+    {
+      "path": "016-check",
+      "label": "check",
+      "exit_code": 0
+    },
+    {
+      "path": "017-explicit-restart-preview",
+      "label": "explicit-restart-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "018-fixture-explicit-restart-approval",
+      "label": "fixture-explicit-restart-approval",
+      "exit_code": null
+    },
+    {
+      "path": "019-explicit-restart-execute",
+      "label": "explicit-restart-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "020-restarted-check",
+      "label": "restarted-check",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:23:39.761168Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing-install-20261030T162334Z-1c53d2f2ac0447c5ad814b1c7755521e/journal.json",
+    "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing-install-20261030T162334Z-1c53d2f2ac0447c5ad814b1c7755521e/entry-backups/20261030T162335Z-0e3692a22b704f1f9137520e11f0ffb9/manifest.json",
+    "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing/backups/20261030T162337Z-663f53bd48b44cebb154ec113b107ae3/manifest.json",
+    "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing/backups/20261030T162339Z-b678c51d01a04859a238b4e78a8416b1/manifest.json",
+    "/private/tmp/M4-09-62-rll8vzqn/home/.mem-sharing/backups/20261030T162336Z-de0aae722809491aa042751657ce585d/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

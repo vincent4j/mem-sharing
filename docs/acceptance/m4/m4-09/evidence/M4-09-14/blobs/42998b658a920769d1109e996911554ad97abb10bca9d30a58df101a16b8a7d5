@@ -1,0 +1,57 @@
+{
+  "results": [
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/registry.json",
+      "action": "removed transaction-owned newly-created registry",
+      "verified": true
+    },
+    {
+      "path": "/Users/vincent4j/.workbuddy/MEMORY.md",
+      "action": "restored",
+      "verified": true
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/memory/MEMORY.md",
+      "action": "restored",
+      "verified": true
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/context-keeper.json",
+      "action": "unchanged",
+      "verified": true
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.workbuddy/skills/context-keeper",
+      "action": "restored",
+      "verified": true
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.claude/skills/context-keeper",
+      "action": "restored",
+      "verified": true
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.codex/skills/context-keeper",
+      "action": "restored",
+      "verified": true
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/.agents/skills/context-keeper",
+      "action": "restored",
+      "verified": true
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/CLAUDE.md",
+      "action": "restored",
+      "verified": true
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/agent-group-memory/AGENTS.md",
+      "action": "restored",
+      "verified": true
+    }
+  ],
+  "store_preserved": "/Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper",
+  "store_reason": "init already succeeded; project asset must not be deleted",
+  "status": "recovered"
+}

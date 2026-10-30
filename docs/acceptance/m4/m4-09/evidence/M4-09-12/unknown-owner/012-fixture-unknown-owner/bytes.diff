@@ -1,0 +1,9 @@
+--- before/home/.mem-sharing-install.lock/migration-owner.json
++++ after/home/.mem-sharing-install.lock/migration-owner.json
+@@ -1,6 +1,5 @@
+ {
+   "operation_id": "synthetic-fault-upgrade",
+-  "pid": 17035,
+   "plan_sha256": "083c0165aab65bcea3847d505fbbdf8c8953890f7d9595a7c02bc93f46059ed3",
+   "product_id": "mem-sharing"
+ }

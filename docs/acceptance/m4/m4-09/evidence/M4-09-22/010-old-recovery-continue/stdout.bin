@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "migration_unsupported", "message": "Development ledger migration and journal replay are unsupported; preserve materials for diagnosis"}], "schema_version": 1, "status": "failed"}

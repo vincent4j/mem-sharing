@@ -1,0 +1,36 @@
+{
+  "case": "M4-09-33",
+  "name": "底层安装与用户报告边界",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-33-glnidqa6",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "003-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "004-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:24:32.123761Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-33-glnidqa6/home/.mem-sharing-install-20261030T162430Z-9a05ddedb897431b988f071285a9792f/journal.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

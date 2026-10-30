@@ -1,0 +1,11 @@
+--- before/source.json
++++ after/source.json
+@@ -30,6 +30,7 @@
+     "scripts/agm_core/migrate.py": "e8d6685897bf47603666ef31fea0d1fd0593a0845362efc8b32722aa0af7c46b",
+     "scripts/agm_core/detect.py": "97119e4d2b63b0539d45f674a8a7301c2d7ac65a7d73b664d3616ac6ac8932c1",
+     "scripts/agm_core/entries.py": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd",
+-    "scripts/agm_core/project.py": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705"
++    "scripts/agm_core/project.py": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705",
++    "../outside": "950574f573289404760a41a0f71d2d04f787cc0e5c0253187f77206b59f8e668"
+   }
+ }

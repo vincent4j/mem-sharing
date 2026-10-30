@@ -1,0 +1,50 @@
+{
+  "nodes": [
+    {
+      "mode": 493,
+      "path": "memories",
+      "sha256": null,
+      "size": null,
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "path": "memories/MEMORY.md",
+      "sha256": "ab93dff472476a4288674273875499555c58aba0e484bd2dffbbdc6f53120647",
+      "size": 101,
+      "type": "file"
+    },
+    {
+      "active": true,
+      "disposition": "internal_link",
+      "mode": 493,
+      "path": "memories/relative",
+      "sha256": "09c7233e9ffddac20bdef988cddd45189a0bb9691b7dbb0db57a9419063b2d4f",
+      "size": 9,
+      "text": "主题.md",
+      "type": "symlink"
+    },
+    {
+      "mode": 420,
+      "path": "memories/主题.md",
+      "sha256": "e2cb2a1227c5bff5602c58154a9f67c3d185f7f3d969073bb258ece5f57986b5",
+      "size": 21,
+      "type": "file"
+    },
+    {
+      "mode": 493,
+      "path": "references",
+      "sha256": null,
+      "size": null,
+      "type": "directory"
+    },
+    {
+      "mode": 420,
+      "path": "references/手册.md",
+      "sha256": "31b21810de38f32201bd31bec75aeb968e86ad4070c70ccd5f9698a0bf484cab",
+      "size": 11,
+      "type": "file"
+    }
+  ],
+  "tree_sha256": "72263951d9dc87305e91983facfa8c1ca8181e5d89a06fd513258cbae003e306"
+}

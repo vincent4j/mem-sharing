@@ -1,0 +1,40 @@
+{
+  "label": "recover-preview",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "/private/tmp/M4-09-12-_2d_5pxw/source/scripts/install.py",
+    "--recover",
+    "/private/tmp/M4-09-12-_2d_5pxw/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
+    "--action",
+    "continue"
+  ],
+  "cwd": "/private/tmp/M4-09-12-_2d_5pxw/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-12-_2d_5pxw/home",
+    "PATH": "/private/tmp/M4-09-12-_2d_5pxw/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-12-_2d_5pxw/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:23:55.708441Z",
+  "ended_utc": "2026-10-30T16:23:56.089543Z",
+  "duration_seconds": 0.3810997499967925,
+  "exit_code": 2,
+  "stdin_base64": "",
+  "json": {
+    "command": "install-machine",
+    "errors": [
+      {
+        "code": "upgrade_conflict",
+        "message": "Fixed recovery toolkit missing/changed"
+      }
+    ],
+    "schema_version": 1,
+    "status": "failed"
+  }
+}

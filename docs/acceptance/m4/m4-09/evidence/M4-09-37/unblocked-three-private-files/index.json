@@ -1,0 +1,84 @@
+{
+  "case": "M4-09-37",
+  "name": "无整文件占用的三家私有规则集中审批",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-37-cfylbggd",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-fixture-three-private-files-without-registered-wholefile-import",
+      "label": "fixture-three-private-files-without-registered-wholefile-import",
+      "exit_code": null
+    },
+    {
+      "path": "007-fixture-organize-request",
+      "label": "fixture-organize-request",
+      "exit_code": null
+    },
+    {
+      "path": "008-organize-preview",
+      "label": "organize-preview",
+      "exit_code": 0
+    },
+    {
+      "path": "009-fixture-reviewed-decisions",
+      "label": "fixture-reviewed-decisions",
+      "exit_code": null
+    },
+    {
+      "path": "010-reviewed-plan",
+      "label": "reviewed-plan",
+      "exit_code": 0
+    },
+    {
+      "path": "011-fixture-central-approval",
+      "label": "fixture-central-approval",
+      "exit_code": null
+    },
+    {
+      "path": "012-execute-reviewed-central-approval",
+      "label": "execute-reviewed-central-approval",
+      "exit_code": 0
+    },
+    {
+      "path": "013-repeat-plan",
+      "label": "repeat-plan",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "Original 37 also preserved a genuine whole-file Claude-import conflict. This separate fixture has only a Codex machine registration; Claude/WB private rule files are synthetic unregistered preexisting content, so their full-file import gate is not present."
+  ],
+  "ended_utc": "2026-10-30T16:28:23.522040Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-37-cfylbggd/home/.mem-sharing-install-20261030T162821Z-13ae9e72b22043f6838274ee1dc3c254/journal.json",
+    "/private/tmp/M4-09-37-cfylbggd/home/.mem-sharing-install-20261030T162821Z-13ae9e72b22043f6838274ee1dc3c254/entry-backups/20261030T162822Z-b08db0147c464d55a441d93d009cafeb/manifest.json",
+    "/private/tmp/M4-09-37-cfylbggd/home/.mem-sharing/backups/20261030T162823Z-c103b0b288db49bca1e856d682b0a951/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

@@ -1,0 +1,14 @@
+............................................./Users/vincent4j/Tools/Source/agent-group-memory/tests/integration/test_m207_cli_cycle.py:184: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+../Users/vincent4j/Tools/Source/agent-group-memory/tests/integration/test_m207_cli_cycle.py:184: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/vincent4j/Tools/Source/agent-group-memory/tests/integration/test_m207_cli_cycle.py:457: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+............
+----------------------------------------------------------------------
+Ran 59 tests in 52.926s
+
+OK

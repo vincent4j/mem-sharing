@@ -1,0 +1,13 @@
+commit d5784154aa6e5d30d9606d8296348ed83dd6e876
+Author:     四勾 4J <vincent4j@gmail.com>
+AuthorDate: Thu Oct 29 19:55:32 2026 +0800
+Commit:     四勾 4J <vincent4j@gmail.com>
+CommitDate: Thu Oct 29 19:55:32 2026 +0800
+
+    feat(m2): CLI shell - strict parsing, approval gate, exit codes, paths loader with 104 tests
+
+ SKILL.md                  |  46 ++-
+ scripts/agm.py            | 623 +++++++++++++++++++++++++++++++++-
+ scripts/agm_core/paths.py | 292 ++++++++++++++++
+ tests/unit/test_cli.py    | 834 ++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 1772 insertions(+), 23 deletions(-)

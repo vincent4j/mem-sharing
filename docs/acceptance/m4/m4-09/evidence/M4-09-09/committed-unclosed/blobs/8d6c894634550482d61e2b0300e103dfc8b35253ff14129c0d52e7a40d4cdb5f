@@ -1,0 +1,12 @@
+{
+  "observed_at": "2026-10-29T10:57:40.890301Z",
+  "store_actual": "/Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper",
+  "idempotence": "bytes/mode/mtime/blocks/links unchanged",
+  "workbuddy_bridge": "missing; M1-04 next",
+  "manifests": [
+    "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/backups/20261029T105740Z-retry-install/manifest.json",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/backups/20261029T105740Z-retry-ensure-codex/manifest.json",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/backups/20261029T105740Z-retry-ensure-claude/manifest.json",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/scripts/backups/20261029T105740Z-retry-init/manifest.json"
+  ]
+}

@@ -1,0 +1,11 @@
+--- before/home/.mem-sharing/var/registry.json
++++ after/home/.mem-sharing/var/registry.json
+@@ -5,7 +5,7 @@
+   "product": {
+     "product_id": "mem-sharing",
+     "installation_id": "20261030T161654Z-85ec4016eb864abcafcc463aa2f27d35",
+-    "product_structure_version": 1,
++    "product_structure_version": 99,
+     "product_code_version": "0.4.0",
+     "source": {
+       "url": "https://github.com/vincent4j/mem-sharing",

@@ -1,0 +1,24 @@
+{
+  "label": "fixture-remove-approval",
+  "argv": [
+    "fixture-operation",
+    "remove-approval"
+  ],
+  "cwd": "/private/tmp/M4-09-26-x6cg8emb/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-26-x6cg8emb/home",
+    "PATH": "/private/tmp/M4-09-26-x6cg8emb/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-26-x6cg8emb/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:22:13.057577Z",
+  "ended_utc": "2026-10-30T16:22:13.076218Z",
+  "duration_seconds": 0.018641583010321483,
+  "fixture_operation": "remove-approval",
+  "returned": "None"
+}

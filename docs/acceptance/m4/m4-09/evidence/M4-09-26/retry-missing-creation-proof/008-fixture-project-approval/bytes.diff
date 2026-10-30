@@ -1,0 +1,37 @@
+--- before/project-approval-7.json
++++ after/project-approval-7.json
+@@ -0,0 +1,34 @@
++{
++  "schema_version": 1,
++  "command": "enable-memory",
++  "main_checkout": "/private/tmp/M4-09-26-5mvqxdh3/project",
++  "checkout": "/private/tmp/M4-09-26-5mvqxdh3/project",
++  "git_common_dir": "/private/tmp/M4-09-26-5mvqxdh3/project/.git",
++  "agents": [
++    "claude"
++  ],
++  "memory_policy": "follow_ck",
++  "changes": [
++    {
++      "path": "/private/tmp/M4-09-26-5mvqxdh3/project/AGENTS.md",
++      "operation": "create",
++      "before_fingerprint": null,
++      "after_fingerprint": "85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406"
++    },
++    {
++      "path": "/private/tmp/M4-09-26-5mvqxdh3/project/CLAUDE.md",
++      "operation": "create",
++      "before_fingerprint": null,
++      "after_fingerprint": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
++    }
++  ],
++  "installation": {
++    "claude": {
++      "status": "installed",
++      "fingerprint": "86772f73012a6e3a98ecd5471f95fdd17c19280944179230edc69f1627e030ac"
++    }
++  },
++  "native_pending": [],
++  "confirmed_at": "2026-10-30T16:26:30.839952Z",
++  "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
++}

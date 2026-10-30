@@ -1,0 +1,78 @@
+{
+  "case": "M4-09-35",
+  "name": "默认启用合成内核与真实触发边界",
+  "status": "not_in_scope",
+  "area": "/private/tmp/M4-09-35-bmbf2vo1",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-init-worktree-base",
+      "label": "init-worktree-base",
+      "exit_code": 0
+    },
+    {
+      "path": "007-fetch-local-frozen-object",
+      "label": "fetch-local-frozen-object",
+      "exit_code": 0
+    },
+    {
+      "path": "008-read-tree-local-frozen-object",
+      "label": "read-tree-local-frozen-object",
+      "exit_code": 0
+    },
+    {
+      "path": "009-create-linked-worktree",
+      "label": "create-linked-worktree",
+      "exit_code": 0
+    },
+    {
+      "path": "010-project-preview",
+      "label": "project-preview",
+      "exit_code": 2
+    },
+    {
+      "path": "011-reenter",
+      "label": "reenter",
+      "exit_code": 2
+    },
+    {
+      "path": "012-check",
+      "label": "check",
+      "exit_code": 1
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "Synthetic explicit kernel calls captured; automatic default-enable trigger in real Agent session is M4-10 scope. No new Agent session was started."
+  ],
+  "ended_utc": "2026-10-30T16:24:18.939319Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-35-bmbf2vo1/home/.mem-sharing-install-20261030T162414Z-4f459746aeb34ef4886483e0d741161b/journal.json",
+    "/private/tmp/M4-09-35-bmbf2vo1/home/.mem-sharing-install-20261030T162414Z-4f459746aeb34ef4886483e0d741161b/entry-backups/20261030T162415Z-4b5fea35aab949c7951e29d90d9b657c/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "diff",
+    "-u",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m1-07/old-protected-before.json",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m1-07/old-protected-after.json"
+  ],
+  "exit_code": 0
+}

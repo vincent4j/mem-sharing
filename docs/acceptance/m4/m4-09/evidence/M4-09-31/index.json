@@ -1,0 +1,29 @@
+{
+  "case": "M4-09-31",
+  "name": "LLM 文档地图原文",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-31-ji6tjdx2",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-documentation-map-read",
+      "label": "documentation-map-read",
+      "exit_code": 0
+    },
+    {
+      "path": "003-read-map-every-linked-file",
+      "label": "read-map-every-linked-file",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:24:27.972906Z",
+  "recovery_locations": [],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

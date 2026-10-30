@@ -1,0 +1,119 @@
+[
+  {
+    "path": "home/.mem-sharing/backups",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377435670615824,
+      "size": 64,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377437224900751,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/backups/20261030T162357Z-654b4dc0f991496aad42c2cd688eace2",
+    "before": null,
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377437336967107,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/backups/20261030T162357Z-654b4dc0f991496aad42c2cd688eace2/1.before",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377437225205296,
+      "size": 2131,
+      "kind": "file",
+      "sha256": "4c50e5ae47a2e3962d2ebf31c2d39170aa1820e3bf0e1ba8057abea387d92fea"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/backups/20261030T162357Z-654b4dc0f991496aad42c2cd688eace2/manifest.json",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377437336826147,
+      "size": 1450,
+      "kind": "file",
+      "sha256": "d7427d2f680a8b82b576325797cef807b556454aaf6d0c686d814407438e7a34"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/var",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377436134039718,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377437337345860,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/var/registry.json",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377436088661304,
+      "size": 2131,
+      "kind": "file",
+      "sha256": "4c50e5ae47a2e3962d2ebf31c2d39170aa1820e3bf0e1ba8057abea387d92fea"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377437336155516,
+      "size": 5027,
+      "kind": "file",
+      "sha256": "e8fb6ce266beead2d20123a49d23eaf603bdb1a9c78c2bec01c242d7dedf09bc"
+    }
+  },
+  {
+    "path": "scan/already-enabled",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377436371429966,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377437335064839,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "scan/already-enabled/AGENTS.md",
+    "before": null,
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377437334911005,
+      "size": 395,
+      "kind": "file",
+      "sha256": "becc6956e42aeea2b59e039a90170ec57f31e37809a831959fce6d3adedca822"
+    }
+  }
+]

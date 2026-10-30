@@ -1,0 +1,31 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377368385288771,
+      "size": 448,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377369187693048,
+      "size": 480,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "wrong-project-approval.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377369187747173,
+      "size": 1416,
+      "kind": "file",
+      "sha256": "7336c7b9252e3a82bca0cbe943e7d3263f2618be93e55067a2e0028a636f2919"
+    }
+  }
+]

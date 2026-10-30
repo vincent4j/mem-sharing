@@ -1,0 +1,15 @@
+{
+  "home": "/private/tmp/M4-09-37-nouo26aa/home",
+  "date": "2026-10-31",
+  "decisions": {
+    "2443e63e9c7f94375fbac7f35638245bba346c85bdcc4b3c31e52e148bbbeb52": {
+      "action": "keep"
+    },
+    "4c0dbdabfffa3c4319173ec4dd5d7c17ec05cbccaad790ac6bb04aee1900bf1b": {
+      "action": "keep"
+    },
+    "a50d9d74934e1dc3f0d4a56d462a20234506057c886608c56134129694774a40": {
+      "action": "keep"
+    }
+  }
+}

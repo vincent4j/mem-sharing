@@ -1,0 +1,11 @@
+--- before/home/.mem-sharing/var/registry.json
++++ after/home/.mem-sharing/var/registry.json
+@@ -58,7 +58,7 @@
+   },
+   "shared_objects": {},
+   "product": {
+-    "product_id": "mem-sharing",
++    "product_id": "agent-group-memory",
+     "installation_id": "20261030T162437Z-7f9711ed1b9b4b45bc76e151eb1b2427",
+     "product_structure_version": 1,
+     "product_code_version": "0.4.0",

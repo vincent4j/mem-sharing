@@ -1,0 +1,87 @@
+{
+  "case": "M4-09-37",
+  "name": "用户规则整理集中审批",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-37-nouo26aa",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-fixture-synthetic-claude-package",
+      "label": "fixture-synthetic-claude-package",
+      "exit_code": null
+    },
+    {
+      "path": "004-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "005-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "006-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "007-fixture-organizer-mixed-content",
+      "label": "fixture-organizer-mixed-content",
+      "exit_code": null
+    },
+    {
+      "path": "008-fixture-organize-request",
+      "label": "fixture-organize-request",
+      "exit_code": null
+    },
+    {
+      "path": "009-organize-preview",
+      "label": "organize-preview",
+      "exit_code": 0
+    },
+    {
+      "path": "010-fixture-decisions-before-approval",
+      "label": "fixture-decisions-before-approval",
+      "exit_code": null
+    },
+    {
+      "path": "011-revised-decisions",
+      "label": "revised-decisions",
+      "exit_code": 0
+    },
+    {
+      "path": "012-fixture-central-approval",
+      "label": "fixture-central-approval",
+      "exit_code": null
+    },
+    {
+      "path": "013-execute-central-approval",
+      "label": "execute-central-approval",
+      "exit_code": 0
+    },
+    {
+      "path": "014-repeat-organize",
+      "label": "repeat-organize",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:23:45.755530Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-37-nouo26aa/home/.mem-sharing-install-20261030T162343Z-b317d342d0694d0bb212d8c382e205e0/journal.json",
+    "/private/tmp/M4-09-37-nouo26aa/home/.mem-sharing-install-20261030T162343Z-b317d342d0694d0bb212d8c382e205e0/entry-backups/20261030T162344Z-5d8ce9ec9f6945baadaad700db6f1ba1/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

@@ -1,0 +1,105 @@
+{
+  "case": "M4-09-10",
+  "name": "六阶段独立硬退出与恢复",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-10-0emongew",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-fixture-synthetic-target-source",
+      "label": "fixture-synthetic-target-source",
+      "exit_code": null
+    },
+    {
+      "path": "007-fixture-synthetic-target-delta",
+      "label": "fixture-synthetic-target-delta",
+      "exit_code": null
+    },
+    {
+      "path": "008-fixture-target-manifest",
+      "label": "fixture-target-manifest",
+      "exit_code": null
+    },
+    {
+      "path": "009-kernel-upgrade-plan",
+      "label": "kernel-upgrade-plan",
+      "exit_code": 0
+    },
+    {
+      "path": "010-fixture-fault-approval",
+      "label": "fixture-fault-approval",
+      "exit_code": null
+    },
+    {
+      "path": "011-hard-exit-after_phase-inventory",
+      "label": "hard-exit-after_phase-inventory",
+      "exit_code": 86
+    },
+    {
+      "path": "012-ordinary-after-crash",
+      "label": "ordinary-after-crash",
+      "exit_code": 2
+    },
+    {
+      "path": "013-check-after-crash",
+      "label": "check-after-crash",
+      "exit_code": 2
+    },
+    {
+      "path": "014-recover-preview",
+      "label": "recover-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "015-fixture-recovery-approval",
+      "label": "fixture-recovery-approval",
+      "exit_code": null
+    },
+    {
+      "path": "016-recover-apply",
+      "label": "recover-apply",
+      "exit_code": 0
+    },
+    {
+      "path": "017-check-after-recovery",
+      "label": "check-after-recovery",
+      "exit_code": 1
+    }
+  ],
+  "notes": [
+    "Source is an exact git-archive export of baseline; source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "§26 generic recovery exercise only: original baseline code plus an explicitly synthetic README/module delta, exact manifest conversion injected to the existing upgrade kernel. Synthetic commit is not a Git release identity and this is not evidence for a frozen T0→release upgrade."
+  ],
+  "ended_utc": "2026-10-30T16:21:38.935081Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-10-0emongew/home/.mem-sharing-install-20261030T162129Z-c759f3c2f2934b38966443b922ae2c53/journal.json",
+    "/private/tmp/M4-09-10-0emongew/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
+    "/private/tmp/M4-09-10-0emongew/home/.mem-sharing-install-synthetic-fault-upgrade/recover.py",
+    "/private/tmp/M4-09-10-0emongew/home/.mem-sharing-install-20261030T162129Z-c759f3c2f2934b38966443b922ae2c53/entry-backups/20261030T162130Z-18f850f6b6c74f5fb88f8bc4cfb51281/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

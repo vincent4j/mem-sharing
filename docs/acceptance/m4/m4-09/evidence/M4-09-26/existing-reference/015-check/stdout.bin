@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "runtime_layout": {
+    "root": "/private/tmp/M4-09-26-l39bkqeq/home/.mem-sharing",
+    "code": "/private/tmp/M4-09-26-l39bkqeq/home/.local/share/mem-sharing",
+    "registry": "/private/tmp/M4-09-26-l39bkqeq/home/.mem-sharing/var/registry.json",
+    "lock": "/private/tmp/M4-09-26-l39bkqeq/home/.mem-sharing/var/.agm.lock",
+    "transaction_lock": "/private/tmp/M4-09-26-l39bkqeq/home/.mem-sharing/var/.agm.lock/transaction",
+    "backups": "/private/tmp/M4-09-26-l39bkqeq/home/.mem-sharing/backups"
+  },
+  "command": "check-memory",
+  "status": "completed",
+  "projects": [
+    {
+      "main_checkout": "/private/tmp/M4-09-26-l39bkqeq/project",
+      "checkout": "/private/tmp/M4-09-26-l39bkqeq/project",
+      "registered": true,
+      "worktree": false,
+      "agents": [
+        "claude"
+      ],
+      "states": {
+        "entries": {
+          "/private/tmp/M4-09-26-l39bkqeq/project/AGENTS.md": "ok",
+          "/private/tmp/M4-09-26-l39bkqeq/project/CLAUDE.md": "ok"
+        }
+      },
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      },
+      "objects": [
+        {
+          "id": "/private/tmp/M4-09-26-l39bkqeq/project/AGENTS.md#memory-denied",
+          "kind": "block",
+          "path": "/private/tmp/M4-09-26-l39bkqeq/project/AGENTS.md",
+          "scope": "project",
+          "agents": [
+            "claude"
+          ],
+          "ownership": "created",
+          "status": "ok",
+          "detail": "块指纹相符"
+        },
+        {
+          "id": "/private/tmp/M4-09-26-l39bkqeq/project/CLAUDE.md#import",
+          "kind": "import",
+          "path": "/private/tmp/M4-09-26-l39bkqeq/project/CLAUDE.md",
+          "scope": "project",
+          "agents": [
+            "claude"
+          ],
+          "ownership": "reused",
+          "status": "ok",
+          "detail": "引用行存在,整文件指纹相符"
+        }
+      ],
+      "agent_discovery": [
+        {
+          "agent": "codex",
+          "signals": [
+            {
+              "kind": "directory_exists",
+              "path": "/private/tmp/M4-09-26-l39bkqeq/home/.codex",
+              "strength": "hint",
+              "exists": true
+            }
+          ]
+        },
+        {
+          "agent": "claude",
+          "signals": [
+            {
+              "kind": "directory_exists",
+              "path": "/private/tmp/M4-09-26-l39bkqeq/home/.claude",
+              "strength": "hint",
+              "exists": true
+            }
+          ]
+        },
+        {
+          "agent": "workbuddy",
+          "signals": [
+            {
+              "kind": "directory_exists",
+              "path": "/private/tmp/M4-09-26-l39bkqeq/home/.workbuddy",
+              "strength": "hint",
+              "exists": false
+            }
+          ]
+        }
+      ],
+      "gaps": [],
+      "warnings": [
+        "identity_limit: v1 无法识别同路径重 clone(architecture §2.4);已知更换实例需重新核对授权"
+      ],
+      "evidence": [],
+      "memory_policy": "disabled"
+    }
+  ],
+  "changes": [],
+  "warnings": [
+    "project: identity_limit: v1 无法识别同路径重 clone(architecture §2.4);已知更换实例需重新核对授权"
+  ],
+  "errors": [],
+  "approval_required": false,
+  "next_action": null
+}

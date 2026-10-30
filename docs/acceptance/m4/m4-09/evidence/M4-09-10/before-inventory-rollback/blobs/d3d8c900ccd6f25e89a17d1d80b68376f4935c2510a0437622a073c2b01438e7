@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "command": "enable-memory",
+  "main_checkout": "/Users/vincent4j/Tools/Source/knowwind",
+  "checkout": "/Users/vincent4j/Tools/Source/knowwind",
+  "git_common_dir": "/Users/vincent4j/Tools/Source/knowwind/.git",
+  "agents": [
+    "codex",
+    "claude",
+    "workbuddy"
+  ],
+  "memory_authorization": "yes",
+  "store_path": "/Users/vincent4j/Tools/Source/knowwind/docs/context-keeper",
+  "provider_source": "/Users/vincent4j/Tools/Source/context-keeper",
+  "provider_fingerprints": [
+    {
+      "path": "/Users/vincent4j/Tools/Source/context-keeper/SKILL.md",
+      "sha256": "1ba25f707cf403838975c0a01401b474599de79c3dae96ee047b66c70864c61a"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/context-keeper/scripts/context_keeper_probe.py",
+      "sha256": "9c2731c1dc7c062dd9ea2cfabf72ae1a7052f54b7cddd25a53a9cb4ac580e567"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/context-keeper/scripts/install.py",
+      "sha256": "2f8d62c59d4462275d87ed6a8a7edd20ba1b5b6ca188aa4d846abe76fcacd47e"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/context-keeper/scripts/package_skill.py",
+      "sha256": "d293c4cf3d9352c57aa40895feba6c647034107265d05661a97e6f29b0c4493f"
+    }
+  ],
+  "changes": [
+    {
+      "path": "/Users/vincent4j/Tools/Source/knowwind/.agents/skills/context-keeper",
+      "operation": "create",
+      "before_fingerprint": null,
+      "after_fingerprint": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/knowwind/.claude/skills/context-keeper",
+      "operation": "create",
+      "before_fingerprint": null,
+      "after_fingerprint": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/knowwind/.codex/skills/context-keeper",
+      "operation": "create",
+      "before_fingerprint": null,
+      "after_fingerprint": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/knowwind/.workbuddy/memory/MEMORY.md",
+      "operation": "create",
+      "before_fingerprint": null,
+      "after_fingerprint": "5d464acc40d0bf2b30fc02dcffda1fdbf1cee80c5e3e742da9e85a1c871a8315"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/knowwind/.workbuddy/skills/context-keeper",
+      "operation": "create",
+      "before_fingerprint": null,
+      "after_fingerprint": "d162d5dd2c458d8f28af80b1b86616d2c24c3c1ae8df31f6f63bcd73e71ffa34"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/knowwind/AGENTS.md",
+      "operation": "update",
+      "before_fingerprint": "22d192dc313e08bfd37614f3ac66c8dc6db95d86f36d937f6f5c7d9733357b58",
+      "after_fingerprint": "6258f7c70147f79ba7faf41aee73f80ee2a2e2aa54d24ce6f5e470ec98662c2b"
+    },
+    {
+      "path": "/Users/vincent4j/Tools/Source/knowwind/CLAUDE.md",
+      "operation": "update",
+      "before_fingerprint": "54134fb03cc201fe5cc500302f1ce9db49635c9fb9bfb97d3299c305d3d2ad79",
+      "after_fingerprint": "ada96f0b9db80e75cbd3493b60ab29576819a76debdd51bc8b2231a1cf036ac1"
+    }
+  ],
+  "confirmed_at": "2026-10-29T13:51:54.977016Z",
+  "reference": "paseo-message:29740901-4bc0-4bcd-9383-c3f58b9bdd19; authorized exact-plan construction for M2-08 second-run"
+}

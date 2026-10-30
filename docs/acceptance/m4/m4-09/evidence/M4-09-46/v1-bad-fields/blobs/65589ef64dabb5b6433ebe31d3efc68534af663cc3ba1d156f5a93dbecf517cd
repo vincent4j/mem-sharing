@@ -1,0 +1,1598 @@
+diff --git a/scripts/agm.py b/scripts/agm.py
+index d966557..9ef4f2c 100644
+--- a/scripts/agm.py
++++ b/scripts/agm.py
+@@ -217,6 +217,7 @@ _APPROVAL_FIELDS = (
+     "confirmed_at",
+     "reference",
+ )
++_ENABLE_APPROVAL_FIELDS = frozenset(("installation", "native_pending", "memory_transition", "rebuild", "rebuild_confirmation"))
+ _APPROVAL_OPERATIONS = frozenset(("create", "update", "remove"))
+ _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
+ _UTC_ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$")
+@@ -265,16 +266,105 @@ def load_approval(path):
+     return data
+ 
+ 
++
++def _validate_enable_extensions(data, requested, path):
++    """Validate optional kernel plan facts; no field grants authority on its own."""
++    def fields(value, names, label):
++        if not isinstance(value, dict) or set(value) != set(names.split()):
++            _approval_fail(label + " 字段不符", path)
++    def digest(value, label):
++        if not isinstance(value, str) or not _HEX64_RE.fullmatch(value):
++            _approval_fail(label + " 必须是 sha256", path)
++    def agent_list(value, label):
++        if (not isinstance(value, list) or any(a not in agm_paths.AGENT_ORDER for a in value)
++                or len(set(value)) != len(value)):
++            _approval_fail(label + " 必须是无重复执行器数组", path)
++    installation = data.get("installation")
++    if "installation" in data:
++        if not isinstance(installation, dict) or set(installation) != set(requested):
++            _approval_fail("installation 必须逐项覆盖请求的执行器", path)
++        for fact in installation.values():
++            fields(fact, "status fingerprint", "installation 项")
++            if fact["status"] not in ("installed", "absent", "unknown"):
++                _approval_fail("installation status 非法", path)
++            digest(fact["fingerprint"], "installation fingerprint")
++        effective = [a for a in requested if installation[a]["status"] == "installed"]
++        if data["agents"] != effective:
++            _approval_fail("agents 与 installation 已验证安装范围不一致", path)
++    if "native_pending" in data:
++        pending = data["native_pending"]
++        if pending not in ([], ["workbuddy"]) or any(a not in data["agents"] for a in pending):
++            _approval_fail("native_pending 仅接受已选 WorkBuddy", path)
++    if "memory_transition" in data:
++        transition = data["memory_transition"]
++        fields(transition, "before after scope affected_agents reused_conflicts", "memory_transition")
++        if (transition["before"] not in (None, "yes", "no")
++                or transition["after"] not in ("yes", "no")
++                or transition["after"] != data["memory_authorization"]
++                or transition["scope"] != "all registered project agents"):
++            _approval_fail("memory_transition 授权范围不符", path)
++        agent_list(transition["affected_agents"], "affected_agents")
++        if not isinstance(transition["reused_conflicts"], list):
++            _approval_fail("reused_conflicts 必须是数组", path)
++        for conflict in transition["reused_conflicts"]:
++            fields(conflict, "path ownership action", "reused_conflicts 项")
++            _check_abs_path(conflict["path"], "reused_conflicts path", path)
++            if (conflict["ownership"] not in ("reused", "unknown", "unregistered")
++                    or conflict["action"] != "preserve bytes; explicit denial guard"):
++                _approval_fail("reused_conflicts 保留策略非法", path)
++    if ("rebuild" in data) != ("rebuild_confirmation" in data):
++        _approval_fail("rebuild 必须绑定独立 rebuild_confirmation", path)
++    if "rebuild" in data:
++        rebuild, confirmation = data["rebuild"], data["rebuild_confirmation"]
++        fields(rebuild, "classification reason registry_sha256 registry_bytes project_count removed_projects removed_shared_objects scope", "rebuild")
++        if rebuild["classification"] not in ("registry_project_corrupt", "registry_evidence_unavailable"):
++            _approval_fail("rebuild classification 非法", path)
++        digest(rebuild["registry_sha256"], "rebuild registry_sha256")
++        for name in ("registry_bytes", "project_count"):
++            if type(rebuild[name]) is not int or rebuild[name] < 0:
++                _approval_fail("rebuild " + name + " 必须是非负整数", path)
++        if (not isinstance(rebuild["reason"], str) or not rebuild["reason"]
++                or rebuild["scope"] != "reset all project registrations and shared consumer indexes; preserve machine identity and all user files"
++                or not isinstance(rebuild["removed_projects"], list)
++                or len(rebuild["removed_projects"]) != rebuild["project_count"]):
++            _approval_fail("rebuild 全局影响摘要非法", path)
++        seen = set()
++        for item in rebuild["removed_projects"]:
++            fields(item, "main_checkout record_sha256", "removed_projects 项")
++            _check_abs_path(item["main_checkout"], "removed_projects main_checkout", path)
++            digest(item["record_sha256"], "removed_projects record_sha256")
++            if item["main_checkout"] in seen:
++                _approval_fail("removed_projects 重复", path)
++            seen.add(item["main_checkout"])
++        shared = rebuild["removed_shared_objects"]
++        if not isinstance(shared, list) or any(not isinstance(v, str) or not v for v in shared) or len(set(shared)) != len(shared):
++            _approval_fail("removed_shared_objects 必须是无重复字符串数组", path)
++        fields(confirmation, "registry_sha256 confirmed_at reference", "rebuild_confirmation")
++        digest(confirmation["registry_sha256"], "rebuild_confirmation registry_sha256")
++        if confirmation["registry_sha256"] != rebuild["registry_sha256"]:
++            _approval_fail("rebuild_confirmation 与计划旧账哈希不一致", path)
++        # Reuse the base envelope's evidence validation, including calendar validity.
++        evidence = dict(data)
++        for name in _ENABLE_APPROVAL_FIELDS:
++            evidence.pop(name, None)
++        evidence.update(confirmed_at=confirmation["confirmed_at"], reference=confirmation["reference"])
++        evidence["agents"] = list(requested)
++        validate_approval(evidence, command="enable-memory", agents=requested, memory_choice=None, path=path)
++
++
+ def validate_approval(data, *, command, agents, memory_choice, path=None):
+-    """批准 envelope 的 CLI 级结构校验(裁定 D-M2-04 方案 A 字段集)。
++    """批准 envelope 的命令级结构校验(含内核版本化计划字段)。
+ 
+     仅校验结构与本命令已知目标的匹配;与锁内现场(主键/指纹/库位置/源码身份)的一致性
+-    核对由内核在写锁内完成(TODO M2-04 接线),CLI 不在此扩大核对也不放宽。
++    核对由内核在写锁内完成;CLI 校验 rebuild 独立确认与旧账哈希的绑定。
+     """
++    if command not in ("enable-memory", "remove-memory"):
++        _approval_fail("该命令不接受批准", path)
+     keys = set(data)
+     expected = set(_APPROVAL_FIELDS)
++    allowed = expected | (_ENABLE_APPROVAL_FIELDS if command == "enable-memory" else set())
+     missing = sorted(expected - keys)
+-    unknown = sorted(keys - expected)
++    unknown = sorted(keys - allowed)
+     if missing:
+         _approval_fail("批准文件缺少字段: %s" % ", ".join(missing), path)
+     if unknown:
+@@ -290,13 +380,16 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
+     for field in ("main_checkout", "checkout", "git_common_dir"):
+         _check_abs_path(data[field], "批准文件 %s" % field, path)
+     file_agents = data["agents"]
+-    if not isinstance(file_agents, list) or not file_agents:
++    revocation = data.get("memory_transition", {})
++    empty_revocation = (isinstance(revocation, dict) and revocation.get("before") == "yes"
++                        and revocation.get("after") == "no" and "installation" in data)
++    if not isinstance(file_agents, list) or (not file_agents and not empty_revocation):
+         _approval_fail("批准文件 agents 必须是非空数组", path)
+     try:
+-        canonical = agm_paths.resolve_agents(file_agents)
++        canonical = agm_paths.resolve_agents(file_agents) if file_agents else []
+     except agm_paths.PathsError as exc:
+         raise CliError("approval_file_invalid", "批准文件 agents 非法: %s" % exc, path=path) from None
+-    if command != "remove-memory" and canonical != list(agents or []):
++    if command != "remove-memory" and "installation" not in data and canonical != list(agents or []):
+         raise CliError(
+             "approval_mismatch",
+             "批准范围(agents=%s)与命令目标(%s)不一致,须重新预览确认" % (canonical, list(agents or [])),
+@@ -362,6 +455,8 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
+             _approval_fail("confirmed_at 不是合法 UTC 时间: %s" % confirmed, path)
+     if not isinstance(data["reference"], str) or not data["reference"]:
+         _approval_fail("reference 必须是非空定位字符串(不保存对话正文)", path)
++    if command == "enable-memory":
++        _validate_enable_extensions(data, list(agents or []), path)
+     return data
+ 
+ 
+@@ -483,7 +578,7 @@ def build_request(
+     return {
+         "command": command,
+         "project": getattr(namespace, "project", None),
+-        "agents": agents,
++        "agents": None if command == "enable-memory" and getattr(namespace, "agent", None) is None else agents,
+         "memory_choice": getattr(namespace, "memory_choice", None),
+         "all": bool(getattr(namespace, "all", False)),
+         "approval": approval,
+diff --git a/scripts/agm_core/check.py b/scripts/agm_core/check.py
+index ba611ce..2cc7d36 100644
+--- a/scripts/agm_core/check.py
++++ b/scripts/agm_core/check.py
+@@ -24,7 +24,7 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+ from . import paths as agm_paths
+-from .entries import EntryConflict, block_fingerprint, managed_span, sha256, verify_link
++from .entries import EntryConflict, block_fingerprint, managed_span, sha256, verify_link, free_project_rules, reference_span
+ from .project import ProjectError, resolve_project
+ from .registry import RegistryError, load_registry, require_installed
+ 
+@@ -120,7 +120,7 @@ def _verify_objects(objects, shared_objects, checkout):
+     statuses, observations = {}, []
+     block_ids = {}  # path -> [oid] 受管块对象,供整文件对象区分块外变化
+     for oid, obj in relevant.items():
+-        if obj["kind"] in ("block", "user_convention"):
++        if obj["kind"] in ("block", "user_convention") and not free_project_rules(obj):
+             block_ids.setdefault(obj["path"], []).append(oid)
+ 
+     def observe(oid, obj, status, detail):
+@@ -143,6 +143,9 @@ def _verify_objects(objects, shared_objects, checkout):
+     for oid, obj in ordered:
+         kind = obj["kind"]
+         on_disk, data = _observe_path(obj["path"])
++        if free_project_rules(obj):
++            observe(oid,obj,"unverified","历史 AGENTS 基座属于项目自由规则,不守护正文或授予删除权")
++            continue
+         if kind in ("block", "user_convention"):
+             if on_disk == "absent":
+                 observe(oid, obj, "missing", "承载文件缺失")
+@@ -206,7 +209,16 @@ def _verify_objects(objects, shared_objects, checkout):
+             if on_disk != "file":
+                 observe(oid, obj, "blocked", "落点不是普通文件(%s)" % on_disk)
+                 continue
+-            if not _reference_line_present(data):
++            try:
++                span=reference_span(data)
++            except EntryConflict as exc:
++                observe(oid,obj,"blocked",str(exc));continue
++            if obj.get("lifecycle"):
++                if span is None:observe(oid,obj,"missing","受管引用行缺失")
++                elif sha256(data[span[0]:span[1]])!=obj["fingerprint"]["value"]:observe(oid,obj,"drifted","受管引用行被编辑")
++                else:observe(oid,obj,"ok","独立引用单元指纹相符,正文自由编辑")
++                continue
++            if span is None:
+                 observe(oid, obj, "missing", "@AGENTS.md 引用行缺失")
+                 continue
+             expected = (obj.get("fingerprint") or {}).get("value")
+@@ -254,6 +266,7 @@ def _bridge_fact(agent, platform_config, *, home, checkout, objects, statuses):
+         (oid, obj)
+         for oid, obj in objects.items()
+         if obj["kind"] in ("block", "user_convention") and obj["path"] == bridge_path
++        and obj.get("marker")==dict(zip(("start","end"),BRIDGE_MARKERS[entry["bridge_owner"]]))
+     ]
+     if related:
+         states = [statuses.get(oid, "unverified") for oid, _ in related]
+@@ -524,11 +537,25 @@ def _observe_project(
+     # 四态现场观测(不信任登记时间戳,逐项重新只读核实)。
+     if project_entry is not None and project_entry.get("provider_source"):
+         provider = project_entry["provider_source"]
+-        if os.path.isdir(provider):
+-            source_fact = _fact("ready", "provider 源码目录存在: %s" % provider)
++        required=[Path(provider)/'SKILL.md',Path(provider)/'scripts/install.py',Path(provider)/'scripts/context_keeper_probe.py']
++        absent=[p for p in required if _observe_path(str(p))[0]=='absent']
++        invalid=[p for p in required if _observe_path(str(p))[0] not in ('absent','file') or p.is_symlink() or p.resolve()!=p]
++        if absent:
++            source_fact=_fact('missing','provider 必需文件缺失: '+', '.join(map(str,absent)))
++            for p in absent:gaps.append(_gap('source_missing','provider 必需文件缺失',path=str(p),suggestion='manual'))
++        elif invalid:
++            source_fact=_fact('blocked','provider 必需文件类型/链接异常: '+', '.join(map(str,invalid)))
++            for p in invalid:gaps.append(_gap('source_invalid','provider 必需文件不是可信普通文件',path=str(p),suggestion='manual'))
+         else:
+-            source_fact = _fact("missing", "登记 provider_source 不存在: %s(可能被移动)" % provider)
+-            gaps.append(_gap("source_missing", "登记 provider_source 不存在: %s" % provider, path=provider, suggestion="manual"))
++            try:
++                from .enable import _source_fingerprints,_source_evidence
++                fingerprints=_source_fingerprints(Path(provider))
++                expected=assembly['states']['source_available']['evidence'] if assembly else None
++                if expected and expected.startswith('Keeper source sha256:') and expected!=_source_evidence(fingerprints):
++                    raise ValueError('provider 与已批准源码指纹不同')
++                source_fact=_fact('ready','provider 最低文件集、Git 身份与可用批准指纹只读核验: '+provider)
++            except (ValueError,OSError) as exc:
++                source_fact=_fact('blocked',str(exc));gaps.append(_gap('source_invalid',str(exc),path=provider,suggestion='manual'))
+     else:
+         source_fact = _fact("unknown", "未登记 provider 源码位置" if project_entry is not None else "项目未登记,源码位置未知")
+ 
+@@ -537,6 +564,8 @@ def _observe_project(
+         agent_objects = _agent_objects(objects, shared_objects, checkout, agent)
+         skill_facts[agent] = _skill_fact(agent, platform_config, home=home, checkout=checkout, objects=agent_objects, statuses=statuses)
+         bridge_fact, bridge_path = _bridge_fact(agent, platform_config, home=home, checkout=checkout, objects=agent_objects, statuses=statuses)
++        memory_denied=project_entry is not None and project_entry.get("memory_authorization")=="no"
++        if memory_denied:bridge_fact=_fact("blocked","本项目自动记忆授权为 no;历史桥接/Skill 不授予自动写入权限")
+         bridge_facts[agent] = bridge_fact
+         # 对象级缺口已定位到路径时不重复报事实级缺口;未登记现场没有对象可依,才报事实级。
+         agent_gap_paths = {
+@@ -548,12 +577,12 @@ def _observe_project(
+             agent in item["agents"] and item["kind"] == "skill_symlink"
+             and item["status"] in ("missing", "drifted", "blocked") for item in observations
+         )
+-        if skill_facts[agent]["status"] in ("missing", "blocked") and not skill_object_gap:
++        if not memory_denied and skill_facts[agent]["status"] in ("missing", "blocked") and not skill_object_gap:
+             blocked = skill_facts[agent]["status"] == "blocked"
+             gaps.append(_gap("skill_conflict" if blocked else "skill_missing", skill_facts[agent]["evidence"], agent=agent, suggestion="manual" if blocked else "enable"))
+-        if bridge_fact["status"] == "missing" and bridge_path not in agent_gap_paths:
++        if not memory_denied and bridge_fact["status"] == "missing" and bridge_path not in agent_gap_paths:
+             gaps.append(_gap("bridge_missing", bridge_fact["evidence"], agent=agent, path=bridge_path, suggestion="enable"))
+-        elif bridge_fact["status"] == "blocked" and bridge_path not in agent_gap_paths:
++        elif not memory_denied and bridge_fact["status"] == "blocked" and bridge_path not in agent_gap_paths:
+             gaps.append(_gap("bridge_conflict", bridge_fact["evidence"], agent=agent, path=bridge_path, suggestion="manual"))
+         entry = platform_config[agent]
+         rule_path = agm_paths.expand_path(entry["project_rule_entry"], home=home, project=checkout)
+diff --git a/scripts/agm_core/enable.py b/scripts/agm_core/enable.py
+index 27bd7b1..91e8aa8 100644
+--- a/scripts/agm_core/enable.py
++++ b/scripts/agm_core/enable.py
+@@ -20,12 +20,15 @@ import sys
+ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+-from . import entries, paths, project, registry, layout
++from . import entries, paths, project, registry, layout, detect
+ from .transaction import Change, Snapshot, Transaction, TransactionError, read_snapshot, write_lock
+ 
+ KEEPER_MARKER = {"start": "<!-- context-keeper:start -->", "end": "<!-- context-keeper:end -->"}
+ BASE_MARKER = {"start": "<!-- agent-group-memory:rules:start -->", "end": "<!-- agent-group-memory:rules:end -->"}
+ WORKBUDDY_MARKER = {"start": "<!-- context-keeper:workbuddy:start -->", "end": "<!-- context-keeper:workbuddy:end -->"}
++DENIED_MARKER = {"start":"<!-- agent-group-memory:memory-denied:start -->", "end":"<!-- agent-group-memory:memory-denied:end -->"}
++DENIED_TEXT = "本项目已撤销自动记忆授权。本段优先于本文件中的历史 context-keeper 桥接和 Skill 触发说明：不得自动调用记忆写入、迁移、初始化或建库，不得因残留 Skill/桥接恢复旧授权；历史内容仅供只读参考。只有用户重新明确批准本项目 enable-memory --memory 后才可恢复自动记录。"
++
+ EXCEPTION_MARKER = {"start": "<!-- agent-group-memory:keeper-exception:start -->", "end": "<!-- agent-group-memory:keeper-exception:end -->"}
+ 
+ 
+@@ -57,7 +60,7 @@ def _source_fingerprints(source):
+     except project.ProjectError as exc:
+         raise EnableError("provider_source_invalid", "Keeper source is not a Git root: " + str(exc)) from exc
+     files = set(required) | set((source / "scripts").rglob("*.py"))
+-    if any(p.is_symlink() or p.resolve() != p for p in files):
++    if any(not p.is_file() or p.is_symlink() or p.resolve() != p for p in files):
+         raise EnableError("provider_source_invalid", "Keeper source scripts must not be symlinks")
+     return [{"path": str(p), "sha256": entries.sha256(p.read_bytes())} for p in sorted(files)]
+ 
+@@ -236,23 +239,106 @@ class _Plan:
+                    "original_existed": not created, "link_target": str(target) if target else None,
+                    "backup_manifest": str(self.tx.manifest_path) if created else None,
+                    "consumers": [str(self.root)]}
++        if scope=="project" and marker in (KEEPER_MARKER,WORKBUDDY_MARKER,DENIED_MARKER) and obj["ownership"]=="created" and old is None:
++            unit=proposed.data[entries.managed_span(proposed.data,**marker)[0]:entries.managed_span(proposed.data,**marker)[1]]
++            obj["lifecycle"]={"version":1,"unit_hex":unit.hex(),
++                "prefix_hex":(b"\n" if not top and original.kind=="file" and original.data and not original.data.endswith(b"\n") else b"").hex(),
++                "suffix_hex":(b"\n" if top and original.data else b"").hex(),
++                "file_created":self.before[path].kind=="absent", "operation_id":self.tx.directory.name,"container_units":[oid]}
+         objects[oid] = obj
+         if scope == "user" and oid not in self.assembly["shared_object_ids"]:
+             self.assembly["shared_object_ids"].append(oid)
+         return original
+ 
++    def reference(self,path):
++        path=Path(path);oid=str(path)+"#import";objects=self.assembly['objects']
++        old=next((o for o in objects.values() if o['path']==str(path) and o['kind']=='import'),None)
++        if old is not None:oid=next(k for k,v in objects.items() if v is old)
++        snap=self.snapshot(path)
++        if snap.kind not in ('absent','file'):raise EnableError('path_conflict','CLAUDE entry must be regular')
++        body=snap.data or b'';span=entries.reference_span(body)
++        if old and old.get('lifecycle'):
++            entries.lifecycle_span(body,old)
++            return
++        if span is None:
++            prefix=b'\n' if body and not body.endswith(b'\n') else b''
++            unit=b'@AGENTS.md\n';self.after[path]=Snapshot('file',body+prefix+unit,snap.mode or 0o600)
++        else:prefix=b'';unit=body[span[0]:span[1]]
++        if old:
++            old['fingerprint']={'algorithm':'sha256','basis':'file_bytes','value':entries.sha256(self.after[path].data)}
++            return  # Legacy reused import never acquires creation/deletion rights.
++        created=span is None
++        obj={'kind':'import','path':str(path),'scope':'project','agents':['claude'],'ownership':'created' if created else 'reused',
++             'marker':None,'fingerprint':{'algorithm':'sha256','basis':'reference_line' if created else 'file_bytes','value':entries.sha256(unit) if created else entries.sha256(body)},
++             'original_existed':not created,'link_target':None,'backup_manifest':str(self.tx.manifest_path) if created else None,'consumers':[str(self.root)]}
++        if created:
++            obj['lifecycle']={'version':1,'unit_hex':unit.hex(),'prefix_hex':prefix.hex(),'suffix_hex':'','file_created':self.before[path].kind=='absent',
++                              'operation_id':self.tx.directory.name,'container_units':[oid]}
++        objects[oid]=obj
++
++    def erase(self,oid):
++        obj=self.assembly['objects'][oid];path=Path(obj['path']);snap=self.snapshot(path)
++        actual=registry._unit_fingerprint(snap,obj)
++        if not obj['fingerprint'] or actual!=obj['fingerprint']['value']:
++            raise EnableError('drift','Cannot revoke edited/missing created unit: '+str(path))
++        if obj['kind']=='skill_symlink':self.after[path]=Snapshot('absent')
++        elif obj.get('lifecycle'):
++            self.after[path]=Snapshot('file',entries.remove_lifecycle_unit(snap.data,obj),snap.mode)
++        else:
++            self.after[path]=Snapshot('file',entries.remove_block(snap.data,**obj['marker'],expected_fingerprint=actual),snap.mode)
++        del self.assembly['objects'][oid]
++
++    def authorization(self,choice,*,transition):
++        conflicts=[]
++        if choice=='yes':
++            for oid,obj in list(self.assembly['objects'].items()):
++                if obj.get('marker')==DENIED_MARKER:
++                    if obj['ownership']!='created':raise EnableError('authorization_conflict','User-owned denial cannot be lifted')
++                    self.erase(oid)
++            return conflicts
++        if choice!='no':return conflicts
++        targets={self.root/'AGENTS.md'}
++        for oid,obj in list(self.assembly['objects'].items()):
++            trigger=(obj['kind']=='block' and obj.get('marker') in (KEEPER_MARKER,WORKBUDDY_MARKER)) or (obj['kind']=='skill_symlink' and Path(obj['path']).name=='context-keeper')
++            if not trigger:continue
++            if obj['ownership']=='created':self.erase(oid)
++            else:
++                conflicts.append({'path':obj['path'],'ownership':obj['ownership'],'action':'preserve bytes; explicit denial guard'})
++                if obj['kind']=='block':targets.add(Path(obj['path']))
++        # A pre-registry historical bridge is not deletion authority either.
++        for path,marker in ((self.root/'AGENTS.md',KEEPER_MARKER),(self.root/'CLAUDE.md',KEEPER_MARKER),(self.root/'.workbuddy/memory/MEMORY.md',WORKBUDDY_MARKER)):
++            snap=self.snapshot(path)
++            if snap.kind=='file' and entries.managed_span(snap.data,**marker) is not None:
++                targets.add(path)
++                if not any(c['path']==str(path) for c in conflicts):conflicts.append({'path':str(path),'ownership':'unregistered','action':'preserve bytes; explicit denial guard'})
++        existing_guard=any(o.get('marker')==DENIED_MARKER for o in self.assembly['objects'].values())
++        if transition or conflicts or existing_guard:
++            for path in sorted(targets):
++                self.object(path,'#memory-denied',list(self.assembly['agents']),'block',marker=DENIED_MARKER,block=_block(DENIED_MARKER,DENIED_TEXT))
++        return conflicts
++
++    def finalize_lifecycle(self):
++        objects=self.assembly['objects']
++        for oid,obj in objects.items():
++            if obj.get('lifecycle') and obj['backup_manifest']==str(self.tx.manifest_path):
++                obj['lifecycle']['container_units']=sorted(k for k,v in objects.items() if v['path']==obj['path'] and v.get('lifecycle') and v['ownership']=='created')
++
+     def changes(self):
+         return [Change(path, self.after[path], snap) for path, snap in self.before.items() if self.after[path] != snap]
+ 
+     def description(self):
+-        return [{"path": str(c.path), "operation": "create" if c.expected.kind == "absent" else "update",
++        return [{"path": str(c.path), "operation": "remove" if c.after.kind == "absent" else "create" if c.expected.kind == "absent" else "update",
+                  "before_fingerprint": c.expected.fingerprint,
+                  "after_fingerprint": c.after.fingerprint} for c in sorted(self.changes(), key=lambda c: str(c.path))]
+ 
+ 
+ def _preflight_objects(assembly, shared, review_user_units=()):
+     for obj in list(assembly["objects"].values()) + [shared[key] for key in assembly["shared_object_ids"]]:
++        if entries.free_project_rules(obj):continue
+         snap = read_snapshot(obj["path"])
++        if obj["kind"]=="import" and obj.get("lifecycle"):
++            if snap.kind!="file" or registry._unit_fingerprint(snap,obj)!=obj["fingerprint"]["value"]:
++                raise EnableError("drift","Managed reference missing or edited: "+obj["path"])
+         if snap.kind == "absent":
+             continue  # Only exact prior units may subsequently be repaired without a fresh approval.
+         if obj["kind"] in ("block", "user_convention"):
+@@ -366,9 +452,24 @@ def _run_locked(request, runtime, result, *, locked=True):
+     except registry.RegistryError:
+         previous_registry, rebuild = registry.plan_registry_rebuild(expected_registry, allowed_user_paths=allowed)
+     previous_registry = registry.require_installed(previous_registry)
++    detection=detect.detect_agents(config,agents,home=str(home),search_paths=request.get('search_paths'),
++        app_directories=request.get('app_directories'),user_candidates=request.get('user_candidates'),runner=request.get('detect_runner'))
++    requested_agents=list(agents)
++    effective=[a for a in agents if detection['agents'][a]['status']=='installed']
++    prior=previous_registry['projects'].get(key)
++    revoking=(request.get('memory_choice') or (request.get('approval') or {}).get('memory_authorization'))=='no' and prior is not None and prior['memory_authorization']=='yes'
++    result['installation']={'requested':requested_agents,'effective':effective,'skipped':{a:detection['agents'][a]['status'] for a in requested_agents if a not in effective}}
++    if request.get('agents') is not None and len(effective)!=len(agents) and not revoking:
++        raise EnableError('agent_not_installed','Explicit agent is not verified installed: '+json.dumps(result['installation']['skipped']))
++    agents=effective
++    if not agents and not revoking:
++        result.update(status='gaps',next_action='Verify/install an executor before creating project entries')
++        result['warnings'].append('No verified installed executor; project/entry state unchanged')
++        return result
+     data = copy.deepcopy(previous_registry)
+     previous = copy.deepcopy(data["projects"].get(key))
+-    p = data["projects"].setdefault(key, registry.new_project(identity, agents))
++    if key not in data["projects"]:data["projects"][key]=registry.new_project(identity,agents)
++    p = data["projects"][key]
+     assembly = p["checkouts"][key]
+     if assembly["git_common_dir"] != str(identity.git_common_dir):
+         raise EnableError("project_identity_mismatch", "Git common-dir changed; do not inherit authorization")
+@@ -406,6 +507,11 @@ def _run_locked(request, runtime, result, *, locked=True):
+                     candidates.add(path.resolve())
+         if len(candidates) == 1:
+             source = str(candidates.pop())
++    native=root/'.workbuddy/memory'
++    native_pending='workbuddy' in agents and not native.exists()
++    if 'workbuddy' in agents and (native.is_symlink() or native.exists() and not native.is_dir()):
++        raise EnableError('path_conflict','WorkBuddy native memory directory must be real')
++    memory_agents=[a for a in agents if a!='workbuddy' or not native_pending]
+     fingerprints, bridge, store = [], None, None
+     if choice == "yes" and source:
+         if str(Path(source).resolve()) != source:
+@@ -428,33 +534,23 @@ def _run_locked(request, runtime, result, *, locked=True):
+     tx = Transaction(lock_path=runtime.transaction_lock, backup_root=runtime.backups,
+                      allowed_roots=[root, registry_path] + [Path(v) for v in allowed])
+     plan = _Plan(assembly, data["shared_objects"], root, tx)
+-    base = root / "AGENTS.md"
+-    if read_snapshot(base).kind == "absent":
+-        plan.object(base, "#base", agents, "block", marker=BASE_MARKER,
+-                    block=_block(BASE_MARKER, "# Project Rules\n\nKeep shared project rules in this file."))
+-    else:
+-        # An existing base is protected reuse, including M1's whole-file snapshots.
+-        existing_base = next((o for o in assembly["objects"].values() if o["path"] == str(base) and o["marker"] == BASE_MARKER), None)
+-        if existing_base:
+-            plan.object(base, "#base", agents, "block", marker=BASE_MARKER,
+-                        block=_block(BASE_MARKER, "# Project Rules\n\nKeep shared project rules in this file."))
+-        else:
+-            plan.object(base, "#base", agents, "file")
+-    if "claude" in agents:
+-        path = root / "CLAUDE.md"
+-        snap = plan.snapshot(path)
+-        if snap.kind not in ("absent", "file"):
+-            raise EnableError("path_conflict", "CLAUDE.md is not a regular file")
+-        if b"@AGENTS.md" not in (snap.data or b"").splitlines():
+-            body = snap.data or b""
+-            plan.after[path] = Snapshot("file", body + (b"\n" if body and not body.endswith(b"\n") else b"") + b"@AGENTS.md\n", snap.mode or 0o600)
+-        plan.object(path, "#import", ["claude"], "import")
++    base=root/'AGENTS.md'
++    snap=plan.snapshot(base)
++    if snap.kind=='absent':plan.after[base]=Snapshot('file',('# '+root.name+'\n\n## 项目规则\n').encode(),0o600)
++    elif snap.kind!='file':raise EnableError('path_conflict','AGENTS must be a regular file')
++    revoke_conflicts=plan.authorization(choice,transition=previous is not None and previous['memory_authorization']=='yes' and choice=='no')
++    if 'claude' in agents:plan.reference(root/'CLAUDE.md')
+     if "workbuddy" in agents:
+         path = Path(paths.expand_path(config["workbuddy"]["user_entry"], home=home))
+         snap = plan.snapshot(path)
+         registered_rules = any(o["path"] == str(path) and o["marker"] == BASE_MARKER
+                                for o in data["shared_objects"].values())
+-        if (snap.kind == "file" and not registered_rules
++        machine_rules=[o for o in data['machine']['objects'].values() if o['path']==str(path) and o['marker']==BASE_MARKER]
++        if machine_rules:
++            obj=machine_rules[0]
++            if registry._unit_fingerprint(snap,obj)!=(obj.get('fingerprint') or {}).get('value'):
++                raise EnableError('drift','Machine convention drift; project does not rewrite it')
++        elif (snap.kind == "file" and not registered_rules
+                 and entries.block_fingerprint(snap.data, **_marker_args(BASE_MARKER)) is None):
+             # M1 reuses the existing user entry as a whole-file baseline.
+             # Do not append a second rule convention to that shared entry.
+@@ -463,7 +559,7 @@ def _run_locked(request, runtime, result, *, locked=True):
+             plan.object(path, "#rules", ["workbuddy"], "user_convention", scope="user", marker=BASE_MARKER,
+                         block=_block(BASE_MARKER, "项目规则读取当前项目根 AGENTS.md。保留已有公共源与用户约定。"))
+     if choice == "yes" and source:
+-        for a in agents:
++        for a in memory_agents:
+             for template in config[a]["project_skill_roots"]:
+                 path = Path(paths.expand_path(template, home=home, project=key)) / "context-keeper"
+                 plan.object(path, "", [a], "skill_symlink", target=source)
+@@ -477,11 +573,16 @@ def _run_locked(request, runtime, result, *, locked=True):
+                             block=_block(EXCEPTION_MARKER, "## Context Keeper 项目记忆例外\n\n项目记忆用 context-keeper 记录库，由项目桥接块驱动。项目规则唯一来源仍为 AGENTS.md；已启用 context-keeper 的项目，其进度、事实与经验写入已获授权的记录库，项目 .workbuddy/memory/MEMORY.md 可在顶部包含受控桥接块。此条款作为既有\u201c事实归 AGENTS.md、项目 MEMORY 只放指针\u201d约定的记忆例外；其余原文约定保留。"))
+             else:
+                 plan.object(target, "#keeper", [a], "block", marker=KEEPER_MARKER, block=bridge)
++    plan.finalize_lifecycle()
+     actual_plan = {"schema_version": 1, "command": "enable-memory", "main_checkout": key,
+                    "checkout": str(root), "git_common_dir": str(identity.git_common_dir), "agents": agents,
+                    "memory_authorization": choice, "store_path": str(store) if store else None,
+                    "provider_source": str(source) if source else None, "provider_fingerprints": fingerprints,
+-                   "changes": plan.description()}
++                   "changes": plan.description(),
++                   "installation":{a:{"status":detection["agents"][a]["status"],"fingerprint":detect.detection_fingerprint(detection["agents"][a])} for a in requested_agents},
++                   "native_pending":["workbuddy"] if native_pending else []}
++    if revoke_conflicts or previous and choice is not None and previous["memory_authorization"]!=choice:
++        actual_plan["memory_transition"]={"before":previous["memory_authorization"] if previous else None,"after":choice,"scope":"all registered project agents", "affected_agents":assembly["agents"],"reused_conflicts":revoke_conflicts}
+     if rebuild:
+         actual_plan["rebuild"] = rebuild
+     def approval_template():
+@@ -501,6 +602,9 @@ def _run_locked(request, runtime, result, *, locked=True):
+                        (KEEPER_MARKER, {"start": "<!-- context-keeper:workbuddy:start -->", "end": "<!-- context-keeper:workbuddy:end -->"})]
+             bridge_ready = bool(bridges) and all(entries.block_fingerprint(plan.before[Path(o["path"])].data or b"", **_marker_args(o["marker"])) == o["fingerprint"]["value"] for o in bridges)
+             observed["bridge_assembled"][a] = _fact("ready" if bridge_ready else "missing", "project bridge preflight")
++    if native_pending and choice=="yes":
++        for phase in ("skill_installed","bridge_assembled"):
++            observed[phase]["workbuddy"]=_fact("blocked","WorkBuddy native memory directory must already exist")
+     result["projects"] = [{"main_checkout": key, "checkout": str(root), "states": observed,
+                            "agents": assembly["agents"], "evidence": [str(registry_path)],
+                            "runtime_acceptance": {"status": "pending", "evidence_path": None}}]
+@@ -537,7 +641,7 @@ def _run_locked(request, runtime, result, *, locked=True):
+         result.update(status="approval_required", approval_required=True,
+                       next_action=approval_template())
+         return result
+-    if choice == "yes" and source is None:
++    if choice == "yes" and memory_agents and source is None:
+         raise EnableError("provider_source_missing", "Confirm an existing Keeper checkout; no source download/fallback is permitted")
+     if not locked:
+         # Inspection is write-free; only an authorized execution takes the shared lock.
+@@ -548,29 +652,37 @@ def _run_locked(request, runtime, result, *, locked=True):
+         with write_lock(runtime.lock):
+             return _run_locked(approved_request, runtime, result, locked=True)
+     p["memory_authorization"], p["authorization_evidence"] = choice, evidence
+-    if choice == "yes":
++    if choice == "yes" and memory_agents:
+         p["provider_source"] = str(source)
+         assembly["store"] = {"path": str(store), "location_approved": True, "approval_evidence": evidence}
+         assembly["states"]["source_available"] = _fact("ready", _source_evidence(fingerprints))
+         # All relevant outputs have already been drift-checked. Preview never counts as ready.
+-        argv = ["install.py", "--project", str(root)] + ["--" + a for a in agents]
++        argv = ["install.py", "--project", str(root)] + ["--" + a for a in memory_agents]
+         preview = _call(request, source, argv, allow_preview=True, fingerprints=fingerprints)
+-        all_links = {o["path"] for o in assembly["objects"].values() if o["kind"] == "skill_symlink" and set(o["agents"]) & set(agents)}
+-        expected_rules = {paths.expand_path(config[a]["project_bridge_entry"], home=home, project=key) for a in agents}
++        all_links = {o["path"] for o in assembly["objects"].values() if o["kind"] == "skill_symlink" and set(o["agents"]) & set(memory_agents)}
++        expected_rules = {paths.expand_path(config[a]["project_bridge_entry"], home=home, project=key) for a in memory_agents}
+         if (set(preview.get("skill_entries", [])) != all_links or set(preview.get("rule_files", [])) != expected_rules):
+             raise EnableError("provider_scope_mismatch", "Keeper preview declared unexpected project outputs")
+         init_argv = ["context_keeper_probe.py", "init", "--root", str(root), "--store-dir", str(store)]
+         _call(request, source, init_argv, allow_preview=True, fingerprints=fingerprints)
+-        for a in agents:
++        for a in memory_agents:
+             assembly["states"]["skill_installed"][a] = _fact("ready", "verified project links: " + str(source))
+             assembly["states"]["bridge_assembled"][a] = _fact("ready", config[a]["project_bridge_entry"])
+         assembly["states"]["store_authorized_ready"] = _fact("ready", "Keeper init + metadata readback: " + str(store))
+     else:
+-        assembly["states"]["store_authorized_ready"] = _fact("blocked", "memory authorization is no")
++        assembly["states"]["store_authorized_ready"] = _fact("blocked", "memory authorization is no" if choice=='no' else 'WorkBuddy must create its native memory directory first')
++    if choice=='no':
++        for a in assembly['agents']:
++            assembly['states']['bridge_assembled'][a]=_fact('blocked','Automatic project memory authorization revoked; historical assets retained')
++            assembly['states']['skill_installed'][a]=_fact('unknown','Created trigger links removed; reused links confer no authorization')
++    if native_pending and choice=='yes':
++        for phase in ('skill_installed','bridge_assembled'):
++            assembly['states'][phase]['workbuddy']=_fact('blocked','Open the project in WorkBuddy first; AGM does not create native .workbuddy/memory')
++
+     assembly["runtime_acceptance"] = {"status": "pending", "evidence_path": None}
+     # Normalize file/import reuse hashes after all overlapping block edits.
+     for obj in list(assembly["objects"].values()) + [data["shared_objects"][oid] for oid in assembly["shared_object_ids"]]:
+-        if obj["kind"] in ("file", "import") and obj["ownership"] != "created" and Path(obj["path"]) in plan.after:
++        if obj["kind"] in ("file", "import") and obj["ownership"] != "created" and not entries.free_project_rules(obj) and Path(obj["path"]) in plan.after:
+             obj["fingerprint"]["value"] = plan.after[Path(obj["path"])].fingerprint
+     called = []
+     def hook(event, path):
+@@ -585,12 +697,12 @@ def _run_locked(request, runtime, result, *, locked=True):
+                 if read_snapshot(output) != snap:
+                     raise EnableError("drift", "Output changed after approval: " + str(output))
+             called.append(True)
+-        if event == "before_write" and path == registry_path and choice == "yes":
++        if event == "before_write" and path == registry_path and choice == "yes" and memory_agents:
+             # Before the registry commit the config is current; provider calls must be no-op.
+             installed = _call(request, source, argv + ["--approved"], fingerprints=fingerprints)
+             if installed.get("scope") != "project" or installed.get("project") != str(root):
+                 raise EnableError("provider_scope_mismatch", "Keeper installation is not for this project")
+-            for a in agents:
++            for a in memory_agents:
+                 alias = Path(paths.expand_path(config[a]["project_skill_roots"][0], home=home, project=key)) / "context-keeper"
+                 ensured = _call(request, source, ["install.py", "--ensure-bridge", "--skill-dir", str(alias),
+                                 "--root", str(root), "--" + a, "--approved"], fingerprints=fingerprints)
+@@ -620,11 +732,13 @@ def _run_locked(request, runtime, result, *, locked=True):
+             result["warnings"].append("Configuration rolled back; any Keeper store/config assets are preserved.")
+             raise cause
+         raise
+-    result["status"] = "completed"
++    result["status"] = "gaps" if native_pending and choice=="yes" else "completed"
+     result["changes"] = [dict(item, ownership=_change_ownership(plan, item["path"]), applied=True) for item in plan.description()]
+     result["projects"] = [{"main_checkout": key, "checkout": str(root), "states": assembly["states"],
+                            "agents": assembly["agents"], "evidence": [str(registry_path)],
+                            "runtime_acceptance": assembly["runtime_acceptance"]}]
++    if revoke_conflicts:result["warnings"].append("Historical reused triggers preserved; explicit project memory denial guards installed")
++    if native_pending:result["warnings"].append("WorkBuddy native .workbuddy/memory must be created by WorkBuddy; no AGM mkdir")
+     result["warnings"].append("Runtime acceptance pending; same-path replacement of .git cannot be reliably detected by schema v1.")
+     if rebuild:
+         result["warnings"].append("Corrupt registry backed up; prior authorization/created ownership was not recovered.")
+diff --git a/scripts/agm_core/entries.py b/scripts/agm_core/entries.py
+index 26ea446..a107f76 100644
+--- a/scripts/agm_core/entries.py
++++ b/scripts/agm_core/entries.py
+@@ -88,3 +88,53 @@ def verify_link(path, target):
+     if not path.is_symlink() or path.resolve() != target:
+         raise EntryConflict("not the expected symlink: " + str(path))
+     return link_fingerprint(target)
++
++
++def reference_span(data: bytes, *, expected=None):
++    """Unique native @AGENTS.md line, preserving its exact original bytes."""
++    offset, found = 0, []
++    for line in data.splitlines(keepends=True):
++        body = line.rstrip(b'\r\n')
++        if body.strip() == b'@AGENTS.md':
++            found.append((offset, offset + len(line)))
++        elif body.lstrip().startswith(b'@AGENTS.md'):
++            raise EntryConflict('ambiguous @AGENTS.md reference')
++        offset += len(line)
++    if len(found) > 1:
++        raise EntryConflict('duplicate @AGENTS.md references')
++    span = found[0] if found else None
++    if expected is not None and (span is None or data[span[0]:span[1]] != expected):
++        raise EntryConflict('managed reference missing or edited')
++    return span
++
++
++def lifecycle_span(data, obj):
++    record = obj['lifecycle']
++    unit = bytes.fromhex(record['unit_hex'])
++    if obj['kind'] == 'import':
++        span = reference_span(data, expected=unit)
++    else:
++        span = managed_span(data, **obj['marker'])
++        if span is None or data[span[0]:span[1]] != unit:
++            raise EntryConflict('managed lifecycle block missing or edited')
++    return span
++
++
++def remove_lifecycle_unit(data, obj):
++    """Only remove verified unit bytes and still-adjacent recorded separators."""
++    left, right = lifecycle_span(data, obj)
++    prefix = bytes.fromhex(obj['lifecycle']['prefix_hex'])
++    suffix = bytes.fromhex(obj['lifecycle']['suffix_hex'])
++    if prefix and data[max(0,left-len(prefix)):left] == prefix:
++        left -= len(prefix)
++    if suffix and data[right:right+len(suffix)] == suffix:
++        right += len(suffix)
++    return data[:left] + data[right:]
++
++
++def free_project_rules(obj):
++    """M2 base objects are history, never active rule ownership in schema=2."""
++    return (obj['scope'] == 'project' and Path(obj['path']).name == 'AGENTS.md'
++            and (obj['kind'] == 'file' or obj.get('marker') == {
++                'start':'<!-- agent-group-memory:rules:start -->',
++                'end':'<!-- agent-group-memory:rules:end -->'}))
+diff --git a/scripts/agm_core/registry.py b/scripts/agm_core/registry.py
+index 215bdc1..60a9599 100644
+--- a/scripts/agm_core/registry.py
++++ b/scripts/agm_core/registry.py
+@@ -325,6 +325,70 @@ def _validate_migration_record(migration):
+             verify_archived_references(migration)
+ 
+ 
++def _project_lifecycle_view(projects, pending_manifest):
++    """Versioned v2 units; v1 remains strict and cannot acquire these rights."""
++    from . import entries
++    view=copy.deepcopy(projects)
++    if not isinstance(view,dict):return view
++    for project in view.values():
++        if not isinstance(project,dict) or not isinstance(project.get('checkouts'),dict):continue
++        for assembly in project['checkouts'].values():
++            if not isinstance(assembly,dict) or not isinstance(assembly.get('objects'),dict):continue
++            for oid,obj in assembly['objects'].items():
++                if not isinstance(obj,dict) or 'lifecycle' not in obj:continue
++                _keys(obj,'kind path scope agents ownership marker fingerprint original_existed link_target backup_manifest consumers lifecycle','v2 lifecycle object')
++                life=obj.pop('lifecycle')
++                _keys(life,'version unit_hex prefix_hex suffix_hex file_created operation_id container_units','v2 lifecycle')
++                if type(life['version']) is not int or life['version']!=1 or type(life['file_created']) is not bool:
++                    _fail('unsupported lifecycle version/type')
++                if (obj['scope']!='project' or obj['ownership']!='created'
++                        or obj['original_existed'] is not False or obj['kind'] not in ('import','block')):
++                    _fail('lifecycle requires independently created project unit')
++                _text(life['operation_id']);_unique(life['container_units'],nonempty=True)
++                if oid not in life['container_units']:_fail('container must name its own unit')
++                for key in ('unit_hex','prefix_hex','suffix_hex'):
++                    if not isinstance(life[key],str):_fail('invalid lifecycle bytes')
++                    try:raw=bytes.fromhex(life[key])
++                    except ValueError:_fail('invalid lifecycle hex')
++                    if raw.hex()!=life[key]:_fail('noncanonical lifecycle hex')
++                unit=bytes.fromhex(life['unit_hex'])
++                if not unit or bytes.fromhex(life['prefix_hex']) not in (b'',b'\n',b'\r\n') or bytes.fromhex(life['suffix_hex']) not in (b'',b'\n',b'\r\n'):
++                    _fail('invalid lifecycle unit/separators')
++                if obj['kind']=='import':
++                    if Path(obj['path']).name!='CLAUDE.md' or entries.reference_span(unit,expected=unit)!=(0,len(unit)) or obj['fingerprint']['basis']!='reference_line':
++                        _fail('invalid created reference')
++                elif entries.managed_span(unit,**obj['marker'])!=(0,len(unit)):
++                    _fail('invalid created block')
++                if obj['fingerprint']['value']!=entries.sha256(unit):_fail('lifecycle unit fingerprint mismatch')
++                _path(obj['backup_manifest'])
++                if obj['backup_manifest']!=pending_manifest:
++                    try:
++                        manifest=json.loads(Path(obj['backup_manifest']).read_text(),object_pairs_hook=_no_duplicates)
++                        matches=[e for e in manifest['entries'] if e['path']==obj['path']]
++                        if manifest['schema_version']!=1 or len(matches)!=1:raise ValueError('creation output missing')
++                        before=matches[0]['before']
++                        if life['operation_id']!=Path(obj['backup_manifest']).parent.name or life['file_created']!=(before['kind']=='absent'):
++                            raise ValueError('container creation provenance mismatch')
++                        if before['kind']=='file':
++                            name=before['backup']
++                            if Path(name).name!=name:raise ValueError('unsafe before backup')
++                            backup=Path(obj['backup_manifest']).parent/name
++                            if backup.is_symlink():raise ValueError('before backup symlink')
++                            data=backup.read_bytes()
++                            if entries.sha256(data)!=before['fingerprint']:raise ValueError('before backup changed')
++                            span=entries.reference_span(data) if obj['kind']=='import' else entries.managed_span(data,**obj['marker'])
++                            if span is not None:raise ValueError('unit existed before creation')
++                        elif before['kind']!='absent':raise ValueError('invalid creation before type')
++                    except (OSError,ValueError,KeyError,TypeError) as exc:
++                        raise RegistryError('lifecycle creation evidence unavailable: '+str(exc)) from exc
++                # Validate the old structural semantics using a non-owning view;
++                # returned/persisted v2 ownership/line fingerprint is unchanged.
++                if obj['kind']=='import':
++                    obj['ownership']='reused';obj['original_existed']=True;obj['backup_manifest']=None
++                    obj['fingerprint']=dict(obj['fingerprint'],basis='file_bytes')
++    return view
++
++
+ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
+     """Active v2 only. Legacy v1 is available solely via explicit diagnostic APIs."""
+     if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] == 1:
+@@ -337,7 +401,12 @@ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
+     # Preserve recorded Evidence strings. Strict v1 validates a semantic view
+     # whose runtime receipt can resolve through a hash-verified v2 archive; the
+     # original v1 validator and the returned/persisted data are unchanged.
+-    project_view = data["projects"]
++    try:
++        project_view = _project_lifecycle_view(data["projects"], _pending_manifest)
++    except RegistryError:
++        raise
++    except (ValueError, KeyError, TypeError, AttributeError) as exc:
++        raise RegistryError("invalid lifecycle metadata: " + str(exc)) from exc
+     if migration is not None and migration["status"] == "committed" and isinstance(project_view, dict):
+         project_view = copy.deepcopy(project_view)
+         for project in project_view.values():
+@@ -605,12 +674,15 @@ def recovered_object(obj, *, verified=False):
+ 
+ 
+ def _unit_fingerprint(snapshot, obj):
+-    from .entries import block_fingerprint, link_fingerprint, sha256
++    from .entries import block_fingerprint, link_fingerprint, sha256, reference_span
+     if snapshot.kind == "absent":
+         return None
+     kind = obj["kind"]
+     if kind in ("block", "user_convention") and snapshot.kind == "file":
+         return block_fingerprint(snapshot.data, obj["marker"]["start"], obj["marker"]["end"])
++    if kind == "import" and obj.get("lifecycle") and snapshot.kind == "file":
++        span=reference_span(snapshot.data)
++        return None if span is None else sha256(snapshot.data[span[0]:span[1]])
+     if kind in ("file", "import") and snapshot.kind == "file":
+         return sha256(snapshot.data)
+     if kind == "skill_symlink" and snapshot.kind == "symlink":
+@@ -628,11 +700,16 @@ def validate_ownership_transition(previous, current, *, changes=()):
+         if old["ownership"] != "created" and new["ownership"] == "created":
+             _fail("cannot recover created ownership: " + oid)
+         if old["ownership"] == "created":
++            if old.get("lifecycle")!=new.get("lifecycle"):
++                _fail("cannot retrofit/change lifecycle deletion provenance")
+             if new["ownership"] != "created":
+                 _fail("cannot silently discard created ownership")
+             for name in ("kind", "path", "scope", "marker", "original_existed", "link_target"):
+                 if old[name] != new[name]:
+                     _fail("cannot change identity of a created unit")
++            from .entries import free_project_rules
++            if free_project_rules(old):
++                continue  # Legacy base bytes are project-owned rules, not active guard units.
+             change = writes.get(old["path"])
+             if change is not None:
+                 actual = _unit_fingerprint(change.expected, old)
+@@ -708,6 +785,12 @@ def commit_registry(path, data, *, transaction, expected, changes=(),
+             if block_fingerprint(before.data or b"", marker["start"], marker["end"]) is not None:
+                 _fail("cannot claim an existing block as created")
+             actual = block_fingerprint(after.data, marker["start"], marker["end"])
++        elif obj["kind"] == "import" and obj.get("lifecycle"):
++            from .entries import reference_span
++            if before.kind not in ("absent","file") or after.kind!="file" or reference_span(before.data or b"") is not None:
++                _fail("cannot claim an existing reference as created")
++            span=reference_span(after.data,expected=bytes.fromhex(obj["lifecycle"]["unit_hex"]))
++            actual=sha256(after.data[span[0]:span[1]])
+         elif obj["kind"] == "file":
+             if before.kind != "absent" or after.kind != "file":
+                 _fail("cannot claim an existing file as created")
+@@ -718,6 +801,9 @@ def commit_registry(path, data, *, transaction, expected, changes=(),
+             actual = link_fingerprint(after.target)
+         else:
+             _fail("unsupported created unit")
++        if obj.get("lifecycle"):
++            if obj["lifecycle"]["file_created"]!=(before.kind=="absent") or obj["lifecycle"]["operation_id"]!=transaction.directory.name:
++                _fail("lifecycle creation must bind the actual before image and operation")
+         if obj["fingerprint"] is None or actual != obj["fingerprint"]["value"]:
+             _fail("creation fingerprint does not match actual write")
+     content = serialize_registry(data, allowed_user_paths=allowed_user_paths,
+diff --git a/scripts/agm_core/remove.py b/scripts/agm_core/remove.py
+index 9231e05..2935272 100644
+--- a/scripts/agm_core/remove.py
++++ b/scripts/agm_core/remove.py
+@@ -8,7 +8,7 @@ import copy
+ from . import layout
+ from pathlib import Path
+ 
+-from .entries import block_fingerprint, link_fingerprint, remove_block, sha256
++from .entries import block_fingerprint, link_fingerprint, remove_block, sha256, free_project_rules, lifecycle_span, remove_lifecycle_unit
+ from .paths import allowed_user_paths
+ from .project import resolve_project
+ from .registry import load_registry, commit_registry, serialize_registry, require_installed
+@@ -59,7 +59,9 @@ def _verify_created(obj, snapshot):
+     expected = obj['fingerprint']['value']
+     actual = None
+     try:
+-        if obj['kind'] in ('block', 'user_convention') and snapshot.kind == 'file':
++        if obj.get('lifecycle') and snapshot.kind=='file':
++            left,right=lifecycle_span(snapshot.data,obj);actual=sha256(snapshot.data[left:right])
++        elif obj['kind'] in ('block', 'user_convention') and snapshot.kind == 'file':
+             actual = block_fingerprint(snapshot.data, **obj['marker'])
+         elif obj['kind'] == 'file' and snapshot.kind == 'file':
+             actual = sha256(snapshot.data)
+@@ -91,6 +93,16 @@ def plan_remove(data, identity):
+     snapshots, units, warnings = {}, {}, []
+     for oid, obj in assembly['objects'].items():
+         path = Path(obj['path'])
++        if obj.get('marker',{})=={'start':'<!-- agent-group-memory:memory-denied:start -->','end':'<!-- agent-group-memory:memory-denied:end -->'} and project['memory_authorization']=='no':
++            _verify_created(obj,read_snapshot(path)) if obj['ownership']=='created' else None
++            warnings.append('保留 no 停用规则,防止历史 reused 指令在 remove 后重激活：%s' % path)
++            continue
++        if free_project_rules(obj) or path.name=='AGENTS.md' and obj['kind']=='skill_symlink':
++            warnings.append('保留项目自由规则及历史基座证据：%s' % path)
++            continue
++        if obj['kind']=='file' and (path.name=='CLAUDE.md' or path.name=='MEMORY.md' and '.workbuddy' in path.parts):
++            warnings.append('保留缺少独立引用/容器创建证据的旧入口：%s' % path)
++            continue
+         if obj['ownership'] != 'created':
+             warnings.append('保留 %s 对象：%s' % (obj['ownership'], path))
+             continue
+@@ -114,9 +126,16 @@ def plan_remove(data, identity):
+         else:
+             content = snapshot.data
+             for obj in objects:
+-                content = remove_block(content, **obj['marker'],
++                if obj.get('lifecycle'):content=remove_lifecycle_unit(content,obj)
++                else:content = remove_block(content, **obj['marker'],
+                                        expected_fingerprint=obj['fingerprint']['value'])
+-            change = Change.file(path, content, expected=snapshot)
++            # A proven new thin container may disappear only when every byte
++            # was one of this tool's independently created units/separators.
++            removed_ids={oid for oid,obj in assembly['objects'].items() if obj in objects}
++            allowed_ids=set().union(*(set(o.get('lifecycle',{}).get('container_units',[])) for o in objects))
++            pure_container=(not content and not preserved and path.name!='AGENTS.md' and removed_ids<=allowed_ids
++                            and any(o.get('lifecycle',{}).get('file_created') for o in objects))
++            change = Change.delete(path,expected=snapshot) if pure_container else Change.file(path, content, expected=snapshot)
+         changes.append(change)
+     for oid in list(target['shared_object_ids']):
+         obj = updated['shared_objects'][oid]
+diff --git a/tests/integration/test_m204_subprocess.py b/tests/integration/test_m204_subprocess.py
+index 47e2e68..a8a16b6 100644
+--- a/tests/integration/test_m204_subprocess.py
++++ b/tests/integration/test_m204_subprocess.py
+@@ -155,8 +155,10 @@ class SubprocessTests(EnableFixture):
+         assembly = self.load()['projects'][str(self.root)]['checkouts'][str(self.root)]
+         alias = str(self.root / '.agents/skills/context-keeper')
+         self.assertEqual(assembly['objects'][alias]['ownership'], 'reused')
+-        base = assembly['objects'][str(self.root / 'AGENTS.md') + '#base']
+-        self.assertEqual(base['ownership'], 'created')
++        # §8.1: project rules remain free; only the Keeper bridge is managed.
++        self.assertNotIn(str(self.root / 'AGENTS.md') + '#base', assembly['objects'])
++        self.assertTrue((self.root / 'AGENTS.md').is_file())
++        self.assertEqual(assembly['objects'][str(self.root / 'AGENTS.md') + '#keeper']['ownership'], 'created')
+ 
+     def test_keeper_first_adopts_correct_bridges_as_reused(self):
+         block = enable._bridge_template(self.source)
+diff --git a/tests/integration/test_m207_cli_cycle.py b/tests/integration/test_m207_cli_cycle.py
+index 6f65a9c..e7c0296 100644
+--- a/tests/integration/test_m207_cli_cycle.py
++++ b/tests/integration/test_m207_cli_cycle.py
+@@ -22,7 +22,7 @@ REPO = Path(__file__).resolve().parents[2]
+ 
+ sys.path.insert(0, str(REPO / "scripts"))
+ sys.path.insert(0, str(REPO / "tests/unit"))
+-from runtime_fixture import seed_runtime
++from runtime_fixture import seed_runtime, seed_project_executors, CLI_DETECTION_BOOTSTRAP
+ 
+ INSTALL_STUB = r'''import json, sys, traceback
+ from pathlib import Path
+@@ -133,13 +133,14 @@ class CliHarness(unittest.TestCase):
+         (self.keeper / "scripts/install.py").write_text(INSTALL_STUB)
+         (self.keeper / "scripts/context_keeper_probe.py").write_text(PROBE_STUB)
+         self._approvals = itertools.count()
++        self.execution_signals=seed_project_executors(self.home)
+ 
+     def git(self, *args):
+         subprocess.run(["git", *args], check=True, capture_output=True)
+ 
+     def cli(self, argv):
+-        env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1")
+-        result = subprocess.run([sys.executable, str(self.agm), *argv], cwd=str(self.area),
++        env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1", PATH=self.execution_signals["search_paths"][0])
++        result = subprocess.run([sys.executable,"-B","-c",CLI_DETECTION_BOOTSTRAP,str(self.agm),*argv], cwd=str(self.area),
+                                 capture_output=True, text=True, env=env)
+         envelope = json.loads(result.stdout)
+         return result.returncode, envelope
+@@ -148,8 +149,8 @@ class CliHarness(unittest.TestCase):
+         """交互(PTY)路径:remove 的内核级预览仅在交互终端可达(非交互被外壳保守门拦截)。"""
+         import pty
+         master, slave = pty.openpty()
+-        env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1")
+-        proc = subprocess.Popen([sys.executable, str(self.agm), *argv], stdin=slave,
++        env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1", PATH=self.execution_signals["search_paths"][0])
++        proc = subprocess.Popen([sys.executable,"-B","-c",CLI_DETECTION_BOOTSTRAP,str(self.agm),*argv], stdin=slave,
+                                 stdout=slave, stderr=subprocess.PIPE, env=env,
+                                 cwd=str(self.area))
+         os.close(slave)
+@@ -214,6 +215,7 @@ class CliHarness(unittest.TestCase):
+ 
+     def enable_memory(self, *, edit=None):
+         """完整装配记忆档:先建项目 Skill 链接供源发现,再预览→批准→执行。"""
++        (self.root/".workbuddy/memory").mkdir(parents=True,exist_ok=True)  # Native WorkBuddy-created fixture, §8.2.
+         self.link_alias()
+         return self.approve(["enable-memory", "--project", str(self.root), "--memory"], edit=edit)
+ 
+@@ -287,7 +289,7 @@ class InstallOrderTests(CliHarness):
+         rc, envelope = self.approve(["enable-memory", "--project", str(self.root), "--no-memory"])
+         self.assertEqual(rc, 0, envelope)
+         self.assertTrue((self.root / "AGENTS.md").read_bytes()
+-                        .startswith(b"<!-- agent-group-memory:rules:start -->"))
++                        .startswith(b"# " + self.root.name.encode()))
+         self.assertFalse((self.root / "docs/context-keeper").exists())
+ 
+         rc, envelope = self.enable_memory()
+@@ -299,8 +301,8 @@ class InstallOrderTests(CliHarness):
+         self.assertIn(b"Keeper rules", (self.root / "AGENTS.md").read_bytes())
+         ledger = json.loads(self.registry.read_text())
+         assembly = ledger["projects"][str(self.root)]["checkouts"][str(self.root)]
+-        self.assertEqual(assembly["objects"][str(self.root / "AGENTS.md") + "#base"]["ownership"],
+-                         "created")
++        # §8.1: free rules carry no managed base ownership.
++        self.assertNotIn(str(self.root / "AGENTS.md") + "#base", assembly["objects"])
+         alias = assembly["objects"][str(self.root / ".agents/skills/context-keeper")]
+         self.assertEqual(alias["ownership"], "reused", "先置链接由 AGM 接管为 reused,不改写")
+ 
+@@ -314,6 +316,8 @@ class InstallOrderTests(CliHarness):
+             target.parent.mkdir(parents=True, exist_ok=True)
+             target.symlink_to(self.keeper, target_is_directory=True)
+ 
++        # §8.2: fixture represents a native WorkBuddy-opened project.
++        (self.root / ".workbuddy/memory").mkdir(parents=True, exist_ok=True)
+         rc, envelope = self.approve(["enable-memory", "--project", str(self.root), "--memory"])
+         self.assertEqual(rc, 0, envelope)
+         data = (self.root / "AGENTS.md").read_bytes()
+@@ -323,9 +327,8 @@ class InstallOrderTests(CliHarness):
+         ledger = json.loads(self.registry.read_text())
+         objects = ledger["projects"][str(self.root)]["checkouts"][str(self.root)]["objects"]
+         self.assertEqual(objects[str(self.root / "AGENTS.md") + "#keeper"]["ownership"], "reused")
+-        base = objects[str(self.root / "AGENTS.md") + "#base"]
+-        self.assertEqual((base["kind"], base["ownership"]), ("file", "reused"),
+-                         "既有 AGENTS.md 整体按 reused 文件保护,不追加基座块")
++        self.assertNotIn(str(self.root / "AGENTS.md") + "#base", objects,
++                         "§8.1: AGENTS 非桥接正文为自由规则,不登记整文件基线")
+ 
+ 
+ class BoundaryTests(CliHarness):
+@@ -443,9 +446,8 @@ class BoundaryTests(CliHarness):
+         self.assertNotIn(b"agent-group-memory:rules", agents_left)
+         self.assertNotIn(b"context-keeper:start", agents_left,
+                          "AGM 创建的受管块应被摘除(块间残余字节按字节精确保留)")
+-        self.assertIn(b"@AGENTS.md", (self.root / "CLAUDE.md").read_bytes(),
+-                      "import 引用受 schema v1 保护,remove 后保留")
+-        self.assertNotIn(b"context-keeper:start", (self.root / "CLAUDE.md").read_bytes())
++        self.assertFalse((self.root / "CLAUDE.md").exists(),
++                         "§8.1: 新 v2 纯入口有独立创建证据,可删除空薄壳")
+         self.assertEqual((self.root / "docs/context-keeper/memory-keeper.md").read_bytes(),
+                          store_marker, "记录库资产在 remove 后必须原样保留")
+         for base in (".codex", ".claude", ".workbuddy"):
+@@ -478,6 +480,8 @@ class BoundaryTests(CliHarness):
+         alias = second / ".agents/skills/context-keeper"
+         alias.parent.mkdir(parents=True)
+         alias.symlink_to(self.keeper, target_is_directory=True)
++        # §8.2: native-ready fixture; AGM must not manufacture this directory.
++        (second / ".workbuddy/memory").mkdir(parents=True)
+         rc, envelope = self.approve(["enable-memory", "--project", str(second), "--memory"])
+         self.assertEqual(rc, 0, envelope)
+ 
+@@ -493,7 +497,11 @@ class BoundaryTests(CliHarness):
+ 
+         path = second / "AGENTS.md"
+         data = path.read_bytes()
+-        path.write_bytes(data.replace(b"# Project Rules", b"# drifted rules"))
++        # §8.1: free project rules do not drift; the actual bridge still does.
++        path.write_bytes(data + b"\nFree user rules\n")
++        rc, envelope = self.cli(["check-memory", "--all"])
++        self.assertEqual(rc, 0, envelope)
++        path.write_bytes(path.read_bytes().replace(b"Keeper rules", b"edited bridge"))
+         rc, envelope = self.cli(["check-memory", "--all"])
+         self.assertEqual(rc, 1, envelope)
+         by_project = {p["checkout"]: p for p in envelope["projects"]}
+diff --git a/tests/unit/runtime_fixture.py b/tests/unit/runtime_fixture.py
+index ec180d6..3b36cef 100644
+--- a/tests/unit/runtime_fixture.py
++++ b/tests/unit/runtime_fixture.py
+@@ -19,3 +19,33 @@ def seed_runtime(home):
+     runtime.var.mkdir(parents=True)
+     runtime.registry.write_bytes(serialize_registry(installed_registry()))
+     return runtime
++
++
++def seed_project_executors(home):
++    """M4 §7: synthetic positive installations, never host application state."""
++    import json
++    import plistlib
++    import shutil
++    from pathlib import Path
++    from types import SimpleNamespace
++    home=Path(home);base=home/'fixture-executors';bin_dir=base/'bin';bin_dir.mkdir(parents=True,exist_ok=True)
++    for agent,name in (('codex','@openai/codex'),('claude','@anthropic-ai/claude-code')):
++        package=base/'packages'/agent;(package/'bin').mkdir(parents=True,exist_ok=True)
++        exe=package/'bin'/agent;exe.write_text('#!/bin/sh\n');exe.chmod(0o755)
++        (package/'package.json').write_text(json.dumps({'name':name,'version':'1.0.0','bin':{agent:'bin/'+agent}}))
++        path=bin_dir/agent
++        if not path.exists():path.symlink_to(exe)
++    bundle=home/'Applications/WorkBuddy.app';(bundle/'Contents/MacOS').mkdir(parents=True,exist_ok=True)
++    (bundle/'Contents/Info.plist').write_bytes(plistlib.dumps({'CFBundleName':'WorkBuddy','CFBundleIdentifier':'fixture.workbuddy',
++        'CFBundleExecutable':'WorkBuddy','CFBundleShortVersionString':'1.0'}))
++    exe=bundle/'Contents/MacOS/WorkBuddy';exe.write_text('#!/bin/sh\n');exe.chmod(0o755)
++    def signature(command):return SimpleNamespace(returncode=0,stdout='',stderr='Identifier=fixture.workbuddy\n' if command[1]=='-d' else '')
++    git=bin_dir/'git'
++    if not git.exists():git.symlink_to(shutil.which('git'))
++    codesign=bin_dir/'codesign';codesign.write_text('#!/bin/sh\nif [ "$1" = "-d" ]; then printf "Identifier=fixture.workbuddy\\n" >&2; fi\nexit 0\n');codesign.chmod(0o755)
++    return {'search_paths':[str(bin_dir)],'app_directories':[],'detect_runner':signature}
++
++
++# CLI subprocesses keep the real copied product files, while the test launcher
++# bounds standard app scanning to synthetic HOME (no /Applications dependency).
++CLI_DETECTION_BOOTSTRAP = "import runpy,sys;from pathlib import Path;sys.path.insert(0,str(Path(sys.argv[1]).parent));from agm_core import detect;detect.STANDARD_APP_DIRECTORIES=();sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')"
+diff --git a/tests/unit/test_m204_enable.py b/tests/unit/test_m204_enable.py
+index d4a53cd..7bd1565 100644
+--- a/tests/unit/test_m204_enable.py
++++ b/tests/unit/test_m204_enable.py
+@@ -10,7 +10,7 @@ from pathlib import Path
+ SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
+ sys.path.insert(0, str(SCRIPTS))
+ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
+-from runtime_fixture import seed_runtime, installed_registry
++from runtime_fixture import seed_runtime, installed_registry, seed_project_executors
+ from agm_core import enable, paths, registry
+ from agm_core.entries import sha256
+ 
+@@ -54,6 +54,8 @@ WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\\nUpstream WorkBuddy rules\\n{WORK
+                         "home": str(self.home), "platform_config": self.config,
+                         "runtime_layout": self.runtime, "runner": self.runner}
+ 
++        self.request.update(seed_project_executors(self.home))
++
+     def runner(self, argv, **kwargs):
+         self.calls.append(argv)
+         self.assertEqual(kwargs["env"]["HOME"], str(self.home))
+@@ -92,6 +94,8 @@ WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\\nUpstream WorkBuddy rules\\n{WORK
+ 
+     def preview(self, memory="no", source=False, store=None):
+         self.request["memory_choice"] = memory
++        if memory=="yes" and "workbuddy" in self.request["agents"]:
++            (self.root/".workbuddy/memory").mkdir(parents=True,exist_ok=True)  # WorkBuddy-native precondition, §8.2.
+         if source:
+             # The dispatch contract carries source/location in the approval envelope.
+             self.request["approval"] = {"provider_source": str(self.source), "memory_authorization": memory,
+diff --git a/tests/unit/test_m205_check.py b/tests/unit/test_m205_check.py
+index f713bbd..c2ef1fc 100644
+--- a/tests/unit/test_m205_check.py
++++ b/tests/unit/test_m205_check.py
+@@ -80,6 +80,10 @@ class Sandbox:
+         self.provider.mkdir(parents=True)
+         self.table_dir.mkdir()
+         (self.provider / "SKILL.md").write_text("# context-keeper\n", encoding="utf-8")
++        (self.provider/"scripts").mkdir()  # R4 verified minimum source fixture.
++        (self.provider/"scripts/install.py").write_text("# source fixture\n")
++        (self.provider/"scripts/context_keeper_probe.py").write_text("# source fixture\n")
++        _git(self.provider,"init","-q")
+         shutil.copy(os.path.join(SCRIPTS_DIR, "agents.json"), self.table_dir / "agents.json")
+         (self.table_dir / "backups").mkdir()
+         with open(self.table_dir / "agents.json", "r", encoding="utf-8") as handle:
+@@ -485,7 +489,9 @@ class CheckReadOnlyTests(unittest.TestCase):
+         # import 对象基线(仅引用行)与现文件(含块)不同 → baseline_changed,信息性不算缺口
+         statuses = {item["id"]: item["status"] for item in report["objects"]}
+         self.assertEqual(statuses[str(main / "CLAUDE.md") + "#import"], "baseline_changed")
+-        self.assertTrue(all(s == "ok" for i, s in statuses.items() if not i.endswith("#import")))
++        # §8.1: historical AGENTS bases are free project rules, not drift guards.
++        self.assertEqual(statuses[str(main / "AGENTS.md") + "#base"], "unverified")
++        self.assertTrue(all(s == "ok" for i, s in statuses.items() if not i.endswith(("#import", "AGENTS.md#base"))))
+ 
+     def test_all_mode_healthy_matrix(self):
+         main, _registry = build_installed_project(self.sb, "proj")
+diff --git a/tests/unit/test_m206_remove.py b/tests/unit/test_m206_remove.py
+index 5c74438..6a2f573 100644
+--- a/tests/unit/test_m206_remove.py
++++ b/tests/unit/test_m206_remove.py
+@@ -160,10 +160,15 @@ class RemoveUnitTests(RemoveFixture):
+             plan_remove(self.data, self.identity)
+         self.assertEqual(caught.exception.code, 'protected_memory_asset')
+ 
+-    def test_whole_file_and_reused_unit_overlap_refused(self):
++    def test_agents_free_whole_file_preserved_while_owned_bridge_removed(self):
++        # §8.1: the historical AGENTS whole-file base confers no deletion right.
+         self.add_object('file', self.entry, oid='whole')
+-        with self.assertRaises(RemoveError):
+-            plan_remove(self.data, self.identity)
++        updated, changes, warnings = plan_remove(self.data, self.identity)
++        self.assertEqual(len(changes), 1)
++        self.assertEqual(changes[0].after.kind, 'file')
++        self.assertNotIn(BLOCK, changes[0].after.data)
++        self.assertIn(b'new user text', changes[0].after.data)
++        self.assertIn('whole', updated['projects'][self.main]['checkouts'][self.main]['objects'])
+ 
+ 
+ if __name__ == '__main__':
+diff --git a/tests/unit/test_m207_faults.py b/tests/unit/test_m207_faults.py
+index 3c65c70..30514e7 100644
+--- a/tests/unit/test_m207_faults.py
++++ b/tests/unit/test_m207_faults.py
+@@ -18,7 +18,7 @@ from pathlib import Path
+ SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
+ sys.path.insert(0, str(SCRIPTS))
+ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
+-from runtime_fixture import seed_runtime, installed_registry
++from runtime_fixture import seed_runtime, installed_registry, seed_project_executors
+ from agm_core import check as check_mod
+ from agm_core import enable, paths, registry
+ from agm_core.remove import run as remove_run
+@@ -50,6 +50,8 @@ class M207Fixture(unittest.TestCase):
+                         "runtime_layout": self.runtime, "runner": self.runner}
+         (self.install / "agents.json").write_bytes((SCRIPTS / "agents.json").read_bytes())
+ 
++        self.request.update(seed_project_executors(self.home))
++
+     def _keeper_source(self):
+         source = self.area / "keeper"
+         (source / "scripts").mkdir(parents=True)
+@@ -94,6 +96,8 @@ class M207Fixture(unittest.TestCase):
+ 
+     def preview(self, memory="no", source=False):
+         self.request["memory_choice"] = memory
++        if memory=="yes" and "workbuddy" in self.request["agents"]:
++            (self.root/".workbuddy/memory").mkdir(parents=True,exist_ok=True)  # WorkBuddy-native precondition, §8.2.
+         if source:
+             alias = self.root / ".agents/skills/context-keeper"
+             alias.parent.mkdir(parents=True, exist_ok=True)
+@@ -308,6 +312,8 @@ class FaultMatrixTests(M207Fixture):
+         alias = self.root / ".agents/skills/context-keeper"
+         alias.parent.mkdir(parents=True, exist_ok=True)
+         alias.symlink_to(self.source, target_is_directory=True)
++        # §8.2: native directory is supplied by WorkBuddy, never by AGM.
++        (self.root / ".workbuddy/memory").mkdir(parents=True, exist_ok=True)
+         self.request.update(approval=None, memory_choice="yes")
+         result = enable.run(self.request)
+         self.assertEqual(result["status"], "approval_required", result)
+diff --git a/tests/unit/test_m3_workbuddy.py b/tests/unit/test_m3_workbuddy.py
+index b526941..1e09c32 100644
+--- a/tests/unit/test_m3_workbuddy.py
++++ b/tests/unit/test_m3_workbuddy.py
+@@ -39,6 +39,8 @@ class WorkBuddyProtocolTests(EnableFixture):
+         self.assertEqual(bridge.read_bytes(), before)
+ 
+     def test_missing_upstream_template_fails_closed_without_fallback(self):
++        # §8.2: establish native-ready precondition so template validation is reached.
++        (self.root / '.workbuddy/memory').mkdir(parents=True, exist_ok=True)
+         source = self.source / 'scripts/install.py'
+         source.write_text(source.read_text().replace('WORKBUDDY_BRIDGE =', 'OLD_WORKBUDDY_BRIDGE ='))
+         self.request.update(memory_choice='yes', approval={'provider_source': str(self.source), 'memory_authorization': 'yes'})
+--- /dev/null
++++ b/tests/unit/test_m406_lifecycle.py
+@@ -0,0 +1,257 @@
++"""M4 §7/§8 and review R1/R4; all mutations use explicit synthetic HOME."""
++import copy
++import json
++import os
++import sys
++from pathlib import Path
++from unittest.mock import patch
++
++sys.path.insert(0,str(Path(__file__).resolve().parent))
++from test_m204_enable import EnableFixture
++from agm_core import enable, entries, registry, remove, check, user_entries
++from runtime_fixture import seed_project_executors
++from agm_core.transaction import read_snapshot
++
++NOW='2026-10-30T00:00:00Z'
++
++
++class LifecycleTests(EnableFixture):
++    def execute_preview(self,result):
++        self.assertEqual(result['status'],'approval_required',result)
++        approval=json.loads(result['next_action']);approval.update(confirmed_at=NOW,reference='explicit lifecycle test confirmation')
++        self.request['approval']=approval
++        return enable.run(self.request)
++
++    def remove_project(self):
++        request=dict(self.request,approval=None)
++        preview=remove.run(request)
++        if preview['status']=='completed':return preview
++        self.assertEqual(preview['status'],'approval_required',preview)
++        p=self.load()['projects'][str(self.root)];a=p['checkouts'][str(self.root)]
++        approval={'command':'remove-memory','main_checkout':str(self.root),'checkout':str(self.root),
++            'git_common_dir':a['git_common_dir'],'agents':a['agents'],'memory_authorization':None,
++            'store_path':a['store']['path'],'provider_source':p['provider_source'],'provider_fingerprints':[],
++            'changes':[{k:c[k] for k in ('path','operation','before_fingerprint','after_fingerprint')} for c in preview['changes']],
++            'confirmed_at':NOW,'reference':'explicit removal approval'}
++        return remove.run(dict(request,approval=approval))
++
++    def report(self):
++        return check.run(dict(self.request,approval=None,agents=None,all=False))
++
++    def test_AGENTS_rules_are_free_and_file_survives_remove(self):
++        self.apply('yes',True);path=self.root/'AGENTS.md';raw=path.read_bytes()
++        body=raw.replace(b'# '+self.root.name.encode(),b'# User title')+b'\nUser rules\xff\r\n'
++        path.write_bytes(body)
++        self.request['approval']=None
++        result=enable.run(self.request)
++        self.assertEqual(result['status'],'completed',result)
++        self.assertEqual(path.read_bytes(),body)
++        self.assertFalse(any(o['status']=='drifted' and o['path']==str(path) for o in self.report()['projects'][0]['objects']))
++        removed=self.remove_project();self.assertEqual(removed['status'],'completed',removed)
++        self.assertTrue(path.is_file());self.assertIn(b'User rules\xff\r\n',path.read_bytes())
++        self.assertNotIn(enable.KEEPER_MARKER['start'].encode(),path.read_bytes())
++
++    def test_old_base_marker_is_history_not_a_guard_or_deletion_right(self):
++        self.apply('yes',True)
++        data=self.load();a=data['projects'][str(self.root)]['checkouts'][str(self.root)]
++        path=self.root/'AGENTS.md';old=entries.managed_span(path.read_bytes(),**enable.KEEPER_MARKER)
++        # Synthetic old M2 whole-file base, with existing real creation manifest.
++        bridge=next(o for o in a['objects'].values() if o['path']==str(path))
++        base=dict(bridge,kind='file',marker=None,fingerprint={'algorithm':'sha256','basis':'file_bytes','value':entries.sha256(path.read_bytes())})
++        base.pop('lifecycle',None);a['objects'][str(path)+'#old-base']=base
++        self.runtime.registry.write_bytes(registry.serialize_registry(data,allowed_user_paths=__import__('agm_core.paths',fromlist=['']).allowed_user_paths(self.config,None,home=str(self.home))))
++        path.write_bytes(path.read_bytes()+b'free historical body\n');self.request['approval']=None
++        self.assertEqual(enable.run(self.request)['status'],'completed')
++        self.assertEqual(self.remove_project()['status'],'completed')
++        self.assertTrue(path.exists());self.assertIn(b'free historical body',path.read_bytes())
++
++    def test_managed_bridge_edit_still_stops_enable_and_remove(self):
++        self.apply('yes',True);path=self.root/'AGENTS.md'
++        path.write_bytes(path.read_bytes().replace(b'Keeper rules',b'foreign bridge'))
++        before=self.runtime.registry.read_bytes();self.request['approval']=None
++        self.assertEqual(enable.run(self.request)['errors'][0]['code'],'drift')
++        self.assertEqual(remove.run(dict(self.request,approval=None))['errors'][0]['code'],'drift')
++        self.assertEqual(self.runtime.registry.read_bytes(),before)
++
++    def test_new_pure_CLAUDE_file_deleted_native_WB_directory_retained(self):
++        self.apply('yes',True)
++        result=self.remove_project();self.assertEqual(result['status'],'completed',result)
++        self.assertFalse((self.root/'CLAUDE.md').exists())
++        self.assertFalse((self.root/'.workbuddy/memory/MEMORY.md').exists())
++        self.assertTrue((self.root/'.workbuddy/memory').is_dir())
++        self.assertTrue((self.root/'AGENTS.md').is_file())
++        self.assertTrue((self.root/'docs/context-keeper/memory-keeper.md').exists())
++
++    def test_CLAUDE_added_user_bytes_preserved_without_whole_file_guard(self):
++        self.apply('yes',True);path=self.root/'CLAUDE.md';user=b'\r\nUser rules\xff\n'
++        path.write_bytes(path.read_bytes()+user)
++        result=self.remove_project();self.assertEqual(result['status'],'completed',result)
++        self.assertEqual(path.read_bytes(),user)
++
++    def test_CLAUDE_existing_no_newline_body_only_created_reference_removed(self):
++        path=self.root/'CLAUDE.md';original=b'Existing bytes\xff';path.write_bytes(original)
++        self.apply()
++        result=self.remove_project();self.assertEqual(result['status'],'completed',result)
++        self.assertEqual(path.read_bytes(),original)
++
++    def test_duplicate_or_edited_created_reference_stops_without_partial_removal(self):
++        self.apply();path=self.root/'CLAUDE.md';original=path.read_bytes();before=self.runtime.registry.read_bytes()
++        for raw in (original+original,b'  @AGENTS.md\n',b'@different.md\n'):
++            path.write_bytes(raw);self.request['approval']=None
++            self.assertEqual(remove.run(dict(self.request,approval=None))['errors'][0]['code'],'drift')
++            self.assertEqual(self.runtime.registry.read_bytes(),before)
++            self.assertNotEqual(enable.run(self.request)['status'],'completed')
++
++    def test_legacy_reused_reference_never_promoted_or_deleted(self):
++        self.apply();path=self.root/'CLAUDE.md';data=self.load();a=data['projects'][str(self.root)]['checkouts'][str(self.root)]
++        obj=next(o for o in a['objects'].values() if o['kind']=='import')
++        with self.assertRaises(registry.RegistryError):
++            registry.validate_registry_v1({'schema_version':1,'projects':data['projects'],'shared_objects':data['shared_objects']},allowed_user_paths=[])
++        obj.pop('lifecycle');obj.update(ownership='reused',original_existed=True,backup_manifest=None,
++            fingerprint={'algorithm':'sha256','basis':'file_bytes','value':entries.sha256(path.read_bytes())})
++        from agm_core.paths import allowed_user_paths
++        self.runtime.registry.write_bytes(registry.serialize_registry(data,allowed_user_paths=allowed_user_paths(self.config,None,home=str(self.home))))
++        self.request['approval']=None;self.assertEqual(enable.run(self.request)['status'],'completed')
++        self.assertEqual(next(o for o in self.load()['projects'][str(self.root)]['checkouts'][str(self.root)]['objects'].values() if o['kind']=='import')['ownership'],'reused')
++        self.assertEqual(self.remove_project()['status'],'completed');self.assertEqual(path.read_bytes(),b'@AGENTS.md\n')
++
++    def test_yes_to_no_plan_revokes_created_triggers_keeps_store_and_source(self):
++        self.apply('yes',True);store=self.root/'docs/context-keeper';before={str(p):p.read_bytes() for p in store.rglob('*') if p.is_file()}
++        self.calls.clear();self.request.update(approval=None,memory_choice='no')
++        preview=enable.run(self.request);plan=json.loads(preview['next_action'])
++        self.assertTrue(any(c['operation']=='remove' for c in plan['changes']))
++        self.assertEqual(plan['memory_transition']['after'],'no');self.assertTrue(plan['changes'])
++        result=self.execute_preview(preview);self.assertEqual(result['status'],'completed',result)
++        p=self.load()['projects'][str(self.root)];self.assertEqual(p['memory_authorization'],'no')
++        self.assertEqual(self.calls,[])
++        for path in (self.root/'AGENTS.md',self.root/'CLAUDE.md',self.root/'.workbuddy/memory/MEMORY.md'):
++            if path.exists():self.assertNotIn(b'<!-- context-keeper:',path.read_bytes())
++        self.assertIn(enable.DENIED_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
++        self.assertFalse((self.root/'.codex/skills/context-keeper').is_symlink())
++        self.assertEqual(before,{str(p):p.read_bytes() for p in store.rglob('*') if p.is_file()})
++        self.assertTrue((self.source/'scripts/install.py').exists())
++        print('DECLINE',json.dumps({'authorization':p['memory_authorization'],'created_bridges_removed':True,'denial_guard':True,'store_preserved':True,'plan_changes':len(plan['changes'])}))
++
++    def test_reused_bridge_preserved_with_denial_even_after_project_remove(self):
++        self.apply('yes',True);data=self.load();a=data['projects'][str(self.root)]['checkouts'][str(self.root)]
++        obj=next(o for o in a['objects'].values() if o['path']==str(self.root/'CLAUDE.md') and o['kind']=='block')
++        unit=bytes.fromhex(obj['lifecycle']['unit_hex']);obj.pop('lifecycle');obj.update(ownership='reused',original_existed=True,backup_manifest=None)
++        from agm_core.paths import allowed_user_paths
++        self.runtime.registry.write_bytes(registry.serialize_registry(data,allowed_user_paths=allowed_user_paths(self.config,None,home=str(self.home))))
++        self.request.update(approval=None,memory_choice='no');result=self.execute_preview(enable.run(self.request))
++        self.assertEqual(result['status'],'completed',result)
++        path=self.root/'CLAUDE.md';self.assertIn(unit,path.read_bytes());self.assertIn(enable.DENIED_MARKER['start'].encode(),path.read_bytes())
++        self.assertEqual(self.remove_project()['status'],'completed')
++        self.assertIn(unit,path.read_bytes());self.assertIn(enable.DENIED_MARKER['start'].encode(),path.read_bytes())
++        self.assertEqual(self.load()['projects'][str(self.root)]['memory_authorization'],'no')
++
++    def test_reenable_removes_only_owned_denial_with_explicit_plan(self):
++        self.apply('yes',True);self.request.update(approval=None,memory_choice='no');self.execute_preview(enable.run(self.request))
++        self.request.update(approval=None,memory_choice='yes')
++        result=self.execute_preview(enable.run(self.request));self.assertEqual(result['status'],'completed',result)
++        self.assertNotIn(enable.DENIED_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
++        self.assertIn(enable.KEEPER_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
++
++    def test_installed_filter_and_explicit_unknown_stop_without_foreign_entries(self):
++        self.request.update(agents=None,search_paths=self.request['search_paths'],app_directories=[str(self.area/'no-apps')])
++        # Remove synthetic non-Codex installations, leaving one valid source.
++        (self.home/'fixture-executors/bin/claude').unlink()
++        import shutil
++        shutil.rmtree(self.home/'Applications/WorkBuddy.app')
++        result=self.execute_preview(enable.run(self.request));self.assertEqual(result['status'],'completed',result)
++        self.assertEqual(self.load()['projects'][str(self.root)]['checkouts'][str(self.root)]['agents'],['codex'])
++        self.assertFalse((self.root/'CLAUDE.md').exists());self.assertFalse((self.home/'.workbuddy').exists())
++        before=self.runtime.registry.read_bytes();self.request.update(agents=['claude'],approval=None)
++        self.assertEqual(enable.run(self.request)['errors'][0]['code'],'agent_not_installed');self.assertEqual(self.runtime.registry.read_bytes(),before)
++
++    def test_no_installed_executor_does_not_create_project_entries(self):
++        self.request.update(agents=None,search_paths=[],app_directories=[])
++        import shutil
++        shutil.rmtree(self.home/'Applications/WorkBuddy.app')
++        before=self.runtime.registry.read_bytes();result=enable.run(self.request)
++        self.assertEqual(result['status'],'gaps',result);self.assertFalse((self.root/'AGENTS.md').exists())
++        self.assertEqual(self.runtime.registry.read_bytes(),before)
++
++    def test_WorkBuddy_installed_without_native_directory_is_partial_without_mkdir(self):
++        self.request.update(agents=['workbuddy'],memory_choice='yes')
++        preview=enable.run(self.request)
++        self.assertEqual(json.loads(preview['next_action'])['native_pending'],['workbuddy'])
++        self.assertFalse((self.root/'.workbuddy/memory').exists())
++        result=self.execute_preview(preview);self.assertEqual(result['status'],'gaps',result)
++        self.assertFalse((self.root/'.workbuddy/memory').exists());self.assertEqual(self.calls,[])
++        a=self.load()['projects'][str(self.root)]['checkouts'][str(self.root)]
++        self.assertEqual(a['states']['bridge_assembled']['workbuddy']['status'],'blocked')
++
++    def test_project_remove_retains_machine_installation_and_user_objects(self):
++        self.runtime.code.mkdir(parents=True);(self.runtime.code/'SKILL.md').write_text('# installed product\n')
++        request={k:self.request[k] for k in ('home','platform_config','search_paths','app_directories','detect_runner')}
++        request['agents']=None
++        preview=user_entries.run_user_entries(request);approval=json.loads(preview['next_action']);approval.update(confirmed_at=NOW,reference='machine entry confirmation')
++        result=user_entries.run_user_entries(dict(request,approval=approval));self.assertEqual(result['status'],'completed',result)
++        machine=copy.deepcopy(self.load()['machine']);code=(self.runtime.code/'SKILL.md').read_bytes()
++        self.apply('yes',True)
++        self.assertEqual(self.remove_project()['status'],'completed')
++        self.assertEqual(self.load()['machine'],machine);self.assertEqual((self.runtime.code/'SKILL.md').read_bytes(),code)
++        self.assertTrue((self.home/'.codex/skills/agent-group-memory').is_symlink())
++        self.assertTrue(all(obj['consumers']==[] for obj in self.load()['machine']['objects'].values()))
++
++    def test_R4_missing_source_scripts_is_readonly_gap_not_ready(self):
++        self.apply('yes',True);(self.source/'scripts/install.py').unlink();(self.source/'scripts/context_keeper_probe.py').unlink()
++        before={str(p):(p.read_bytes(),p.stat().st_mtime_ns) for p in self.area.rglob('*') if p.is_file() and not p.is_symlink()}
++        with patch('agm_core.enable._call',side_effect=AssertionError('check must not call provider')):
++            result=self.report()
++        report=result['projects'][0];self.assertEqual(report['states']['source_available']['status'],'missing')
++        self.assertIn('source_missing',{g['code'] for g in report['gaps']})
++        self.assertEqual(before,{str(p):(p.read_bytes(),p.stat().st_mtime_ns) for p in self.area.rglob('*') if p.is_file() and not p.is_symlink()})
++        print('SOURCE',json.dumps({'source_status':report['states']['source_available']['status'],'gap_codes':[g['code'] for g in report['gaps']]}))
++
++    def test_R4_wrong_source_type_or_changed_approved_bytes_blocks(self):
++        self.apply('yes',True);path=self.source/'scripts/install.py';original=path.read_bytes()
++        path.write_bytes(original+b'\n# changed')
++        report=self.report()['projects'][0];self.assertEqual(report['states']['source_available']['status'],'blocked')
++        path.unlink();path.symlink_to(self.source/'scripts/context_keeper_probe.py')
++        report=self.report()['projects'][0];self.assertEqual(report['states']['source_available']['status'],'blocked')
++
++
++    def test_old_base_block_can_be_removed_as_free_rules(self):
++        self.apply('yes',True)
++        data=self.load();a=data['projects'][str(self.root)]['checkouts'][str(self.root)]
++        path=self.root/'AGENTS.md'
++        bridge=next(o for o in a['objects'].values() if o['path']==str(path))
++        unit=enable._block(enable.BASE_MARKER,'old freely editable base')
++        base=dict(bridge,marker=enable.BASE_MARKER,
++            fingerprint={'algorithm':'sha256','basis':'block_bytes','value':entries.sha256(unit)})
++        base.pop('lifecycle',None);a['objects'][str(path)+'#base']=base
++        from agm_core.paths import allowed_user_paths
++        self.runtime.registry.write_bytes(registry.serialize_registry(data,allowed_user_paths=allowed_user_paths(self.config,None,home=str(self.home))))
++        # The old base is absent now, while the real Keeper bridge is intact.
++        self.request['approval']=None
++        self.assertEqual(enable.run(self.request)['status'],'completed')
++        self.assertFalse(any(o['status']=='drifted' for o in self.report()['projects'][0]['objects']))
++        self.assertEqual(self.remove_project()['status'],'completed')
++        self.assertTrue(path.exists())
++
++    def test_revocation_succeeds_when_all_registered_executors_are_now_absent(self):
++        self.apply('yes',True)
++        self.request.update(search_paths=[],app_directories=[],user_candidates={},
++            agents=None,approval=None,memory_choice='no')
++        # Existing configuration produces only unknown hints, never installed facts.
++        (self.home/'Applications/WorkBuddy.app').rename(self.area/'retired-WorkBuddy.app')
++        result=self.execute_preview(enable.run(self.request))
++        self.assertEqual(result['status'],'completed',result)
++        self.assertEqual(self.load()['projects'][str(self.root)]['memory_authorization'],'no')
++        self.assertNotIn(enable.KEEPER_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
++        self.assertIn(enable.DENIED_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
++
++    def test_pure_reference_only_file_deleted_and_corrupt_lifecycle_rejected(self):
++        self.apply()
++        data=self.load();a=data['projects'][str(self.root)]['checkouts'][str(self.root)]
++        obj=next(o for o in a['objects'].values() if o['kind']=='import')
++        from agm_core.paths import allowed_user_paths
++        for mutation in ({'unit_hex':'zz'}, {'version':2}, {'file_created':'true'}, {'container_units':[]}):
++            bad=copy.deepcopy(data);ref=next(o for o in bad['projects'][str(self.root)]['checkouts'][str(self.root)]['objects'].values() if o['kind']=='import')
++            ref['lifecycle'].update(mutation)
++            with self.subTest(mutation=mutation),self.assertRaises(registry.RegistryError):
++                registry.validate_registry(bad,allowed_user_paths=allowed_user_paths(self.config,None,home=str(self.home)))
++        self.assertEqual(self.remove_project()['status'],'completed')
++        self.assertFalse((self.root/'CLAUDE.md').exists())
+--- /dev/null
++++ b/tests/unit/test_m406_cli.py
+@@ -0,0 +1,92 @@
++"""M4-06: strict command-specific approval wiring; no real HOME operations."""
++import copy
++import unittest
++from test_cli import agm, _approval_data
++
++
++class LifecycleApprovalTests(unittest.TestCase):
++    def plan(self):
++        return _approval_data(installation={a: {'status': 'installed', 'fingerprint': 'a' * 64}
++                                           for a in ('codex', 'claude', 'workbuddy')}, native_pending=[])
++
++    def validate(self, data, command='enable-memory'):
++        return agm.validate_approval(data, command=command,
++                                    agents=['codex', 'claude', 'workbuddy'], memory_choice=None)
++
++    def rebuild(self):
++        data = self.plan()
++        data['rebuild'] = {
++            'classification': 'registry_project_corrupt', 'reason': 'damaged project',
++            'registry_sha256': 'b' * 64, 'registry_bytes': 1200, 'project_count': 1,
++            'removed_projects': [{'main_checkout': '/projects/a', 'record_sha256': 'c' * 64}],
++            'removed_shared_objects': [],
++            'scope': 'reset all project registrations and shared consumer indexes; preserve machine identity and all user files'}
++        data['rebuild_confirmation'] = {'registry_sha256': 'b' * 64,
++            'confirmed_at': data['confirmed_at'], 'reference': 'separate rebuild authorization'}
++        return data
++
++    def test_enable_accepts_installed_facts_and_native_pending(self):
++        data = self.plan(); data['native_pending'] = ['workbuddy']
++        self.assertEqual(self.validate(data), data)
++
++    def test_default_effective_subset_and_empty_revocation(self):
++        data = self.plan(); data['installation']['claude']['status'] = 'absent'
++        data['installation']['workbuddy']['status'] = 'unknown'; data['agents'] = ['codex']
++        self.validate(data)
++        for fact in data['installation'].values(): fact['status'] = 'absent'
++        data['agents'] = []; data['memory_authorization'] = 'no'
++        data['memory_transition'] = {'before': 'yes', 'after': 'no',
++            'scope': 'all registered project agents', 'affected_agents': ['codex'], 'reused_conflicts': []}
++        self.validate(data)
++        data.pop('memory_transition')
++        with self.assertRaises(agm.CliError): self.validate(data)
++
++    def test_enable_transition_with_reused_conflict(self):
++        data = self.plan(); data['memory_authorization'] = 'no'
++        data['memory_transition'] = {'before': 'yes', 'after': 'no',
++            'scope': 'all registered project agents', 'affected_agents': ['codex'],
++            'reused_conflicts': [{'path': '/projects/a/AGENTS.md', 'ownership': 'reused',
++                                 'action': 'preserve bytes; explicit denial guard'}]}
++        self.validate(data)
++        data['memory_transition']['after'] = 'yes'
++        with self.assertRaises(agm.CliError): self.validate(data)
++
++    def test_rebuild_requires_independent_exact_hash_binding_and_valid_evidence(self):
++        data = self.rebuild(); self.validate(data)
++        for field, value in [('registry_sha256', 'd' * 64), ('confirmed_at', '2026-02-30T00:00:00Z'), ('reference', '')]:
++            bad = copy.deepcopy(data); bad['rebuild_confirmation'][field] = value
++            with self.subTest(field=field), self.assertRaises(agm.CliError): self.validate(bad)
++        for field in ('rebuild', 'rebuild_confirmation'):
++            bad = copy.deepcopy(data); bad.pop(field)
++            with self.subTest(missing=field), self.assertRaises(agm.CliError): self.validate(bad)
++
++    def test_remove_rejects_each_enable_extension_check_rejects_approval(self):
++        data = self.rebuild(); data['memory_transition'] = {}
++        for field in agm._ENABLE_APPROVAL_FIELDS:
++            bad = _approval_data(command='remove-memory', memory_authorization=None)
++            bad[field] = data[field]
++            with self.subTest(field=field), self.assertRaises(agm.CliError): self.validate(bad, 'remove-memory')
++        self.validate(_approval_data(command='remove-memory', memory_authorization=None), 'remove-memory')
++        with self.assertRaises(agm.CliError): self.validate(_approval_data(command='check-memory'), 'check-memory')
++
++    def test_unknown_or_malformed_extension_rejected(self):
++        mutations = [('unexpected', True), ('installation', {}), ('native_pending', ['codex']),
++                     ('memory_transition', {}), ('rebuild', {})]
++        for name, value in mutations:
++            bad = self.plan(); bad[name] = value
++            with self.subTest(name=name), self.assertRaises(agm.CliError): self.validate(bad)
++        data = self.plan(); data['installation']['codex']['extra'] = True
++        with self.assertRaises(agm.CliError): self.validate(data)
++
++    def test_default_request_preserves_none_for_installed_filter(self):
++        ns = agm.build_parser().parse_args(['enable-memory'])
++        table = agm.agm_paths.load_agents_table()
++        request = agm.build_request('enable-memory', ns, agents=['codex', 'claude', 'workbuddy'],
++            approval=None, table=table, platform_key='darwin', platform_config=table['platforms']['darwin'],
++            table_path=None, interactive=False, home='/fixture-home')
++        self.assertIsNone(request['agents'])
++        ns.agent = ['codex']
++        request = agm.build_request('enable-memory', ns, agents=['codex'], approval=None, table=table,
++            platform_key='darwin', platform_config=table['platforms']['darwin'], table_path=None,
++            interactive=False, home='/fixture-home')
++        self.assertEqual(request['agents'], ['codex'])
+--- /dev/null
++++ b/tests/integration/test_m406_cli_lifecycle.py
+@@ -0,0 +1,49 @@
++"""M4-06 CLI reversals through isolated copied product and synthetic executors."""
++import json
++import shutil
++from test_m207_cli_cycle import CliHarness
++
++
++class LifecycleCliTests(CliHarness):
++    def test_DECLINE_revokes_owned_instructions_after_explicit_plan(self):
++        rc, envelope = self.enable_memory(); self.assertEqual(rc, 0, envelope)
++        store = self.root/'docs/context-keeper'
++        before = self.snapshot(store, self.keeper)
++        args = ['enable-memory', '--project', str(self.root), '--no-memory']
++        rc, preview = self.cli(args); self.assertEqual(rc, 5, preview)
++        plan = json.loads(preview['next_action'])
++        self.assertEqual(plan['memory_transition']['before'], 'yes')
++        self.assertEqual(plan['memory_transition']['after'], 'no')
++        self.assertTrue(any(c['operation']=='remove' for c in plan['changes']))
++        ledger_before = self.registry.read_bytes()
++        self.assertEqual(json.loads(ledger_before)['projects'][str(self.root)]['memory_authorization'], 'yes')
++        rc, envelope = self.approve(args); self.assertEqual(rc, 0, envelope)
++        self.assertEqual(json.loads(self.registry.read_text())['projects'][str(self.root)]['memory_authorization'], 'no')
++        for path in (self.root/'AGENTS.md', self.root/'CLAUDE.md', self.root/'.workbuddy/memory/MEMORY.md'):
++            self.assertNotIn(b'<!-- context-keeper:', path.read_bytes())
++        self.assertIn(b'agent-group-memory:memory-denied:start', (self.root/'AGENTS.md').read_bytes())
++        self.assertEqual(self.snapshot(store, self.keeper), before)
++        rc, envelope = self.check(); self.assertEqual(rc, 1, envelope)
++        self.assertTrue(all(f['status']=='blocked' for f in envelope['projects'][0]['states']['bridge_assembled'].values()))
++        print('CLI DECLINE authorization=no; created triggers removed; denial guard present; store/source unchanged')
++
++    def test_SOURCE_missing_required_scripts_is_readonly_gap(self):
++        rc, envelope = self.enable_memory(); self.assertEqual(rc, 0, envelope)
++        (self.keeper/'scripts/install.py').unlink()
++        (self.keeper/'scripts/context_keeper_probe.py').unlink()
++        before = self.snapshot(self.root, self.home, self.keeper, self.install.parent)
++        rc, envelope = self.check(); self.assertEqual(rc, 1, envelope)
++        project = envelope['projects'][0]
++        self.assertEqual(project['states']['source_available']['status'], 'missing')
++        self.assertIn('source_missing', {g['code'] for g in project['gaps']})
++        self.assertEqual(self.snapshot(self.root, self.home, self.keeper, self.install.parent), before)
++        print('CLI SOURCE source_available=missing; source_missing gaps; zero persistent writes')
++
++    def test_default_agent_scope_keeps_only_verified_installations(self):
++        (self.home/'fixture-executors/bin/claude').unlink()
++        shutil.rmtree(self.home/'Applications/WorkBuddy.app')
++        rc, envelope = self.approve(['enable-memory', '--project', str(self.root), '--no-memory'])
++        self.assertEqual(rc, 0, envelope)
++        self.assertEqual(envelope['projects'][0]['agents'], ['codex'])
++        self.assertFalse((self.root/'CLAUDE.md').exists())
++        self.assertFalse((self.home/'.workbuddy').exists())

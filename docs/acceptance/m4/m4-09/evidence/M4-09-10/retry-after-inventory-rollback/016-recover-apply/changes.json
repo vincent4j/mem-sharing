@@ -1,0 +1,153 @@
+[
+  {
+    "path": "home",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377304142341469,
+      "size": 288,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377307787589051,
+      "size": 224,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-synthetic-fault-upgrade",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377304144820741,
+      "size": 192,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377307786619834,
+      "size": 192,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377304143298811,
+      "size": 143238,
+      "kind": "file",
+      "sha256": "2ac5b5ff8ccc4f26f7fa93fc99f2a3704b5dc4bd27ffe2ae057484fda0482ec5"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377307786377081,
+      "size": 143241,
+      "kind": "file",
+      "sha256": "1590cb5abf2bf0d15f0950325004ee05fe8b47685fcadcdc8b61d86638a7b578"
+    }
+  },
+  {
+    "path": "home/.mem-sharing-install.lock",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377303577897404,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": null
+  },
+  {
+    "path": "home/.mem-sharing-install.lock/migration-owner.json",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377303577702985,
+      "size": 180,
+      "kind": "file",
+      "sha256": "e44068c0e6fd53ad0e61234aa199de53b811f29695d67d4184ac85cca714fd4a"
+    },
+    "after": null
+  },
+  {
+    "path": "home/.mem-sharing-upgrade.json",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377304142188426,
+      "size": 274,
+      "kind": "file",
+      "sha256": "a303a1dcb0ed1c90d1aaeba5a12c4ef8bb9505a630e1018b8d8ffa13edfc6d93"
+    },
+    "after": null
+  },
+  {
+    "path": "home/.mem-sharing/var",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377303578044822,
+      "size": 128,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377307787471883,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/var/.agm.lock",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377303578525076,
+      "size": 128,
+      "kind": "directory"
+    },
+    "after": null
+  },
+  {
+    "path": "home/.mem-sharing/var/.agm.lock/migration-owner.json",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377303578247032,
+      "size": 180,
+      "kind": "file",
+      "sha256": "e44068c0e6fd53ad0e61234aa199de53b811f29695d67d4184ac85cca714fd4a"
+    },
+    "after": null
+  },
+  {
+    "path": "home/.mem-sharing/var/.agm.lock/transaction",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377303578924496,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": null
+  },
+  {
+    "path": "home/.mem-sharing/var/.agm.lock/transaction/migration-owner.json",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377303578803287,
+      "size": 180,
+      "kind": "file",
+      "sha256": "e44068c0e6fd53ad0e61234aa199de53b811f29695d67d4184ac85cca714fd4a"
+    },
+    "after": null
+  }
+]

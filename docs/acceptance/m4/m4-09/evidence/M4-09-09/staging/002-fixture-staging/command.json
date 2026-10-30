@@ -1,0 +1,24 @@
+{
+  "label": "fixture-staging",
+  "argv": [
+    "fixture-operation",
+    "staging"
+  ],
+  "cwd": "/private/tmp/M4-09-09-h930z6w1/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-09-h930z6w1/home",
+    "PATH": "/private/tmp/M4-09-09-h930z6w1/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-09-h930z6w1/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:17:30.636432Z",
+  "ended_utc": "2026-10-30T16:17:30.693084Z",
+  "duration_seconds": 0.056646708981134,
+  "fixture_operation": "staging",
+  "returned": "None"
+}

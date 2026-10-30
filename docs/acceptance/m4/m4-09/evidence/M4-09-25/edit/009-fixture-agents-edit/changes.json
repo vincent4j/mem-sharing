@@ -1,0 +1,21 @@
+[
+  {
+    "path": "project/AGENTS.md",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377319059012776,
+      "size": 387,
+      "kind": "file",
+      "sha256": "85c3c27e9cb7bd49b3a253ecb13283ed279f1e8d27edbbed5e3ddf1d2f46b406"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377319115290831,
+      "size": 392,
+      "kind": "file",
+      "sha256": "74320f581a7884d51f0765317784be3a8fc69764590ebe0bdd8c0b9319de8df8"
+    }
+  }
+]

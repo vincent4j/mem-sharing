@@ -1,0 +1,64 @@
+[
+  {
+    "path": "project",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377361943321679,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377363463681046,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/docs",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377363463749047,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/docs/context-keeper",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377363463802422,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/docs/context-keeper/worklogs",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377363463862840,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "project/docs/context-keeper/worklogs/existing.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377363463917173,
+      "size": 20,
+      "kind": "file",
+      "sha256": "05d618f7dcf9ada87beca1502b46934d5358a932e5814b1513b244c5ad66e379"
+    }
+  }
+]

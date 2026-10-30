@@ -1,0 +1,70 @@
+--- before/recovery-approval-13.json
++++ after/recovery-approval-13.json
+@@ -0,0 +1,67 @@
++{
++  "schema_version": 1,
++  "command": "recover-machine-upgrade",
++  "operation_id": "synthetic-fault-upgrade",
++  "journal": "/private/tmp/M4-09-11-laj2gpdg/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
++  "journal_sha256": "56cc1d320ffb106f0c96ca3355cf38c45629fae5af1fa2648e01cb57e29fb4d8",
++  "installation_plan_sha256": "423ac3f363224bc381b62fa93fdeee5a23f49340ee28c856fb1730155116e62e",
++  "action": "continue",
++  "scene": {
++    "target": "after",
++    "outputs": [
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after",
++      "after"
++    ]
++  },
++  "stale_locks": [
++    {
++      "path": "/private/tmp/M4-09-11-laj2gpdg/home/.mem-sharing-install.lock",
++      "device": 16777234,
++      "inode": 159702422,
++      "owner_sha256": "eedebeb6483ebd4c1eb17b143303e8a968ce1cb0c545c8c4c704fef59136d109"
++    },
++    {
++      "path": "/private/tmp/M4-09-11-laj2gpdg/home/.mem-sharing/var/.agm.lock",
++      "device": 16777234,
++      "inode": 159702424,
++      "owner_sha256": "eedebeb6483ebd4c1eb17b143303e8a968ce1cb0c545c8c4c704fef59136d109"
++    },
++    {
++      "path": "/private/tmp/M4-09-11-laj2gpdg/home/.mem-sharing/var/.agm.lock/transaction",
++      "device": 16777234,
++      "inode": 159702427,
++      "owner_sha256": "eedebeb6483ebd4c1eb17b143303e8a968ce1cb0c545c8c4c704fef59136d109"
++    }
++  ],
++  "migration_recovery": null,
++  "plan_sha256": "7a595d24ea3a15c981ded2af539cdef78e67f8e4a3a394b13bd77ba1670ddb29",
++  "confirmed_at": "2026-10-30T16:22:05.388442Z",
++  "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
++}

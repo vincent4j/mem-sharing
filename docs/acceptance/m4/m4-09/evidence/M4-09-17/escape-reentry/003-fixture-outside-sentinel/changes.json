@@ -1,0 +1,42 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377072200132231,
+      "size": 320,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377072602759028,
+      "size": 352,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "outside",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377072602825945,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "outside/sentinel",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377072602883988,
+      "size": 10,
+      "kind": "file",
+      "sha256": "81f10a16076996388fd7d74d3284dcbf4488e2cd748691d178ea975798f570c3"
+    }
+  }
+]

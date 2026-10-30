@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "upgrade_conflict", "message": "Before registry archive missing/corrupt"}], "schema_version": 1, "status": "failed"}

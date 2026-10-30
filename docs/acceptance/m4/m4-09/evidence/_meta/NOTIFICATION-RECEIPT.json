@@ -1,0 +1,7 @@
+{
+  "recipient_agent_id": "ff0dfddf-eef8-49ae-9dff-0f932559d06c",
+  "message_id": "9699f9af-c9fa-4165-8883-06aaf7b818e4",
+  "delivery_status": "queued",
+  "provider_dispatch_observed": false,
+  "note": "No resend; queued receipt is not proof of delivery."
+}

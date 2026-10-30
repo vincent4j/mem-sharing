@@ -1,0 +1,25 @@
+{
+  "upstream": {
+    "head": "a8e584159b3853b11f96b0ec89036d04ce29dce2",
+    "files": {
+      "scripts/install.py": "a41ffca7f7749d483a4076b0ae5ed6599a39c5b980d443a0e4e90b616f994763",
+      "SKILL.md": "aec1c1e1c6cda592f20b3938ff278fbe36953bc67c196a8b3bf9caae0a53448f",
+      "references/install.md": "fcac9b9487e3ae799d7f150e521656a00698c824bb690f7cfaea65eb1e30c957",
+      "tests/test_install.py": "74f548239f75259f6785fa3ecd1c2ef7384e628320dc1c852a3be8ec60e4cbee",
+      "tests/test_workbuddy_install.py": "c5a90b40dd03de7eac2707145b5b2e71a5d91ea32d44b7ec11d47f256d85f7a1"
+    }
+  },
+  "agm": {
+    "head": "99cb81774444664c7ecc9da1e1c0a92b389eac72",
+    "files": {
+      "scripts/agm_core/enable.py": "170d5ff5e897ef1063aa0302675bb29485fc1e4b6986a256340aba7055d61936",
+      "DESIGN.md": "a1d4c3169c942be696514a1a93288f83b68caa5a0964c3fcdcd5d4dc867a10a4",
+      "templates/workbuddy-bridge.md": null,
+      "tests/unit/test_m204_enable.py": "978b56027180a592d7d5dc6b0c0ceae23f6050ecb5f0099529b012f4cb04950b",
+      "tests/unit/test_m207_faults.py": "45bdece81b9bf7b9c195f54fabb1e6ff35b50a9d6ffd889939e4fbc5b7180fad",
+      "tests/unit/test_m3_workbuddy.py": "1fc1356a5617c4df3e302720acf1c9fb2460b8f2308a0ad7aaf583aeed21cd9c",
+      "tests/integration/test_m204_subprocess.py": "6801cd8dd338c4d842f5c1c46e83b2d2fdd8cd6a609f5a5a94a4844ab80720d2",
+      "tests/integration/test_m207_cli_cycle.py": "ea71f3c3dd5d1552b569d473cbb4a208537a2a2cd9dd4782b43c3f0b0ee6fc04"
+    }
+  }
+}

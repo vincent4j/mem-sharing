@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "operation": "assemble-user-entries",
+  "status": "committed",
+  "registry_path": "/private/tmp/M4-09-10-_snb0xp7/home/.mem-sharing-install-20261030T161821Z-ce72e201be9f41cabdf0cfa87b48f64f/staged-registry.json",
+  "created_directories": [
+    "/private/tmp/M4-09-10-_snb0xp7/home/.codex"
+  ],
+  "entries": [
+    {
+      "path": "/private/tmp/M4-09-10-_snb0xp7/home/.codex/AGENTS.md",
+      "before": {
+        "existed": false,
+        "kind": "absent",
+        "mode": null,
+        "link_target": null,
+        "fingerprint": null,
+        "backup": null
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "8b90e86c94779e6d4b508b823a98af6833a1c3774365eed1ea85416ecbdb8894",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    },
+    {
+      "path": "/private/tmp/M4-09-10-_snb0xp7/home/.mem-sharing-install-20261030T161821Z-ce72e201be9f41cabdf0cfa87b48f64f/staged-registry.json",
+      "before": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "3a7f878c55338001f3ea11ace93a811e1f541586abcc1d99036c05f1b4abd393",
+        "backup": "1.before"
+      },
+      "after": {
+        "existed": true,
+        "kind": "file",
+        "mode": 384,
+        "link_target": null,
+        "fingerprint": "cc15d4e54c1fd23b8ab4163c3dbdd9434aa77536d271b173e5eabf93644bceff",
+        "backup": null
+      },
+      "attempted": true,
+      "restoration": "not_needed"
+    }
+  ],
+  "error": null
+}

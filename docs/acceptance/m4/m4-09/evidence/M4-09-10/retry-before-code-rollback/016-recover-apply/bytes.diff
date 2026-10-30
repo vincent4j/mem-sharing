@@ -1,0 +1,54 @@
+--- before/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json
++++ after/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json
+@@ -1147,7 +1147,7 @@
+   ],
+   "final_registry_sha256": "198e60ae2f21546384849290ae660d032cbb0485d8c926cf358259e28a20468d",
+   "intent": {
+-    "kind": "upgrade_marker",
++    "kind": "rollback_guard",
+     "path": "/private/tmp/M4-09-10-irtrfm9t/home/.mem-sharing-upgrade.json"
+   },
+   "operation_id": "synthetic-fault-upgrade",
+@@ -2282,5 +2282,5 @@
+   },
+   "product_id": "mem-sharing",
+   "schema_version": 1,
+-  "status": "prepared"
++  "status": "rolled_back"
+ }
+--- before/home/.mem-sharing-install.lock/migration-owner.json
++++ after/home/.mem-sharing-install.lock/migration-owner.json
+@@ -1,6 +0,0 @@
+-{
+-  "operation_id": "synthetic-fault-upgrade",
+-  "pid": 11809,
+-  "plan_sha256": "029cd3f97e7d8c47e967ccc07dc2ba773c6cf84cf9fb76f5628950846f23e7eb",
+-  "product_id": "mem-sharing"
+-}
+--- before/home/.mem-sharing-upgrade.json
++++ after/home/.mem-sharing-upgrade.json
+@@ -1,6 +0,0 @@
+-{
+-  "journal": "/private/tmp/M4-09-10-irtrfm9t/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
+-  "operation_id": "synthetic-fault-upgrade",
+-  "plan_sha256": "029cd3f97e7d8c47e967ccc07dc2ba773c6cf84cf9fb76f5628950846f23e7eb",
+-  "product_id": "mem-sharing"
+-}
+--- before/home/.mem-sharing/var/.agm.lock/migration-owner.json
++++ after/home/.mem-sharing/var/.agm.lock/migration-owner.json
+@@ -1,6 +0,0 @@
+-{
+-  "operation_id": "synthetic-fault-upgrade",
+-  "pid": 11809,
+-  "plan_sha256": "029cd3f97e7d8c47e967ccc07dc2ba773c6cf84cf9fb76f5628950846f23e7eb",
+-  "product_id": "mem-sharing"
+-}
+--- before/home/.mem-sharing/var/.agm.lock/transaction/migration-owner.json
++++ after/home/.mem-sharing/var/.agm.lock/transaction/migration-owner.json
+@@ -1,6 +0,0 @@
+-{
+-  "operation_id": "synthetic-fault-upgrade",
+-  "pid": 11809,
+-  "plan_sha256": "029cd3f97e7d8c47e967ccc07dc2ba773c6cf84cf9fb76f5628950846f23e7eb",
+-  "product_id": "mem-sharing"
+-}

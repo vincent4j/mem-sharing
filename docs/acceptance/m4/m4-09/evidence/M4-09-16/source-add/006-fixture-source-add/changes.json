@@ -1,0 +1,31 @@
+[
+  {
+    "path": "source/scripts",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793376737000000000,
+      "size": 192,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377060720151479,
+      "size": 224,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "source/scripts/new-file.py",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377060720225272,
+      "size": 18,
+      "kind": "file",
+      "sha256": "a94e7a7d4db9c1ebbb3012731fc524ca0d5c4c79c1d427a93c6666a8d674547d"
+    }
+  }
+]

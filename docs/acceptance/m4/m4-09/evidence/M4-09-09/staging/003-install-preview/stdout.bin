@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "machine_route_interrupted", "message": "Machine scene interrupted: ['unreadable bootstrap: /private/tmp/M4-09-09-h930z6w1/home/.mem-sharing-install-staging']"}], "schema_version": 1, "status": "failed"}

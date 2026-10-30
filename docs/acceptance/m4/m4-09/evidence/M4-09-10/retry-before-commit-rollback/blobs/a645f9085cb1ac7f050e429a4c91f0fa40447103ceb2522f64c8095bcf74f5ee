@@ -1,0 +1,11 @@
+{
+  "fixture": "synthetic temporary HOME and Git repositories; deleted after capture",
+  "preview_zero_write": true,
+  "fresh_no_claude": true,
+  "existing_agents_prefix_preserved": true,
+  "existing_claude_unchanged": true,
+  "disabled_preserved": true,
+  "no_workbuddy_directory": true,
+  "no_ck_store": true,
+  "repeat_no_changes": true
+}

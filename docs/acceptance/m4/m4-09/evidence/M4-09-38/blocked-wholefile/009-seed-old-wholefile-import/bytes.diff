@@ -1,0 +1,28 @@
+--- before/home/.mem-sharing/var/registry.json
++++ after/home/.mem-sharing/var/registry.json
+@@ -91,6 +91,25 @@
+         "link_target": null,
+         "backup_manifest": null,
+         "consumers": []
++      },
++      "synthetic-old-import": {
++        "kind": "import",
++        "path": "/private/tmp/M4-09-38-tuhnx4ma/home/.codex/AGENTS.md",
++        "scope": "machine",
++        "agents": [
++          "codex"
++        ],
++        "ownership": "reused",
++        "marker": null,
++        "fingerprint": {
++          "algorithm": "sha256",
++          "basis": "file_bytes",
++          "value": "db89464b57518db0a90c62f2ecf9c2d9f2b91e9385589a31cccaf435bf487b98"
++        },
++        "original_existed": true,
++        "link_target": null,
++        "backup_manifest": null,
++        "consumers": []
+       }
+     }
+   },

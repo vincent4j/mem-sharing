@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "git",
+    "diff",
+    "--no-index",
+    "--",
+    "/dev/null",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper/worklogs/2026-10-29-M1负向验证与收口.md"
+  ],
+  "exit_code": 1
+}

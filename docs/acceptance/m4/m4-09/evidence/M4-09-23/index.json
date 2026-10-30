@@ -1,0 +1,88 @@
+{
+  "case": "M4-09-23",
+  "name": "显式后装另一执行器",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-23-bl6cu4kq",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-synthetic-codex-package",
+      "label": "fixture-synthetic-codex-package",
+      "exit_code": null
+    },
+    {
+      "path": "003-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "004-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "005-install-execute",
+      "label": "install-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "006-fixture-existing-claude-user-body",
+      "label": "fixture-existing-claude-user-body",
+      "exit_code": null
+    },
+    {
+      "path": "007-fixture-synthetic-claude-package",
+      "label": "fixture-synthetic-claude-package",
+      "exit_code": null
+    },
+    {
+      "path": "008-check-before-explicit-onboard",
+      "label": "check-before-explicit-onboard",
+      "exit_code": 1
+    },
+    {
+      "path": "009-explicit-onboard-preview",
+      "label": "explicit-onboard-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "010-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "011-explicit-onboard-execute",
+      "label": "explicit-onboard-execute",
+      "exit_code": 0
+    },
+    {
+      "path": "012-explicit-repeat-preview",
+      "label": "explicit-repeat-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "013-fixture-approval",
+      "label": "fixture-approval",
+      "exit_code": null
+    },
+    {
+      "path": "014-explicit-repeat-execute",
+      "label": "explicit-repeat-execute",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release."
+  ],
+  "ended_utc": "2026-10-30T16:21:46.644579Z",
+  "recovery_locations": [
+    "/private/tmp/M4-09-23-bl6cu4kq/home/.mem-sharing-install-20261030T162142Z-57d8a0c409e642ce988ef138b250111c/journal.json",
+    "/private/tmp/M4-09-23-bl6cu4kq/home/.mem-sharing-install-20261030T162142Z-57d8a0c409e642ce988ef138b250111c/entry-backups/20261030T162143Z-bf4d1efe1973408dbb8bccee69f9aaf8/manifest.json",
+    "/private/tmp/M4-09-23-bl6cu4kq/home/.mem-sharing/backups/20261030T162145Z-ec61ac83b7d840358a9e006c413a13a6/manifest.json"
+  ],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

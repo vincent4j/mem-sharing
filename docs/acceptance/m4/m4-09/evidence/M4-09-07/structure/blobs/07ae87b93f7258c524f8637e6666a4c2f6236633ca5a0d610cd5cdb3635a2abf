@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "command": "check-memory",
+  "status": "completed",
+  "projects": [
+    {
+      "main_checkout": "/Users/vincent4j/Tools/Source/poster-fit",
+      "checkout": "/Users/vincent4j/Tools/Source/poster-fit",
+      "registered": true,
+      "worktree": false,
+      "agents": [
+        "codex",
+        "claude",
+        "workbuddy"
+      ],
+      "states": {
+        "source_available": {
+          "status": "ready",
+          "observed_at": "2026-10-29T13:53:25Z",
+          "evidence": "provider 源码目录存在: /Users/vincent4j/Tools/Source/context-keeper"
+        },
+        "skill_installed": {
+          "codex": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:25Z",
+            "evidence": "codex Skill 已安装: /Users/vincent4j/Tools/Source/poster-fit/.agents/skills/context-keeper; /Users/vincent4j/Tools/Source/poster-fit/.codex/skills/context-keeper"
+          },
+          "claude": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:25Z",
+            "evidence": "claude Skill 已安装: /Users/vincent4j/Tools/Source/poster-fit/.claude/skills/context-keeper"
+          },
+          "workbuddy": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:25Z",
+            "evidence": "workbuddy Skill 已安装: /Users/vincent4j/Tools/Source/poster-fit/.workbuddy/skills/context-keeper"
+          }
+        },
+        "bridge_assembled": {
+          "codex": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:25Z",
+            "evidence": "codex 桥接块就绪: /Users/vincent4j/Tools/Source/poster-fit/AGENTS.md"
+          },
+          "claude": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:25Z",
+            "evidence": "claude 桥接块就绪: /Users/vincent4j/Tools/Source/poster-fit/CLAUDE.md"
+          },
+          "workbuddy": {
+            "status": "ready",
+            "observed_at": "2026-10-29T13:53:25Z",
+            "evidence": "workbuddy 桥接块就绪: /Users/vincent4j/Tools/Source/poster-fit/.workbuddy/memory/MEMORY.md"
+          }
+        },
+        "store_authorized_ready": {
+          "status": "unknown",
+          "observed_at": "2026-10-29T13:53:25Z",
+          "evidence": "库目录存在: /Users/vincent4j/Tools/Source/poster-fit/docs/context-keeper;只读检查不调用可能写缓存的 Keeper 探针,无法判定库可用/迁移状态"
+        }
+      },
+      "runtime_acceptance": {
+        "status": "pending",
+        "evidence_path": null
+      },
+      "objects": [
+        {
+          "id": "/Users/vincent4j/.workbuddy/MEMORY.md#keeper-exception",
+          "kind": "user_convention",
+          "path": "/Users/vincent4j/.workbuddy/MEMORY.md",
+          "scope": "user",
+          "agents": [
+            "workbuddy"
+          ],
+          "ownership": "created",
+          "status": "ok",
+          "detail": "块指纹相符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/poster-fit/.workbuddy/memory/MEMORY.md#keeper",
+          "kind": "block",
+          "path": "/Users/vincent4j/Tools/Source/poster-fit/.workbuddy/memory/MEMORY.md",
+          "scope": "project",
+          "agents": [
+            "workbuddy"
+          ],
+          "ownership": "created",
+          "status": "ok",
+          "detail": "块指纹相符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/poster-fit/AGENTS.md#keeper",
+          "kind": "block",
+          "path": "/Users/vincent4j/Tools/Source/poster-fit/AGENTS.md",
+          "scope": "project",
+          "agents": [
+            "codex"
+          ],
+          "ownership": "created",
+          "status": "ok",
+          "detail": "块指纹相符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/poster-fit/CLAUDE.md#keeper",
+          "kind": "block",
+          "path": "/Users/vincent4j/Tools/Source/poster-fit/CLAUDE.md",
+          "scope": "project",
+          "agents": [
+            "claude"
+          ],
+          "ownership": "created",
+          "status": "ok",
+          "detail": "块指纹相符"
+        },
+        {
+          "id": "/Users/vincent4j/.workbuddy/MEMORY.md#base",
+          "kind": "file",
+          "path": "/Users/vincent4j/.workbuddy/MEMORY.md",
+          "scope": "user",
+          "agents": [
+            "workbuddy"
+          ],
+          "ownership": "reused",
+          "status": "ok",
+          "detail": "整文件指纹相符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/poster-fit/.agents/skills/context-keeper",
+          "kind": "skill_symlink",
+          "path": "/Users/vincent4j/Tools/Source/poster-fit/.agents/skills/context-keeper",
+          "scope": "project",
+          "agents": [
+            "codex"
+          ],
+          "ownership": "created",
+          "status": "ok",
+          "detail": "链接指向与登记目标相符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/poster-fit/.claude/skills/context-keeper",
+          "kind": "skill_symlink",
+          "path": "/Users/vincent4j/Tools/Source/poster-fit/.claude/skills/context-keeper",
+          "scope": "project",
+          "agents": [
+            "claude"
+          ],
+          "ownership": "created",
+          "status": "ok",
+          "detail": "链接指向与登记目标相符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/poster-fit/.codex/skills/context-keeper",
+          "kind": "skill_symlink",
+          "path": "/Users/vincent4j/Tools/Source/poster-fit/.codex/skills/context-keeper",
+          "scope": "project",
+          "agents": [
+            "codex"
+          ],
+          "ownership": "created",
+          "status": "ok",
+          "detail": "链接指向与登记目标相符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/poster-fit/.workbuddy/skills/context-keeper",
+          "kind": "skill_symlink",
+          "path": "/Users/vincent4j/Tools/Source/poster-fit/.workbuddy/skills/context-keeper",
+          "scope": "project",
+          "agents": [
+            "workbuddy"
+          ],
+          "ownership": "created",
+          "status": "ok",
+          "detail": "链接指向与登记目标相符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/poster-fit/AGENTS.md#base",
+          "kind": "file",
+          "path": "/Users/vincent4j/Tools/Source/poster-fit/AGENTS.md",
+          "scope": "project",
+          "agents": [
+            "codex",
+            "claude",
+            "workbuddy"
+          ],
+          "ownership": "reused",
+          "status": "ok",
+          "detail": "整文件指纹相符"
+        },
+        {
+          "id": "/Users/vincent4j/Tools/Source/poster-fit/CLAUDE.md#import",
+          "kind": "import",
+          "path": "/Users/vincent4j/Tools/Source/poster-fit/CLAUDE.md",
+          "scope": "project",
+          "agents": [
+            "claude"
+          ],
+          "ownership": "reused",
+          "status": "ok",
+          "detail": "引用行存在,整文件指纹相符"
+        }
+      ],
+      "agent_discovery": [
+        {
+          "agent": "codex",
+          "signals": [
+            {
+              "kind": "directory_exists",
+              "path": "/Users/vincent4j/.codex",
+              "strength": "hint",
+              "exists": true
+            }
+          ]
+        },
+        {
+          "agent": "claude",
+          "signals": [
+            {
+              "kind": "directory_exists",
+              "path": "/Users/vincent4j/.claude",
+              "strength": "hint",
+              "exists": true
+            }
+          ]
+        },
+        {
+          "agent": "workbuddy",
+          "signals": [
+            {
+              "kind": "directory_exists",
+              "path": "/Users/vincent4j/.workbuddy",
+              "strength": "hint",
+              "exists": true
+            }
+          ]
+        }
+      ],
+      "gaps": [],
+      "warnings": [
+        "identity_limit: v1 无法识别同路径重 clone(architecture §2.4);已知更换实例需重新核对授权"
+      ],
+      "evidence": [
+        "provider 源码目录存在: /Users/vincent4j/Tools/Source/context-keeper",
+        "库目录存在: /Users/vincent4j/Tools/Source/poster-fit/docs/context-keeper;只读检查不调用可能写缓存的 Keeper 探针,无法判定库可用/迁移状态",
+        "codex Skill 已安装: /Users/vincent4j/Tools/Source/poster-fit/.agents/skills/context-keeper; /Users/vincent4j/Tools/Source/poster-fit/.codex/skills/context-keeper",
+        "claude Skill 已安装: /Users/vincent4j/Tools/Source/poster-fit/.claude/skills/context-keeper",
+        "workbuddy Skill 已安装: /Users/vincent4j/Tools/Source/poster-fit/.workbuddy/skills/context-keeper",
+        "codex 桥接块就绪: /Users/vincent4j/Tools/Source/poster-fit/AGENTS.md",
+        "claude 桥接块就绪: /Users/vincent4j/Tools/Source/poster-fit/CLAUDE.md",
+        "workbuddy 桥接块就绪: /Users/vincent4j/Tools/Source/poster-fit/.workbuddy/memory/MEMORY.md"
+      ]
+    }
+  ],
+  "changes": [],
+  "warnings": [
+    "poster-fit: identity_limit: v1 无法识别同路径重 clone(architecture §2.4);已知更换实例需重新核对授权"
+  ],
+  "errors": [],
+  "approval_required": false,
+  "next_action": null
+}

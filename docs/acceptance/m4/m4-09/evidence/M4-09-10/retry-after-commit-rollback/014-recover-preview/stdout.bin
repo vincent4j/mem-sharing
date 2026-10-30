@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "upgrade_conflict", "message": "Committed V is authoritative; finish only, then request a separately approved release rollback"}], "schema_version": 1, "status": "failed"}

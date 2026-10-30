@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "python3",
+    "/Users/vincent4j/Tools/Source/context-keeper/scripts/context_keeper_probe.py",
+    "init",
+    "--root",
+    "/Users/vincent4j/Tools/Source/agent-group-memory",
+    "--store-dir",
+    "/Users/vincent4j/Tools/Source/agent-group-memory/docs/context-keeper",
+    "--approved"
+  ],
+  "observed_at": "2026-10-29T10:57:40.889715Z",
+  "rc": 0,
+  "stdout": "Context Keeper 记录库已就绪：docs/context-keeper\n",
+  "stderr": ""
+}

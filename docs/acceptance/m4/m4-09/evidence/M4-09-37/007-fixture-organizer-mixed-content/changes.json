@@ -1,0 +1,109 @@
+[
+  {
+    "path": "home",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377424911579356,
+      "size": 224,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377424993040641,
+      "size": 256,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.claude/CLAUDE.md",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377424593097909,
+      "size": 69,
+      "kind": "file",
+      "sha256": "b134c338810ec87ac2f9e48b0873fc91865ac7b6313aaedbcc129c568c4687a5"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377424992948431,
+      "size": 225,
+      "kind": "file",
+      "sha256": "9622936d9e30ba6a06580d7a7aebb66a7cd2db2145e27d489fa05813bd7ab8ae"
+    }
+  },
+  {
+    "path": "home/.codex/AGENTS.md",
+    "before": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377424594508422,
+      "size": 2211,
+      "kind": "file",
+      "sha256": "1736cdc92d71f6249224d400c7597fd28f6fd97dbb72e31f088d035a8daa95d7"
+    },
+    "after": {
+      "mode": 33152,
+      "permissions": "0o600",
+      "mtime_ns": 1793377424992800305,
+      "size": 2366,
+      "kind": "file",
+      "sha256": "21632fb102d7adb5133683e345f90fb263dc83ff61ea267cc4c2c35848e632bd"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/memories",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377424560831907,
+      "size": 128,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377424992593095,
+      "size": 160,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.mem-sharing/memories/communication.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377424992657345,
+      "size": 91,
+      "kind": "file",
+      "sha256": "fc6d4d4dc3db649c9a9ae3be155695829860c6885d6b8f547f724ee653f6e94e"
+    }
+  },
+  {
+    "path": "home/.workbuddy",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377424993103558,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "home/.workbuddy/MEMORY.md",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377424993156725,
+      "size": 159,
+      "kind": "file",
+      "sha256": "0c52940ab6cf277412c97bf72faa3a11a9f3369fffe92b41f3fcff6f779410f4"
+    }
+  }
+]

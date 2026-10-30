@@ -1,0 +1,56 @@
+{
+  "label": "missing-enable",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import runpy,sys;from pathlib import Path;sys.path.insert(0,str(Path(sys.argv[1]).parent));from agm_core import detect;detect.STANDARD_APP_DIRECTORIES=();sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+    "/private/tmp/M4-09-34-q2iwo36p/source/scripts/agm.py",
+    "enable-memory",
+    "--project",
+    "/private/tmp/M4-09-34-q2iwo36p/project"
+  ],
+  "cwd": "/private/tmp/M4-09-34-q2iwo36p/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-34-q2iwo36p/home",
+    "PATH": "/private/tmp/M4-09-34-q2iwo36p/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-34-q2iwo36p/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:15:48.935440Z",
+  "ended_utc": "2026-10-30T16:15:49.231853Z",
+  "duration_seconds": 0.2964146250160411,
+  "exit_code": 2,
+  "stdin_base64": "",
+  "json": {
+    "schema_version": 1,
+    "runtime_layout": {
+      "root": "/private/tmp/M4-09-34-q2iwo36p/home/.mem-sharing",
+      "code": "/private/tmp/M4-09-34-q2iwo36p/home/.local/share/mem-sharing",
+      "registry": "/private/tmp/M4-09-34-q2iwo36p/home/.mem-sharing/var/registry.json",
+      "lock": "/private/tmp/M4-09-34-q2iwo36p/home/.mem-sharing/var/.agm.lock",
+      "transaction_lock": "/private/tmp/M4-09-34-q2iwo36p/home/.mem-sharing/var/.agm.lock/transaction",
+      "backups": "/private/tmp/M4-09-34-q2iwo36p/home/.mem-sharing/backups"
+    },
+    "command": "enable-memory",
+    "status": "failed",
+    "projects": [],
+    "changes": [],
+    "warnings": [],
+    "errors": [
+      {
+        "code": "machine_not_installed",
+        "path": null,
+        "message": "Machine registry missing; use scripts/install.py",
+        "recovery": null
+      }
+    ],
+    "approval_required": false,
+    "next_action": "先阅读 INSTALL.md，运行 python3 -B <已核验源>/scripts/install.py 预览机器安装；确认后用 --approval-file 执行。"
+  }
+}

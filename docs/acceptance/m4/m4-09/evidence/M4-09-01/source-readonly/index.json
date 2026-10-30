@@ -1,0 +1,55 @@
+{
+  "case": "M4-09-01",
+  "name": "只读权限源的冷启动补证",
+  "status": "executed",
+  "area": "/private/tmp/M4-09-01-ut4fbohb",
+  "steps": [
+    {
+      "path": "001-fixture-git-init",
+      "label": "fixture-git-init",
+      "exit_code": 0
+    },
+    {
+      "path": "002-fixture-source-read-only-permissions",
+      "label": "fixture-source-read-only-permissions",
+      "exit_code": null
+    },
+    {
+      "path": "003-git-version",
+      "label": "git-version",
+      "exit_code": 0
+    },
+    {
+      "path": "004-install-help",
+      "label": "install-help",
+      "exit_code": 0
+    },
+    {
+      "path": "005-agm-help",
+      "label": "agm-help",
+      "exit_code": 0
+    },
+    {
+      "path": "006-check",
+      "label": "check",
+      "exit_code": 1
+    },
+    {
+      "path": "007-install-preview",
+      "label": "install-preview",
+      "exit_code": 5
+    },
+    {
+      "path": "008-imports-and-detection",
+      "label": "imports-and-detection",
+      "exit_code": 0
+    }
+  ],
+  "notes": [
+    "Source contains exact baseline git-archive product bytes (scripts and four root documents; documentation cases retain full archive); source-manifest route is used. Synthetic SemVer 0.4.0 is an exercise identity, not a frozen formal release.",
+    "All S regular files are mode 0444 and directories 0555 before the cold commands. These are filesystem permission bits under the ordinary user, not a separate VM or read-only mount."
+  ],
+  "ended_utc": "2026-10-30T16:29:44.345252Z",
+  "recovery_locations": [],
+  "verdict": "Not evaluated; primary Agent must judge raw evidence."
+}

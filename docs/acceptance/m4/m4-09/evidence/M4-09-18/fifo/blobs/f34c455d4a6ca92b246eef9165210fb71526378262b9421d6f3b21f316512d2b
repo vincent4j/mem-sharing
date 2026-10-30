@@ -1,0 +1,69 @@
+............................................./Users/vincent4j/Tools/Source/agent-group-memory/tests/integration/test_m207_cli_cycle.py:185: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+../Users/vincent4j/Tools/Source/agent-group-memory/tests/integration/test_m207_cli_cycle.py:185: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/Users/vincent4j/Tools/Source/agent-group-memory/tests/integration/test_m207_cli_cycle.py:459: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.......................
+----------------------------------------------------------------------
+Ran 70 tests in 163.244s
+
+OK
+CLI DECLINE authorization=no; created triggers removed; denial guard present; store/source unchanged
+CLI SOURCE source_available=missing; source_missing gaps; zero persistent writes
+REAL_CHAIN {"P_commit": "27d6e264496184a85dc015039885ebdae174f89d", "T_commit": "e3177611204b31cef60300fa66f08102f5bfe319", "T_parent": "27d6e264496184a85dc015039885ebdae174f89d", "P_manifest": "50e922d11d53af6627ea0bae437222c498391916a53c2790b44c8fa48e25d134", "T_manifest": "aa26d257118e4a1787eba58a92d135ab67765726e70b1f7b8e1b4dbb7b5e9024", "changed_files": ["SKILL.md", "scripts/agm.py", "scripts/agm_core/layout.py", "scripts/agm_core/upgrade.py", "scripts/agm_core/user_install.py", "scripts/agm_core/user_rules_organize.py", "scripts/agm_core/versions.py", "scripts/install.py"], "P_self_installed": true, "P_command_ran": true, "T_command_ran": true, "same_version_zero_mtime": true}
+REAL_ROLLBACK version=0.4.0; post-upgrade project and authorization preserved; user bytes unchanged
+REAL_FILE_WINDOW .agm-code-manifest.json before continue
+REAL_FILE_WINDOW .agm-code-manifest.json before rollback
+REAL_FILE_WINDOW .agm-code-manifest.json after continue
+REAL_FILE_WINDOW .agm-code-manifest.json after rollback
+REAL_FILE_WINDOW SKILL.md before continue
+REAL_FILE_WINDOW SKILL.md before rollback
+REAL_FILE_WINDOW SKILL.md after continue
+REAL_FILE_WINDOW SKILL.md after rollback
+REAL_FILE_WINDOW scripts/agm.py before continue
+REAL_FILE_WINDOW scripts/agm.py before rollback
+REAL_FILE_WINDOW scripts/agm.py after continue
+REAL_FILE_WINDOW scripts/agm.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/layout.py before continue
+REAL_FILE_WINDOW scripts/agm_core/layout.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/layout.py after continue
+REAL_FILE_WINDOW scripts/agm_core/layout.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py before continue
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py after continue
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/user_install.py before continue
+REAL_FILE_WINDOW scripts/agm_core/user_install.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/user_install.py after continue
+REAL_FILE_WINDOW scripts/agm_core/user_install.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/user_rules_organize.py before continue
+REAL_FILE_WINDOW scripts/agm_core/user_rules_organize.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/user_rules_organize.py after continue
+REAL_FILE_WINDOW scripts/agm_core/user_rules_organize.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/versions.py before continue
+REAL_FILE_WINDOW scripts/agm_core/versions.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/versions.py after continue
+REAL_FILE_WINDOW scripts/agm_core/versions.py after rollback
+REAL_FILE_WINDOW scripts/install.py before continue
+REAL_FILE_WINDOW scripts/install.py before rollback
+REAL_FILE_WINDOW scripts/install.py after continue
+REAL_FILE_WINDOW scripts/install.py after rollback
+REAL_PHASE prepare continue completed 
+REAL_PHASE prepare rollback rolled_back 
+REAL_PHASE archive continue completed 
+REAL_PHASE archive rollback rolled_back 
+REAL_PHASE inventory continue completed 
+REAL_PHASE inventory rollback rolled_back 
+REAL_PHASE code continue completed 
+REAL_PHASE code rollback rolled_back 
+REAL_PHASE verify continue completed 
+REAL_PHASE verify rollback rolled_back 
+REAL_PHASE commit continue completed finish_only
+REAL_PHASE commit rollback completed finish_only
+REAL_FIXED_TOOLKIT source unavailable; installer replaced; fixed launcher recovered; T CLI runs
+M408 ACQUIRE b89822276a79d27ce2d1471a5aff1b9be7ba29f9 local transport acquired; separate read_only plan; installation completed
+M408 COLD 48234b37f5e0257beb2c4e7a6b5e5605fc7bea20 non_git_cwd completed; same_release zero_writes_mtimes; runtime pending

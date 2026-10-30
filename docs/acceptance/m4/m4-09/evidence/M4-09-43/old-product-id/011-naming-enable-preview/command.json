@@ -1,0 +1,56 @@
+{
+  "label": "naming-enable-preview",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import runpy,sys;from pathlib import Path;sys.path.insert(0,str(Path(sys.argv[1]).parent));from agm_core import detect;detect.STANDARD_APP_DIRECTORIES=();sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+    "/private/tmp/M4-09-43-fsfus8bg/home/.local/share/mem-sharing/scripts/agm.py",
+    "enable-memory",
+    "--project",
+    "/private/tmp/M4-09-43-fsfus8bg/project"
+  ],
+  "cwd": "/private/tmp/M4-09-43-fsfus8bg/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-43-fsfus8bg/home",
+    "PATH": "/private/tmp/M4-09-43-fsfus8bg/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-43-fsfus8bg/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:24:40.294046Z",
+  "ended_utc": "2026-10-30T16:24:40.556183Z",
+  "duration_seconds": 0.2621436250046827,
+  "exit_code": 2,
+  "stdin_base64": "",
+  "json": {
+    "schema_version": 1,
+    "runtime_layout": {
+      "root": "/private/tmp/M4-09-43-fsfus8bg/home/.mem-sharing",
+      "code": "/private/tmp/M4-09-43-fsfus8bg/home/.local/share/mem-sharing",
+      "registry": "/private/tmp/M4-09-43-fsfus8bg/home/.mem-sharing/var/registry.json",
+      "lock": "/private/tmp/M4-09-43-fsfus8bg/home/.mem-sharing/var/.agm.lock",
+      "transaction_lock": "/private/tmp/M4-09-43-fsfus8bg/home/.mem-sharing/var/.agm.lock/transaction",
+      "backups": "/private/tmp/M4-09-43-fsfus8bg/home/.mem-sharing/backups"
+    },
+    "command": "enable-memory",
+    "status": "failed",
+    "projects": [],
+    "changes": [],
+    "warnings": [],
+    "errors": [
+      {
+        "code": "registry_invalid",
+        "path": null,
+        "message": "product identity mismatch",
+        "recovery": null
+      }
+    ],
+    "approval_required": false,
+    "next_action": "Inspect preserved evidence; re-preview before retrying. No store assets are deleted."
+  }
+}

@@ -1,0 +1,105 @@
+[
+  {
+    "path": ".",
+    "before": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377299201214859,
+      "size": 320,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16832,
+      "permissions": "0o700",
+      "mtime_ns": 1793377299500048792,
+      "size": 352,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "bin",
+    "before": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377298939593681,
+      "size": 96,
+      "kind": "directory"
+    },
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377299500518672,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "bin/codex",
+    "before": null,
+    "after": {
+      "mode": 41453,
+      "permissions": "0o755",
+      "mtime_ns": 1793377299500516714,
+      "size": 55,
+      "kind": "symlink",
+      "target": "/private/tmp/M4-09-10-sc1146cp/packages/codex/bin/codex"
+    }
+  },
+  {
+    "path": "packages",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377299500109210,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "packages/codex",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377299500394629,
+      "size": 128,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "packages/codex/bin",
+    "before": null,
+    "after": {
+      "mode": 16877,
+      "permissions": "0o755",
+      "mtime_ns": 1793377299500233753,
+      "size": 96,
+      "kind": "directory"
+    }
+  },
+  {
+    "path": "packages/codex/bin/codex",
+    "before": null,
+    "after": {
+      "mode": 33261,
+      "permissions": "0o755",
+      "mtime_ns": 1793377299500285586,
+      "size": 17,
+      "kind": "file",
+      "sha256": "306c6ca7407560340797866e077e053627ad409277d1b9da58106fce4cf717cb"
+    }
+  },
+  {
+    "path": "packages/codex/package.json",
+    "before": null,
+    "after": {
+      "mode": 33188,
+      "permissions": "0o644",
+      "mtime_ns": 1793377299500462171,
+      "size": 93,
+      "kind": "file",
+      "sha256": "c1671791d001a92947a89ac8d26eaef65bb18f083d70922596553d9ddce4b95b"
+    }
+  }
+]

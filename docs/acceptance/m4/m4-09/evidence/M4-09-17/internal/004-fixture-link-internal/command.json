@@ -1,0 +1,24 @@
+{
+  "label": "fixture-link-internal",
+  "argv": [
+    "fixture-operation",
+    "link-internal"
+  ],
+  "cwd": "/private/tmp/M4-09-17-nr8q22ma/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-17-nr8q22ma/home",
+    "PATH": "/private/tmp/M4-09-17-nr8q22ma/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-17-nr8q22ma/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:17:49.502830Z",
+  "ended_utc": "2026-10-30T16:17:49.563190Z",
+  "duration_seconds": 0.06035408301977441,
+  "fixture_operation": "link-internal",
+  "returned": "None"
+}

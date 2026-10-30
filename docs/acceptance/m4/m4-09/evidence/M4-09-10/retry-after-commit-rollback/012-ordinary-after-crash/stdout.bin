@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "machine_route_interrupted", "message": "Machine scene interrupted: ['writer lock: /private/tmp/M4-09-10-z4ki57tz/home/.mem-sharing-install.lock']"}], "schema_version": 1, "status": "failed"}

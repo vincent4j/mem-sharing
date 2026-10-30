@@ -1,0 +1,69 @@
+[
+  {
+    "cwd": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/agm-m403-isolated-tv21bhn0/repo",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests/unit"
+    ],
+    "exit_code": 0,
+    "raw": "final-isolated-unit.log",
+    "tests": 279
+  },
+  {
+    "cwd": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/agm-m403-isolated-tv21bhn0/repo",
+    "env": {
+      "PYTHONDONTWRITEBYTECODE": "1",
+      "M403_EVIDENCE_DIR": "/Users/vincent4j/Tools/Source/agent-group-memory/docs/acceptance/m4/m4-03/raw"
+    },
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests/integration"
+    ],
+    "exit_code": 0,
+    "raw": "final-isolated-integration.log",
+    "tests": 57
+  },
+  {
+    "cwd": "/Users/vincent4j/Tools/Source/agent-group-memory",
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests/unit"
+    ],
+    "exit_code": 1,
+    "raw": "shared-unit.log",
+    "tests": 277,
+    "failures": 2,
+    "errors": 3,
+    "note": "Earlier shared-workspace run; before final two M4-03 unit cases; parallel M4-05 user_skill_roots and agents_table_invalid interfaces."
+  },
+  {
+    "cwd": "/Users/vincent4j/Tools/Source/agent-group-memory",
+    "argv": [
+      "python3",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests/integration"
+    ],
+    "exit_code": 0,
+    "raw": "shared-integration.log",
+    "tests": 57,
+    "note": "Earlier shared-workspace run; final M4-03 source provenance belongs to isolated/scoped logs."
+  }
+]

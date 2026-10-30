@@ -1,0 +1,24 @@
+{
+  "label": "fixture-v0-seed",
+  "argv": [
+    "fixture-operation",
+    "v0-seed"
+  ],
+  "cwd": "/private/tmp/M4-09-17-55wf106p/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-17-55wf106p/home",
+    "PATH": "/private/tmp/M4-09-17-55wf106p/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-17-55wf106p/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:17:52.479302Z",
+  "ended_utc": "2026-10-30T16:17:52.540901Z",
+  "duration_seconds": 0.06159516700427048,
+  "fixture_operation": "v0-seed",
+  "returned": "None"
+}

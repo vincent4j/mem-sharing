@@ -1,0 +1,80 @@
+{
+  "label": "native-pointer-execute",
+  "argv": [
+    "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/bin/python3.14",
+    "-B",
+    "-c",
+    "import runpy,sys;from pathlib import Path;sys.path.insert(0,str(Path(sys.argv[1]).parent));from agm_core import detect;detect.STANDARD_APP_DIRECTORIES=();sys.argv=sys.argv[1:];runpy.run_path(sys.argv[0],run_name='__main__')",
+    "/private/tmp/M4-09-27-47628ifz/home/.local/share/mem-sharing/scripts/agm.py",
+    "enable-memory",
+    "--project",
+    "/private/tmp/M4-09-27-47628ifz/project",
+    "--agent",
+    "workbuddy",
+    "--approval-file",
+    "/private/tmp/M4-09-27-47628ifz/native-pointer-approval-11.json"
+  ],
+  "cwd": "/private/tmp/M4-09-27-47628ifz/cwd",
+  "environment": {
+    "HOME": "/private/tmp/M4-09-27-47628ifz/home",
+    "PATH": "/private/tmp/M4-09-27-47628ifz/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+    "TMPDIR": "/private/tmp/M4-09-27-47628ifz/tmp",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONNOUSERSITE": "1",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_OPTIONAL_LOCKS": "0",
+    "LC_ALL": "en_US.UTF-8"
+  },
+  "started_utc": "2026-10-30T16:22:24.560512Z",
+  "ended_utc": "2026-10-30T16:22:25.085913Z",
+  "duration_seconds": 0.5253994590020739,
+  "exit_code": 0,
+  "stdin_base64": "",
+  "json": {
+    "schema_version": 1,
+    "runtime_layout": {
+      "root": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing",
+      "code": "/private/tmp/M4-09-27-47628ifz/home/.local/share/mem-sharing",
+      "registry": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/registry.json",
+      "lock": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/.agm.lock",
+      "transaction_lock": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/.agm.lock/transaction",
+      "backups": "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/backups"
+    },
+    "command": "enable-memory",
+    "status": "completed",
+    "projects": [
+      {
+        "main_checkout": "/private/tmp/M4-09-27-47628ifz/project",
+        "checkout": "/private/tmp/M4-09-27-47628ifz/project",
+        "memory_policy": "follow_ck",
+        "agents": [
+          "workbuddy"
+        ],
+        "runtime_acceptance": {
+          "status": "pending",
+          "evidence_path": null
+        },
+        "evidence": [
+          "/private/tmp/M4-09-27-47628ifz/home/.mem-sharing/var/registry.json"
+        ]
+      }
+    ],
+    "changes": [
+      {
+        "path": "/private/tmp/M4-09-27-47628ifz/project/.workbuddy/memory/MEMORY.md",
+        "operation": "update",
+        "before_fingerprint": "96fa66579e3d608b9cbafd64bbc2c87ebd98fd1df50dd865c764f07d1d9126ab",
+        "after_fingerprint": "587bd54c4003d0d060492182c45cb01a221841b9673fbacedd4244fb40a3b1b5",
+        "ownership": "created",
+        "applied": true
+      }
+    ],
+    "warnings": [
+      "Runtime acceptance pending; CK installation and record data are retained and not inspected."
+    ],
+    "errors": [],
+    "approval_required": false,
+    "next_action": null
+  }
+}

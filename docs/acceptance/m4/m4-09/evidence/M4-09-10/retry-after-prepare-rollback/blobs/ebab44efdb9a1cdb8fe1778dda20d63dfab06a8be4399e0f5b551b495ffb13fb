@@ -1,0 +1,7 @@
+....
+----------------------------------------------------------------------
+Ran 4 tests in 9.440s
+
+OK
+M408 ACQUIRE db263e21d8b27d73c9e7cd4d46862bdf0da86619 local transport acquired; separate read_only plan; installation completed
+M408 COLD 34f24029c106bdc946d186b0aeec8638ea80bfa8 non_git_cwd completed; same_release zero_writes_mtimes; runtime pending

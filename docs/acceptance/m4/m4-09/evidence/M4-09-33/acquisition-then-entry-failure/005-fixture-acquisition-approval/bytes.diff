@@ -1,0 +1,20 @@
+--- before/acquisition-approval-4.json
++++ after/acquisition-approval-4.json
+@@ -0,0 +1,17 @@
++{
++  "changes": [
++    {
++      "operation": "clone_pinned_source_and_manifest",
++      "path": "/private/tmp/M4-09-33-qmzwtkpy/acquired-source"
++    }
++  ],
++  "command": "acquire-machine-source",
++  "commit": "de9cc4fdd0c7c5088267b9ff3bf0ff10ad52a40b",
++  "plan_sha256": "a05a3c23ef1d604be31eb0a654aa529ad16292ebef0e2c114383900e56db38a5",
++  "schema_version": 1,
++  "source_url": "https://github.com/vincent4j/mem-sharing",
++  "staging": "/private/tmp/M4-09-33-qmzwtkpy/acquired-source",
++  "version": "0.4.0",
++  "confirmed_at": "2026-10-30T16:26:32.410563Z",
++  "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
++}

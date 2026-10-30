@@ -1,0 +1,1 @@
+{"command": "install-machine", "errors": [{"code": "install_conflict", "message": "Case/Unicode collision in code manifest"}], "schema_version": 1, "status": "failed"}

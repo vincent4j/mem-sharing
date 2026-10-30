@@ -1,0 +1,180 @@
+# 2026-10-29 全提交 review
+
+审查日期：2026-10-30；审查基线：`97b1b5332ef280fc763e3601dca97c2cf23af812`。本报告是供主 Agent 独立验收的 review 交付，不是 M4 或产品验收结论。本轮只新增本文件，不修改实现，不 commit/push/merge，不访问网页，不操作真实用户入口、真实项目记录库或其他 worktree。
+
+## 范围与方法
+
+按 **main 可达提交的 committer timestamp**，取 Asia/Singapore `[2026-10-29 00:00:00, 2026-10-30 00:00:00)`。不是 author date，也不是仅 first-parent / 合并后的总 diff。初始 HEAD 与 main 均为上述基线，工作区干净。独立枚举所有可达提交后按 epoch 筛选，共 **29 条**，`252d53c` 至 `6dab84c`。
+
+可重放清单命令（只读，退出码 0）：
+
+```sh
+git log main --format='%H%x09%ct%x09%cI%x09%s' | python3 -c 'import sys,datetime; lo=int(datetime.datetime.fromisoformat("2026-10-29T00:00:00+08:00").timestamp()); hi=lo+86400; rows=[s.rstrip().split("\t",3) for s in sys.stdin]; rows=[r for r in rows if lo<=int(r[1])<hi]; print("count=",len(rows)); [print(r[0][:7],r[2],r[3]) for r in reversed(rows)]'
+git diff --name-only 6dab84c 97b1b53 -- scripts tests
+```
+
+第二条输出为空、退出码 0：当日末至审查基线没有实现/测试变化，因此下面实现问题在两端均存在。逐提交检查变更清单、相关 patch、实现和测试；证据型提交检查交付说明、时间线、追加更正和相关原始文件。未逐行审计所有重复快照/全部模型 JSONL，覆盖表表示每条提交均进入审查，不表示每个证据字节均独立复核。没有重新跑真机会话。
+
+开始前已读取指定共享 MEMORY.md 与项目 AGENTS.md。限量历史检索仅用于定位 M2-08/M3 的证据边界，报告事实均重新核对本地 Git/source/evidence。smart-explore Skill 已读取，但本会话没有其 smart_* 工具，故使用本地 Git、定点源码读取。任务禁止写项目记忆，本轮不沉淀记录。
+
+## 当前发现
+
+优先级：P1 为授权/数据保护风险，应优先修复；P2 为有明确条件的可靠性或状态报告缺陷。没有证据支持 P0。下列 5 项均未在当日后续提交修复，截至 `97b1b53` 仍存在。
+
+### R1 / P1：拒绝记忆只改账本，仍保留生效的记忆指令
+
+- 引入：`965af63`。定位：`scripts/agm_core/enable.py:522`、`:543`（选择 no 仅把 store 状态设 blocked）；`tests/unit/test_m204_enable.py:467`。
+- 条件：项目已批准并完成 `--memory`，之后明确批准 `enable-memory --no-memory`。
+- 证据：隔离夹具返回 completed、账本 authorization=no；AGENTS.md 字节完全不变，Keeper marker 和 `.codex/skills/context-keeper` 链接仍存在，批准计划 changes=[]。源码只在 yes 路径装配，没有 no 路径撤销/禁用桥接。现有测试仅确认 no 已落账和记忆资产保留，没有检查触发指令是否停用。
+- 影响：机器账本宣称未启用，但执行器仍读取原来的自动记录指令；桥接不通过 AGM registry 逐次判定 no。用户拒绝后的新会话可能继续依此前授权写记忆。这里证明的是残留指令与授权矛盾，**没有运行模型，不能声称已实际发生拒绝后写库**。保留历史记录库是正确要求，保留仍生效的启用指令则需要单独处理。
+- 建议：明确 yes→no 的运行时契约。保留库内容，对工具拥有的桥接制定禁用/撤销计划；reused 入口不能直接删，应提示冲突或加入明确的禁止触发机制。若参数仅表示“不执行安装”，应拒绝把既有 yes 改记 no，避免产生虚假的撤权成功状态。加入 yes→no 后入口行为的回归。
+
+### R2 / P1：账本重建没有进入批准范围，空变更计划可丢失其他项目登记
+
+- 引入：`965af63`。定位：`scripts/agm_core/enable.py:364`–`:369`、`:481`–`:501`、`:601`–`:602`；底层提交见 `scripts/agm_core/registry.py:364` 起。
+- 条件：同一账本有项目 A/B，A 任一字段损坏，或创建证据文件丢失导致整个 schema 校验失败；对 B 重新 enable 并批准返回的具体计划。
+- 证据：捕获任意 RegistryError 后直接以空账本构造 B。两项目隔离复现中，预览 warnings=[]、changes=[]，没有 rebuild 字段；执行后 completed，但 projects 从 2 变 1，A 被移出登记。重建提示只在完成后写入 warnings。`changes` 特意排除 registry，批准文件也没有绑定原账本哈希/重建动作。
+- 影响：用户批准的单项目装配计划不能显示会替换全局登记；其他项目的 yes/no、所有权及消费者索引从活动账本消失，后续 `check --all` 漏掉 A。旧字节有备份，因此不是不可恢复删除，但恢复需要人工处理，不能把备份存在视为授权充分。D-M2-03 允许重新批准重建，不等于允许在空计划中隐含重建整个账本。
+- 建议：损坏、未知 schema、证据不可达分型。重建必须在写前明确展示全局影响并绑定旧账本摘要及单独的重建授权；无法安全识别时停止。不得默默“修好”其他项目，也不能仅在完成后告知旧历史丢失。加入多项目单处损坏、备份证据丢失及预览后账本变化用例。
+
+### R3 / P2：最后一次漂移检查与实际替换之间仍可覆盖外部编辑
+
+- 引入：`fb5e980`。定位（引入提交与基线相同）：`scripts/agm_core/transaction.py:275`–`:291`；真实长窗口调用在 `scripts/agm_core/enable.py:561` 起的 registry 写前 hook。
+- 条件：编辑器/另一个不遵守 `.agm.lock` 的写者在 expected 检查之后、`_apply` 之前修改输出。AGM 自己的第二个写者会被锁拒绝，此项不否定该锁用例。
+- 证据：使用公开测试注入点，在 `before_write` 把文件由 original 改成 external edit；事务随后返回 committed，最终内容为 planned。检查之后还有建目录、保存 manifest 与 hook；enable 的 registry hook 还运行多个 provider 子进程，所以不只是单条指令的极窄窗口。写后校验只核对 planned，无法发现已经覆盖的外部版本，备份仍为 original。
+- 影响：并发外部修改静默丢失，成功回执及 before 备份均未记录它。已有测试覆盖启动前漂移、读回阶段外部编辑、两个 AGM 写者竞争，没有覆盖该写前窗口。
+- 建议：至少在耗时 hook 完成后、紧邻实际替换再次核对；对恢复路径同样收紧检查。声明协作锁的边界，并设计冲突保留策略。一次额外检查不能在所有平台实现真正的 compare-and-swap，修复不能声称消灭所有非协作写者竞态。
+
+### R4 / P2：provider 仅剩目录和 SKILL.md 时，巡检仍全绿
+
+- 引入：`88e0fbf`。定位：`scripts/agm_core/check.py:525`–`:531`；与 enable 的 `_source_fingerprints`（`enable.py:50` 起）检查口径不一致。
+- 条件：已登记项目的 provider 保留目录和 SKILL.md，但 `scripts/install.py`、`scripts/context_keeper_probe.py` 被删。
+- 证据：隔离装配后只删上述两个脚本，`check.run` 返回 `status=completed`、`source_available.status=ready`、`gaps=[]`。源码只用 `os.path.isdir(provider)` 判源码可用；Skill 检查因 SKILL.md 还在而成功。另一轮连 SKILL.md 一起删会报 skill_conflict，故不把那轮称作全绿。
+- 影响：用户得到全绿检查，但下一次 enable 无法验证 provider，记忆探针也不可调用。库状态 unknown 的既有诚实边界不弥补源码状态的假 ready。
+- 建议：只读核对最低必需文件、类型、Git 身份和已批准源码指纹；不足时 missing/blocked/unknown，并给出明确缺口，不调用会写缓存的 probe。补“目录在而执行文件不在”的回归。
+
+### R5 / P2：任务书的全部完成横幅隐藏了仍未闭环的验收项
+
+- 引入：`6dab84c`。定位：`docs/plan/tasks.md:3`；同提交 README 文档导航也称 M1/M2 全部执行完毕。
+- 条件：后续执行者以任务书“16 项全部执行完毕、不再是待办清单”决定无需补证。
+- 证据：`docs/acceptance/m1-07/evidence.md` 的“总结论与后续”和末尾 N2 结论明确 M1 部分通过、WorkBuddy N1/N2 not-run、需要标准新 run；`docs/acceptance/m2-08/README.md` second-run 明确 WorkBuddy 未运行、Claude 未显式 Skill/resume。原任务的验收标准包含这些步骤。`117b83a` 的当前主题也保留对应未完成事项。基线任务书仍保留该横幅。
+- 影响：交付过报告与完成全部任务验收混在一起，维护者容易关闭未完成测试。**并非指控所有公开材料虚报通过**：README/SKILL/M3 报告同时保留了部分限制，M3 还把真机验证列为可选；问题是任务书总状态与其验收范围冲突。
+- 建议：改成“实现与本批报告已交付；M1/M2 运行时验收部分通过”，显式保留补证条目、负责人/下一触发条件，并说明哪些范围经后续裁定变为可选，不覆盖历史证据。
+
+## 提交当时存在、同日已处理或已限定的问题
+
+| 项目 | 当时证据 | 当日处理 / 截至基线状态 |
+|---|---|---|
+| CLI 冷启动可能产生 `__pycache__` | `d578415` 在导入 agm_core 前没有禁写字节码 | `88e0fbf` 在 `agm.py:39` 加 `sys.dont_write_bytecode=True` 并新增冷启动测试；不列为当前缺陷 |
+| 既有用户共享约定被安装模板当成更新源 | `965af63` 的 `_Plan.object` 对登记块直接 render 当前模板；M2-08 第一轮报告真实 drift 阻断 | `0919ec9` 保留已登记共享文案、整文件 reused 约定，补 approved repair/created drift 门禁；`23a8197` second-run 有后续装配证据。不能把第一轮阻断说成最终仍阻断 |
+| M1 辅助判定脚本误判及恢复失败 | `0d402e8` 的 m1-03 evidence 保留两轮失败、mtime 边界与 Git 并发状态 | 同提交第三轮原始回执追加并保留旧失败；不据旧顶部 failed 否定第三轮，也不据第三轮回执宣告全部运行验收通过 |
+| M1-02 提交包含并发安装时的桥接块 | `a422ec8` patch 已有 Keeper 块，m1-03 evidence 记载提交发生在短暂追加期间、随后现场恢复出现差异 | 后续装配证据已对账；这是历史交付/并发边界，不据此声称基线入口仍错误 |
+| P4 “未执行”历史文字与后来读回 | `2fa3554` 含早期 evidence 及后续 p4 原始输出；部分旧主题仍写未执行 | `8e1ef33` 新收口明确 P4 已执行但完整流程未通过。原始追加时间线优先于旧摘要，不重新报告 P4 未执行 |
+| WorkBuddy 私有第二模板 | M1/M2 曾用 templates/workbuddy-bridge.md | `9be6ba2` 删除模板、读取上游常量并验证 ensure；缺模板失败关闭，无私有 fallback。bridge_owner 旧标签在 m3 README 明确为兼容用途，不把标签本身误报为仍有第二真源 |
+| 卸载重装连接符换行累积 | `99cb817` 平台报告 §3 有字节差异 | 报告已公开并引用既有接受裁定，非本轮新缺陷；不以此声称 remove 字节完全可逆 |
+
+## 29 提交覆盖表
+
+时间均为 2026-10-29 Asia/Singapore。无新增发现表示在所列审查范围内未建立新的缺陷证据，不是全面正确性保证。
+
+| # | commit | 时间 | 审查内容与结果 |
+|---|---|---|---|
+| 1 | 252d53c | 11:31:57 | README/.gitignore 初始骨架；无实现，无新增发现 |
+| 2 | 60310dc | 16:05:18 | 最初自建记忆设计与触发链；后被 144117b 替代，不把废弃方案算当前实现 |
+| 3 | 144117b | 16:29:40 | 转为 Keeper 编排、职责与桥接；无新增实现缺陷 |
+| 4 | 2aac43e | 16:35:43 | AGENTS 唯一源、CLAUDE import、WorkBuddy 用户约定；核对后续入口实现 |
+| 5 | 1b51dfb | 16:45:16 | 存量迁移及嵌套规则政策；后续原文搬运修订，外部加载能力声明未独立实测 |
+| 6 | d3ec5b5 | 16:57:15 | 原文搬运/用户级范围/嵌套规则；后续约束继承，无新增可证实现缺陷 |
+| 7 | f141ca3 | 17:04:26 | 子目录具体搬运步骤；未执行迁移，不验证 Claude 原生加载推断 |
+| 8 | 0262c4e | 17:45:12 | v1.0 两档、触发链、目录及锁/备份方向；与后续 v1.1 对照 |
+| 9 | 53314d7 | 18:12:28 | check 零写、集中登记、授权四态、接力标准；作为实现审查合同 |
+| 10 | a43e31c | 18:37:19 | 架构、16 任务、路径表、CLI 占位、私有 WB 模板；当时明确未实现 |
+| 11 | a422ec8 | 18:52:30 | 基座/CLAUDE 引用及预检；发现历史并发桥接提交现象，见上表 |
+| 12 | 0d402e8 | 19:07:08 | M1 装配、两轮失败/恢复、第三轮原始回执及 WB 入口；不把早期脚本 passed 当产品验收 |
+| 13 | 3fc2696 | 19:16:50 | legacy 样本来源/可公开性/格式说明；guard 等 not-run 已披露，无新增发现 |
+| 14 | 247ca23 | 19:25:56 | schema、所有权、未知授权、O1/O2/O7 与精确计划合同；与实现对照 |
+| 15 | 3d94d2a | 19:32:58 | 五项裁定；主 checkout、共享保留、重建须重新批准、退出码为已生效边界 |
+| 16 | fb5e980 | 19:45:26 | project/entries/registry/transaction 与 54 测试范围；R3 引入，复核回滚/恢复和边界检查 |
+| 17 | 2fa3554 | 19:48:15 | 四环时间线、P2/P3 偏差、P4 追加证据；读回链路不等于标准流程通过 |
+| 18 | d578415 | 19:55:32 | CLI 严格解析/批准/路径表/路由测试；冷启动缓存问题后由 88e0fbf 修复 |
+| 19 | 8e1ef33 | 19:59:22 | Codex/Claude N1/N2、迁移停读写证据和 M1 部分收口；WB 未测已披露 |
+| 20 | cc67e7d | 20:07:40 | remove 按 ownership、保护库、共享消费者、精确批准；漂移先停符合合同，未发现额外删除缺陷 |
+| 21 | 965af63 | 20:21:29 | enable 计划/源码绑定/provider 调用/事务写入；R1/R2 引入；共享文案问题后修复 |
+| 22 | 88e0fbf | 20:34:51 | check 状态、只读/缺口与 CLI 冷启动修复；R4 引入 |
+| 23 | 3d7f8e9 | 21:30:42 | 20 场景幂等/故障矩阵、真实文件及桩边界；缺 R1–R4 条件，不能据矩阵全绿排除 |
+| 24 | 0919ec9 | 21:49:42 | shared registered 文案保留与新增测试；修复历史共享模板问题，R1/R2 未涉及 |
+| 25 | 23a8197 | 21:57:36 | 两项目 first/second-run、dirty 前缀保护、四会话读回；部分通过限定明确 |
+| 26 | 117b83a | 21:58:08 | M2-08 当前主题/待办及工作日志；未把 WB pending 改成通过 |
+| 27 | 99cb817 | 22:20:59 | macOS 四项报告、真实 remove/recovery、README/SKILL；不同证据范围已披露，恢复指引见下方限制 |
+| 28 | 9be6ba2 | 22:39:14 | 上游 WorkBuddy 常量/ensure 接管、模板删除、4 新测试、原始接管回执；静态/模型运行边界仍需保持 |
+| 29 | 6dab84c | 22:46:32 | 命名/导航/M3 状态与收官横幅；R5，引入完成状态歧义 |
+
+## 本轮隔离验证与原始结果
+
+全部临时目录创建在本分配 worktree 的 `.review-*` 下并在结束清理；Python 使用 `PYTHONDONTWRITEBYTECODE=1`。复用既有 `EnableFixture` / `M207Fixture`，临时 Git 仓库、HOME、provider、registry 均隔离。provider 为既有测试 runner 桩，本轮不把它当真实上游或模型行为。未新增测试/验收脚本文件，只执行终端中的短复现片段并打印观察值。
+
+### E1：R1/R2/R3
+
+终端 `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY' ... PY`，退出码 **0**。操作顺序：
+
+1. `EnableFixture.setUp()`，`apply('yes', True)`；保存 AGENTS 字节；将 request 改为 `approval=None, memory_choice='no'`，按返回 next_action 添加夹具确认字段后执行。
+2. 新夹具先 `apply()`，再创建第二临时 Git 根并登记；将首项目 `states.source_available.status` 改为 `INVALID`；对第二项目生成并批准计划；读取实际项目数。
+3. 独立临时文件写 original，`Transaction` 的 `before_write` hook 写 external edit，再执行 expected=original、after=planned 的 Change。
+
+原始输出：
+
+```text
+DECLINE {"status": "completed", "authorization": "no", "bridge_bytes_unchanged": true, "keeper_marker_present": true, "skill_exists": true, "plan_changes": []}
+REBUILD projects_before 2
+REBUILD preview {"warnings": [], "changes": [], "rebuild_field": false}
+REBUILD result {"status": "completed", "projects_after": 1, "first_project_retained": false, "warnings": ["Runtime acceptance pending; same-path replacement of .git cannot be reliably detected by schema v1.", "Corrupt registry backed up; prior authorization/created ownership was not recovered."]}
+RACE committed planned
+```
+
+R3 最小可重放核心（将 p/area 放在临时 worktree 子目录）：
+
+```python
+p.write_bytes(b'original')
+def hook(event, path):
+    if event == 'before_write':
+        path.write_bytes(b'external edit')
+tx = Transaction(lock_path=area/'lock', backup_root=area/'backups',
+                 allowed_roots=[area], hook=hook)
+tx.run([Change.file(p, b'planned',
+                   expected=Snapshot('file', b'original', p.stat().st_mode & 0o7777))])
+print(p.read_bytes())
+```
+
+### E2：R4 与针对性常规回归
+
+先用 `M207Fixture.apply('yes', True)`，删临时 provider 的 install.py/probe.py，保留 SKILL.md，调用 `f.check()`。随后在同一隔离父目录运行既有套件：
+
+```python
+suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName(n)
+    for n in ['test_m204_enable', 'test_m202_transactions', 'test_m206_remove'])
+result = unittest.TextTestRunner(verbosity=1).run(suite)
+sys.exit(not result.wasSuccessful())
+```
+
+命令为 `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY' ... PY`，sys.path 加入 scripts、tests/unit、tests/integration；`tempfile.tempdir` 指向本 worktree 临时父目录。退出码 **0**。原始结果（省略进度圆点）：
+
+```text
+Ran 68 tests in 42.930s
+
+OK
+SOURCE {"status": "completed", "source_status": "ready", "gaps": []}
+```
+
+另一个先行观察同时删了 SKILL.md，返回 gaps/skill_conflict，故 R4 采用上述更精确条件。这些 68 项回归通过说明现有断言仍通过，不能推翻复现，也不是主 Agent 的验收结论。未重复全套无关测试。
+
+## 未验证项与边界
+
+- 未运行真实 Keeper 安装、真实 WorkBuddy/Codex/Claude 新会话、旧用户中枢迁移、M4 安装/升级，也未验证 Windows/Linux。上游只审查仓库已存 patch/evidence，没有操作另一仓库。
+- R3 为测试 hook 确定性模拟合法时序，未做 OS 级高并发压力或断电/磁盘 fsync 持久性验证；也未证明恶意进程可越过系统权限。
+- 真实用户源/账本是否漂移、旧 manifest 当前是否可达不在本轮范围。所有历史“已验收”均注明来自哪批证据，未重跑不称当前实测。
+- `--no-memory` 的 no→yes 已有测试；yes→no 本轮只证明配置不失活，模型是否实际继续保存仍待主 Agent 安排。若产品明确决定 no 不撤销已有触发，须公开说明并避免账本表现为已撤权。
+- README/SKILL 建议“created 漂移后 remove 重装”，但 remove 同样先拒绝漂移；实际恢复仍需先人工恢复/审查，不能把 remove 当强制绕过。此处列为指引需澄清，不另增重复缺陷。
+- 本轮未联网验证早期设计对执行器原生 AGENTS/CLAUDE 加载能力的描述；不凭记忆报平台行为缺陷。
+- 未扫描证据全集做隐私/凭据审计；不输出或复制真实用户文件正文。首次 `252d53c^..6dab84c` 枚举因根提交无 parent 返回 128，已改为 main 全可达时间筛选；一次 shell glob 无匹配返回 1，随后用明确文件路径读取，不影响 29 条清单。
+
+后续实现修复与验收由主 Agent 分配。本报告不修改政策、不宣告 M4 通过，也不替用户执行提交。

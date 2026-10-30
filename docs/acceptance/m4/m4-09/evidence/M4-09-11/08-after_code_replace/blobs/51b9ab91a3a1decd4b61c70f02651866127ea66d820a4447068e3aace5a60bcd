@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "command": "recover-machine-upgrade",
+  "operation_id": "synthetic-fault-upgrade",
+  "journal": "/private/tmp/M4-09-11-fny2itmj/home/.mem-sharing-install-synthetic-fault-upgrade/journal.json",
+  "journal_sha256": "6268ced72ef98dd879b90a31234db69553a6b28e77c0c3c1f7bd4ace1d0d85a9",
+  "installation_plan_sha256": "8ccf3f2d7a64e1dea1654d73e1b215bdf0c64b2cb9a69444fad6343c3caf9a14",
+  "action": "continue",
+  "scene": {
+    "target": "before",
+    "outputs": [
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "before",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after",
+      "after"
+    ]
+  },
+  "stale_locks": [
+    {
+      "path": "/private/tmp/M4-09-11-fny2itmj/home/.mem-sharing-install.lock",
+      "device": 16777234,
+      "inode": 159717404,
+      "owner_sha256": "f05a7544769af4ce1a4302e6a6518648fc7ded05aa69667d0869964b1c78c3dc"
+    },
+    {
+      "path": "/private/tmp/M4-09-11-fny2itmj/home/.mem-sharing/var/.agm.lock",
+      "device": 16777234,
+      "inode": 159717406,
+      "owner_sha256": "f05a7544769af4ce1a4302e6a6518648fc7ded05aa69667d0869964b1c78c3dc"
+    },
+    {
+      "path": "/private/tmp/M4-09-11-fny2itmj/home/.mem-sharing/var/.agm.lock/transaction",
+      "device": 16777234,
+      "inode": 159717408,
+      "owner_sha256": "f05a7544769af4ce1a4302e6a6518648fc7ded05aa69667d0869964b1c78c3dc"
+    }
+  ],
+  "migration_recovery": null,
+  "plan_sha256": "157695e469af53e915cd8ece906d52f349aac957de833cc1e9e3271f8ec7a5b3",
+  "confirmed_at": "2026-10-30T16:22:28.302628Z",
+  "reference": "M4-09 synthetic-only execution authorization: user message dff17160-5380-4d37-a388-9b63b30e3968"
+}
