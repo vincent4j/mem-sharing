@@ -109,4 +109,4 @@ Agent 先回复“我来安装 memSharing，先检查运行环境和本机 Agent
 - **漂移即停。** 不用覆盖用户改动来制造成功。
 - **安装与验证分开。** 静态入口完成不等于已经证明所有执行器的新会话行为。
 
-完整设计：[DESIGN.md](DESIGN.md)；操作入口：[SKILL.md](SKILL.md)；文档地图：[llms.txt](llms.txt)；[任务与裁定](docs/plan/decisions-m4.md)；[验收材料](docs/acceptance/)。
+完整设计：[DESIGN.md](DESIGN.md)；操作入口：[SKILL.md](SKILL.md)；文档地图：[llms.txt](llms.txt)；[验收总览](docs/acceptance/index.md)。

@@ -4,7 +4,7 @@
 
 memSharing 为多个执行器提供同一份用户规则和项目规则入口。
 它使用 Python 标准库、Markdown 文件和 JSON 台账，不运行常驻服务。
-本文描述当前机制，依据 [DESIGN](../DESIGN.md)、[关键裁定](plan/decisions-m4.md) 与 `scripts/` 实现。
+本文描述当前机制，依据 [DESIGN](../DESIGN.md)、[DESIGN](../DESIGN.md) 与 `scripts/` 实现。
 裁定存在替代关系时采用当前有效条款，不把撤销的实现承诺列为能力。
 
 ## 1. 三层记忆与职责

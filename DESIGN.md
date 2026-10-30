@@ -1,17 +1,17 @@
-# agent-group-memory(多 Agent 记忆融合)设计方案
+# memSharing(多 Agent 记忆共享与融合)设计方案
 
-多 Agent 跨执行器共享记忆:**不重复造轮子**。项目规则统一到项目根 `AGENTS.md`,项目记忆直接复用 context-keeper;本仓库只做跨执行器的互通与编排,并定义清楚三套系统的分工边界。
+多 Agent 跨执行器共享记忆:**不重复造轮子**。用户记忆跟人走、项目记忆(规则)跟仓库走、项目经历由 keeper 记录;本仓库只做跨执行器的互通与编排,并定义清楚分工边界。
+
 
 - 版本:v1.15(2026-10-31,文档终稿轮跟进:三记忆术语与路径按 §23 统一;keeper 总述按 §26 撤销开发版转换链(schema=3 即首版基线);§16 细化——默认启用完全不触碰 CLAUDE.md,显式 --agent claude 为另一接入路径;项目经历由 keeper 首次 / 命令激活;停用三层(§25)入册;菜单短路由与 enable-memory-batch 入册。此前 v1.14(2026-10-30,§24 keeper 重构设计四要点入册:schema=3 显式升版/--no-memory 停用政策/独立 keeper 尾步封皮/桥接短协议与旧块迁移。此前 v1.13(2026-10-30,定名 memSharing+根目录 .mem-sharing,§23。此前 v1.12(2026-10-30,后续裁定:未启用项目默认启用不询问(取代提醒方案A,增兜底接入条款)、向导集中审批、术语"装配"→"启用"、批量启用定稿。此前五条裁定:①不做 skills/mcp(含取消产品 Skill 投影,菜单入规则文本);②用户规则治理——独有内容永不并入永不删除、公共源写入纪律、整理向导;③新项目自动结构;④旧项目提醒(后由 v1.12 默认启用取代)与批量启用(已定稿);⑤装完报告不加自检提示)
 - 覆盖执行器:**Codex、Claude Code、WorkBuddy**
-- 历史沿革:v0.1 自建项目记忆已废弃(能力归 context-keeper);v0.2 起定位编排层;v1.1 按评审修订(check 只读、状态文件更名、授权四态、三执行器接力验收、M1 收敛、跨平台收紧);v1.2 用户级层并入产品范围;v1.5 安装三分法;v1.6 M4 review 七项阻断裁定;v1.7 代码独立落位与运行时前置裁定;v1.8 轻量化原则与 OpenViking 边界;v1.9 记忆读取分层 L0/L1/L2;v1.10 接入交互化;v1.11 skills/mcp 出局+用户规则治理+新项目自动结构;v1.12 默认启用+集中审批+术语统一+项目入口按实际使用驱动+记忆三分类定名+keeper 装机默认询问/项目按需激活/provider 退役
-- **本期范围不含 Skills/MCP 管理**(用户决定,留待后续;项目级 Skills/MCP 继续由 v0 旧版 `project_manage.py` 负责,后续由本产品接管)
+- **产品范围不含 Skills/MCP 管理**(用户裁定)
 
 ---
 
 ## 0. 摘要
 
-解决的问题:周一用 Codex、周二用 WorkBuddy 处理同一个项目,记忆和规则互不相通。方案一句话:**规则互通靠"项目根 AGENTS.md 单一源 + 各执行器入口打通"(零依赖基座);项目记忆靠自动安装的 context-keeper(可选档,默认推荐);本仓库是一个用户级工具(Skill 外壳 + 跨平台 Python 内核),负责装、拆、检查与联动。**
+解决的问题:周一用 Codex、周二用 Claude Code、周三用 WorkBuddy 处理同一个项目,习惯、规则与经历互不相通。方案一句话:**用户记忆一份公共源跟人走;项目规则单一真源 AGENTS.md 跟仓库走,各执行器入口打通;项目经历由 keeper 在首次 `/` 命令时按需记录;本产品是纯文件、零服务的编排层,负责装、启、停、查与联动。**
 
 ## 1. 问题与定位
 
@@ -304,25 +304,8 @@ M3 已将 WorkBuddy 桥接交由 context-keeper 安装器管理。AGM 从上游�
 | 跨平台未验收 | M1 限定 macOS;不自建第二套安装逻辑;M2 平台矩阵 |
 | 双重入口打架(WorkBuddy 旧约定 vs 桥接) | §5 约定追加式改写;check 检测旧约定残留 |
 
-## 8. 落地路线
+## 8. 现状与路线
 
-| 里程碑 | 内容 | 验收 |
-|---|---|---|
-| M1 dogfood(**macOS、单仓库、三执行器接力闭环**) | 本仓库启用:基座 + 记忆档(含记录库授权)+ WorkBuddy 桥接 + 用户级约定追加;存量只做**一份已批准、可公开的样本** | §6 正向闭环 + 两个负向用例 |
-| M1.5(独立) | 用户级全面整理;(如需)memories/ 升级为"索引 + 主题文件"结构 | 用户逐项确认的迁移报告 |
-| M2 工具化 | 单一 CLI + 执行器路径表 + registry;平台矩阵(安装/重装/卸载/失败恢复,macOS 优先) | knowwind、poster-fit 复制,幂等重装通过 |
-| M3 上游回传(工作区实现) | 上游已接管 WorkBuddy 模板/install/ensure;本仓库改读上游模板并调用安装器,私有模板已删除 | 旧块字节兼容、无双入口、三项目只读 check;证据见 docs/acceptance/m3。未 commit/push,真机新会话验收可选 |
-| M4 用户级层产品化 | **安装即建 `~/.agents-group`**(公共源结构:memories 索引+主题、references)+ 用户级入口指针启用(只为已验证安装的执行器)+ **安装通道判别落地**(全新/v0 存量复制(源快照+manifest)/升级/异常停止)+ **独立机器级安装入口**(INSTALL.md + scripts/install.py)+ **产品代码独立版本化落位**(`~/.local/share/agent-group-memory`,支持回退)+ **可运行升级**(同版幂等/支持旧版/未来版拒绝)+ `scripts/registry.json` 保真迁移至 `var/` + §4.8 生命周期最小落地。任务书与决策单(Git 历史)及 [docs/plan/decisions-m4.md](docs/plan/decisions-m4.md), [docs/plan/decisions-m4.md](docs/plan/decisions-m4.md) | 隔离证据矩阵(docs/acceptance/m4/);三执行器用户级指针新会话验收;真机 v0 时机由用户定 |
-| 后续 | 项目级 Skills/MCP 管理纳入(旧 project_manage 职责);其余执行器按同模式逐家接入 | — |
+M1~M4-09 已全部收口并通过验收(判定结论见[验收总览](acceptance/index.md),原始证据在 Git 历史);剩余:M4-10 真机首装(含本机 v0 迁移,裁定不用隔离环境)→ 版本定稿与 tag。后续方向:项目级 Skills/MCP 管理不在产品范围;其余执行器(如 ZCode、DSH)按路径表同模式接入。
 
-## 9. 对既有 `~/.agents-group` 实现的借鉴与简化
 
-既有实现(manage/sync/project_manage 等约 900 行 Python + 约 500 行测试)是本产品的 v0 旧版本,也是本仓库前身。
-
-**直接借鉴**:标记块+指纹+幂等(冲突/漂移即拒绝);写后读回+快照回滚(恢复失败报错并保留现场);操作前时间戳备份与 manifest 可逆恢复;进程锁;信任登记放项目外(registry 的先例);不自动吸收原生安装、无密钥纪律(本期虽不管理 Skills/MCP,纪律保留);"静态配置不算数"与自然语言操作约定;配单元测试。
-
-**明确简化**:README 只留现行规则,历史决策存于 Git 历史(旧实现 README 混成百来行操作日志);**单一 CLI 三子命令**(旧实现 5 个脚本;M4 另加机器级 `scripts/install.py` 独立安装入口);纳管状态收敛为 `~/.agents-group/var/` 内**单一 registry**(M2/M3 过渡于仓库 `scripts/`,M4 保真迁出;旧实现五六套状态文件并存;新版项目内零状态文件);**执行器路径表**替代硬编码元组;入口块带标记块与指纹、**check 报告 + enable 幂等重装**(旧实现指针纯手编,重置即静默丢失);验收命令化即 `check-memory`(旧实现靠 README 散文纪律);备份与临时物带保留期限,如 90 天提醒清理。
-
----
-
-附:调研依据——Codex 官方文档(memories、agents-md)、Claude Code 官方 memory 文档、WorkBuddy 官方设置文档与三层记忆机制文章;本机实测 `~/.codex/memories/`、`~/.claude/projects/`、`~/.workbuddy/`、poster-fit `.workbuddy/memory/`;context-keeper 仓库源码(SKILL.md、install.py 的 BRIDGE 模板与安装限制);`~/.agents-group` 全部脚本与 README 评审;巴克队长对 v1.0 的评审结论(10 项,已全部吸收:v1.1)。

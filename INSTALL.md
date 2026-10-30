@@ -6,7 +6,7 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 请从 https://github.com/vincent4j/mem-sharing 安装 memSharing（多 Agent 记忆共享与融合）。
 ```
 
-本页供未安装产品的 Agent 直接使用，无须先有产品 Skill、v0 工具、Context Keeper 或项目配置。依据 [DESIGN v1.15](DESIGN.md) 与 [M4 决策](docs/plan/decisions-m4.md)，冲突时采用后续 §14—§26（后续裁定优先） 裁定。本页描述目标流程，执行状态以实际结果为准；[M4-09 判定](docs/acceptance/m4/m4-09/JUDGEMENT.md) 已通过,真机项归 M4-10。
+本页供未安装产品的 Agent 直接使用，无须先有产品 Skill、v0 工具、Context Keeper 或项目配置。依据 [DESIGN v2.0](DESIGN.md) 与[系统架构](docs/architecture.md)。本页描述目标流程，执行状态以实际结果为准；M4-09 已通过(见[验收总览](docs/acceptance/index.md)),真机项归 M4-10。
 
 ## 用户看到的安装对话（五拍）
 

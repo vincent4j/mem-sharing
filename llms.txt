@@ -15,9 +15,9 @@ memSharing(多 Agent 记忆共享与融合):纯文件、零服务、一句话安
 - [操作手册](docs/operations.md):安装/启用/批量/停用/整理/健康检查/排查的完整操作说明。
 - [验收门禁总览](docs/acceptance/index.md):各里程碑结论索引;原始证据在 Git 历史。
 
-## 决策记录
+## 设计与验收
 
-- [M4 决策单](docs/plan/decisions-m4.md):§1~§28 全部裁定——现行合同的事实来源,含替代关系标注;更早决策见 Git 历史。
+- 现行合同的完整裁定沿革存 Git 历史(docs/plan/decisions-m4.md);[验收总览](docs/acceptance/index.md) 汇总各里程碑结论。
 
 ## 项目经历(由 keeper 管理)
 
