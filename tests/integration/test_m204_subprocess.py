@@ -79,7 +79,7 @@ class SubprocessTests(EnableFixture):
         self.assertEqual(writes[-1], self.install / 'registry.json')
         self.assertTrue((self.install / '.agm.lock').exists() is False)
         self.assertFalse(list(self.source.rglob('__pycache__')))
-        manifests = list((self.install / 'backups').rglob('manifest.json'))
+        manifests = list((self.runtime.backups).rglob('manifest.json'))
         self.assertEqual(len(manifests), 1)
         self.assertEqual(json.loads(manifests[0].read_text())['status'], 'committed')
         self.request['approval'] = None
@@ -93,8 +93,8 @@ class SubprocessTests(EnableFixture):
         self.assertEqual(result['status'], 'failed', result)
         self.assertTrue((self.root / 'docs/context-keeper/memory-keeper.md').exists())
         self.assertFalse((self.root / 'AGENTS.md').exists())
-        self.assertFalse((self.install / 'registry.json').exists())
-        manifest = json.loads(next((self.install / 'backups').rglob('manifest.json')).read_text())
+        self.assertEqual(self.load()['projects'], {})
+        manifest = json.loads(next((self.runtime.backups).rglob('manifest.json')).read_text())
         self.assertEqual(manifest['status'], 'rolled_back')
 
     def test_migration_no_record_readback_or_extra_provider_call(self):
@@ -104,7 +104,7 @@ class SubprocessTests(EnableFixture):
         result = enable.run(self.request)
         self.assertEqual(result['status'], 'migration_required', result)
         self.assertFalse((self.root / 'docs').exists())
-        self.assertFalse((self.install / 'backups').exists())
+        self.assertFalse((self.runtime.backups).exists())
 
     def test_config_fault_rolls_back_and_preserves_old_registry(self):
         self.apply()
@@ -133,7 +133,7 @@ class SubprocessTests(EnableFixture):
         result = enable.run(self.request)
         self.assertEqual(result['status'], 'recovery_required', result)
         self.assertTrue(Path(result['errors'][0]['recovery']).is_file())
-        self.assertFalse((self.install / 'registry.json').exists())
+        self.assertEqual(self.load()['projects'], {})
 
     def test_source_changed_before_transaction_is_rejected(self):
         plan = self.preview('yes', True)
@@ -146,7 +146,7 @@ class SubprocessTests(EnableFixture):
         self.request['transaction_hook'] = mutate
         result = enable.run(self.request)
         self.assertEqual(result['status'], 'approval_required', result)
-        self.assertFalse((self.install / 'registry.json').exists())
+        self.assertEqual(self.load()['projects'], {})
 
     def test_group_then_keeper_existing_objects_reused(self):
         self.apply()

@@ -2,6 +2,8 @@
 
 ## 未完成事项
 
+- M4-02 runtime layout 与产品台账；状态：进行中（实现与回归已交付，待主 Agent 验收）；触发：主 Agent 审核本轮 diff 和原始证据；完成：独立确认路径/schema/授权保真后进入 M4-03；证据：[本轮日志](worklogs/2026-10-30-M4-02统一运行态与产品台账.md)。
+
 - M2-08 两项目复制与新会话验收；状态：进行中（部分通过）；触发：用户按操作单执行两项目 WorkBuddy 新会话；完成：审核 WorkBuddy 实际读回证据后关闭三家验收；证据：[重跑日志](worklogs/2026-10-29-M2-08重跑装配与新会话验收.md)。
 
 - M2 收官遗留（M2-09 后）；状态：待办；触发：后续迭代或用户要求；范围：Claude 显式走 Skill/resume 的程序化验证、卸载/重装周期换行重排的可选打磨（AGENTS/CLAUDE 块尾换行迁移、WorkBuddy MEMORY.md 每周期 +1 换行）、AGENTS.md 构建/测试占位文案补充、Windows/Linux 环境具备后的平台扩展；证据：[M2-09 日志](worklogs/2026-10-29-M2-09平台矩阵与发布前文档.md)、[平台矩阵](../acceptance/m2-platforms.md)。
@@ -11,6 +13,8 @@
 （无。接力验证 T1 已于 2026-10-29T19:42:21+08:00 完成，完成情况见下方主题摘要与第三环日志；M1-06 整体验收仍未通过。）
 
 ## 主题摘要（按类型）
+
+- **M4-02 运行态与台账（当前）：** fb980d6 上统一 HOME 下 var 台账/锁与顶层 backups；活动 schema=2，旧 schema=1 仅显式诊断，机器缺账/坏账不自动初始化。单元 250、集成 53 exit=0；含 18 项新增定向回归。只完成隔离夹具下实现与测试，未运行真实安装/迁移/升级或新会话，待主 Agent 验收。来源：[日志](worklogs/2026-10-30-M4-02统一运行态与产品台账.md)、[原始命令](../acceptance/m4/m4-02/raw/commands.txt)。
 
 - **M2-09 平台矩阵与发布文档（当前）：** M2 收官已完成。macOS 四项 passed（安装/重装引 M2-08 与 m2-matrix，卸载/失败恢复为本仓库真实演练：remove/enable 全周期 rc=0、真实 Transaction 硬崩溃后 recover_manifest 字节复原）；Windows/Linux not-run。README 重写为用户文档、SKILL 过时表述清零、agents.json 维持不动（runtime_status 枚举无合法扩展值）。281 项测试基线与终态全绿。已知限制入 README：created 漂移需人工/remove 重装、周期换行重排、WorkBuddy 待运行时验收、registry 为本机文件。来源：[M2-09 日志](worklogs/2026-10-29-M2-09平台矩阵与发布前文档.md)、[平台矩阵](../acceptance/m2-platforms.md)。
 
@@ -28,6 +32,10 @@
 - [进化经验索引](evolution/index.md)
 
 ## 时间线（最新在前）
+
+## 2026-10-30 - M4-02 统一运行态与产品台账 `implementation`
+- **任务：** 路径解耦、schema=2 兼容模型及三命令接线；隔离回归单元 250 / 集成 53。
+- **详见：** [日志](worklogs/2026-10-30-M4-02统一运行态与产品台账.md)
 
 ## 2026-10-29 - M2-09 平台矩阵与发布前文档 `milestone`
 - **任务：** M2 收官——平台矩阵、本仓库真实卸载/重装/失败恢复演练、README/SKILL 发布文档、281 项测试全绿。

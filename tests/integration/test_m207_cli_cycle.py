@@ -20,6 +20,10 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 
+sys.path.insert(0, str(REPO / "scripts"))
+sys.path.insert(0, str(REPO / "tests/unit"))
+from runtime_fixture import seed_runtime
+
 INSTALL_STUB = r'''import json, sys, traceback
 from pathlib import Path
 BRIDGE_START = "<!-- context-keeper:start -->"
@@ -117,6 +121,8 @@ class CliHarness(unittest.TestCase):
         self.registry = self.install / "registry.json"
         self.home = self.area / "home"
         self.home.mkdir()
+        self.runtime = seed_runtime(self.home)
+        self.registry = self.runtime.registry
         self.root = self.area / "project"
         self.root.mkdir()
         self.git("init", "-q", str(self.root))
@@ -236,7 +242,7 @@ class CliHarness(unittest.TestCase):
         """幂等断言口径:项目 + HOME + 安装树。排除设计上会刷新的 registry/备份,
         以及 git 自身会触碰 mtime 的 .git 元数据(非 AGM 输出)。"""
         return self.snapshot(self.root, self.home, self.install.parent,
-                             exclude=[self.registry, self.install / "backups",
+                             exclude=[self.registry, self.runtime.backups,
                                       self.root / ".git", *exclude])
 
 
@@ -387,7 +393,7 @@ class BoundaryTests(CliHarness):
         self.assertEqual(envelope["errors"][0]["code"], "path_conflict")
         self.assertEqual(self.snapshot(self.root, exclude=[self.root / ".git"]), before,
                          "复制目录冲突时现场字节不得被改动")
-        self.assertFalse(self.registry.exists())
+        self.assertEqual(json.loads(self.registry.read_bytes())["projects"], {})
         self.assertFalse((self.root / "AGENTS.md").exists())
 
     def test_corrupt_registry_conservative_across_cli_commands(self):
@@ -421,22 +427,11 @@ class BoundaryTests(CliHarness):
         self.assertTrue((self.root / "AGENTS.md").exists(), "损坏登记下 remove 不得删除任何输出")
 
         rc, envelope = self.cli(["enable-memory", "--project", str(self.root), "--no-memory"])
-        self.assertEqual(rc, 5, envelope)
-        rc, envelope = self.approve(["enable-memory", "--project", str(self.root), "--no-memory"])
-        self.assertEqual(rc, 0, envelope)
-        self.assertTrue(any("Corrupt registry backed up" in w for w in envelope["warnings"]),
-                        envelope["warnings"])
-        backups = list((self.install / "backups").rglob("*.before"))
-        self.assertTrue(any(p.read_bytes() == corrupt for p in backups),
-                        "损坏字节必须留存在备份中")
-        ledger = json.loads(self.registry.read_bytes())
-        objects = ledger["projects"][str(self.root)]["checkouts"][str(self.root)]["objects"]
-        self.assertTrue(objects and all(o["ownership"] != "created" for o in objects.values()),
-                        "重建后不得恢复 created 删除权")
-        self.assertNotEqual(self.registry.read_bytes(), healthy)
+        self.assertEqual(rc, 2, envelope)
+        self.assertEqual(envelope["errors"][0]["code"], "registry_invalid")
+        self.assertEqual(self.registry.read_bytes(), corrupt)
+        self.assertFalse(self.runtime.lock.exists())
 
-
-class CycleTests(CliHarness):
     def test_remove_twice_then_reenable_full_cycle(self):
         rc, _ = self.enable_memory()
         self.assertEqual(rc, 0)
@@ -537,7 +532,7 @@ class CycleTests(CliHarness):
         self.assertEqual(rc, 0)
         residues = [p for p in self.area.rglob("__pycache__")]
         self.assertEqual(residues, [], "CLI 冷启动与全周期不得留下字节码缓存")
-        self.assertFalse((self.install / ".agm.lock").exists(), "锁必须正常释放")
+        self.assertFalse((self.runtime.lock).exists(), "锁必须正常释放")
 
 
 if __name__ == "__main__":

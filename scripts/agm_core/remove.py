@@ -5,13 +5,14 @@ creation evidence even with zero consumers. Plans are read-only; execution uses
 exact approved snapshots, registry-last commit and Transaction recovery.
 """
 import copy
+from . import layout
 from pathlib import Path
 
 from .entries import block_fingerprint, link_fingerprint, remove_block, sha256
 from .paths import allowed_user_paths
 from .project import resolve_project
-from .registry import load_registry, commit_registry, serialize_registry
-from .transaction import Change, Transaction, read_snapshot
+from .registry import load_registry, commit_registry, serialize_registry, require_installed
+from .transaction import Change, Transaction, read_snapshot, write_lock
 
 
 class RemoveError(ValueError):
@@ -158,15 +159,19 @@ def _check_approval(approval, identity, project, changes):
             raise RemoveError('approval_mismatch', '批准的源码指纹已变化', str(path))
 
 
-def run(request, *, registry_path=None, transaction_factory=Transaction):
+def run(request, *, registry_path=None, transaction_factory=Transaction, _locked=False):
     """CLI dispatch entry. Missing approval returns a concrete read-only preview.
 
-    Optional Python-only injection points isolate tests from the installation's
-    registry/backups; they are not additional CLI flags.
+    HOME/runtime_layout isolate tests. The legacy registry_path Python argument
+    is accepted only when equal to that layout; it cannot redirect active state.
     """
     result = {'status': 'failed', 'projects': [], 'changes': [], 'warnings': [],
               'errors': [], 'approval_required': False, 'next_action': None}
     try:
+        runtime = layout.from_request(request)
+        result['runtime_layout'] = runtime.describe()
+        if registry_path is not None and Path(registry_path) != runtime.registry:
+            raise RemoveError('runtime_layout_invalid', 'registry_path must match the injected HOME/layout')
         identity = resolve_project(request.get('project'))
         main, checkout = str(identity.main_checkout), str(identity.checkout)
         approval = request.get('approval')
@@ -175,13 +180,20 @@ def run(request, *, registry_path=None, transaction_factory=Transaction):
                                   ('checkout', checkout), ('git_common_dir', str(identity.git_common_dir))):
                 if approval.get(key) != expected:
                     raise RemoveError('approval_mismatch', '批准目标不符：' + key)
-        path = Path(registry_path) if registry_path else Path(__file__).resolve().parents[1] / 'registry.json'
+        # An approved call replans with the same product writer lock as enable.
+        if request.get('approval') is not None and not _locked:
+            require_installed(load_registry(runtime.registry,
+                allowed_user_paths=allowed_user_paths(request['platform_config'], None, home=str(request['home']))))
+            with write_lock(runtime.lock):
+                return run(request, registry_path=registry_path, transaction_factory=transaction_factory, _locked=True)
+        path = runtime.registry
         allowed = allowed_user_paths(request['platform_config'], None, home=str(request['home']))
         before = read_snapshot(path)
         if before.kind == 'absent':
-            result.update(status='completed', warnings=['registry 不存在；不推断任何删除权'])
+            result.update(status='failed', errors=[{'code': 'machine_not_installed', 'path': str(path),
+                'message': 'Machine registry missing; use INSTALL.md and scripts/install.py', 'recovery': None}])
             return result
-        data = load_registry(path, allowed_user_paths=allowed)
+        data = require_installed(load_registry(path, allowed_user_paths=allowed))
         updated, changes, warnings = plan_remove(data, identity)
         result['warnings'] = warnings
         project = data['projects'].get(main)
@@ -210,7 +222,7 @@ def run(request, *, registry_path=None, transaction_factory=Transaction):
                     raise RemoveError('project_identity_mismatch', '锁内 Git 身份变化')
                 _check_approval(approval, identity, project, summaries)
 
-        tx = transaction_factory(lock_path=path.parent / '.agm.lock', backup_root=path.parent / 'backups',
+        tx = transaction_factory(lock_path=runtime.transaction_lock, backup_root=runtime.backups,
                                  allowed_roots=[identity.checkout, path], operation='remove-memory', hook=verify)
         receipt = commit_registry(path, updated, transaction=tx, expected=before, changes=changes,
                                   allowed_user_paths=allowed, previous=data)

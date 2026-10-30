@@ -18,6 +18,7 @@ changes 恒为空(候选修复放 next_action),projects[] 每项含本模块定�
 from __future__ import annotations
 
 import os
+from . import layout
 import stat as stat_module
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,7 +26,7 @@ from pathlib import Path
 from . import paths as agm_paths
 from .entries import EntryConflict, block_fingerprint, managed_span, sha256, verify_link
 from .project import ProjectError, resolve_project
-from .registry import RegistryError, load_registry
+from .registry import RegistryError, load_registry, require_installed
 
 # 两对桥接标记与上游 install.py / templates/workbuddy-bridge.md 一致,仅用于
 # 未登记现场的只读观察;已登记现场的权威标记来自 registry 对象。
@@ -37,7 +38,6 @@ ALL_MARKER_PAIRS = tuple(BRIDGE_MARKERS.values())
 IMPORT_REFERENCE_LINE = b"@AGENTS.md"
 OVERRIDE_BASENAME = "AGENTS.override.md"
 SKILL_NAME = "context-keeper"
-REGISTRY_BASENAME = "registry.json"
 
 STATUS_COMPLETED = "completed"
 STATUS_GAPS = "gaps"
@@ -101,7 +101,7 @@ def _load_registry_state(registry_path, allowed_user_paths):
     if not os.path.isfile(registry_path):
         return None, "registry 文件不存在: %s" % registry_path
     try:
-        return load_registry(registry_path, allowed_user_paths=allowed_user_paths), None
+        return require_installed(load_registry(registry_path, allowed_user_paths=allowed_user_paths)), None
     except RegistryError as exc:
         return None, "registry 校验失败(损坏或含越界对象): %s" % exc
 
@@ -648,8 +648,13 @@ def run(request):
     """check-memory 命令体入口;合同与零写入边界见模块 docstring。"""
     platform_config = request["platform_config"]
     home = request["home"]
-    table_path = request.get("agents_table_path") or agm_paths.default_table_path()
-    registry_path = Path(table_path).parent / REGISTRY_BASENAME
+    try:
+        runtime = layout.from_request(request)
+    except ValueError as exc:
+        return {"status": STATUS_FAILED, "projects": [], "changes": [], "warnings": [],
+                "errors": [{"code": getattr(exc, "code", "runtime_layout_invalid"), "path": None,
+                            "message": str(exc), "recovery": None}], "approval_required": False, "next_action": None}
+    registry_path = runtime.registry
     allowed = agm_paths.allowed_user_paths(platform_config, None, home=home)
     registry, registry_problem = _load_registry_state(registry_path, allowed)
 
@@ -677,6 +682,7 @@ def run(request):
             identity = resolve_project(Path(raw_project) if raw_project else None, allow_worktree=True)
         except ProjectError as exc:
             return {
+                "runtime_layout": runtime.describe(),
                 "status": STATUS_FAILED,
                 "projects": [],
                 "changes": [],
@@ -715,6 +721,7 @@ def run(request):
             "drifted/conflict/manual 项先人工核对;缺口清单见 projects[].gaps"
         )
     return {
+        "runtime_layout": runtime.describe(),
         "status": STATUS_GAPS if any_gap else STATUS_COMPLETED,
         "projects": projects,
         "changes": [],

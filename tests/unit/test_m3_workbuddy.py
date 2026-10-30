@@ -61,7 +61,7 @@ class WorkBuddyProtocolTests(EnableFixture):
         result = enable.run(self.request)
         self.assertEqual(result['errors'][0]['code'], 'provider_scope_mismatch', result)
         self.assertFalse((self.root / '.workbuddy/memory/MEMORY.md').exists())
-        self.assertFalse((self.install / 'registry.json').exists())
+        self.assertEqual(self.load()['projects'], {})
 
 
 if __name__ == '__main__':

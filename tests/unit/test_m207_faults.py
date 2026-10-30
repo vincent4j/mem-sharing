@@ -17,6 +17,8 @@ from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
+from runtime_fixture import seed_runtime, installed_registry
 from agm_core import check as check_mod
 from agm_core import enable, paths, registry
 from agm_core.remove import run as remove_run
@@ -36,6 +38,8 @@ class M207Fixture(unittest.TestCase):
         self.install.mkdir(parents=True)
         self.home = self.area / "home"
         self.home.mkdir()
+        self.runtime = seed_runtime(self.home)
+        self.install = self.runtime.var
         self.source = self._keeper_source()
         self.config = paths.select_platform(paths.load_agents_table(), "darwin")
         self.calls = []
@@ -43,7 +47,7 @@ class M207Fixture(unittest.TestCase):
                         "memory_choice": "no", "approval": None, "interactive": False,
                         "home": str(self.home), "platform_config": self.config,
                         "agents_table_path": str(self.install / "agents.json"),
-                        "install_dir": str(self.install), "runner": self.runner}
+                        "runtime_layout": self.runtime, "runner": self.runner}
         (self.install / "agents.json").write_bytes((SCRIPTS / "agents.json").read_bytes())
 
     def _keeper_source(self):
@@ -178,7 +182,7 @@ class FaultMatrixTests(M207Fixture):
         (self.install / "registry.json").unlink()
 
         self.request.update(approval=None, memory_choice=None)
-        self.assertEqual(enable.run(self.request)["status"], "approval_required")
+        self.assertEqual(enable.run(self.request)["errors"][0]["code"], "machine_not_installed")
 
         result = self.check()
         self.assertEqual(result["status"], "gaps", result)
@@ -186,8 +190,8 @@ class FaultMatrixTests(M207Fixture):
                       [g["code"] for g in result["projects"][0]["gaps"]])
 
         removal = self.remove()
-        self.assertEqual(removal["status"], "completed", removal)
-        self.assertIn("registry 不存在", removal["warnings"][0])
+        self.assertEqual(removal["status"], "failed", removal)
+        self.assertEqual(removal["errors"][0]["code"], "machine_not_installed")
         for path, data in outputs.items():
             self.assertEqual(path.read_bytes(), data, "registry 丢失不得触发任何删除")
         self.assertFalse((self.install / "registry.json").exists(), "remove 不得凭空重建 registry")
@@ -267,8 +271,8 @@ class FaultMatrixTests(M207Fixture):
         self.assertEqual(result["status"], "failed", result)
         self.assertEqual(result["errors"][0]["code"], "path_conflict")
         self.assertEqual(marker.read_bytes(), b"occupied")
-        self.assertFalse((self.install / "registry.json").exists())
-        self.assertFalse((self.install / "backups").exists())
+        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
+        self.assertFalse((self.runtime.backups).exists())
         self.assertFalse((self.root / "CLAUDE.md").exists())
 
     def test_workbuddy_native_bytes_survive_enable_and_remove_cycle(self):

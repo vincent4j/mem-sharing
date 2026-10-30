@@ -28,6 +28,8 @@ if SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, SCRIPTS_DIR)
 
 import agm  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
+from runtime_fixture import seed_runtime, installed_registry
 from agm_core import check as check_mod  # noqa: E402
 from agm_core import paths as agm_paths  # noqa: E402
 from agm_core import registry as reg  # noqa: E402
@@ -74,6 +76,7 @@ class Sandbox:
         self.provider = self.root / "provider" / "context-keeper"
         self.table_dir = self.root / "table"
         self.home.mkdir()
+        self.runtime = seed_runtime(self.home)
         self.provider.mkdir(parents=True)
         self.table_dir.mkdir()
         (self.provider / "SKILL.md").write_text("# context-keeper\n", encoding="utf-8")
@@ -82,7 +85,7 @@ class Sandbox:
         with open(self.table_dir / "agents.json", "r", encoding="utf-8") as handle:
             self.table = json.load(handle)
         self.platform_config = self.table["platforms"]["darwin"]
-        self.registry_path = self.table_dir / "registry.json"
+        self.registry_path = self.runtime.registry
 
     def allowed_user_paths(self):
         return agm_paths.allowed_user_paths(self.platform_config, None, home=str(self.home))
@@ -198,7 +201,7 @@ def build_installed_project(sb: Sandbox, name, *, auth="yes", runtime_passed=Fal
         evidence.write_text("new-session acceptance\n", encoding="utf-8")
         runtime = {"status": "passed", "evidence_path": str(evidence)}
     registry = {
-        "schema_version": 1,
+        **installed_registry(),
         "projects": {
             str(main): {
                 "main_checkout": str(main),
@@ -459,7 +462,7 @@ class CheckReadOnlyTests(unittest.TestCase):
         self.assertEqual(
             set(envelope),
             {"schema_version", "command", "status", "projects", "changes", "warnings",
-             "errors", "approval_required", "next_action"},
+             "errors", "approval_required", "next_action", "runtime_layout"},
         )
         self.assertEqual(envelope["command"], "check-memory")
         self.assertEqual(envelope["status"], "completed")
@@ -652,7 +655,7 @@ class CheckReadOnlyTests(unittest.TestCase):
     def test_unregistered_project_reports_gap_and_discovery(self):
         main = _git_repo(self.sb.root / "fresh")
         (self.sb.home / ".codex").mkdir()
-        self.sb.write_registry({"schema_version": 1, "projects": {}, "shared_objects": {}})
+        self.sb.write_registry(installed_registry())
         envelope, code = run_check(self.sb, ["--project", str(main)])
         self.assertEqual((envelope["status"], code), ("gaps", 1))
         report = envelope["projects"][0]

@@ -7,6 +7,8 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
+from runtime_fixture import seed_runtime, installed_registry
 from agm_core.entries import sha256, link_fingerprint
 from agm_core.paths import load_agents_table, select_platform
 from agm_core.project import resolve_project
@@ -28,15 +30,15 @@ class RemoveFixture(unittest.TestCase):
         self.identity = resolve_project(self.repo)
         self.home = self.root / 'home'
         self.home.mkdir()
-        self.install = self.root / 'install'
-        self.install.mkdir()
+        self.runtime = seed_runtime(self.home)
+        self.install = self.runtime.var
         self.registry = self.install / 'registry.json'
         self.manifest = self.install / 'creation.json'
         self.manifest.write_text('{}')
         self.config = select_platform(load_agents_table(), 'darwin')
         self.request = {'project': str(self.repo), 'home': str(self.home),
                         'platform_config': self.config, 'approval': None}
-        self.data = empty_registry()
+        self.data = installed_registry()
         self.main = str(self.repo)
         self.data['projects'][self.main] = new_project(self.identity, ['codex'])
         self.assembly = self.data['projects'][self.main]['checkouts'][self.main]

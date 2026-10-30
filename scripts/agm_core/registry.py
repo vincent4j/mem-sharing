@@ -1,4 +1,4 @@
-"""Strict schema-v1 registry validation; reads never create state or locks.
+"""Strict versioned registry validation; reads never create state or locks.
 
 User paths are supplied by the validated platform path table, not inferred here.
 Atomic writes are delegated to transaction.Transaction; a registry must be its
@@ -153,7 +153,10 @@ def _object(obj, scope, checkout, allowed_user_paths, pending_manifest=None):
 
 
 def empty_registry():
-    return {"schema_version": 1, "projects": {}, "shared_objects": {}}
+    """An explicit uninstalled schema-v2 model, never an on-disk initializer."""
+    return {"schema_version": 2, "projects": {}, "shared_objects": {},
+            "product": None, "machine": {"agents": {}, "objects": {}},
+            "migration": None, "legacy_import": None}
 
 
 def unknown_fact():
@@ -178,7 +181,7 @@ def new_project(identity, agents):
             "checkouts": {str(identity.checkout): assembly}}
 
 
-def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
+def validate_registry_v1(data, *, allowed_user_paths=None, _pending_manifest=None):
     """Validate exact schema and cross-references, without changing data or disk.
 
     allowed_user_paths must be provided when user-scoped objects exist.
@@ -277,6 +280,132 @@ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
     return data
 
 
+
+def _digest(value):
+    if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
+        _fail("expected SHA-256 digest")
+
+
+def _runtime(value):
+    _keys(value, "status evidence_path", "runtime")
+    if value["status"] not in ("pending", "passed", "failed"):
+        _fail("unknown runtime status")
+    if value["evidence_path"] is not None:
+        _path(value["evidence_path"])
+    if value["status"] != "pending" and (value["evidence_path"] is None or not Path(value["evidence_path"]).is_file()):
+        _fail("runtime evidence unavailable")
+
+
+def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
+    """Active v2 only. Legacy v1 is available solely via explicit diagnostic APIs."""
+    if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] == 1:
+        raise RegistryMigrationRequired("schema=1 requires explicit machine migration; no fallback/rebuild")
+    _keys(data, "schema_version projects shared_objects product machine migration legacy_import", "registry")
+    if type(data["schema_version"]) is not int or data["schema_version"] != 2:
+        _fail("unsupported registry schema")
+    validate_registry_v1({"schema_version": 1, "projects": data["projects"],
+                          "shared_objects": data["shared_objects"]},
+                         allowed_user_paths=allowed_user_paths, _pending_manifest=_pending_manifest)
+    product = data["product"]
+    if product is not None:
+        _keys(product, "product_id installation_id product_structure_version product_code_version source installation_status last_operation_id", "product")
+        if product["product_id"] != "agent-group-memory":
+            _fail("product identity mismatch")
+        _text(product["installation_id"])
+        if type(product["product_structure_version"]) is not int or product["product_structure_version"] != 1:
+            _fail("unsupported product structure version")
+        if not isinstance(product["product_code_version"], str) or not re.fullmatch(
+                r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?", product["product_code_version"]):
+            _fail("invalid product code SemVer")
+        _keys(product["source"], "url commit tree_sha256", "product source")
+        _text(product["source"]["url"])
+        if not isinstance(product["source"]["commit"], str) or not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", product["source"]["commit"]):
+            _fail("invalid source commit")
+        _digest(product["source"]["tree_sha256"])
+        if product["installation_status"] not in ("complete", "installing", "recovery_required"):
+            _fail("unknown installation status")
+        _text(product["last_operation_id"])
+    machine = data["machine"]
+    _keys(machine, "agents objects", "machine")
+    if not isinstance(machine["agents"], dict) or not set(machine["agents"]) <= set(AGENTS):
+        _fail("invalid machine agents")
+    for record in machine["agents"].values():
+        _keys(record, "installation static runtime_acceptance", "machine agent")
+        installation = record["installation"]
+        _keys(installation, "status observed_at evidence", "agent installation")
+        if installation["status"] not in ("installed", "absent", "unknown"):
+            _fail("invalid installation fact")
+        _fact(dict(installation, status={"installed": "ready", "absent": "missing", "unknown": "unknown"}[installation["status"]]))
+        _fact(record["static"])
+        _runtime(record["runtime_acceptance"])
+    if not isinstance(machine["objects"], dict):
+        _fail("invalid machine objects")
+    existing = _objects(dict(data, machine={"objects": {}}))
+    units = {(o["path"], json.dumps(o["marker"], sort_keys=True)) for o in existing.values()}
+    for oid, obj in machine["objects"].items():
+        _text(oid)
+        if oid in existing or not isinstance(obj, dict) or obj.get("scope") != "machine":
+            _fail("machine object identity collision/scope mismatch")
+        _object(dict(obj, scope="user"), "user", None,
+                None if allowed_user_paths is None else set(allowed_user_paths), _pending_manifest)
+        if obj["consumers"] != []:
+            _fail("machine objects cannot use project consumers")
+        if not set(obj["agents"]) <= set(machine["agents"]):
+            _fail("machine object has no agent installation record")
+        unit = (obj["path"], json.dumps(obj["marker"], sort_keys=True))
+        if unit in units:
+            _fail("duplicate machine unit; reference existing shared object instead")
+        units.add(unit)
+    migration = data["migration"]
+    if migration is not None:
+        _keys(migration, "operation_id source_registry source_sha256 archive_root reference_map tombstones status", "migration")
+        _text(migration["operation_id"])
+        _path(migration["source_registry"])
+        _digest(migration["source_sha256"])
+        _path(migration["archive_root"])
+        if migration["status"] not in ("prepared", "committed", "recovery_required", "rolled_back"):
+            _fail("unknown migration status")
+        if not isinstance(migration["reference_map"], dict):
+            _fail("invalid reference map")
+        for old, target in migration["reference_map"].items():
+            _path(old)
+            _keys(target, "path sha256 kind", "archived reference")
+            _path(target["path"])
+            _digest(target["sha256"])
+            if target["kind"] != "file":
+                _fail("unsupported archived evidence kind")
+        if not isinstance(migration["tombstones"], dict):
+            _fail("invalid tombstones")
+        for path, digest in migration["tombstones"].items():
+            _path(path)
+            _digest(digest)
+    imported = data["legacy_import"]
+    if imported is not None:
+        _keys(imported, "operation_id source_tree_sha256 manifest_path status", "legacy import")
+        _text(imported["operation_id"])
+        _digest(imported["source_tree_sha256"])
+        _path(imported["manifest_path"])
+        if imported["status"] not in ("prepared", "snapshot_complete", "applying", "outputs_verified", "committed", "recovery_required", "rolled_back"):
+            _fail("unknown legacy import status")
+    return data
+
+
+class RegistryMigrationRequired(RegistryError):
+    code = "registry_migration_required"
+
+
+def require_installed(data):
+    """Project writers cannot initialize or repair the machine installation."""
+    if data["product"] is None:
+        raise RegistryError("Machine product missing; use INSTALL.md and scripts/install.py")
+    if data["product"]["installation_status"] != "complete":
+        raise RegistryError("Machine installation incomplete; explicit recovery required")
+    for name in ("migration", "legacy_import"):
+        state = data[name]
+        if state is not None and state["status"] not in ("committed", "rolled_back"):
+            raise RegistryError("Machine operation incomplete; explicit recovery required")
+    return data
+
 def _no_duplicates(pairs):
     obj = {}
     for key, value in pairs:
@@ -286,7 +415,7 @@ def _no_duplicates(pairs):
     return obj
 
 
-def load_registry(path, *, allowed_user_paths=None):
+def _load_registry(path, *, allowed_user_paths=None, legacy=False):
     path = Path(path)
     if path.is_symlink() or str(path.parent.resolve() / path.name) != str(path.absolute()):
         _fail("registry path is a symlink or has a symlink parent")
@@ -297,7 +426,17 @@ def load_registry(path, *, allowed_user_paths=None):
         if isinstance(exc, RegistryError):
             raise
         raise RegistryError("cannot read registry: " + str(exc)) from exc
-    return validate_registry(data, allowed_user_paths=allowed_user_paths)
+    validator = validate_registry_v1 if legacy else validate_registry
+    return validator(data, allowed_user_paths=allowed_user_paths)
+
+
+def load_registry(path, *, allowed_user_paths=None):
+    return _load_registry(path, allowed_user_paths=allowed_user_paths)
+
+
+def load_legacy_registry(path, *, allowed_user_paths=None):
+    """Explicit strict v1 diagnostic/migration input; never used by project writers."""
+    return _load_registry(path, allowed_user_paths=allowed_user_paths, legacy=True)
 
 
 def serialize_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
@@ -308,7 +447,7 @@ def serialize_registry(data, *, allowed_user_paths=None, _pending_manifest=None)
             assembly["agents"].sort(key=AGENTS.index)
             for obj in assembly["objects"].values():
                 obj["agents"].sort(key=AGENTS.index)
-    for obj in result["shared_objects"].values():
+    for obj in list(result["shared_objects"].values()) + list(result["machine"]["objects"].values()):
         obj["agents"].sort(key=AGENTS.index)
     return (json.dumps(result, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
@@ -364,6 +503,7 @@ def validate_ownership_transition(previous, current, *, changes=()):
 
 def _objects(data):
     result = dict(data["shared_objects"])
+    result.update(data.get("machine", {}).get("objects", {}))
     for project in data["projects"].values():
         for assembly in project["checkouts"].values():
             result.update(assembly["objects"])
@@ -375,8 +515,8 @@ def commit_registry(path, data, *, transaction, expected, changes=(),
     """Validate and commit registry last, including evidence for new created units.
 
     expected is the exact registry snapshot read by the caller. Existing valid
-    ownership cannot be promoted by omitting previous. Explicit rebuild=True is
-    required for corrupt/missing history; its old objects cannot become created.
+    ownership cannot be promoted by omitting previous. Corrupt/legacy active
+    state is never rebuilt, including when an old caller passes rebuild=True.
     New created records must bind to an absent unit in this transaction's write
     set and to its actual manifest path, including when the manifest is pending.
     """
@@ -390,9 +530,7 @@ def commit_registry(path, data, *, transaction, expected, changes=(),
             observed = json.loads(expected.data.decode("utf-8"), object_pairs_hook=_no_duplicates)
             validate_registry(observed, allowed_user_paths=allowed_user_paths)
         except (ValueError, UnicodeError) as exc:
-            if not rebuild:
-                raise RegistryError("corrupt registry requires explicit authorized rebuild") from exc
-            observed = empty_registry()
+            raise RegistryError("Active registry invalid; explicit machine recovery required") from exc
     elif expected.kind == "absent":
         observed = empty_registry()
     else:

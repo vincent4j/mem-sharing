@@ -9,6 +9,8 @@ from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
+from runtime_fixture import seed_runtime, installed_registry
 from agm_core import enable, paths, registry
 from agm_core.entries import sha256
 
@@ -25,6 +27,8 @@ class EnableFixture(unittest.TestCase):
         self.install.mkdir(parents=True)
         self.home = self.area / "home"
         self.home.mkdir()
+        self.runtime = seed_runtime(self.home)
+        self.install = self.runtime.var
         self.source = self.area / "keeper"
         (self.source / "scripts").mkdir(parents=True)
         subprocess.run(["git", "init", "-q", str(self.source)], check=True)
@@ -48,7 +52,7 @@ WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\\nUpstream WorkBuddy rules\\n{WORK
         self.request = {"project": str(self.root), "agents": ["codex", "claude", "workbuddy"],
                         "memory_choice": "no", "approval": None, "interactive": False,
                         "home": str(self.home), "platform_config": self.config,
-                        "install_dir": str(self.install), "runner": self.runner}
+                        "runtime_layout": self.runtime, "runner": self.runner}
 
     def runner(self, argv, **kwargs):
         self.calls.append(argv)
@@ -231,8 +235,8 @@ class EnableTests(EnableFixture):
         plan = self.preview()
         self.assertEqual(plan["memory_authorization"], "no")
         self.assertFalse((self.root / "AGENTS.md").exists())
-        self.assertFalse((self.install / "registry.json").exists())
-        self.assertFalse((self.install / "backups").exists())
+        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
+        self.assertFalse((self.runtime.backups).exists())
         self.assertFalse((self.install / ".agm.lock").exists())
         self.assertEqual(self.calls, [])
         self.assertTrue(all(c["after_fingerprint"] for c in plan["changes"]))
@@ -357,7 +361,7 @@ class EnableTests(EnableFixture):
         self.install_preview_only = True
         result = enable.run(self.request)
         self.assertEqual(result["status"], "approval_required", result)
-        self.assertFalse((self.install / "registry.json").exists())
+        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
         self.assertFalse((self.root / "AGENTS.md").exists())
 
     def test_scope_mismatch_preview_stops_before_writes(self):
@@ -374,7 +378,7 @@ class EnableTests(EnableFixture):
         self.bad_ensure = True
         result = enable.run(self.request)
         self.assertEqual(result["errors"][0]["code"], "provider_scope_mismatch")
-        self.assertFalse((self.install / "registry.json").exists())
+        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
         self.assertFalse((self.root / "AGENTS.md").exists())
 
     def test_migration_preview_stops_immediately(self):
@@ -385,7 +389,7 @@ class EnableTests(EnableFixture):
         self.assertEqual(result["status"], "migration_required", result)
         self.assertEqual(len(self.calls), 2)
         self.assertFalse((self.root / "AGENTS.md").exists())
-        self.assertFalse((self.install / "registry.json").exists())
+        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
 
     def test_init_preview_five_then_approved_success(self):
         self.init_rc = 5
@@ -407,7 +411,7 @@ class EnableTests(EnableFixture):
         result = enable.run(self.request)
         self.assertEqual(result["status"], "failed", result)
         self.assertTrue((self.root / "docs/context-keeper/memory-keeper.md").exists())
-        self.assertFalse((self.install / "registry.json").exists())
+        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
         self.assertFalse((self.root / "AGENTS.md").exists())
 
     def test_workbuddy_top_preserves_raw_native_bytes(self):
@@ -426,7 +430,7 @@ class EnableTests(EnableFixture):
         self.request["project"] = str(tree)
         result = enable.run(self.request)
         self.assertEqual(result["errors"][0]["code"], "worktree_unsupported")
-        self.assertFalse((self.install / "registry.json").exists())
+        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
 
     def test_lock_is_not_stolen(self):
         (self.install / ".agm.lock").mkdir()
@@ -434,13 +438,15 @@ class EnableTests(EnableFixture):
         self.assertEqual(result["errors"][0]["code"], "lock_conflict")
         self.assertTrue((self.install / ".agm.lock").exists())
 
-    def test_corrupt_registry_requires_exact_approval_and_backup(self):
-        (self.install / "registry.json").write_bytes(b"{broken")
-        plan = self.preview()
-        self.request["approval"] = plan
+    def test_corrupt_registry_cannot_be_rebuilt_by_project_enable(self):
+        path = self.install / "registry.json"
+        path.write_bytes(b"{broken")
         result = enable.run(self.request)
-        self.assertEqual(result["status"], "completed", result)
-        self.assertTrue(any(p.read_bytes() == b"{broken" for p in (self.install / "backups").rglob("*.before")))
+        self.assertEqual(result["status"], "failed", result)
+        self.assertEqual(result["errors"][0]["code"], "registry_invalid")
+        self.assertEqual(path.read_bytes(), b"{broken")
+        self.assertFalse(self.runtime.backups.exists())
+        self.assertFalse(self.runtime.lock.exists())
 
     def test_source_update_requires_new_approval_without_recorded_fingerprint_refresh(self):
         self.apply("yes", True)
@@ -496,7 +502,7 @@ class EnableTests(EnableFixture):
         self.init_approved_rc = 5
         result = enable.run(self.request)
         self.assertEqual(result["status"], "approval_required", result)
-        self.assertFalse((self.install / "registry.json").exists())
+        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
         self.assertNotEqual(result["projects"][0]["states"]["store_authorized_ready"]["status"], "ready")
 
     def test_unknown_provider_failure_is_failure(self):
@@ -535,7 +541,7 @@ class EnableTests(EnableFixture):
         self.assertEqual(self.calls[-1][1], str(self.source / "scripts/context_keeper_probe.py"))
         self.assertIn("--approved", self.calls[-1])
         self.assertEqual(result["projects"][0]["states"]["store_authorized_ready"]["status"], "blocked")
-        self.assertFalse((self.install / "registry.json").exists())
+        self.assertEqual(json.loads((self.install / "registry.json").read_bytes()), installed_registry())
         self.assertFalse((self.root / "AGENTS.md").exists())
 
 

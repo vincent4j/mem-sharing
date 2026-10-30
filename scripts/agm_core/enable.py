@@ -8,7 +8,7 @@ scope and leave those bytes unchanged. Store init remains Keeper-owned: on any
 failure its assets are preserved, never rolled back or read as memory content.
 
 run(request) is the CLI dispatch entry. Private request injection points
-install_dir, runner, confirm and transaction_hook support isolated tests only;
+runtime_layout, runner, confirm and transaction_hook support isolated tests only;
 they are not CLI options. No source download, fallback, or global installation.
 """
 import ast
@@ -20,7 +20,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import entries, paths, project, registry
+from . import entries, paths, project, registry, layout
 from .transaction import Change, Snapshot, Transaction, TransactionError, read_snapshot, write_lock
 
 KEEPER_MARKER = {"start": "<!-- context-keeper:start -->", "end": "<!-- context-keeper:end -->"}
@@ -328,10 +328,11 @@ def run(request):
     result = {"status": "failed", "projects": [], "changes": [], "warnings": [], "errors": [],
               "approval_required": False, "next_action": None}
     try:
-        install = Path(request.get("install_dir", Path(__file__).resolve().parents[1])).resolve()
-        # install_dir already exists; do not create it just to acquire a lock.
-        with write_lock(install / ".agm.lock"):
-            return _run_locked(request, install, result)
+        runtime = layout.from_request(request)
+        result["runtime_layout"] = runtime.describe()
+        if runtime.lock.exists():
+            raise TransactionError("writer lock exists; do not steal a stale lock", code="lock_conflict")
+        return _run_locked(request, runtime, result, locked=False)
     except (ValueError, OSError, EOFError, SyntaxError) as exc:
         result["status"] = getattr(exc, "status", "recovery_required" if getattr(exc, "code", None) == "recovery_required" else "failed")
         result["approval_required"] = result["status"] == "approval_required"
@@ -349,24 +350,18 @@ def run(request):
         return result
 
 
-def _run_locked(request, install, result):
+def _run_locked(request, runtime, result, *, locked=True):
     identity = project.resolve_project(request.get("project"))
     root, key = identity.checkout, str(identity.main_checkout)
     agents = paths.resolve_agents(request.get("agents"))
     config, home = request["platform_config"], request["home"]
     allowed = paths.allowed_user_paths(config, None, home=home)
-    registry_path = install / "registry.json"
+    registry_path = runtime.registry
     expected_registry = read_snapshot(registry_path)
-    rebuild = False
     if expected_registry.kind == "absent":
-        previous_registry = registry.empty_registry()
-    else:
-        try:
-            previous_registry = registry.load_registry(registry_path, allowed_user_paths=allowed)
-        except registry.RegistryError:
-            if expected_registry.kind != "file":
-                raise
-            previous_registry, rebuild = registry.empty_registry(), True
+        raise EnableError("machine_not_installed", "Machine registry missing: " + str(registry_path) + "; use INSTALL.md and scripts/install.py")
+    previous_registry = registry.require_installed(registry.load_registry(registry_path, allowed_user_paths=allowed))
+    rebuild = False
     data = copy.deepcopy(previous_registry)
     previous = copy.deepcopy(data["projects"].get(key))
     p = data["projects"].setdefault(key, registry.new_project(identity, agents))
@@ -426,7 +421,7 @@ def _run_locked(request, install, result):
             store = approved_store
         if previous and assembly["store"]["location_approved"] and str(store) != assembly["store"]["path"]:
             raise EnableError("approval_mismatch", "Keeper store location changed; re-confirm location explicitly")
-    tx = Transaction(lock_path=install / ".agm.lock/transaction", backup_root=install / "backups",
+    tx = Transaction(lock_path=runtime.transaction_lock, backup_root=runtime.backups,
                      allowed_roots=[root, registry_path] + [Path(v) for v in allowed])
     plan = _Plan(assembly, data["shared_objects"], root, tx)
     base = root / "AGENTS.md"
@@ -520,6 +515,12 @@ def _run_locked(request, install, result):
         return result
     if choice == "yes" and source is None:
         raise EnableError("provider_source_missing", "Confirm an existing Keeper checkout; no source download/fallback is permitted")
+    if not locked:
+        # Inspection is write-free; only an authorized execution takes the shared lock.
+        # Replan under that lock so approval and machine state cannot race.
+        approved_request = dict(request, approval=dict(actual_plan, **evidence))
+        with write_lock(runtime.lock):
+            return _run_locked(approved_request, runtime, result, locked=True)
     p["memory_authorization"], p["authorization_evidence"] = choice, evidence
     if choice == "yes":
         p["provider_source"] = str(source)

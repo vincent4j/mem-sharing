@@ -37,13 +37,14 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
 
     def test_corrupt_missing_registry_and_unknown_project_never_infer_ownership(self):
         original = self.entry.read_bytes()
-        self.assertEqual(self.call()['status'], 'completed')
+        self.registry.unlink()
+        self.assertEqual(self.call()['errors'][0]['code'], 'machine_not_installed')
         self.registry.write_bytes(b'{bad')
         self.assertEqual(self.call()['errors'][0]['code'], 'registry_invalid')
-        self.registry.write_bytes(fixtures.serialize_registry(fixtures.empty_registry()))
+        self.registry.write_bytes(fixtures.serialize_registry(fixtures.installed_registry()))
         self.assertEqual(self.call()['status'], 'completed')
         self.assertEqual(self.entry.read_bytes(), original)
-        self.assertFalse((self.install / 'backups').exists())
+        self.assertFalse((self.runtime.backups).exists())
 
     def test_approval_target_rejected_before_registry_read(self):
         from unittest.mock import patch
@@ -123,11 +124,11 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
         original = self.entry.read_bytes()
         self.approve()
         self.assertEqual(self.entry.read_bytes(), original)
-        self.assertFalse((self.install / 'backups').exists())
+        self.assertFalse((self.runtime.backups).exists())
         self.entry.write_bytes(original + b'new outside')
         result = self.call()
         self.assertEqual(result['errors'][0]['code'], 'approval_mismatch', result)
-        self.assertFalse((self.install / 'backups').exists())
+        self.assertFalse((self.runtime.backups).exists())
 
     def test_created_relative_symlink_removed_source_survives(self):
         source = self.repo / 'source'
@@ -173,7 +174,7 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
         self.assertEqual(result['errors'][0]['code'], 'drift', result)
         self.assertEqual(self.entry.read_bytes(), b'external edit')
         self.assertEqual(self.registry.read_bytes(), before)
-        self.assertFalse((self.install / 'backups').exists())
+        self.assertFalse((self.runtime.backups).exists())
 
     def test_drift_blocks_all_created_removals(self):
         path = self.repo / 'owned.md'
@@ -184,7 +185,7 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
         result = self.call()
         self.assertEqual(result['errors'][0]['code'], 'drift', result)
         self.assertEqual(path.read_bytes(), b'owned')
-        self.assertFalse((self.install / 'backups').exists())
+        self.assertFalse((self.runtime.backups).exists())
 
 
 if __name__ == '__main__':

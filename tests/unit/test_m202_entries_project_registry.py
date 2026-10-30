@@ -169,7 +169,7 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(load_registry(path), self.data)
 
     def test_missing_unknown_fields_and_boolean_version(self):
-        for mutate in (lambda d: d.pop("shared_objects"), lambda d: d.update(extra=1), lambda d: d.update(schema_version=True), lambda d: d.update(schema_version=2)):
+        for mutate in (lambda d: d.pop("shared_objects"), lambda d: d.update(extra=1), lambda d: d.update(schema_version=True), lambda d: d.update(schema_version=3)):
             data = copy.deepcopy(self.data)
             mutate(data)
             with self.assertRaises(RegistryError):
@@ -327,10 +327,10 @@ class RegistryTests(unittest.TestCase):
         tx = lambda: Transaction(lock_path=self.root / ".agm.lock", backup_root=self.root / "backups", allowed_roots=[self.root])
         with self.assertRaises(RegistryError):
             commit_registry(registry, self.data, transaction=tx(), expected=read_snapshot(registry))
-        result = commit_registry(registry, self.data, transaction=tx(), expected=read_snapshot(registry), rebuild=True)
-        manifest = Path(result["manifest"])
-        entry = json.loads(manifest.read_bytes())["entries"][0]
-        self.assertEqual((manifest.parent / entry["before"]["backup"]).read_bytes(), b"corrupt original")
+        with self.assertRaises(RegistryError):
+            commit_registry(registry, self.data, transaction=tx(), expected=read_snapshot(registry), rebuild=True)
+        self.assertEqual(registry.read_bytes(), b"corrupt original")
+        self.assertFalse((self.root / "backups").exists())
 
     def test_commit_cannot_skip_existing_ownership_transition_check(self):
         obj = self.add(self.obj(ownership="reused"))

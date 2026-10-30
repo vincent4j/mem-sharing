@@ -39,6 +39,7 @@ if _HERE not in sys.path:
 sys.dont_write_bytecode = True
 
 from agm_core import paths as agm_paths
+from agm_core import layout as agm_layout
 
 SCHEMA_VERSION = 1
 KNOWN_COMMANDS = ("enable-memory", "remove-memory", "check-memory")
@@ -95,10 +96,12 @@ def make_envelope(
     errors=None,
     approval_required=False,
     next_action=None,
+    runtime_layout=None,
 ):
     """构造输出合同要求的唯一 JSON envelope(architecture §4)。"""
     return {
         "schema_version": SCHEMA_VERSION,
+        "runtime_layout": runtime_layout,
         "command": command,
         "status": status,
         "projects": list(projects or []),
@@ -412,6 +415,7 @@ def _envelope_from_result(command, result):
         errors=errors,
         approval_required=result.get("approval_required", False),
         next_action=result.get("next_action"),
+        runtime_layout=result.get("runtime_layout"),
     )
 
 
@@ -489,6 +493,7 @@ def build_request(
         "platform_config": platform_config,
         "agents_table_path": table_path,
         "home": home,
+        "runtime_layout": agm_layout.resolve_layout(home),
         "allowed_user_paths": allowed,
     }
 
@@ -534,6 +539,7 @@ def _execute(argv, *, platform, interactive, table_path, home):
             command,
             STATUS_APPROVAL_REQUIRED,
             approval_required=True,
+            runtime_layout=agm_layout.resolve_layout(home).describe(),
             warnings=["非交互环境(非 TTY)无法提问;不从 stdin 猜测 yes,不因环境变量自动批准"],
             next_action=(
                 "非交互写命令需 --approval-file <JSON> 绑定用户已确认的执行计划"

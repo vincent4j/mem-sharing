@@ -358,6 +358,7 @@ class CliParseTests(CliTestCase):
                 "errors",
                 "next_action",
                 "projects",
+                "runtime_layout",
                 "schema_version",
                 "status",
                 "warnings",
