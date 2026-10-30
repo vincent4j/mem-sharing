@@ -1,4 +1,4 @@
-# agent-group-memory · 多 Agent 记忆共享
+# agent-group-memory · 多 Agent 记忆融合
 
 > Multi-Agent Memory Sharing —— 周一用 Codex、周二用 WorkBuddy,同一个项目,同一份记忆。
 

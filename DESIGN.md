@@ -1,4 +1,4 @@
-# agent-group-memory(多 Agent 记忆共享)设计方案
+# agent-group-memory(多 Agent 记忆融合)设计方案
 
 多 Agent 跨执行器共享记忆:**不重复造轮子**。项目规则统一到项目根 `AGENTS.md`,项目记忆直接复用 context-keeper;本仓库只做跨执行器的互通与编排,并定义清楚三套系统的分工边界。
 
