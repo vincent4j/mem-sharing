@@ -1,6 +1,6 @@
 # agent-group-memory · 多 Agent 记忆融合
 
-> Multi-Agent Memory Sharing —— 周一用 Codex、周二用 WorkBuddy,同一个项目,同一份记忆。
+> Multi-Agent Memory Fusion —— 周一用 Codex、周二用 WorkBuddy,同一个项目,同一份记忆。
 
 跨执行器(Codex / Claude Code / WorkBuddy)共享记忆的**互通编排层**:一条命令把项目规则入口与
 [context-keeper](https://github.com/vincent4j/context-keeper) 记忆库装配到三个执行器,换工具不失忆。
