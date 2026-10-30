@@ -36,6 +36,7 @@ def _agent_entry(**overrides):
         "project_rule_entry": "{project}/AGENTS.md",
         "project_bridge_entry": "{project}/AGENTS.md",
         "project_skill_roots": ["{project}/.agents/skills"],
+        "user_skill_roots": ["{home}/.codex/skills"],
         "installation_signals": [
             {"kind": "directory_exists", "path": "{home}/.codex", "strength": "hint"}
         ],
@@ -58,6 +59,7 @@ def _valid_table():
                     project_rule_entry="{project}/CLAUDE.md",
                     project_bridge_entry="{project}/CLAUDE.md",
                     project_skill_roots=["{project}/.claude/skills"],
+                    user_skill_roots=["{home}/.claude/skills"],
                     installation_signals=[
                         {"kind": "directory_exists", "path": "{home}/.claude", "strength": "hint"}
                     ],
@@ -67,6 +69,7 @@ def _valid_table():
                     user_entry="{home}/.workbuddy/MEMORY.md",
                     project_bridge_entry="{project}/.workbuddy/memory/MEMORY.md",
                     project_skill_roots=["{project}/.workbuddy/skills"],
+                    user_skill_roots=["{home}/.workbuddy/skills"],
                     installation_signals=[
                         {"kind": "directory_exists", "path": "{home}/.workbuddy", "strength": "hint"}
                     ],
@@ -320,12 +323,17 @@ class InstallationHintTests(unittest.TestCase):
             self.config, ["claude", "codex"], home="/TestHome"
         )
         self.assertEqual(
-            allowed, ["/TestHome/.codex/AGENTS.md", "/TestHome/.claude/CLAUDE.md"]
+            allowed,
+            ["/TestHome/.codex/AGENTS.md", "/TestHome/.codex/skills/agent-group-memory",
+             "/TestHome/.claude/CLAUDE.md", "/TestHome/.claude/skills/agent-group-memory"],
         )
 
     def test_allowed_user_paths_single_agent(self):
         allowed = paths.allowed_user_paths(self.config, ["workbuddy"], home="/TestHome")
-        self.assertEqual(allowed, ["/TestHome/.workbuddy/MEMORY.md"])
+        self.assertEqual(
+            allowed,
+            ["/TestHome/.workbuddy/MEMORY.md", "/TestHome/.workbuddy/skills/agent-group-memory"],
+        )
 
 
 class CliTestCase(unittest.TestCase):
@@ -867,7 +875,8 @@ class RequestBuildingTests(unittest.TestCase):
         )
         self.assertEqual(
             request["allowed_user_paths"],
-            ["/TestHome/.codex/AGENTS.md", "/TestHome/.claude/CLAUDE.md"],
+            ["/TestHome/.codex/AGENTS.md", "/TestHome/.codex/skills/agent-group-memory",
+             "/TestHome/.claude/CLAUDE.md", "/TestHome/.claude/skills/agent-group-memory"],
         )
         self.assertEqual(request["agents"], ["codex", "claude"])
         self.assertTrue(request["interactive"])

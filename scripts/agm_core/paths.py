@@ -1,11 +1,18 @@
-"""agents.json 路径表合同实现(M2-03)。
+"""agents.json 路径表合同实现(M2-03;M4-05 扩展用户级 Skill 根与强安装信号)。
 
 加载并严格校验 scripts/agents.json,展开 {home}/{project} 占位符,选择平台与执行器目标,
-并把目标映射为用户级入口绝对路径(allowed_user_paths,交 M2-02 内核做 user 对象校验)。
+并把目标映射为用户级受管路径(allowed_user_paths,交内核做 user/machine 对象校验):
+用户级入口文件 + 各家用户级 Skill 根下的本产品 Skill 投影位。
 
-安装信号(installation_signals)仅作 hint:目录存在只表示安装线索,可能是残留目录,
-不证明已安装;目录缺失也不能证明未安装;任何信号都不授权写入、不改变目标选择。
-合同:docs/plan/architecture.md v2 §3;错误码供 CLI 的 errors.code 序列化(§4)。
+安装信号(installation_signals)分两级:
+- hint(directory_exists):目录存在只是线索,可能是残留目录,不证明已安装;目录缺失
+  也不能证明未安装;hint 不授权写入、不改变目标选择(M2 合同不变)。
+- strong(M4-05 决策单 §7.1):path_executable(PATH 解析 + package.json 包名精确匹配)、
+  macos_app_bundle(Info.plist 产品名 + 可执行 + 静态签名)、user_receipt(用户显式
+  提供的收据清单)。强信号由 agm_core.detect 核验为三态安装事实;本模块只定义/校验
+  声明,不做探测。
+合同:docs/plan/architecture.md v2 §3、docs/plan/decisions-m4.md §7;错误码供 CLI 的
+errors.code 序列化(§4)。
 """
 
 from __future__ import annotations
@@ -23,6 +30,7 @@ AGENT_FIELDS = (
     "project_rule_entry",
     "project_bridge_entry",
     "project_skill_roots",
+    "user_skill_roots",
     "installation_signals",
     "rule_mode",
     "bridge_owner",
@@ -31,9 +39,23 @@ AGENT_FIELDS = (
 RULE_MODES = frozenset(("native", "import_agents", "user_convention"))
 BRIDGE_OWNERS = frozenset(("context-keeper", "agent-group-memory"))
 RUNTIME_STATUSES = frozenset(("upstream_verified_local_pending", "pending"))
-SIGNAL_KINDS = frozenset(("directory_exists",))
-SIGNAL_STRENGTHS = frozenset(("hint",))
-SIGNAL_FIELDS = ("kind", "path", "strength")
+HINT_SIGNAL_KINDS = frozenset(("directory_exists",))
+STRONG_SIGNAL_KINDS = frozenset(("path_executable", "macos_app_bundle", "user_receipt"))
+SIGNAL_KINDS = HINT_SIGNAL_KINDS | STRONG_SIGNAL_KINDS
+SIGNAL_STRENGTHS = frozenset(("hint", "strong"))
+# 各 kind 的字段集必须恰好一致;kind 与 strength 等级固定配对(hint↔directory_exists,
+# strong↔其余),不允许表内自造等级或混配。
+_SIGNAL_FIELD_SETS = {
+    "directory_exists": frozenset(("kind", "path", "strength")),
+    "path_executable": frozenset(("kind", "executable", "package_name", "strength")),
+    "macos_app_bundle": frozenset((
+        "kind", "bundle_name", "product_name", "require_bundle_version",
+        "require_signature_identifier_match", "strength")),
+    "user_receipt": frozenset(("kind", "product_name", "strength")),
+}
+# 本产品 Skill 名:与 layout.RuntimeLayout.code(skills/agent-group-memory)成对出现;
+# 用户级投影目标路径由此展开,layout 属共享文件不可在此 import,故重复字面量。
+PRODUCT_SKILL_NAME = "agent-group-memory"
 
 _PLACEHOLDER_RE = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 _ALLOWED_PLACEHOLDERS = frozenset(("home", "project"))
@@ -106,6 +128,43 @@ def _check_string_list(value, label):
         seen.add(item)
 
 
+def _check_signal(signal, label):
+    if not isinstance(signal, dict) or set(signal) != _SIGNAL_FIELD_SETS.get(signal.get("kind") if isinstance(signal, dict) else None, frozenset()):
+        expected_kinds = "、".join(sorted(_SIGNAL_FIELD_SETS))
+        _fail(
+            "agents_table_invalid",
+            "%s.installation_signals 项的 kind 必须是 %s 之一且字段集与该 kind 恰好一致"
+            % (label, expected_kinds),
+        )
+    kind = signal["kind"]
+    expected_strength = "hint" if kind in HINT_SIGNAL_KINDS else "strong"
+    if signal["strength"] != expected_strength:
+        _fail(
+            "agents_table_invalid",
+            "%s 安装信号 kind=%s 的 strength 只能是 %s" % (label, kind, expected_strength),
+        )
+    if kind == "directory_exists":
+        _check_string(signal["path"], "%s 安装信号 path" % label)
+        _check_placeholders(signal["path"], "%s 安装信号 path" % label)
+    elif kind == "path_executable":
+        executable = signal["executable"]
+        if (not isinstance(executable, str) or not executable or os.sep in executable
+                or (os.altsep and os.altsep in executable) or executable in (".", "..")):
+            _fail("agents_table_invalid", "%s 安装信号 executable 必须是不含路径分隔符的裸命令名" % label)
+        _check_string(signal["package_name"], "%s 安装信号 package_name" % label)
+    elif kind == "macos_app_bundle":
+        bundle = signal["bundle_name"]
+        if (not isinstance(bundle, str) or not bundle.endswith(".app")
+                or os.sep in bundle or (os.altsep and os.altsep in bundle) or bundle in (".app", "..app")):
+            _fail("agents_table_invalid", "%s 安装信号 bundle_name 必须是单个 .app 目录名" % label)
+        _check_string(signal["product_name"], "%s 安装信号 product_name" % label)
+        for field in ("require_bundle_version", "require_signature_identifier_match"):
+            if type(signal[field]) is not bool:
+                _fail("agents_table_invalid", "%s 安装信号 %s 必须是布尔值" % (label, field))
+    else:  # user_receipt
+        _check_string(signal["product_name"], "%s 安装信号 product_name" % label)
+
+
 def _validate_agent(platform_name, agent, entry):
     label = "platforms.%s.%s" % (platform_name, agent)
     if not isinstance(entry, dict):
@@ -124,25 +183,27 @@ def _validate_agent(platform_name, agent, entry):
     _check_string_list(entry["project_skill_roots"], "%s.project_skill_roots" % label)
     for root in entry["project_skill_roots"]:
         _check_placeholders(root, "%s.project_skill_roots 项" % label)
+    _check_string_list(entry["user_skill_roots"], "%s.user_skill_roots" % label)
+    for root in entry["user_skill_roots"]:
+        _check_placeholders(root, "%s.user_skill_roots 项" % label)
     signals = entry["installation_signals"]
     if not isinstance(signals, list) or not signals:
         _fail("agents_table_invalid", "%s.installation_signals 必须是非空数组" % label)
-    seen_paths = set()
+    seen_ids = set()
     for signal in signals:
-        if not isinstance(signal, dict) or set(signal) != set(SIGNAL_FIELDS):
-            _fail(
-                "agents_table_invalid",
-                "%s.installation_signals 项字段必须恰好是 %s" % (label, ", ".join(SIGNAL_FIELDS)),
-            )
-        if signal["kind"] not in SIGNAL_KINDS:
-            _fail("agents_table_invalid", "%s 安装信号 kind 仅接受 directory_exists" % label)
-        if signal["strength"] not in SIGNAL_STRENGTHS:
-            _fail("agents_table_invalid", "%s 安装信号 strength 仅接受 hint" % label)
-        _check_string(signal["path"], "%s 安装信号 path" % label)
-        _check_placeholders(signal["path"], "%s 安装信号 path" % label)
-        if signal["path"] in seen_paths:
+        _check_signal(signal, label)
+        kind = signal["kind"] if isinstance(signal, dict) else None
+        if kind == "directory_exists":
+            identity = signal.get("path")
+        elif kind == "path_executable":
+            identity = signal.get("executable")
+        elif kind == "macos_app_bundle":
+            identity = signal.get("bundle_name")
+        else:
+            identity = signal.get("product_name")
+        if identity in seen_ids:
             _fail("agents_table_invalid", "%s.installation_signals 存在重复项" % label)
-        seen_paths.add(signal["path"])
+        seen_ids.add(identity)
     if entry["rule_mode"] not in RULE_MODES:
         _fail("agents_table_invalid", "%s.rule_mode 枚举非法" % label)
     if entry["bridge_owner"] not in BRIDGE_OWNERS:
@@ -256,7 +317,7 @@ def expand_path(template, *, home, project=None):
 
 
 def installation_hints(platform_config, agents=None, *, home, project=None):
-    """只读收集目录安装信号;strength 恒为 hint。
+    """只读收集目录安装信号(hint 级);强信号的三态核验归 agm_core.detect。
 
     目录存在只表示安装线索(可能为残留),目录缺失不能证明未安装;
     本函数结果不得用于改变目标选择或授权任何写入。
@@ -265,6 +326,8 @@ def installation_hints(platform_config, agents=None, *, home, project=None):
     for agent in resolve_agents(agents):
         entry = platform_config[agent]
         for signal in entry["installation_signals"]:
+            if signal["strength"] != "hint":
+                continue
             path = expand_path(signal["path"], home=home, project=project)
             hints.append(
                 {
@@ -278,15 +341,37 @@ def installation_hints(platform_config, agents=None, *, home, project=None):
     return hints
 
 
-def allowed_user_paths(platform_config, agents, *, home):
-    """把目标执行器映射为用户级入口绝对路径(唯一、按 AGENT_ORDER 排序)。
+def user_skill_paths(platform_config, agents, *, home, name=PRODUCT_SKILL_NAME):
+    """把目标执行器的用户级 Skill 根展开为 <root>/<name> 投影位(唯一、按 AGENT_ORDER)。
 
-    M2-02 内核合同:凡涉及 user 对象的 registry load/validate/serialize/commit 必须传该
-    列表,不在表内的用户级路径一律拒绝;CLI 层不得自行放宽。
+    M4-05 合同:仅本产品 Skill 投影使用该函数;name 缺省为本产品 Skill 名。
+    """
+    if not isinstance(name, str) or not name or os.sep in name or name in (".", ".."):
+        raise PathsError("agents_table_invalid", "Skill 名必须是单个路径分量: %r" % (name,))
+    collected = []
+    for agent in resolve_agents(agents):
+        for template in platform_config[agent]["user_skill_roots"]:
+            root = expand_path(template, home=home)
+            expanded = os.path.join(root, name)
+            if expanded not in collected:
+                collected.append(expanded)
+    return collected
+
+
+def allowed_user_paths(platform_config, agents, *, home):
+    """把目标执行器映射为用户级受管路径(唯一、按 AGENT_ORDER 排序)。
+
+    M2-02 内核合同:凡涉及 user/machine 对象的 registry load/validate/serialize/commit
+    必须传该列表,不在表内的用户级路径一律拒绝;CLI 层不得自行放宽。M4-05 起列表在
+    用户级入口之外,还包含各家用户级 Skill 根下的本产品 Skill 投影位(仅此一个名字,
+    不放开整个 Skill 根)。
     """
     collected = []
     for agent in resolve_agents(agents):
         expanded = expand_path(platform_config[agent]["user_entry"], home=home)
         if expanded not in collected:
             collected.append(expanded)
+        for path in user_skill_paths(platform_config, [agent], home=home):
+            if path not in collected:
+                collected.append(path)
     return collected
