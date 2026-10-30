@@ -26,14 +26,17 @@
 
 **难道每次换工具,都得你来交接进度、同步规则、检查配置?**
 
-Multi-Agent Memory Fusion 一条命令,把「**项目规则单一源 + [context-keeper](https://github.com/vincent4j/context-keeper) 记忆库**」装配到三个执行器:规则三家同读,记忆三方共写,谁来了都接着干。
+Multi-Agent Memory Fusion 一条命令,把「**项目规则单一源** + **项目记忆库**」装配到三个执行器:规则三家同读,记忆三方共写,谁来了都接着干。
+
+项目记忆库由开源的 [Context Keeper(上下文守望者)](https://github.com/vincent4j/context-keeper) 提供——它是一个给 AI 编程 Agent 装上项目记忆的 Skill:自动保存进度、续接上次工作、查找历史事实、沉淀可复用经验。你**不需要单独安装它**,本产品装配时自动带上。
 
 ### ✅ 在你用之前,你可能想知道
 
 | | |
 |---|---|
-| ⚡ **会多花 Token 吗?** | 规则文件里只追加几个指针块;记忆本体在项目内,由 context-keeper 规则按需读取,不全量注入。 |
-| 📝 **需要自己维护吗?** | 装配、巡检、修复、卸载由命令完成;记忆的记录与整理由 context-keeper 驱动 Agent 执行,你不手写日志。 |
+| 🧩 **Context Keeper 是什么?要单独装吗?** | 一个开源的项目记忆 Skill(保存进度/续接/查找历史/经验进化),是本产品的记忆引擎。**不用单独装**——装配时自动带上,记录库就在你项目的 `docs/context-keeper/` 里,纯 Markdown 可读。 |
+| ⚡ **会多花 Token 吗?** | 规则文件里只追加几个指针块;记忆本体在项目内,由记忆规则按需读取,不全量注入。 |
+| 📝 **需要自己维护吗?** | 装配、巡检、修复、卸载由命令完成;记忆的记录与整理由 Agent 在工作中自动执行,你不手写日志。 |
 | 🔒 **会动我的文件吗?** | 只触碰声明的受管对象,**块外字节一字不动**;指纹漂移即拒绝写入(实测:poster-fit 的未提交文件字节级保留)。 |
 | 🤖 **支持哪些 Agent / 平台?** | Codex、Claude Code、WorkBuddy;macOS 安装/重装/卸载/失败恢复四项已验收,Windows/Linux 不声称支持。 |
 | 🧹 **想撤掉怎么办?** | `remove-memory` 只撤销本工具创建的对象;你的记录库与既有规则永不删除。 |
@@ -45,7 +48,7 @@ Multi-Agent Memory Fusion 一条命令,把「**项目规则单一源 + [context-
 
 | 你遇到的问题 | Multi-Agent Memory Fusion 怎么处理 | 你得到什么 |
 |---|---|---|
-| 换工具就失忆,交接全靠你 | 把 context-keeper 记录库装配到三个执行器,新会话自动续接 | 周一 Codex、周二 WorkBuddy 无缝接力 |
+| 换工具就失忆,交接全靠你 | 把项目记忆库(Context Keeper)装配到三个执行器,新会话自动续接 | 周一 Codex、周二 WorkBuddy 无缝接力 |
 | 规则三处各写一份 | 项目根 `AGENTS.md` 单一规则源;CLAUDE.md 放 `@AGENTS.md` 引用;WorkBuddy 桥接由上游接管 | 一份规则,三家同读 |
 | 装完不知道坏没坏 | `check-memory` 只读巡检:入口漂移、缺口、`AGENTS.override.md` 劫持全部报告 | 一条命令看健康,不修复只说实话 |
 | 配置被重置/误改 | `enable-memory` 幂等补装:现场与登记一致时免重新批准,一键复原 | 坏了自己发现,修了不留痕 |
@@ -61,7 +64,7 @@ Multi-Agent Memory Fusion 一条命令,把「**项目规则单一源 + [context-
 | 层 | 归属 | 管什么 |
 |---|---|---|
 | 用户级 | `~/.agents-group`(**本产品用户级层**,随产品安装自动创建) | 跨项目、跨执行器的个人规则与共享 Skills 的公共源 |
-| 项目记忆 | [context-keeper](https://github.com/vincent4j/context-keeper)(独立产品) | 记录库本体:保存/继续/查找、按证据自我进化 |
+| 项目记忆 | [Context Keeper](https://github.com/vincent4j/context-keeper)(开源记忆引擎,装配时自动安装) | 记录库本体:保存/继续/查找、按证据自我进化 |
 | 编排层 | **本工具** | 谁在什么时机被装上、被触发:装配、巡检、授权记账、所有权卸载 |
 
 **装配四态**:源码可用 → Skill 安装 → 桥接装配 → 记录库授权。没有用户批准,第四态不会发生;**写入永远走精确批准文件**(逐路径前后指纹),幂等补装除外。
