@@ -42,7 +42,7 @@ Agent 先回复“我来安装 memSharing，先检查运行环境和本机 Agent
 
 同意后，由 Context Keeper 自己的安装器为全部已接入 Agent 完成用户级安装。装好后，在需要的项目里使用 `/context-keeper`；首次使用按 Context Keeper 的流程初始化记录库，记录库建在项目里、随 Git 走，各家 Agent 共用。装机安装引擎不等于替所有项目创建记录库。跳过也不影响用户记忆与项目记忆。
 
-详细操作见 [INSTALL.md](INSTALL.md)。当前生产范围为 macOS，其他平台尚未验证；新版行为的验证范围见[案例清单](docs/acceptance/m4/m4-09/cases.md)。
+详细操作见 [INSTALL.md](INSTALL.md)。当前生产范围为 macOS，其他平台尚未验证；新版行为的验证结论见[验收总览](docs/acceptance/index.md)。
 
 ### 如何添加新 Agent
 

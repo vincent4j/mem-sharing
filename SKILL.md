@@ -5,7 +5,7 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 # memSharing 操作说明
 
-唯一设计依据：[DESIGN.md](DESIGN.md) v1.14；最新替代关系以 [M4 决策 §14—§26（后续裁定优先）](docs/plan/decisions-m4.md) 为准。本文是仓库内操作说明，菜单由用户级规则文本承载，不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 keeper 集成已通过；当前案例见 [M4-09](docs/acceptance/m4/m4-09/cases.md)。
+唯一设计依据：[DESIGN.md](DESIGN.md) v1.14；最新替代关系以 [M4 决策 §14—§26（后续裁定优先）](docs/plan/decisions-m4.md) 为准。本文是仓库内操作说明，菜单由用户级规则文本承载，不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 keeper 集成已通过；M4-09 判定见 [JUDGEMENT](docs/acceptance/m4/m4-09/JUDGEMENT.md)。
 
 ## 会话入口与六项菜单
 
@@ -20,7 +20,7 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 | 整理用户规则 | 逐条计划、一次批准 → 下文“用户规则治理”的模块 API 流程。 |
 | 批量启用记忆 | 扫目录、集中预览批准 → `scripts/agm.py enable-memory-batch --directory <目录>`。 |
 
-以上脚本均以 `python3 -B` 从已核验产品代码目录执行。详细安装、批准与恢复只在需要时读 [INSTALL.md](INSTALL.md)，批量证据边界读[批量交接](docs/acceptance/m4/batch-enable/HANDOFF.md)。
+以上脚本均以 `python3 -B` 从已核验产品代码目录执行。详细安装、批准与恢复只在需要时读 [INSTALL.md](INSTALL.md)，批量边界与详细操作读[操作手册](docs/operations.md)。
 
 停用记忆下的进阶指引：仅禁止自动项目经历记录与初始化而保留入口，使用 `enable-memory --project <根> --no-memory`；它不执行 remove。两者均登记 disabled，默认启用与批量均不翻转；解除需显式 `--memory` 并批准精确计划。
 
