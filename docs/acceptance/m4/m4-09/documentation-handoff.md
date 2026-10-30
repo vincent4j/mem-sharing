@@ -54,3 +54,33 @@ llms 按当前文档集重建五类索引，更新入口品牌与菜单描述，
 静态核对：与本轮开始快照比较，cases 旧正文完整为新文件前缀；DESIGN 与 decisions 去掉新增标注及指定引用修正后与原文完全一致；README 字节不变。案例 01—62 连续且无重复，旧五列与新增四列表格各自一致；限定写集 diff 空白检查通过。不运行产品测试或验收，未形成 M4-09／M4-10 通过结论。
 
 后续由主 Agent 冻结 schema／批准封皮／旧块归属／政策路由实际结构与退出码，并在代码侧实现后逐案采原始证据。旧 44 案正文保留历史语境，执行前必须连同新增覆盖关系阅读，不能单独据其旧升级链或 v1.13 文案执行。
+
+
+## 2026-10-31 文档终稿轮（基线 de9cc4f）
+
+开工 HEAD 为 `de9cc4f`，工作区干净。本轮写集仅 README.md、INSTALL.md、SKILL.md、llms.txt 与本页，旧交接全文保留，只追加本节；不改代码、测试、DESIGN.md、decisions-m4.md 或项目记录库，不 commit／push。
+
+### 对齐结果
+
+- README：保留 memSharing 品牌与三记忆定义，新增“如何添加新 Agent”小节，明确只 find、不 search；默认不触碰已有或缺失的 CLAUDE.md，实际使用兜底或显式 `--agent claude` 才接入。停用撤入口、保数据、持久 disabled 与进阶 `--no-memory` 分开。
+- INSTALL：保留一句安装请求、检查汇总回车、静默安装结论、CK 正向问句与同作者背书、CK 用法一句的五拍；Python ≥3.9 放行，缺失则外层 Agent 安装最新稳定版。明确当前 Python CLI 本身只诊断依赖，不将对话合同当作外层自动化已验收。
+- CK：写明 `--context-keeper` 独立路由与 `install-context-keeper` 独立封皮、真实回车／EOF 边界、全部实际接入者、固定持久来源与缺源 unavailable、主完成态／恢复门禁、失败不回滚主产品。短协议仅位置／入口／职责；CK 自有首次命令初始化与后续行为边界保留。disabled 由 Agent 遵守，CK 脚本无硬拒写承诺。
+- SKILL：六项各一行短路由，批量明确映射 `enable-memory-batch --directory`，详细说明按需读单份文档；L0 恒读→需要时 L1→仍不足 L2 保持。整理向导仍是模块 API，未自造 CLI；批量批准、跳过 disabled、无整批回滚边界与安装说明互相一致。
+- schema／升级：活动 schema=3，旧 v1/v2 仅只读诊断与保全，不承诺旧开发版转换，不提供逆 schema；真实 v0 双目录 memories/references 导入与通用恢复保留。
+- llms：新增 CK 重构、批量启用、改名交接与 verdict、M4-10 四份预备物料及三份审计／核验，共 16 条；剔除不存在的根 CLAUDE.md 条目。历史材料保留为历史证据，不全库改写历史正文；术语统一限于本轮批准的公开写集。
+
+### DESIGN 需跟进建议（由主 Agent 处理）
+
+1. 开头及 §2／§3 的“项目记忆＝CK／默认 provider”旧术语、旧 `~/.agents-group` 用户中枢路径应按三记忆和 `.mem-sharing` 统一；历史条款若保留须就近标明替代。
+2. CK 集成总述仍承诺 P→v2→v3 开发版转换，与 §26 及 schema=3 实现冲突；改为旧开发版只读保全后重装、正式发行起承诺升级。
+3. §4.8 默认启用段仍有“已有 CLAUDE.md 只补引用”“记录库从启用时开始记”等旧文；改为默认完全不触碰 CLAUDE.md、仅实际使用兜底或显式 `--agent claude`，项目经历由 CK 首次命令激活。
+4. 实际使用段“唯一创建路径”须纳入显式 `--agent claude` 例外；§25 的 remove 撤入口且持久 disabled、`--no-memory` 保入口禁自动经历、显式 `--memory` 精确批准恢复应分别写清。
+5. 菜单与 CLI 说明补 `enable-memory-batch --directory` 及短路由；外层依赖准备与 Python CLI 诊断能力分层，避免宣称真机流程已验收。
+
+另有写集外实现差异：`scripts/agm_core/user_entries.py` 的批量菜单仍写“各项目 enable-memory”，没有使用现有 `enable-memory-batch --directory`。公开文档已按用户要求采用新 CLI；本轮未改代码，由主 Agent 决定补齐生成菜单。保留的旧项目 CK Skill 别名及 CK ensure 可能重建全文块的边界见 CK 交接，不承诺始终只有三行。
+
+### 验证边界
+
+相对链接存在性、文档地图条目去重与覆盖、安装请求逐字一致、旧交接前缀保全、限定写集及 `git diff --check` 在本轮静态检查。首次检查发现地图根 CLAUDE.md 已失效及末尾多余空行，均已修正后复核。未运行产品单元／集成、M4-09 案例、真实安装或客户端新会话，不新增运行时／发布通过结论；链接只证明 checkout 内可达。
+
+最终复核：五份写集共 134 个相对链接有效，llms 共 110 条且无重复，旧交接全文保持为文件前缀，DESIGN／decisions 无 diff，限定写集空白检查通过。期间另出现未跟踪 `docs/acceptance/m4/m4-09/evidence/`，本轮未创建、未读取或修改该目录，不将其纳入本轮交付。可核验编辑与静态复核窗口为 UTC 16:14:54—16:16:05，约 1 分 11 秒；此前规则、裁定及实现预读未单独计时，不据此伪报总墙钟。

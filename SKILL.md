@@ -5,7 +5,7 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 # memSharing 操作说明
 
-唯一设计依据：[DESIGN.md](DESIGN.md) v1.14；最新替代关系以 [M4 决策 §14—§24（后续替代见 §25—§26）](docs/plan/decisions-m4.md) 为准。本文是仓库内操作说明，菜单由用户级规则文本承载，不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 CK 集成已通过；当前案例见 [M4-09](docs/acceptance/m4/m4-09/cases.md)。
+唯一设计依据：[DESIGN.md](DESIGN.md) v1.14；最新替代关系以 [M4 决策 §14—§26（后续裁定优先）](docs/plan/decisions-m4.md) 为准。本文是仓库内操作说明，菜单由用户级规则文本承载，不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 CK 集成已通过；当前案例见 [M4-09](docs/acceptance/m4/m4-09/cases.md)。
 
 ## 会话入口与六项菜单
 
@@ -13,26 +13,30 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 | 选项 | 操作路由 |
 |---|---|
-| 给项目启用记忆 | `python3 -B scripts/agm.py enable-memory --project <实际Git主checkout根>`；按默认启用与当前授权执行，不初始化 CK 记录库。 |
-| 添加新的 Agent | 输入名字，映射到 `codex`、`claude` 或 `workbuddy`，核验 installed 后运行安装器同版通道，使用 `--agent <名字>` 与已核验来源。 |
-| 健康检查 | `python3 -B scripts/agm.py check-memory --project <实际项目根>`；明确请求全量时使用 `--all`。始终只读。 |
-| 停用记忆 | `python3 -B scripts/agm.py remove-memory --project <实际项目根>`，只撤允许撤销的受管单元，保留机器安装、用户级接入、规则正文与记录库。`enable-memory --no-memory` 的事后撤权沿 R1 语义。 |
-| 整理用户规则 | 只读扫描，逐条分类与提议，允许批准前调整 decisions，一次批准完整计划后执行。 |
-| 批量启用记忆 | 用户给目录，扫描 Git 主 checkout，每项目一行预览，一次批准后复用 enable 内核批量执行。 |
+| 给项目启用记忆 | 建立或显式恢复当前项目入口 → `scripts/agm.py enable-memory --project <根> --memory`。 |
+| 添加新的 Agent | 核验 installed 后同版接入 → `scripts/install.py --agent <名字>`，来源参数见 INSTALL。 |
+| 健康检查 | 只读检查当前项目 → `scripts/agm.py check-memory --project <根>`，全量用 `--all`。 |
+| 停用记忆 | 撤入口、保数据并登记 disabled → `scripts/agm.py remove-memory --project <根>`。 |
+| 整理用户规则 | 逐条计划、一次批准 → 下文“用户规则治理”的模块 API 流程。 |
+| 批量启用记忆 | 扫目录、集中预览批准 → `scripts/agm.py enable-memory-batch --directory <目录>`。 |
 
-<!-- TODO（与代码侧核对）： 整理向导、批量启用的可执行入口及参数尚待集成冻结；不得自造 CLI。默认启用如何绑定规则授权、批量批准封皮及 --no-memory 的返回字段需对照新实现。 -->
+以上脚本均以 `python3 -B` 从已核验产品代码目录执行。详细安装、批准与恢复只在需要时读 [INSTALL.md](INSTALL.md)，批量证据边界读[批量交接](docs/acceptance/m4/batch-enable/HANDOFF.md)。
+
+停用记忆下的进阶指引：仅禁止自动项目经历记录与初始化而保留入口，使用 `enable-memory --project <根> --no-memory`；它不执行 remove。两者均登记 disabled，默认启用与批量均不翻转；解除需显式 `--memory` 并批准精确计划。
 
 后装 Agent 不自动发现、不自动提示；仅用户主动选“添加新的 Agent”后核验安装事实。名字、残留目录或 hint 不能代替 installed。absent 不创建入口，unknown 只报告不写。机器台账中的事实记录不驱动自动接入。
 
 ## 安装与项目默认启用
 
-产品未安装时读 [INSTALL.md](INSTALL.md)，从已核验源调用 `python3 -B scripts/install.py`，补齐来源参数。先检查 Python、Git、已适配执行器，汇总一次确认；正常安装静默，最后简报后征询是否安装 CK。项目三命令不隐式安装或升级机器产品，check 不修复。
+产品未安装时读 [INSTALL.md](INSTALL.md)，从已核验源调用 `python3 -B scripts/install.py`，补齐来源参数。先检查 Python、Git、已适配执行器，汇总一次确认；正常安装静默，最后简报后征询是否安装 CK。项目命令不隐式安装或升级机器产品，check 不修复。
 
-用户级规则驱动尚未启用的 Git 主 checkout 默认启用：建立 `AGENTS.md` 骨架与纯协议桥接，已有正文保留，不重复询问是否启用。非 Git 不触发，worktree 明确报告未支持，不自动启用。项目记忆是规则；项目经历的记录库按 CK 首次 `/context-keeper` 流程初始化，不由默认启用创建。
+用户级规则驱动未登记的 Git 主 checkout 默认启用：建立 `AGENTS.md` 骨架与纯协议桥接，已有正文保留，不重复询问是否启用。非 Git 不触发，worktree 明确报告未支持，不自动启用。项目记忆是规则；项目经历的记录库按 CK 首次 `/context-keeper` 流程初始化，不由默认启用创建。
 
-项目入口按实际使用驱动：Claude 首次在已启用项目实际使用且缺引用时幂等补 `CLAUDE.md` 引用；仅本机安装 Claude 不足以创建该文件。WorkBuddy 原生目录出现后才补顶部协议块，不预建目录。Codex 使用 `AGENTS.md`，无额外兜底入口。已有用户字节保留，受管单元漂移停写。
+项目缺省启用不创建或补写 `CLAUDE.md`，已有文件原样保留；显式 `enable-memory --agent claude` 可接入。项目兜底入口按实际使用驱动：Claude 首次在已启用项目实际使用且缺引用时幂等补 `CLAUDE.md` 引用；仅本机安装 Claude 不足以创建该文件。WorkBuddy 原生目录出现后才补顶部协议块，不预建目录。Codex 使用 `AGENTS.md`，无额外兜底入口。已有用户字节保留，受管单元漂移停写。
 
 ## 用户规则治理
+
+目前无整理 CLI 子命令。执行 Agent 按 `scripts/agm_core/user_rules_organize.py` 的 `plan_organize(request)` / `run_organize(request)` 或 `run(request)` 调用；request 显式提供 `home/platform_config`，以完整计划加真实 `confirmed_at/reference` 批准。调用细节按需读[模块交接](docs/acceptance/m4/m4-08/organize/handoff.md)，不自行虚构菜单 CLI。
 
 Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep。公共内容只写 `~/.mem-sharing/memories/` 的指定文件，不写入各家私有用户规则文件；独有内容留各自用户文件。
 
@@ -42,13 +46,13 @@ Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep
 
 用户记忆是跨项目习惯，位于 `~/.mem-sharing/memories/`；项目记忆是 `AGENTS.md` 规则；项目经历是 CK 的进度、决策、日志与积累，记录库默认位于项目 `docs/context-keeper/`，具体由 CK 定义。
 
-装机尾步按安装页的固定正向问句征询 CK 用户级安装，回车同意，n 跳过。同意后由 CK 自有安装器为全部已接入执行器安装；其 Skill 落位由 CK 负责。未装 CK 不报产品错误，用户记忆和项目记忆照常工作。
+装机尾步按安装页的固定正向问句征询 CK 用户级安装，回车同意，n 跳过。同意后走 `scripts/install.py --context-keeper` 独立路由与 `install-context-keeper` 封皮，由 CK 自有安装器为全部已接入执行器安装；其 Skill 落位由 CK 负责。EOF、非交互或空格不视为同意；CK 缺源或失败独立报告，不回滚主产品。来源与批准细节按需读 INSTALL。未装 CK 不报产品错误，用户记忆和项目记忆照常工作。
 
-项目 enable 不再调用 CK 安装器，不安装项目级 CK Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 CK 首次命令，装后行为完全由 CK 定义，memSharing 不接管保存或查找流程。
+项目 enable 不再调用 CK 安装器，不安装项目级 CK Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 CK 首次命令，memSharing 不接管保存或查找流程。disabled 优先禁止自动经历，已有 CK 自动规则不得覆盖；CK 脚本本身不读取该政策，不能宣称硬拒写。手动 CK 操作仍按明确请求与 CK 自身门禁处理。
 
 ## 检索与分层读取
 
-检索＝索引精确查找（find），不做语义搜索。
+检索只用索引精确查找（find），不使用 search 或语义搜索。
 
 - L0 恒读：`memories/MEMORY.md` 每行包含主题名、一句话当前结论、链接，上限 200 行／25KB。
 - 需要时读 L1：主题文件开头几行概要，包含当前有效结论与待办。
@@ -62,6 +66,6 @@ Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep
 
 底层诊断保留状态、精确变化、错误和恢复位置；成功对话遵守安装页的极简报告，不倾倒路径或未安装名单，不添加新会话自检提示。失败或 partial 如实说明未完成，不能凭退出码 0 声称三家运行时均已生效。
 
-<!-- TODO（与代码侧核对）： 新版项目 envelope、退出码与字段清单；CK 的内部状态不作为 memSharing 项目规则启用的成功标准。 -->
+项目写操作无批准先预览；批量待批准退出码 5，`next_action` 提供完整批量封皮模板，变更 `applied=false` 不表示已写入。schema=3 为活动合同，旧 v1/v2 仅只读诊断，旧开发版与旧标记不做迁移；详情按需读 INSTALL。
 
 `AGENTS.md` 永不整文件删除；新建纯 CLAUDE 入口只在 created 证据完备时可删，有正文只撤允许撤销的单元，旧 reused 不追认删除权。记录库、私有记忆与其他 Skills/MCP 不由本产品删除。本轮不交付完整机器卸载。
