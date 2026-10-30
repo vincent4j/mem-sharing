@@ -36,7 +36,7 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 ## 用户规则治理
 
-目前无整理 CLI 子命令。执行 Agent 按 `scripts/agm_core/user_rules_organize.py` 的 `plan_organize(request)` / `run_organize(request)` 或 `run(request)` 调用；request 显式提供 `home/platform_config`，以完整计划加真实 `confirmed_at/reference` 批准。调用细节按需读[模块交接](docs/acceptance/m4/m4-08/organize/handoff.md)，不自行虚构菜单 CLI。
+目前无整理 CLI 子命令。执行 Agent 按 `scripts/agm_core/user_rules_organize.py` 的 `plan_organize(request)` / `run_organize(request)` 或 `run(request)` 调用；request 显式提供 `home/platform_config`，以完整计划加真实 `confirmed_at/reference` 批准。调用细节按需读[操作手册](docs/operations.md)，不自行虚构菜单 CLI。
 
 Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep。公共内容只写 `~/.mem-sharing/memories/` 的指定文件，不写入各家私有用户规则文件；独有内容留各自用户文件。
 
