@@ -1,23 +1,9 @@
 #!/usr/bin/env python3
-"""memSharing CLI 外壳(M2-03):严格参数解析、路径表加载、批准文件结构校验、
-稳定 JSON 输出与退出码。
+"""memSharing project CLI: strict parsing and exact-policy approval envelopes.
 
-退出码(裁定 D-M2-05):0 完成、1 check 缺口、2 参数/schema/冲突/执行或恢复失败、
-3 Keeper 迁移门禁、5 待授权;多结果优先级 2 > 3 > 5 > 1 > 0。
-
-命令体接线状态(内核桩清单;接线前命令体一律返回 kernel_unavailable,不产生任何写入):
-  TODO(M2-04): agm_core.enable.run —— enable-memory 装配(基座→四态→补缺)与 keeper 子进程协议;
-  TODO(M2-05): agm_core.check.run —— check-memory 只读巡检(不得创建锁/缓存/registry 写入);
-  TODO(M2-06): agm_core.remove.run —— remove-memory 所有权卸载。
-  依赖的 M2-02 内核(agm_core project/registry/entries/transaction)由并行任务交付;内核异常
-  合同为 ValueError 子类 + .code 字符串属性,本外壳直接序列化进 errors[];user 级路径经
-  agm_core.paths.allowed_user_paths 产出并随 request 传递,CLI 层不放宽。
-
-命令模块合同(桩):提供 run(request: dict) -> dict;request 由 build_request 构造,
-返回 dict 携带 status/projects/changes/warnings/errors/approval_required/next_action。
-接线 M2-04 时注意:非交互幂等补装是否免批准,必须由内核依 registry 现场判定,本外壳的
-批准门是保守前置门,不猜测现场。
-合同文档:docs/plan/architecture.md v2 §3/§4、docs/plan/decisions-m2.md §5(已裁定)。
+Exit codes: 0 completed, 1 check gaps, 2 failed/recovery, 3 migration gate,
+5 approval required. Project rules use schema3 follow_ck/disabled policy;
+CK user installation is an independent installer operation.
 """
 
 from __future__ import annotations
@@ -172,10 +158,10 @@ def build_parser():
     )
     memory_group = enable.add_mutually_exclusive_group()
     memory_group.add_argument(
-        "--memory", dest="memory_choice", action="store_const", const="yes", help="启用记忆档"
+        "--memory", dest="memory_choice", action="store_const", const="follow_ck", help="显式解除项目经历停用政策"
     )
     memory_group.add_argument(
-        "--no-memory", dest="memory_choice", action="store_const", const="no", help="不装记忆档并记录 no"
+        "--no-memory", dest="memory_choice", action="store_const", const="disabled", help="禁止自动项目经历记录与初始化，保留 CK 与数据"
     )
     enable.add_argument(
         "--approval-file", metavar="JSON", help="非交互批准文件(裁定 D-M2-04;仅写命令)"
@@ -213,15 +199,12 @@ _APPROVAL_FIELDS = (
     "checkout",
     "git_common_dir",
     "agents",
-    "memory_authorization",
-    "store_path",
-    "provider_source",
-    "provider_fingerprints",
+    "memory_policy",
     "changes",
     "confirmed_at",
     "reference",
 )
-_ENABLE_APPROVAL_FIELDS = frozenset(("installation", "native_pending", "memory_transition", "rebuild", "rebuild_confirmation"))
+_ENABLE_APPROVAL_FIELDS = frozenset(("installation", "native_pending", "memory_transition", "legacy_bridge_transition", "rebuild", "rebuild_confirmation"))
 _APPROVAL_OPERATIONS = frozenset(("create", "update", "remove"))
 _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 _UTC_ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$")
@@ -301,21 +284,33 @@ def _validate_enable_extensions(data, requested, path):
             _approval_fail("native_pending 仅接受已选 WorkBuddy", path)
     if "memory_transition" in data:
         transition = data["memory_transition"]
-        fields(transition, "before after scope affected_agents reused_conflicts", "memory_transition")
-        if (transition["before"] not in (None, "yes", "no")
-                or transition["after"] not in ("yes", "no")
-                or transition["after"] != data["memory_authorization"]
+        fields(transition, "before after scope affected_agents", "memory_transition")
+        if (transition["before"] not in ("follow_ck", "disabled")
+                or transition["after"] not in ("follow_ck", "disabled")
+                or transition["after"] != data["memory_policy"]
                 or transition["scope"] != "all registered project agents"):
-            _approval_fail("memory_transition 授权范围不符", path)
+            _approval_fail("memory_transition 政策范围不符", path)
         agent_list(transition["affected_agents"], "affected_agents")
-        if not isinstance(transition["reused_conflicts"], list):
-            _approval_fail("reused_conflicts 必须是数组", path)
-        for conflict in transition["reused_conflicts"]:
-            fields(conflict, "path ownership action", "reused_conflicts 项")
-            _check_abs_path(conflict["path"], "reused_conflicts path", path)
-            if (conflict["ownership"] not in ("reused", "unknown", "unregistered")
-                    or conflict["action"] != "preserve bytes; explicit denial guard"):
-                _approval_fail("reused_conflicts 保留策略非法", path)
+    if "legacy_bridge_transition" in data:
+        items = data["legacy_bridge_transition"]
+        if not isinstance(items, list) or not items:
+            _approval_fail("legacy bridge transitions must be a nonempty array", path)
+        for item in items:
+            fields(item, "path ownership before_hex fingerprint action", "legacy bridge transition")
+            _check_abs_path(item["path"], "legacy bridge path", path)
+            digest(item["fingerprint"], "legacy bridge fingerprint")
+            if item["ownership"] not in ("created", "reused", "unknown"):
+                _approval_fail("invalid legacy ownership", path)
+            try:
+                unit = bytes.fromhex(item["before_hex"])
+            except (ValueError, TypeError):
+                _approval_fail("invalid legacy bytes", path)
+            import hashlib
+            if not unit or unit.hex() != item["before_hex"] or hashlib.sha256(unit).hexdigest() != item["fingerprint"]:
+                _approval_fail("legacy bytes fingerprint mismatch", path)
+            expected_action = "retire created and rebuild" if item["ownership"] == "created" else "review exact bytes and replace"
+            if item["action"] != expected_action:
+                _approval_fail("invalid legacy action", path)
     if ("rebuild" in data) != ("rebuild_confirmation" in data):
         _approval_fail("rebuild 必须绑定独立 rebuild_confirmation", path)
     if "rebuild" in data:
@@ -366,6 +361,7 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
         _approval_fail("该命令不接受批准", path)
     keys = set(data)
     expected = set(_APPROVAL_FIELDS)
+    expected = expected | ({"registry_sha256"} if command == "remove-memory" else set())
     allowed = expected | (_ENABLE_APPROVAL_FIELDS if command == "enable-memory" else set())
     missing = sorted(expected - keys)
     unknown = sorted(keys - allowed)
@@ -385,8 +381,8 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
         _check_abs_path(data[field], "批准文件 %s" % field, path)
     file_agents = data["agents"]
     revocation = data.get("memory_transition", {})
-    empty_revocation = (isinstance(revocation, dict) and revocation.get("before") == "yes"
-                        and revocation.get("after") == "no" and "installation" in data)
+    empty_revocation = (isinstance(revocation, dict) and revocation.get("before") == "follow_ck"
+                        and revocation.get("after") == "disabled" and "installation" in data)
     if not isinstance(file_agents, list) or (not file_agents and not empty_revocation):
         _approval_fail("批准文件 agents 必须是非空数组", path)
     try:
@@ -399,34 +395,16 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
             "批准范围(agents=%s)与命令目标(%s)不一致,须重新预览确认" % (canonical, list(agents or [])),
             path=path,
         )
-    memory = data["memory_authorization"]
+    memory = data["memory_policy"]
+    if memory not in ("follow_ck", "disabled"):
+        _approval_fail("memory_policy only accepts follow_ck/disabled", path)
     if command == "remove-memory":
-        if memory is not None:
-            raise CliError(
-                "approval_mismatch", "remove-memory 的 memory_authorization 必须为 null(不改选择)", path=path
-            )
-    else:
-        if memory not in ("yes", "no", None):
-            _approval_fail("批准文件 memory_authorization 仅接受 yes/no/null", path)
-        if memory_choice is not None and memory != memory_choice:
-            raise CliError(
-                "approval_mismatch",
-                "批准文件 memory_authorization=%r 与命令参数 %r 冲突" % (memory, memory_choice),
-                path=path,
-            )
-    if data["store_path"] is not None:
-        _check_abs_path(data["store_path"], "批准文件 store_path", path)
-    if data["provider_source"] is not None:
-        _check_abs_path(data["provider_source"], "批准文件 provider_source", path)
-    fingerprints = data["provider_fingerprints"]
-    if not isinstance(fingerprints, list):
-        _approval_fail("批准文件 provider_fingerprints 必须是数组", path)
-    for item in fingerprints:
-        if not isinstance(item, dict) or set(item) != {"path", "sha256"}:
-            _approval_fail("provider_fingerprints 项字段必须恰好是 path、sha256", path)
-        _check_abs_path(item["path"], "provider_fingerprints 项 path", path)
-        if not isinstance(item["sha256"], str) or not _HEX64_RE.match(item["sha256"]):
-            _approval_fail("provider_fingerprints 项 sha256 必须是 64 位小写十六进制", path)
+        _check_fingerprint(data["registry_sha256"], "registry_sha256", path)
+        if data["registry_sha256"] is None: _approval_fail("registry_sha256 required", path)
+    if command == "remove-memory" and memory != "disabled":
+        _approval_fail("remove-memory must set disabled", path)
+    if command == "enable-memory" and memory_choice is not None and memory != memory_choice:
+        raise CliError("approval_mismatch", "Approved policy differs from explicit choice", path=path)
     changes = data["changes"]
     if not isinstance(changes, list):
         _approval_fail("批准文件 changes 必须是数组", path)

@@ -28,26 +28,7 @@ JOURNAL_KEYS = ('schema_version product_id operation_id plan approval status int
                 'final_registry_sha256 phase')
 PHASES = ('prepare', 'archive', 'inventory', 'code', 'verify', 'commit')
 
-# v1.11(2026-10-30)入口合同变更的唯一精确转换白名单(主 Agent 批准,仅此一对哈希,
-# 不开"文件变了就放行"的通用口子):本发行同时变更 agents.json(移除 user_skill_roots)
-# 与 user_entries.py(移除产品 Skill 投影、入口模板加治理条款与 /mem-sharing 菜单)。
-# before = P(27d6e26)两文件字节 SHA256,after = 本发行两文件字节 SHA256;两向各一条
-# (P→T 升级与 §12.2 显式批准的 T→P 回退)。任何其他哈希组合仍按无处理器拒绝。
-# 升级语义:entries:'preserve' 照旧——旧 machine 账中的 skill_symlink 对象退化为惰性
-# (链接原地保留、不再受管、不再校验),本发行不清理;旧入口块指纹不变、零改写。
 _ENTRY_CONTRACT_NAMES = ('scripts/agents.json', 'scripts/agm_core/user_entries.py')
-_ENTRY_CONTRACT_WHITELIST = (
-    # P(27d6e26) → 本发行(v1.11 调整轮)
-    ({'scripts/agents.json': '24258be62f8e4d5fe260a1578fbda55c456a74a4a812bc154bdadcdcee48e396',
-      'scripts/agm_core/user_entries.py': '5cff6dfb0f21dc24b21b41b0b815bf4570cec3f795b41d7771054e52a191f789'},
-     {'scripts/agents.json': '50ca9e0e53bfc068a1b60efdf734a4be6e316a2ee3bffe4c4ceaa301700b4147',
-      'scripts/agm_core/user_entries.py': 'a8fad5f078b5ac32a33edf40b4be159ba7b59fd7d0c40d8e22a266d2c4af2586'}),
-    # 显式批准的反向回退:本发行 → P(§12.2 主动回退仍须走精确转换表)
-    ({'scripts/agents.json': '50ca9e0e53bfc068a1b60efdf734a4be6e316a2ee3bffe4c4ceaa301700b4147',
-      'scripts/agm_core/user_entries.py': 'a8fad5f078b5ac32a33edf40b4be159ba7b59fd7d0c40d8e22a266d2c4af2586'},
-     {'scripts/agents.json': '24258be62f8e4d5fe260a1578fbda55c456a74a4a812bc154bdadcdcee48e396',
-      'scripts/agm_core/user_entries.py': '5cff6dfb0f21dc24b21b41b0b815bf4570cec3f795b41d7771054e52a191f789'}),
-)
 
 
 LAUNCHER = b'''import json, sys
@@ -95,52 +76,6 @@ def _entry_facts(data):
     """Exact observed machine objects; release conversions cannot broaden ownership."""
     user_entries._preflight_machine_units(data)
     return {obj['path']:install._node(obj['path']) for obj in data['machine']['objects'].values()}
-
-
-def _legacy_contract_load_paths(runtime, allowed):
-    """白名单前驱(P)账本的读侧装载辅助:并入前驱自身 agents.json 展开的投影位。
-
-    仅用于装载仍含旧 machine skill_symlink 对象的前驱账本(当前收窄路径表已不含
-    投影位,直接装载会被 registry 合同拒绝);计划的 allowed_user_paths 仍为当前表,
-    写入授权仍由 _ENTRY_CONTRACT_WHITELIST 精确把关,本函数不授权任何写入。
-    """
-    table = migrate._json(runtime.code/'scripts/agents.json')
-    extra = set()
-    for platform in table.get('platforms', {}).values():
-        if not isinstance(platform, dict):
-            continue
-        for entry in platform.values():
-            if isinstance(entry, dict):
-                for template in entry.get('user_skill_roots', []):
-                    # 前驱投影名是改名前历史产品名(§23),不是当前 PRODUCT。
-                    extra.add(paths.expand_path(template, home=str(runtime.home)) + '/' + install.LEGACY_PRODUCT_ID)
-    return sorted(set(allowed) | extra)
-
-
-def _predecessor_whitelisted(runtime, request_source):
-    """已装代码与请求源是否恰为白名单入口合同对(只读预判,供路由/装载)。"""
-    files = (request_source or {}).get('files')
-    if not isinstance(files, dict):
-        return False
-    try:
-        meta = migrate._json(runtime.code/'.agm-code-manifest.json')
-    except (OSError, ValueError):
-        return False
-    before = {x['path']: x['sha256'] for x in meta.get('files', []) if isinstance(x, dict)}
-    contract_before = {name: before.get(name) for name in _ENTRY_CONTRACT_NAMES}
-    contract_after = {name: files.get(name) for name in _ENTRY_CONTRACT_NAMES}
-    return contract_before != contract_after and (contract_before, contract_after) in _ENTRY_CONTRACT_WHITELIST
-
-
-def _load_whitelisted_predecessor(path, allowed):
-    """白名单前驱(P)台账装载:旧 product_id(agent-group-memory)按 §23 改名语义
-    在内存规范化后校验;磁盘 V 字节不动——product_id 迁移是本对白名单转换的
-    一部分,随升级提交落账。非白名单场景一律走常规装载(漂移即拒)。"""
-    raw = migrate._json(path)
-    if isinstance(raw.get('product'), dict) and raw['product'].get('product_id') == 'agent-group-memory':
-        raw = copy.deepcopy(raw)
-        raw['product']['product_id'] = PRODUCT
-    return registry.require_installed(registry.validate_registry(raw, allowed_user_paths=allowed))
 
 
 def _conversion(request, data, target, direction):
@@ -212,31 +147,15 @@ def _plan(request, *, allow_marker=False):
     direction = request.get('direction', 'upgrade')
     if direction not in ('upgrade','rollback'): _fail('Unknown direction')
     current = read_snapshot(runtime.registry)
-    migration_plan = None; old_inventory = None; old_product = None; noop = False; whitelisted = False
+    migration_plan = None; old_inventory = None; old_product = None; noop = False
     if current.kind == 'absent':
-        if direction != 'upgrade': _fail('Cannot roll back an uninstalled machine')
-        legacy_sources = request.get('legacy_registries', [])
-        if not legacy_sources: _fail('No product ledger; use explicit first installation')
-        product = _product(source, op)
-        migration_plan = migrate.plan_migration(runtime, legacy_sources,
-            source_commits=request.get('legacy_source_commits', {}), product=product,
-            allowed_user_paths=allowed, evidence_files=request.get('evidence_files', []), operation_id=op+'-migration')
-        if install._node(runtime.code)['kind'] != 'absent': _fail('Unexplained code with legacy ledger')
-        data = copy.deepcopy(migration_plan['after_registry'])
-        conversion = {'source_version':'m2-schema1', 'entries':'preserve'}
+        _fail('No formal installed ledger; old development ledgers are diagnostic-only', 'upgrade_unsupported')
     else:
         meta = migrate._json(runtime.code/'.agm-code-manifest.json')
         contract_files = {x['path']:x['sha256'] for x in meta['files']}
         contract_before = {name: contract_files.get(name) for name in _ENTRY_CONTRACT_NAMES}
         contract_after = {name: source['files'].get(name) for name in _ENTRY_CONTRACT_NAMES}
-        whitelisted = (contract_before != contract_after
-                       and (contract_before, contract_after) in _ENTRY_CONTRACT_WHITELIST)
-        # v1.11 前驱账本可能登记旧投影对象;白名单命中时先按前驱自身投影位装载,
-        # 并按 §23 改名语义在内存规范化旧 product_id(提交时随转换落账)。
-        if whitelisted and direction == 'upgrade':
-            data = _load_whitelisted_predecessor(runtime.registry, _legacy_contract_load_paths(runtime, allowed))
-        else:
-            data = registry.require_installed(registry.load_registry(runtime.registry, allowed_user_paths=allowed))
+        data = registry.require_installed(registry.load_registry(runtime.registry, allowed_user_paths=allowed))
         install._code_matches(runtime, data['product'])
         old_product = copy.deepcopy(data['product'])
         old_source = dict(old_product['source'], version=old_product['product_code_version'])
@@ -246,25 +165,13 @@ def _plan(request, *, allow_marker=False):
         if direction == 'rollback' and not versions.installed_before(runtime, target):
             _fail('Rollback target has no verified successful installation receipt')
         conversion = None if noop else _conversion(request, data, target, direction)
-        # Current templates must remain compatible; the single exception is the
-        # exact whitelisted v1.11 entry-contract conversion (see whitelist above):
-        # any other hash pair for these two files still has no handler.
-        if contract_before != contract_after and not whitelisted:
+        # Entry-contract conversion is deferred; formal releases preserve it exactly.
+        if contract_before != contract_after:
             _fail('Conversion has no handler for changed entry contract')
         if not noop:
             data['product'] = _product(source, op, old_product)
-            if whitelisted:
-                # §23:本对转换同时承载产品定名迁移(agent-group-memory → mem-sharing)。
-                data['product']['product_id'] = PRODUCT
     if not noop and os.path.lexists(bootstrap): _fail('Operation exists; use recovery')
     facts = _entry_facts(data)
-    if whitelisted and not noop and direction == 'upgrade':
-        # 旧产品 Skill 投影退化为惰性:磁盘链接原地保留(已记入 entry_facts,升级
-        # 期间不触碰);此处仅注销 machine 账中的对象登记——当前收窄路径表(仅
-        # 用户级入口文件)不再容纳投影位,保留登记会使账本无法加载/序列化。
-        # 回退到 P 后,P 的装配器会把同目标链接按 reused 重新登记。
-        data['machine']['objects'] = {oid: obj for oid, obj in data['machine']['objects'].items()
-                                      if obj['kind'] != 'skill_symlink'}
     outputs = []
     old_files = {} if old_inventory is None else {x['path']:x for x in old_inventory['release']['files']}
     new_files = {x['path']:x for x in files}
@@ -275,7 +182,7 @@ def _plan(request, *, allow_marker=False):
         elif rel in new_files: after = {'kind':'file','sha256':new_files[rel]['sha256'],'mode':new_files[rel]['mode']}
         else: after = {'kind':'absent'}
         outputs.append({'path':str(path), 'before':before, 'after':after})
-    after_raw = current.data if noop else legacy.encoded(data) if migration_plan else registry.serialize_registry(data, allowed_user_paths=allowed)
+    after_raw = current.data if noop else registry.serialize_registry(data, allowed_user_paths=allowed)
     archive = runtime.backups/('upgrade-'+op)
     dirs = {str(runtime.backups)}
     for output in outputs:
@@ -315,7 +222,7 @@ def _plan(request, *, allow_marker=False):
                 {'path':str(marker(runtime)),'operation':'upgrade_guard'},
                 {'path':str(archive),'operation':'before_archive'},
                 {'path':str(bootstrap),'operation':'fixed_toolkit_and_journal'}]
-             + (migration_plan or {}).get('changes',[]))
+             )
     return _seal(plan)
 
 
@@ -366,10 +273,8 @@ def _validate(plan):
         registry._keys(item,'path sha256 mode','upgrade tool')
         if Path(item['path']).name!=item['path'] or not item['path'].endswith('.py'): _fail('Tool escapes toolkit')
         registry._digest(item['sha256'])
-    if plan['migration_plan']:
-        migrate._validate_plan(plan['migration_plan'])
-        if plan['after_registry_hex'] != legacy.encoded(plan['migration_plan']['after_registry']).hex():
-            _fail('Migration target mismatch')
+    if plan['migration_plan'] is not None:
+        _fail('Pre-release migration is unsupported', 'upgrade_unsupported')
     return runtime
 
 
@@ -579,11 +484,7 @@ def _journal(plan,approval):
 
 
 def _lock_paths(runtime,plan):
-    old=sorted((plan.get('migration_plan') or {}).get('source_commits',{}))
-    if not old:
-        after=json.loads(bytes.fromhex(plan['after_registry_hex']))
-        old=sorted((after.get('migration') or {}).get('tombstones',{}))
-    return [runtime.home/'.mem-sharing-install.lock']+[Path(p).parent/'.agm.lock' for p in old]+[runtime.lock,runtime.transaction_lock]
+    return [runtime.home/'.mem-sharing-install.lock',runtime.lock,runtime.transaction_lock]
 
 
 def _open_locks(stack,runtime,plan):
@@ -600,8 +501,6 @@ def execute_upgrade(plan,approval=None,*,request=None,hook=None):
     req=dict(request or {},home=str(runtime.home),operation_id=plan['operation_id'],direction=plan['direction'])
     if plan_upgrade(req)!=plan:_fail('Scene/source/plan drift before writes','source_drift')
     journal=_journal(plan,approval)
-    if plan['migration_plan']:
-        return _execute_legacy(journal,hook)
     with ExitStack() as stack:
         _open_locks(stack,runtime,plan)
         if install._node(runtime.registry)!=plan['before_registry']:_fail('V drift under locks')
@@ -625,36 +524,6 @@ def run_same_version_entries(request):
     plan=plan_upgrade(request)
     if not plan['noop']:_fail('Separate entry assembly requires an identical installed release')
     return user_entries.run_user_entries(request)
-
-
-def _legacy_hook(journal,hook):
-    initialized=[Path(journal['plan']['journal']).exists()]
-    def observer(event,path):
-        if not initialized[0]:
-            Path(journal['plan']['bootstrap']).mkdir(mode=0o700);_save(journal);initialized[0]=True
-        if event=='before_commit':
-            _prepare(journal,hook);_write_code(journal,hook)
-            _phase(journal,'commit','before',hook)
-            if hook:hook('before_registry_commit',path)
-            _verify_outputs(journal['plan'])
-        elif event=='after_commit':
-            if hook:hook('after_registry_commit',path)
-        elif event=='after_finish':
-            _finalize(journal,hook)
-        if hook:hook('migration:'+event,path)
-    return observer
-
-
-def _execute_legacy(journal,hook):
-    plan=journal['plan'];child=plan['migration_plan']
-    approval=dict(child,confirmed_at=journal['approval']['confirmed_at'],reference=journal['approval']['reference'])
-    try:
-        migrate.execute_migration(child,approval,hook=_legacy_hook(journal,hook))
-        if journal['status']!='committed':return _finalize(journal,hook)
-        return {'status':'completed','journal':plan['journal'],'operation_id':plan['operation_id'],'source_version':'m2-schema1'}
-    except BaseException:
-        if Path(plan['journal']).exists():journal['status']='recovery_required';_save(journal)
-        raise
 
 
 def _load_journal(path):
@@ -716,13 +585,7 @@ def plan_recovery(journal_path,*,action):
         _fail('Committed V is authoritative; finish only, then request a separately approved release rollback')
     if journal['status']=='rolled_back':_fail('Operation already rolled back')
     child=None
-    if plan['migration_plan']:
-        inner=Path(plan['migration_plan']['journal'])
-        state=migrate._json(inner)
-        if state['status'] not in ('committed','rolled_back'):
-            child=migrate.plan_recovery(inner,action=action)
-        locks=[]
-    else:locks=[x for x in (migrate._stale_observation(p,plan) for p in _lock_paths(runtime,plan)) if x]
+    locks=[x for x in (migrate._stale_observation(p,plan) for p in _lock_paths(runtime,plan)) if x]
     result={'schema_version':1,'command':'recover-machine-upgrade','operation_id':plan['operation_id'],
         'journal':str(journal_path),'journal_sha256':install._node(journal_path)['sha256'],
         'installation_plan_sha256':plan['plan_sha256'],'action':action,'scene':scene,'stale_locks':locks,'migration_recovery':child}
@@ -760,13 +623,6 @@ def recover_upgrade(recovery_plan,approval,*,request=None,hook=None):
     fresh=plan_recovery(recovery_plan['journal'],action=recovery_plan['action'])
     if fresh!=recovery_plan:_fail('Recovery scene changed since approval','source_drift')
     journal,runtime=_load_journal(recovery_plan['journal']);plan=journal['plan']
-    if plan['migration_plan']:
-        child=recovery_plan['migration_recovery']
-        if child:
-            migrate.recover_migration(child,dict(child,confirmed_at=approval['confirmed_at'],reference=approval['reference']),
-                hook=_legacy_hook(journal,hook) if recovery_plan['action']=='continue' else None)
-        if recovery_plan['action']=='rollback':return _rollback(journal,hook)
-        return _finalize(journal,hook)
     for lock in reversed(recovery_plan['stale_locks']):
         p=Path(lock['path'])
         _intent(journal,'remove_stale_lock',p,hook)

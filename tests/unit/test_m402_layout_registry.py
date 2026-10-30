@@ -30,7 +30,7 @@ class LayoutRegistryTests(unittest.TestCase):
         self.config = paths.select_platform(paths.load_agents_table(), "darwin")
         self.request = {"home": str(self.home), "platform_config": self.config,
                         "project": str(self.area / "no-project"), "all": True,
-                        "agents": ["codex"], "memory_choice": "no", "approval": None,
+                        "agents": ["codex"], "memory_choice": "disabled", "approval": None,
                         "interactive": False}
 
     def tree(self):
@@ -173,11 +173,11 @@ class LayoutRegistryTests(unittest.TestCase):
             self.assertEqual(before, self.tree())
         result = check.run(request)
         self.assertEqual(result["status"], "gaps")
-        self.assertTrue(any("explicit machine migration" in w for w in result["warnings"]))
+        self.assertTrue(any("read-only" in w for w in result["warnings"]))
         self.assertEqual(before, self.tree())
 
     def test_future_schema_and_structure_are_refused(self):
-        for change in (lambda d: d.update(schema_version=3),
+        for change in (lambda d: d.update(schema_version=4),
                        lambda d: d["product"].update(product_structure_version=2)):
             data = installed_registry()
             change(data)
@@ -186,7 +186,7 @@ class LayoutRegistryTests(unittest.TestCase):
 
     def test_code_schema_and_structure_versions_are_separate(self):
         data = installed_registry()
-        self.assertEqual(data["schema_version"], 2)
+        self.assertEqual(data["schema_version"], 3)
         self.assertEqual(data["product"]["product_structure_version"], 1)
         self.assertEqual(registry.validate_registry(data), data)
         data["product"]["product_code_version"] = "1.6.0"
@@ -276,28 +276,35 @@ class MachinePreservationTests(EnableFixture):
                    "platform_config": self.config, "approval": None}
         preview = remove.run(request)
         self.assertEqual(preview["status"], "approval_required", preview)
-        model = self.load()
-        project = model["projects"][str(self.root)]
-        assembly = project["checkouts"][str(self.root)]
-        request["approval"] = {
-            "command": "remove-memory", "main_checkout": str(self.root), "checkout": str(self.root),
-            "git_common_dir": assembly["git_common_dir"], "agents": assembly["agents"],
-            "memory_authorization": None, "store_path": assembly["store"]["path"],
-            "provider_source": project["provider_source"], "provider_fingerprints": [],
-            "changes": [{k: c[k] for k in ("path", "operation", "before_fingerprint", "after_fingerprint")}
-                        for c in preview["changes"]]}
+        request["approval"] = json.loads(preview["next_action"])
+        request["approval"].update(confirmed_at="2026-10-30T00:00:00Z",
+                                   reference="exact synthetic removal confirmation")
         return request
 
     def test_machine_metadata_unchanged_through_project_enable_remove(self):
         metadata = {key: copy.deepcopy(self.load()[key]) for key in
                     ("product", "machine", "migration", "legacy_import")}
         self.apply()
+        # Historical shared user convention: synthetic reused bytes, no CK install.
+        shared_path=self.home/'.workbuddy/MEMORY.md';shared_path.parent.mkdir(parents=True,exist_ok=True)
+        shared_path.write_bytes(b'<!-- fixture:user:start -->\nuser convention\xff\r\n<!-- fixture:user:end -->')
+        model=self.load();assembly=model['projects'][str(self.root)]['checkouts'][str(self.root)]
+        model['shared_objects']['historical-user-rule']={
+            'kind':'user_convention','path':str(shared_path),'scope':'user','agents':['workbuddy'],
+            'ownership':'reused','marker':{'start':'<!-- fixture:user:start -->','end':'<!-- fixture:user:end -->'},
+            'fingerprint':{'algorithm':'sha256','basis':'block_bytes','value':hashlib.sha256(shared_path.read_bytes()).hexdigest()},
+            'original_existed':True,'link_target':None,'backup_manifest':None,'consumers':[str(self.root)]}
+        assembly['shared_object_ids']=['historical-user-rule']
+        self.runtime.registry.write_bytes(registry.serialize_registry(model,allowed_user_paths=paths.allowed_user_paths(self.config,None,home=str(self.home))))
+        shared_before=shared_path.read_bytes()
+
         result = remove.run(self.removal_request())
         self.assertEqual(result["status"], "completed", result)
         current = self.load()
         self.assertEqual({key: current[key] for key in metadata}, metadata)
-        self.assertEqual(current["projects"][str(self.root)]["memory_authorization"], "no")
+        self.assertEqual(current["projects"][str(self.root)]["memory_policy"], "disabled")
         self.assertTrue(current["shared_objects"])
+        self.assertEqual(shared_path.read_bytes(),shared_before)
         self.assertTrue(all(obj["consumers"] == [] for obj in current["shared_objects"].values()))
 
     def test_enable_and_remove_hold_the_same_writer_and_transaction_locks(self):

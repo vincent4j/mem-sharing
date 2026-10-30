@@ -169,7 +169,7 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(load_registry(path), self.data)
 
     def test_missing_unknown_fields_and_boolean_version(self):
-        for mutate in (lambda d: d.pop("shared_objects"), lambda d: d.update(extra=1), lambda d: d.update(schema_version=True), lambda d: d.update(schema_version=3)):
+        for mutate in (lambda d: d.pop("shared_objects"), lambda d: d.update(extra=1), lambda d: d.update(schema_version=True), lambda d: d.update(schema_version=4)):
             data = copy.deepcopy(self.data)
             mutate(data)
             with self.assertRaises(RegistryError):
@@ -234,29 +234,33 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaises(RegistryError):
             validate_registry(self.data)
 
-    def test_authorization_and_store_are_independent(self):
-        self.assembly["states"]["store_authorized_ready"] = {"status": "ready", "observed_at": "2026-10-29T12:00:00Z", "evidence": "probe"}
-        with self.assertRaises(RegistryError):
+    def test_only_two_policies_and_retired_fields_rejected(self):
+        for policy in ('follow_ck','disabled'):
+            self.project['memory_policy']=policy
             validate_registry(self.data)
-        self.project["memory_authorization"] = "yes"
-        self.project["authorization_evidence"] = {"confirmed_at": "2026-10-29T12:00:00Z", "reference": "approval"}
-        self.assembly["store"].update(path=str(self.root / "store"), location_approved=True,
-                                      approval_evidence=copy.deepcopy(self.project["authorization_evidence"]))
-        validate_registry(self.data)
+        for policy in (None,'yes','no','unknown'):
+            self.project['memory_policy']=policy
+            with self.assertRaises(RegistryError):validate_registry(self.data)
+        self.project['memory_policy']='follow_ck'
+        for field in ('provider_source','memory_authorization','authorization_evidence'):
+            self.project[field]=None
+            with self.assertRaises(RegistryError):validate_registry(self.data)
+            del self.project[field]
+        for field in ('states','store'):
+            self.assembly[field]={}
+            with self.assertRaises(RegistryError):validate_registry(self.data)
+            del self.assembly[field]
 
     def test_fact_requires_evidence_and_real_utc_timestamp(self):
-        fact = self.assembly["states"]["source_available"]
+        from agm_core.registry import _fact
         for value in ({"status": "ready", "observed_at": None, "evidence": None},
                       {"status": "ready", "observed_at": "2026-02-30T01:00:00Z", "evidence": "probe"},
                       {"status": "ready", "observed_at": "2026-10-29T01:00:00+08:00", "evidence": "probe"}):
-            fact.update(value)
-            with self.assertRaises(RegistryError):
-                validate_registry(self.data)
+            with self.assertRaises(RegistryError):_fact(value)
 
-    def test_fact_agent_set_must_match(self):
-        self.assembly["states"]["skill_installed"].pop("codex")
-        with self.assertRaises(RegistryError):
-            validate_registry(self.data)
+    def test_object_agent_set_must_match(self):
+        obj=self.add();obj['agents']=['claude']
+        with self.assertRaises(RegistryError):validate_registry(self.data)
 
     def test_shared_references_are_bidirectional_and_user_allowlisted(self):
         path = self.root / "MEMORY.md"

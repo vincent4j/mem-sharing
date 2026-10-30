@@ -33,7 +33,7 @@ def _chain(path, home):
 def descriptor(runtime, source, files):
     identity = {k: source[k] for k in ('url', 'commit', 'tree_sha256')}
     release = {'schema_version': 1, 'product_id': PRODUCT,
-               'versions': {'schema_version': 2, 'product_structure_version': 1,
+               'versions': {'schema_version': 3, 'product_structure_version': 1,
                             'product_code_version': source['version']},
                'source': identity, 'files': files}
     marker = legacy.encoded({'product_id': PRODUCT, 'source': identity, 'files': files})
@@ -57,7 +57,7 @@ def validate(runtime, item):
     data = registry.empty_registry(); data['product'] = product
     registry.validate_registry(data)
     if release['schema_version'] != 1 or release['product_id'] != PRODUCT or versions != {
-            'schema_version': 2, 'product_structure_version': 1,
+            'schema_version': 3, 'product_structure_version': 1,
             'product_code_version': product['product_code_version']}:
         raise ValueError('Unknown release versions')
     files = release['files']; seen = set()

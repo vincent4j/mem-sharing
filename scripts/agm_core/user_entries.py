@@ -64,26 +64,19 @@ WORKBUDDY_CONVENTION_TEXT = "项目规则读取当前项目根 AGENTS.md。保�
 # 写入用户级入口文本与公共源模板;菜单逐项映射既有命令与安装器参数,零新机制。
 # 术语用“启用/停用”(用户裁定,装配不好理解),命令名 enable-memory 等保持不变。
 GOVERNANCE_RULES_TEXT = (
-    "用户规则治理:"
-    "①写入纪律——公共内容只写公共指定文件(R/memories),禁止写进自己 Agent 的用户文件;"
-    "Agent 独有内容才写各自用户文件;"
-    "②Agent 独有内容永不并入公共、永不删除;"
-    "③新项目默认启用——进入尚未启用记忆的 Git 主 checkout 项目时,自动创建项目规则骨架"
-    "(AGENTS.md 骨架+桥接块,不创建 CLAUDE.md)并默认启用记忆"
-    "(记录库默认位置 docs/context-keeper/,不询问);非 Git 目录不触发;用户显式 --no-memory 可事后停用。"
-    "旧项目同走此通道,差异只在已有文件的处理:已有 AGENTS.md 的项目保留全文,只追加桥接块;"
-    "已有 CLAUDE.md 保留全文,只补 @AGENTS.md 引用行;"
-    "已有 WorkBuddy MEMORY.md 顶部补桥接块,原文字节下移;"
-    "不回溯项目历史,项目经历从启用时刻开始记。"
+    "用户规则治理:公共内容只写公共指定文件(R/memories)，Agent 独有内容保留于各自用户文件，永不并入公共或自动删除。"
+    "进入 Git 主 checkout 时，未登记项目默认启用项目规则：创建缺失的 AGENTS.md 骨架并追加项目经历短协议，已有全文保留。"
+    "默认启用不创建 CK 记录库、不调用 CK 安装或初始化；首次 /context-keeper 进入 CK 流程，首次保存按其流程确认位置。"
+    "项目政策已为 disabled 时，默认流程不得重新启用入口、自动记录经历或初始化；已有 CK 自动规则也不能覆盖此政策。"
+    "重新启用须用户显式执行 enable-memory；解除 disabled 须显式 enable-memory --memory 并批准精确计划。"
+    "Claude 和 WorkBuddy 项目入口只由各自实际使用时补齐，其他执行器不得预建；非 Git 目录和 linked worktree 不触发。"
 )
-# §16 兜底接入条款:项目级入口按实际使用驱动,各执行器用户级规则各含一条幂等条款;
-# Claude 的经 @import 由公共源文本承载(DESIGN §4.8、decisions-m4 §15/§16)。
 CLAUDE_FALLBACK_TEXT = (
-    "项目级入口按实际使用驱动:首次在本项目实际使用且项目已启用但缺 CLAUDE.md 引用时,"
-    "创建仅含 @AGENTS.md 引用的 CLAUDE.md(幂等,唯一创建路径)。"
+    "仅 Claude Code 在本项目实际使用且项目已启用、政策非 disabled 时补引用：CLAUDE.md 不存在才创建仅含 @AGENTS.md 的文件；"
+    "已有正文必须完整保留，仅追加缺失的 @AGENTS.md 引用行，重复执行不改字节。"
 )
-WORKBUDDY_FALLBACK_TEXT = "项目级入口按实际使用驱动:首次实际使用产生原生记忆目录后,补顶部桥接块(幂等)。"
-CODEX_FALLBACK_TEXT = "项目级入口按实际使用驱动:首次实际使用时 AGENTS.md 若缺,按默认启用条款创建。"
+WORKBUDDY_FALLBACK_TEXT = "仅 WorkBuddy 在本项目实际使用产生原生 .workbuddy/memory 目录，且项目已启用、政策非 disabled 时，补顶部 AGENTS.md 指针；保留已有正文字节，不预建原生目录。"
+CODEX_FALLBACK_TEXT = "仅 Codex 首次实际使用时，按默认启用条款补缺失 AGENTS.md；已 disabled 项目不自动恢复。"
 
 
 def agent_group_menu_text(code):
@@ -91,14 +84,13 @@ def agent_group_menu_text(code):
     cli = "python3 %s/scripts/agm.py" % code
     installer = "python3 %s/scripts/install.py" % code
     return (
-        "/mem-sharing 菜单:"
-        "给项目启用记忆→%s enable-memory --project <项目绝对路径> --memory;"
-        "添加新的 Agent→%s --agent <执行器名>(安装器同版幂等通道,先核验安装事实);"
-        "健康检查→%s check-memory --project <项目绝对路径>;"
-        "停用记忆→%s remove-memory --project <项目绝对路径>;"
-        "整理用户规则→只读扫描各家用户规则,分类公共/独有,公共项经批准迁入公共源,"
-        "冗余/过时项逐项批准删除或修改,永不自动删除;"
-        "批量启用记忆→给定目录,扫描其下未启用记忆的项目,汇总预览,一次批准后批量执行。"
+        "/mem-sharing 菜单:\n"
+        "给项目启用记忆：为当前项目建立共享规则入口 → %s enable-memory --project <项目绝对路径> --memory\n"
+        "添加新的 Agent：接入已安装的执行器 → %s --agent <执行器名>\n"
+        "健康检查：只读检查已登记入口 → %s check-memory --project <项目绝对路径>\n"
+        "停用记忆：撤入口并保留数据 → %s remove-memory --project <项目绝对路径>；仅禁自动项目经历记录、保留入口用 enable-memory --no-memory\n"
+        "整理用户规则：公共与独有分开，逐条计划后一次批准 → 按 SKILL.md 治理流程执行\n"
+        "批量启用记忆：扫描给定目录，汇总预览后一次批准 → 各项目 enable-memory\n"
         % (cli, installer, cli, cli)
     )
 

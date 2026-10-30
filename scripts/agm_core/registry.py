@@ -154,8 +154,8 @@ def _object(obj, scope, checkout, allowed_user_paths, pending_manifest=None):
 
 
 def empty_registry():
-    """An explicit uninstalled schema-v2 model, never an on-disk initializer."""
-    return {"schema_version": 2, "projects": {}, "shared_objects": {},
+    """An explicit uninstalled schema-v3 model, never an on-disk initializer."""
+    return {"schema_version": 3, "projects": {}, "shared_objects": {},
             "product": None, "machine": {"agents": {}, "objects": {}},
             "migration": None, "legacy_import": None}
 
@@ -170,15 +170,9 @@ def new_project(identity, agents):
     if not identity.is_main:
         _fail("M2 supports only the main checkout")
     assembly = {"git_common_dir": str(identity.git_common_dir), "agents": selected,
-                "states": {"source_available": unknown_fact(),
-                           "skill_installed": {a: unknown_fact() for a in selected},
-                           "bridge_assembled": {a: unknown_fact() for a in selected},
-                           "store_authorized_ready": unknown_fact()},
-                "store": {"path": None, "location_approved": False, "approval_evidence": None},
                 "objects": {}, "shared_object_ids": [],
                 "runtime_acceptance": {"status": "pending", "evidence_path": None}}
-    return {"main_checkout": str(identity.main_checkout), "memory_authorization": None,
-            "authorization_evidence": None, "provider_source": None,
+    return {"main_checkout": str(identity.main_checkout), "memory_policy": "follow_ck",
             "checkouts": {str(identity.checkout): assembly}}
 
 
@@ -389,7 +383,7 @@ def _project_lifecycle_view(projects, pending_manifest):
     return view
 
 
-def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
+def validate_registry_v2(data, *, allowed_user_paths=None, _pending_manifest=None):
     """Active v2 only. Legacy v1 is available solely via explicit diagnostic APIs."""
     if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] == 1:
         raise RegistryMigrationRequired("schema=1 requires explicit machine migration; no fallback/rebuild")
@@ -424,7 +418,7 @@ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
     product = data["product"]
     if product is not None:
         _keys(product, "product_id installation_id product_structure_version product_code_version source installation_status last_operation_id", "product")
-        if product["product_id"] != "mem-sharing":
+        if product["product_id"] not in ("mem-sharing", "agent-group-memory"):
             _fail("product identity mismatch")
         _text(product["installation_id"])
         if type(product["product_structure_version"]) is not int or product["product_structure_version"] != 1:
@@ -479,6 +473,40 @@ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
         _path(imported["manifest_path"])
         if imported["status"] not in ("prepared", "snapshot_complete", "applying", "outputs_verified", "committed", "recovery_required", "rolled_back"):
             _fail("unknown legacy import status")
+    return data
+
+
+def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
+    """Strict active schema=3; historical inputs are diagnostic-only."""
+    if isinstance(data, dict) and type(data.get("schema_version")) is int and data["schema_version"] in (1, 2):
+        raise RegistryMigrationRequired("legacy schema is read-only; preserve and reinstall; pre-release migration unsupported")
+    _keys(data, "schema_version projects shared_objects product machine migration legacy_import", "registry")
+    if type(data["schema_version"]) is not int or data["schema_version"] != 3:
+        _fail("unsupported registry schema")
+    if not isinstance(data["projects"], dict):
+        _fail("invalid project map")
+    if data["product"] is not None and data["product"].get("product_id") != "mem-sharing":
+        _fail("product identity mismatch")
+    view = copy.deepcopy(data)
+    view["schema_version"] = 2
+    for main, record in view["projects"].items():
+        _keys(record, "main_checkout memory_policy checkouts", "project")
+        if record.pop("memory_policy") not in ("follow_ck", "disabled"):
+            _fail("invalid memory policy")
+        record.update(memory_authorization=None, authorization_evidence=None, provider_source=None)
+        if not isinstance(record["checkouts"], dict):
+            _fail("invalid checkout map")
+        for assembly in record["checkouts"].values():
+            _keys(assembly, "git_common_dir agents objects shared_object_ids runtime_acceptance", "assembly")
+            agents = assembly["agents"]
+            if not isinstance(agents, list):
+                _fail("invalid agents")
+            assembly["states"] = {"source_available": unknown_fact(),
+                "skill_installed": {a: unknown_fact() for a in agents},
+                "bridge_assembled": {a: unknown_fact() for a in agents},
+                "store_authorized_ready": unknown_fact()}
+            assembly["store"] = {"path": None, "location_approved": False, "approval_evidence": None}
+    validate_registry_v2(view, allowed_user_paths=allowed_user_paths, _pending_manifest=_pending_manifest)
     return data
 
 
@@ -590,7 +618,7 @@ def _load_registry(path, *, allowed_user_paths=None, legacy=False):
         if isinstance(exc, RegistryError):
             raise
         raise RegistryError("cannot read registry: " + str(exc)) from exc
-    validator = validate_registry_v1 if legacy else validate_registry
+    validator = ({1: validate_registry_v1, 2: validate_registry_v2, 3: validate_registry}.get(data.get("schema_version") if isinstance(data, dict) else None, validate_registry) if legacy else validate_registry)
     return validator(data, allowed_user_paths=allowed_user_paths)
 
 
@@ -598,9 +626,12 @@ def load_registry(path, *, allowed_user_paths=None):
     return _load_registry(path, allowed_user_paths=allowed_user_paths)
 
 
-def load_legacy_registry(path, *, allowed_user_paths=None):
-    """Explicit strict v1 diagnostic/migration input; never used by project writers."""
+def load_diagnostic_registry(path, *, allowed_user_paths=None):
+    """Strict historical read-only parsing; original data is never converted."""
     return _load_registry(path, allowed_user_paths=allowed_user_paths, legacy=True)
+
+
+load_legacy_registry = load_diagnostic_registry
 
 
 def plan_registry_rebuild(expected, *, allowed_user_paths=None):
@@ -618,7 +649,7 @@ def plan_registry_rebuild(expected, *, allowed_user_paths=None):
                          parse_constant=lambda x: _fail("nonfinite JSON value"))
     except (ValueError, UnicodeError) as exc:
         raise RegistryError("registry_unreadable: cannot safely enumerate rebuild impact") from exc
-    if not isinstance(raw, dict) or type(raw.get("schema_version")) is not int or raw["schema_version"] != 2:
+    if not isinstance(raw, dict) or type(raw.get("schema_version")) is not int or raw["schema_version"] != 3:
         raise RegistryMigrationRequired("registry_schema_unsupported: explicit migration/recovery required")
     _keys(raw, "schema_version projects shared_objects product machine migration legacy_import", "registry")
     if not isinstance(raw["projects"], dict) or not isinstance(raw["shared_objects"], dict):

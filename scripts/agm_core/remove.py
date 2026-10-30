@@ -1,17 +1,17 @@
-"""Ownership-only removal. Never calls the upstream combined uninstaller.
+"""Revoke project entries, retain CK/data and persist an explicit disabled guard.
 
-Project choices/store metadata survive removal. O2 keeps user objects and their
-creation evidence even with zero consumers. Plans are read-only; execution uses
-exact approved snapshots, registry-last commit and Transaction recovery.
+Exact approved snapshots, registry-last commit and transaction recovery protect
+bytes and ownership. User shared objects survive even with zero consumers.
 """
 import copy
+import json
 from . import layout
 from pathlib import Path
 
 from .entries import block_fingerprint, link_fingerprint, remove_block, sha256, free_project_rules, lifecycle_span, remove_lifecycle_unit
 from .paths import allowed_user_paths
 from .project import resolve_project
-from .registry import load_registry, commit_registry, serialize_registry, require_installed
+from .registry import load_registry, commit_registry, serialize_registry, require_installed, _evidence
 from .transaction import Change, Transaction, read_snapshot, write_lock
 
 
@@ -27,11 +27,6 @@ def _inside(path, root):
 
 def _protected(path, data):
     # A malformed ownership entry must never turn memory assets into outputs.
-    for project in data['projects'].values():
-        for assembly in project['checkouts'].values():
-            store = assembly['store']['path']
-            if store and (_inside(path, Path(store)) or _inside(Path(store), path)):
-                return True
     return ('context-keeper.json' == path.name or
             ('.codex' in path.parts and 'memories' in path.parts) or
             ('.claude' in path.parts and ('projects' in path.parts or 'memory' in path.parts)) or
@@ -93,7 +88,7 @@ def plan_remove(data, identity):
     snapshots, units, warnings = {}, {}, []
     for oid, obj in assembly['objects'].items():
         path = Path(obj['path'])
-        if obj.get('marker',{})=={'start':'<!-- mem-sharing:memory-denied:start -->','end':'<!-- mem-sharing:memory-denied:end -->'} and project['memory_authorization']=='no':
+        if obj.get('marker',{})=={'start':'<!-- mem-sharing:memory-denied:start -->','end':'<!-- mem-sharing:memory-denied:end -->'} :
             _verify_created(obj,read_snapshot(path)) if obj['ownership']=='created' else None
             warnings.append('保留 no 停用规则,防止历史 reused 指令在 remove 后重激活：%s' % path)
             continue
@@ -102,6 +97,9 @@ def plan_remove(data, identity):
             continue
         if obj['kind']=='file' and (path.name=='CLAUDE.md' or path.name=='MEMORY.md' and '.workbuddy' in path.parts):
             warnings.append('保留缺少独立引用/容器创建证据的旧入口：%s' % path)
+            continue
+        if obj['kind']=='skill_symlink' and path.name=='context-keeper':
+            warnings.append('保留 CK 安装：%s' % path)
             continue
         if obj['ownership'] != 'created':
             warnings.append('保留 %s 对象：%s' % (obj['ownership'], path))
@@ -145,21 +143,23 @@ def plan_remove(data, identity):
         warnings.append('O2 保留用户级共享对象（剩余消费者 %d）：%s' %
                         (len(obj['consumers']), obj['path']))
     target['shared_object_ids'] = []
-    if changes:
-        # Removed assembly units invalidate historical runtime acceptance.
-        target['runtime_acceptance'] = {'status': 'pending', 'evidence_path': None}
-        for name in ('skill_installed', 'bridge_assembled'):
-            for agent in target['states'][name]:
-                target['states'][name][agent] = {'status': 'unknown', 'observed_at': None, 'evidence': None}
+    updated['projects'][main]['memory_policy'] = 'disabled'
+    target['runtime_acceptance'] = {'status': 'pending', 'evidence_path': None}
     return updated, changes, warnings
 
 
-def _check_approval(approval, identity, project, changes):
+def _check_approval(approval, identity, project, changes, registry_sha256):
+    fields = {'schema_version','command','main_checkout','checkout','git_common_dir','agents','memory_policy','registry_sha256','changes','confirmed_at','reference'}
+    if not isinstance(approval, dict) or set(approval) != fields or type(approval['schema_version']) is not int or approval['schema_version'] != 1:
+        raise RemoveError('approval_mismatch', 'Remove approval must match the exact versioned envelope')
+    try:
+        _evidence({k: approval[k] for k in ('confirmed_at', 'reference')})
+    except ValueError as exc:
+        raise RemoveError('approval_mismatch', 'Remove approval requires valid confirmation evidence') from exc
     assembly = project['checkouts'][str(identity.checkout)]
     expected = {'command': 'remove-memory', 'main_checkout': str(identity.main_checkout),
                 'checkout': str(identity.checkout), 'git_common_dir': str(identity.git_common_dir),
-                'agents': assembly['agents'], 'memory_authorization': None,
-                'store_path': assembly['store']['path'], 'provider_source': project['provider_source']}
+                'agents': assembly['agents'], 'memory_policy': 'disabled', 'registry_sha256':registry_sha256}
     for key, value in expected.items():
         if approval.get(key) != value:
             raise RemoveError('approval_mismatch', '批准与当前计划不符：' + key)
@@ -168,14 +168,6 @@ def _check_approval(approval, identity, project, changes):
               for item in changes]
     if approval.get('changes') != actual:
         raise RemoveError('approval_mismatch', '批准变更集或前后指纹与当前计划不符')
-    for item in approval.get('provider_fingerprints', []):
-        path = Path(item['path'])
-        source = project['provider_source']
-        if source is None or not _inside(path, Path(source)):
-            raise RemoveError('approval_mismatch', '源码指纹路径超出已登记来源')
-        snapshot = read_snapshot(path)
-        if snapshot.kind != 'file' or snapshot.fingerprint != item['sha256']:
-            raise RemoveError('approval_mismatch', '批准的源码指纹已变化', str(path))
 
 
 def run(request, *, registry_path=None, transaction_factory=Transaction, _locked=False):
@@ -214,35 +206,53 @@ def run(request, *, registry_path=None, transaction_factory=Transaction, _locked
             return result
         data = require_installed(load_registry(path, allowed_user_paths=allowed))
         updated, changes, warnings = plan_remove(data, identity)
+        tx = transaction_factory(lock_path=runtime.transaction_lock, backup_root=runtime.backups,
+                                 allowed_roots=[identity.checkout, path], operation='remove-memory', hook=lambda event, output: None)
+        if main in updated['projects']:
+            from .enable import _Plan
+            target = updated['projects'][main]['checkouts'][checkout]
+            guard = _Plan(target, updated['shared_objects'], identity.checkout, tx)
+            for change in changes:
+                guard.before[change.path], guard.after[change.path] = change.expected, change.after
+            guard.authorization('disabled')
+            guard.finalize_lifecycle()
+            changes = guard.changes()
         result['warnings'] = warnings
         project = data['projects'].get(main)
         if project is not None:
             assembly = updated['projects'][main]['checkouts'][checkout]
             result['projects'] = [{'main_checkout': main, 'checkout': checkout,
-                                   'states': assembly['states'], 'agents': assembly['agents'],
+                                   'memory_policy': 'disabled', 'agents': assembly['agents'],
                                    'evidence': [str(path)], 'runtime_acceptance': assembly['runtime_acceptance']}]
         if updated == data:
             result['status'] = 'completed'
             return result
-        registry_change = Change.file(path, serialize_registry(updated, allowed_user_paths=allowed), expected=before)
+        file_summaries = [_summary(c) for c in changes]
+        registry_change = Change.file(path, serialize_registry(updated, allowed_user_paths=allowed, _pending_manifest=str(tx.manifest_path)), expected=before)
         summaries = [_summary(c) for c in changes] + [_summary(registry_change, 'registry')]
         result['changes'] = summaries
         approval = request.get('approval')
         if approval is None:
             result.update(status='approval_required', approval_required=True,
-                          next_action='确认所列精确变更并通过 --approval-file 提供批准；记录库始终保留')
+                          next_action=json.dumps(dict(schema_version=1, command='remove-memory', main_checkout=main, checkout=checkout,
+                            git_common_dir=str(identity.git_common_dir),agents=project['checkouts'][checkout]['agents'],memory_policy='disabled',
+                            registry_sha256=before.fingerprint, changes=[{k:v for k,v in c.items() if k in ('path','operation','before_fingerprint','after_fingerprint')} for c in file_summaries],
+                            confirmed_at='<UTC timestamp>',reference='<user confirmation reference>'),ensure_ascii=False))
             return result
-        _check_approval(approval, identity, project, summaries)
+        _check_approval(approval, identity, project, file_summaries, before.fingerprint)
 
         def verify(event, output):
             if event == 'before_write':
                 current = resolve_project(checkout)
                 if (current.main_checkout, current.checkout, current.git_common_dir) != (identity.main_checkout, identity.checkout, identity.git_common_dir):
                     raise RemoveError('project_identity_mismatch', '锁内 Git 身份变化')
-                _check_approval(approval, identity, project, summaries)
+                _check_approval(approval, identity, project, file_summaries, before.fingerprint)
 
-        tx = transaction_factory(lock_path=runtime.transaction_lock, backup_root=runtime.backups,
-                                 allowed_roots=[identity.checkout, path], operation='remove-memory', hook=verify)
+        prior_hook = tx.hook
+        def combined_hook(event, output):
+            verify(event, output)
+            prior_hook(event, output)
+        tx.hook = combined_hook
         receipt = commit_registry(path, updated, transaction=tx, expected=before, changes=changes,
                                   allowed_user_paths=allowed, previous=data)
         result['status'] = 'completed'

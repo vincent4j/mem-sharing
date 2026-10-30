@@ -281,9 +281,20 @@ class UserEntryFixture(unittest.TestCase):
 
     # ---- per-mode entry semantics -------------------------------------------
 
+    def test_generated_governance_separates_default_rules_and_ck_activation(self):
+        text=user_entries.GOVERNANCE_RULES_TEXT
+        self.assertIn('默认启用不创建 CK 记录库',text)
+        self.assertIn('disabled 时，默认流程不得重新启用入口',text)
+        self.assertIn('首次保存按其流程确认位置',text)
+        self.assertNotIn('从启用时刻开始记',text)
+        self.assertIn('已有正文必须完整保留',user_entries.CLAUDE_FALLBACK_TEXT)
+        self.assertIn('仅追加缺失',user_entries.CLAUDE_FALLBACK_TEXT)
+        self.assertIn('仅 WorkBuddy',user_entries.WORKBUDDY_FALLBACK_TEXT)
+
     def test_workbuddy_convention_uses_enable_template_text(self):
         enable_source = (REPO / "scripts" / "agm_core" / "enable.py").read_text(encoding="utf-8")
-        self.assertIn(user_entries.WORKBUDDY_CONVENTION_TEXT, enable_source)
+        self.assertIn('项目规则读取当前项目根 AGENTS.md。', enable_source)
+        self.assertIn('保留已有公共源与用户约定', user_entries.WORKBUDDY_CONVENTION_TEXT)
 
     def test_workbuddy_shared_convention_is_referenced_not_duplicated(self):
         self.seed_workbuddy_bundle()

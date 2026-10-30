@@ -24,9 +24,9 @@ class UpgradeFixture(InstallFixture):
             files={str(p.relative_to(self.target)):legacy.digest(p.read_bytes()) for p in self.target.rglob('*') if p.is_file()})
         self.req=dict(self.request,source=self.t,operation_id='fixture-m407')
         old=self.product();target,_=install._source(self.req)
-        self.forward={'before':{'schema_version':2,'product_structure_version':1,
+        self.forward={'before':{'schema_version':3,'product_structure_version':1,
             'product_code_version':old['product_code_version'],'source':old['source']},
-            'after':{'schema_version':2,'product_structure_version':1,'product_code_version':target['version'],
+            'after':{'schema_version':3,'product_structure_version':1,'product_code_version':target['version'],
                      'source':{k:target[k] for k in ('url','commit','tree_sha256')}},'direction':'upgrade','entries':'preserve'}
         self.req['conversions']=[self.forward]
 
@@ -45,6 +45,58 @@ class UpgradeFixture(InstallFixture):
 
 
 class UpgradeTests(UpgradeFixture):
+    def test_exact_approval_and_source_identity_bind_before_any_write(self):
+        plan=self.plan_upgrade();before=self.snapshot()
+        for approval in ({}, dict(approved(plan), extra=True), dict(approved(plan), operation_id='other')):
+            with self.assertRaises(ValueError):
+                upgrade.execute_upgrade(plan,approval,request=self.req)
+            self.assertEqual(before,self.snapshot())
+        request=copy.deepcopy(self.req);request['source']['commit']='c'*40
+        with self.assertRaises(ValueError):
+            upgrade.execute_upgrade(plan,approved(plan),request=request)
+        self.assertEqual(before,self.snapshot())
+
+    def test_upgrade_holds_writer_locks_and_blocks_competing_entries(self):
+        from agm_core import enable, remove, check, user_entries
+        observed=[]
+        def hook(event,path):
+            if event!='before_phase:code': return
+            expected=[self.home/'.mem-sharing-install.lock',self.runtime.lock,self.runtime.transaction_lock]
+            self.assertTrue(all(p.is_dir() for p in expected))
+            before=self.snapshot()
+            with self.assertRaises(ValueError): upgrade.plan_upgrade(self.req)
+            for entry in (enable.run,remove.run,check.run,user_entries.run_user_entries):
+                result=entry(dict(self.request,project=str(self.area)))
+                self.assertEqual(result['errors'][0]['code'],'machine_upgrade_pending',result)
+            self.assertEqual(before,self.snapshot());observed.append(True)
+        from unittest.mock import patch
+        locked_order=[];original_lock=upgrade.migrate._lock
+        def record_lock(path,plan):
+            locked_order.append(path);return original_lock(path,plan)
+        with patch.object(upgrade.migrate,'_lock',side_effect=record_lock):
+            self.execute_upgrade(hook=hook)
+        self.assertEqual(locked_order,[self.home/'.mem-sharing-install.lock',self.runtime.lock,self.runtime.transaction_lock])
+        self.assertTrue(observed)
+        self.assertFalse(self.runtime.lock.exists())
+
+    def test_schema_downgrade_or_development_predecessor_is_unsupported(self):
+        before=self.snapshot();conversion=copy.deepcopy(self.forward)
+        conversion['after']['schema_version']=2
+        with self.assertRaises(ValueError):
+            upgrade.plan_upgrade(dict(self.req,conversions=[conversion]))
+        self.assertEqual(before,self.snapshot())
+        data=json.loads(self.runtime.registry.read_bytes())
+        data['product']['product_code_version']='0.4.0-dev'
+        self.runtime.registry.write_bytes(registry.serialize_registry(data));before=self.snapshot()
+        with self.assertRaises(ValueError): self.plan_upgrade()
+        self.assertEqual(before,self.snapshot())
+
+    def test_old_code_product_identity_is_never_normalized(self):
+        marker=self.runtime.code/'.agm-code-manifest.json';data=json.loads(marker.read_bytes())
+        data['product_id']='agent-group-memory';marker.write_bytes(legacy.encoded(data));before=self.snapshot()
+        with self.assertRaises(ValueError): self.plan_upgrade()
+        self.assertEqual(before,self.snapshot())
+
     def test_preview_and_same_version_are_zero_writes_and_mtimes(self):
         before=self.snapshot();self.assertEqual(install.inspect_machine(self.req)['scene'],'valid_old')
         plan=self.plan_upgrade();self.assertEqual(before,self.snapshot())
@@ -106,7 +158,7 @@ class UpgradeTests(UpgradeFixture):
         self.runtime.registry.write_bytes(registry.serialize_registry(data));before=self.snapshot()
         with self.assertRaises(ValueError):self.execute_upgrade(plan)
         self.assertEqual(before,self.snapshot())
-        data['schema_version']=3;self.runtime.registry.write_text(json.dumps(data));before=self.snapshot()
+        data['schema_version']=4;self.runtime.registry.write_text(json.dumps(data));before=self.snapshot()
         with self.assertRaises(ValueError):self.plan_upgrade()
         self.assertEqual(before,self.snapshot())
 
@@ -215,7 +267,7 @@ upgrade.execute_upgrade(plan,dict(plan,confirmed_at="2026-10-30T00:00:00Z",refer
         self.assertTrue(upgrade.execute_upgrade(plan)['noop'])
         self.assertEqual(before,self.snapshot())
 
-    def test_even_whitelisted_future_ledger_is_not_downgraded(self):
+    def test_future_ledger_is_not_downgraded(self):
         data=json.loads(self.runtime.registry.read_bytes());data['product']['product_code_version']='9.0.0'
         self.runtime.registry.write_bytes(registry.serialize_registry(data))
         rule=copy.deepcopy(self.forward);rule['before']['product_code_version']='9.0.0'
@@ -287,8 +339,8 @@ upgrade.execute_upgrade(plan,dict(plan,confirmed_at="2026-10-30T00:00:00Z",refer
                         files={str(p.relative_to(target)):legacy.digest(p.read_bytes()) for p in target.rglob('*') if p.is_file()})
                     new,_=install._source({'source':source});old=registry.load_registry(fixture.runtime.registry)['product']
                     request=dict(fixture.request,source=source,operation_id='obsolete-dir',conversions=[{
-                        'before':{'schema_version':2,'product_structure_version':1,'product_code_version':'0.4.0','source':old['source']},
-                        'after':{'schema_version':2,'product_structure_version':1,'product_code_version':'0.4.1','source':{k:new[k] for k in ('url','commit','tree_sha256')}},
+                        'before':{'schema_version':3,'product_structure_version':1,'product_code_version':'0.4.0','source':old['source']},
+                        'after':{'schema_version':3,'product_structure_version':1,'product_code_version':'0.4.1','source':{k:new[k] for k in ('url','commit','tree_sha256')}},
                         'direction':'upgrade','entries':'preserve'}])
                     user=fixture.runtime.root/'memories/user-directory';user.mkdir();(user/'record').write_text('user')
                     plan=upgrade.plan_upgrade(request)

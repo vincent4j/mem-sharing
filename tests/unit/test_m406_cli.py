@@ -34,21 +34,21 @@ class LifecycleApprovalTests(unittest.TestCase):
         data['installation']['workbuddy']['status'] = 'unknown'; data['agents'] = ['codex']
         self.validate(data)
         for fact in data['installation'].values(): fact['status'] = 'absent'
-        data['agents'] = []; data['memory_authorization'] = 'no'
-        data['memory_transition'] = {'before': 'yes', 'after': 'no',
-            'scope': 'all registered project agents', 'affected_agents': ['codex'], 'reused_conflicts': []}
+        data['agents'] = []; data['memory_policy'] = 'disabled'
+        data['memory_transition'] = {'before': 'follow_ck', 'after': 'disabled',
+            'scope': 'all registered project agents', 'affected_agents': ['codex']}
         self.validate(data)
         data.pop('memory_transition')
         with self.assertRaises(agm.CliError): self.validate(data)
 
-    def test_enable_transition_with_reused_conflict(self):
-        data = self.plan(); data['memory_authorization'] = 'no'
-        data['memory_transition'] = {'before': 'yes', 'after': 'no',
-            'scope': 'all registered project agents', 'affected_agents': ['codex'],
-            'reused_conflicts': [{'path': '/projects/a/AGENTS.md', 'ownership': 'reused',
-                                 'action': 'preserve bytes; explicit denial guard'}]}
+    def test_enable_legacy_reused_bridge_requires_exact_bytes_and_fingerprint(self):
+        import hashlib
+        data = self.plan(); raw=b'old CK rules'
+        data['legacy_bridge_transition']=[{'path':'/projects/a/AGENTS.md','ownership':'reused',
+            'before_hex':raw.hex(),'fingerprint':hashlib.sha256(raw).hexdigest(),
+            'action':'review exact bytes and replace'}]
         self.validate(data)
-        data['memory_transition']['after'] = 'yes'
+        data['legacy_bridge_transition'][0]['before_hex']=b'changed'.hex()
         with self.assertRaises(agm.CliError): self.validate(data)
 
     def test_rebuild_requires_independent_exact_hash_binding_and_valid_evidence(self):
@@ -61,12 +61,12 @@ class LifecycleApprovalTests(unittest.TestCase):
             with self.subTest(missing=field), self.assertRaises(agm.CliError): self.validate(bad)
 
     def test_remove_rejects_each_enable_extension_check_rejects_approval(self):
-        data = self.rebuild(); data['memory_transition'] = {}
+        data = self.rebuild(); data['memory_transition'] = {}; data['legacy_bridge_transition'] = []
         for field in agm._ENABLE_APPROVAL_FIELDS:
-            bad = _approval_data(command='remove-memory', memory_authorization=None)
+            bad = _approval_data(command='remove-memory', memory_policy='disabled', registry_sha256='a'*64)
             bad[field] = data[field]
             with self.subTest(field=field), self.assertRaises(agm.CliError): self.validate(bad, 'remove-memory')
-        self.validate(_approval_data(command='remove-memory', memory_authorization=None), 'remove-memory')
+        self.validate(_approval_data(command='remove-memory', memory_policy='disabled', registry_sha256='a'*64), 'remove-memory')
         with self.assertRaises(agm.CliError): self.validate(_approval_data(command='check-memory'), 'check-memory')
 
     def test_unknown_or_malformed_extension_rejected(self):

@@ -1,5 +1,6 @@
 """Real temp-file removal transactions, fault injection and O2 lifecycle."""
 import copy
+import json
 import importlib.util
 import os
 import unittest
@@ -22,8 +23,7 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
         imported = self.repo / 'CLAUDE.md'
         imported.write_bytes(b'@AGENTS.md\n')
         self.add_object('import', imported, 'reused')
-        self.data['projects'][self.main].update(memory_authorization='yes',
-            authorization_evidence={'confirmed_at': '2026-10-29T00:00:00Z', 'reference': 'test approval'})
+        self.data['projects'][self.main]['memory_policy']='follow_ck'
         self.approve()
         result = self.call()
         self.assertEqual(result['status'], 'completed', result)
@@ -31,9 +31,10 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
         self.assertEqual(imported.read_bytes(), b'@AGENTS.md\n')
         data = load_registry(self.registry)
         project = data['projects'][self.main]
-        self.assertEqual(project['memory_authorization'], 'yes')
-        self.assertEqual(project['checkouts'][self.main]['store']['path'], str(self.store))
-        self.assertEqual(set(project['checkouts'][self.main]['objects']), {'base', str(imported)})
+        self.assertEqual(project['memory_policy'], 'disabled')
+        self.assertEqual((self.store/'memory-keeper.md').read_bytes(), b'private memory')
+        self.assertTrue({'base', str(imported)} <= set(project['checkouts'][self.main]['objects']))
+        self.assertIn(b'mem-sharing:memory-denied', self.entry.read_bytes())
 
     def test_corrupt_missing_registry_and_unknown_project_never_infer_ownership(self):
         original = self.entry.read_bytes()
@@ -109,10 +110,8 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
         self.request.update(project=str(other), approval=None)
         self.save()
         preview = self.call()
-        self.request['approval'] = {'command': 'remove-memory', 'main_checkout': str(other), 'checkout': str(other),
-            'git_common_dir': str(identity.git_common_dir), 'agents': ['codex'], 'memory_authorization': None,
-            'store_path': None, 'provider_source': None, 'provider_fingerprints': [],
-            'changes': [{k: v for k, v in c.items() if k in ('path', 'operation', 'before_fingerprint', 'after_fingerprint')} for c in preview['changes']]}
+        self.request['approval']=json.loads(preview['next_action'])
+        self.request['approval'].update(confirmed_at='2026-10-30T00:00:00Z',reference='second remove confirmation')
         self.assertEqual(self.call()['status'], 'completed')
         data = load_registry(self.registry, allowed_user_paths=allowed)
         expected = copy.deepcopy(obj)
@@ -134,7 +133,7 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
         source = self.repo / 'source'
         source.mkdir()
         (source / 'SKILL.md').write_bytes(b'source')
-        link = self.repo / 'context-keeper'
+        link = self.repo / 'generic-skill'
         link.symlink_to('source', target_is_directory=True)
         self.add_object('skill_symlink', link)
         self.approve()
@@ -145,7 +144,7 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
     def test_registry_failure_restores_entries_and_raw_symlink(self):
         source = self.repo / 'source'
         source.mkdir()
-        link = self.repo / 'context-keeper'
+        link = self.repo / 'generic-skill'
         link.symlink_to('source', target_is_directory=True)
         self.add_object('skill_symlink', link)
         self.approve()
@@ -175,6 +174,19 @@ class RemoveIntegrationTests(fixtures.RemoveFixture):
         self.assertEqual(self.entry.read_bytes(), b'external edit')
         self.assertEqual(self.registry.read_bytes(), before)
         self.assertFalse((self.runtime.backups).exists())
+
+    def test_direct_module_approval_requires_evidence_and_exact_fields(self):
+        self.approve()
+        valid=copy.deepcopy(self.request['approval'])
+        before=self.entry.read_bytes(),self.registry.read_bytes()
+        for mutate in (lambda a:a.pop('confirmed_at'),lambda a:a.update(reference=''),
+                       lambda a:a.update(confirmed_at='<UTC timestamp>'),lambda a:a.update(extra=True),
+                       lambda a:a.update(schema_version=True)):
+            with self.subTest(mutation=mutate):
+                approval=copy.deepcopy(valid);mutate(approval);self.request['approval']=approval
+                result=self.call();self.assertEqual(result['errors'][0]['code'],'approval_mismatch',result)
+                self.assertEqual((self.entry.read_bytes(),self.registry.read_bytes()),before)
+                self.assertFalse(self.runtime.backups.exists())
 
     def test_drift_blocks_all_created_removals(self):
         path = self.repo / 'owned.md'

@@ -13,8 +13,8 @@
           {"kind": "macos_app_bundle", "bundle_name": "Codex.app", "product_name": "Codex", "require_bundle_version": false, "require_signature_identifier_match": false, "strength": "strong"}
         ],
         "rule_mode": "native",
-        "bridge_owner": "context-keeper",
-        "runtime_status": "upstream_verified_local_pending"
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
       },
       "claude": {
         "user_entry": "{home}/.claude/CLAUDE.md",
@@ -27,8 +27,8 @@
           {"kind": "user_receipt", "product_name": "Claude Code", "strength": "strong"}
         ],
         "rule_mode": "import_agents",
-        "bridge_owner": "context-keeper",
-        "runtime_status": "upstream_verified_local_pending"
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
       },
       "workbuddy": {
         "user_entry": "{home}/.workbuddy/MEMORY.md",

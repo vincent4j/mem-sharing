@@ -1,70 +1,37 @@
-"""AGM delegates WorkBuddy to the upstream protocol without a private template."""
-import subprocess
-import unittest
-from pathlib import Path
+"""WorkBuddy pointer follows actual native use; CK's old block needs explicit review."""
 from test_m204_enable import EnableFixture
 from agm_core import enable
 
 
 class WorkBuddyProtocolTests(EnableFixture):
-    def test_upstream_template_is_used_and_existing_block_is_reused(self):
-        self.request['agents'] = ['workbuddy']
-        alias = self.root / '.workbuddy/skills/context-keeper'
-        alias.parent.mkdir(parents=True)
-        alias.symlink_to(self.source)
-        bridge = self.root / '.workbuddy/memory/MEMORY.md'
-        bridge.parent.mkdir(parents=True)
-        block = enable._bridge_template(self.source, 'workbuddy')
-        self.assertIn(b'Upstream WorkBuddy rules', block)
-        bridge.write_bytes(block + b'\n\n# existing notes\r\n')
-        before = bridge.read_bytes(), bridge.stat().st_mtime_ns
-        self.apply('yes', True)
-        self.assertEqual((bridge.read_bytes(), bridge.stat().st_mtime_ns), before)
-        obj = self.load()['projects'][str(self.root)]['checkouts'][str(self.root)]['objects'][str(bridge) + '#keeper']
-        self.assertEqual(obj['ownership'], 'reused')
-        calls = [c for c in self.calls if '--ensure-bridge' in c]
-        self.assertEqual(len(calls), 1)
-        self.assertIn('--workbuddy', calls[0])
+    def test_existing_legacy_block_requires_explicit_review_then_replaces(self):
+        self.request['agents']=['workbuddy']
+        path=self.root/'.workbuddy/memory/MEMORY.md';path.parent.mkdir(parents=True)
+        old=enable._block(enable.LEGACY_WORKBUDDY_MARKER,'legacy WB rules')
+        path.write_bytes(old+b'\n\n# existing notes\r\n\xff')
+        before=path.read_bytes();plan=self.preview('follow_ck')
+        self.assertEqual(path.read_bytes(),before)
+        self.assertEqual(plan['legacy_bridge_transition'][0]['ownership'],'reused')
+        self.request['approval']=plan;self.assertEqual(enable.run(self.request)['status'],'completed')
+        self.assertTrue(path.read_bytes().startswith(enable.WORKBUDDY_MARKER['start'].encode()))
+        self.assertTrue(path.read_bytes().endswith(b'\n\n# existing notes\r\n\xff'))
+        self.assertEqual(self.calls,[])
 
-    def test_workbuddy_drift_stops_before_upstream_call(self):
-        self.apply('yes', True)
-        bridge = self.root / '.workbuddy/memory/MEMORY.md'
-        bridge.write_bytes(bridge.read_bytes().replace(b'Upstream WorkBuddy rules', b'External change'))
-        before = bridge.read_bytes()
-        self.calls.clear()
-        self.request['approval'] = None
-        result = enable.run(self.request)
-        self.assertEqual(result['errors'][0]['code'], 'drift')
-        self.assertEqual(self.calls, [])
-        self.assertEqual(bridge.read_bytes(), before)
+    def test_workbuddy_pointer_drift_stops_whole_order(self):
+        self.apply('follow_ck',True)
+        path=self.root/'.workbuddy/memory/MEMORY.md';path.write_bytes(path.read_bytes().replace(b'AGENTS.md',b'OTHER.md'))
+        before=path.read_bytes(),self.runtime.registry.read_bytes();self.request['approval']=None
+        self.assertEqual(enable.run(self.request)['errors'][0]['code'],'drift')
+        self.assertEqual((path.read_bytes(),self.runtime.registry.read_bytes()),before)
 
-    def test_missing_upstream_template_fails_closed_without_fallback(self):
-        # §8.2: establish native-ready precondition so template validation is reached.
-        (self.root / '.workbuddy/memory').mkdir(parents=True, exist_ok=True)
-        source = self.source / 'scripts/install.py'
-        source.write_text(source.read_text().replace('WORKBUDDY_BRIDGE =', 'OLD_WORKBUDDY_BRIDGE ='))
-        self.request.update(memory_choice='yes', approval={'provider_source': str(self.source), 'memory_authorization': 'yes'})
-        result = enable.run(self.request)
-        self.assertEqual(result['status'], 'failed', result)
-        self.assertEqual(self.calls, [])
-        self.assertFalse((self.root / '.workbuddy/memory/MEMORY.md').exists())
+    def test_no_template_or_install_dependency(self):
+        (self.source/'scripts/install.py').write_bytes(b'invalid python !!')
+        self.apply('follow_ck',True)
+        self.assertEqual(self.calls,[])
 
-    def test_workbuddy_ensure_wrong_path_rolls_back(self):
-        original = self.runner
-        def wrong_workbuddy(argv, **kwargs):
-            result = original(argv, **kwargs)
-            if '--ensure-bridge' in argv and '--workbuddy' in argv:
-                return subprocess.CompletedProcess(argv, 0,
-                    '{"scope":"project","bridge":"wrong","action":"unchanged"}', '')
-            return result
-        self.request['runner'] = wrong_workbuddy
-        plan = self.preview('yes', True)
-        self.request['approval'] = plan
-        result = enable.run(self.request)
-        self.assertEqual(result['errors'][0]['code'], 'provider_scope_mismatch', result)
-        self.assertFalse((self.root / '.workbuddy/memory/MEMORY.md').exists())
-        self.assertEqual(self.load()['projects'], {})
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_native_symlink_directory_fails_closed(self):
+        target=self.area/'native';target.mkdir();path=self.root/'.workbuddy/memory';path.parent.mkdir();path.symlink_to(target)
+        self.request['memory_choice']='follow_ck'
+        self.assertEqual(enable.run(self.request)['errors'][0]['code'],'path_conflict')
+        self.assertFalse((self.root/'AGENTS.md').exists())
+        self.assertEqual(list(target.iterdir()),[])

@@ -1,7 +1,7 @@
-"""Real P=27d6e26 -> T development snapshots, temporary Git commits only.
+"""Frozen synthetic schema 3 T0 -> T1 Git releases in a synthetic HOME.
 
-P installs itself in a synthetic HOME. T contains the actual changed product
-files, with P as its Git parent. No version-string-only fixture proves upgrade.
+The pair exercises the formal release contract; neither snapshot is a published
+release or a promise to migrate development installations.
 """
 import copy
 import json
@@ -20,7 +20,7 @@ from agm_core import upgrade, user_install as install, registry, legacy_import a
 from test_m404_install import approved
 from runtime_fixture import seed_project_executors
 
-P_COMMIT='27d6e26'
+
 
 
 def git(*args,cwd):
@@ -39,15 +39,22 @@ class RealUpgradeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.bundle=tempfile.TemporaryDirectory();cls.base=Path(cls.bundle.name).resolve()
-        cls.p=cls.base/'P';cls.t=cls.base/'T'
-        subprocess.run(['git','clone','--quiet','--no-hardlinks',str(REPO),str(cls.p)],check=True,capture_output=True)
-        git('checkout','--quiet','--detach',P_COMMIT,cwd=cls.p)
-        subprocess.run(['git','clone','--quiet','--no-hardlinks',str(cls.p),str(cls.t)],check=True,capture_output=True)
+        cls.p=cls.base/'T0';cls.t=cls.base/'T1';cls.p.mkdir()
         for original in [REPO/'SKILL.md',*(REPO/'scripts').rglob('*.py'),REPO/'scripts/agents.json']:
-            rel=original.relative_to(REPO);target=cls.t/rel;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(original,target)
+            rel=original.relative_to(REPO)
+            if str(rel).startswith(('scripts/backups/', 'scripts/.agm.lock/')): continue
+            target=cls.p/rel;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(original,target)
+        git('init','--quiet',cwd=cls.p)
+        git('add','--','scripts','SKILL.md',cwd=cls.p)
+        git('-c','user.name=AGM isolated fixture','-c','user.email=fixture@invalid',
+            '-c','commit.gpgsign=false','commit','--quiet','-m','Frozen synthetic formal T0 schema3',cwd=cls.p)
+        subprocess.run(['git','clone','--quiet','--no-hardlinks',str(cls.p),str(cls.t)],check=True,capture_output=True)
+        for name in ('upgrade.py','versions.py','user_install.py'):
+            target=cls.t/'scripts/agm_core'/name
+            target.write_bytes(target.read_bytes()+b'\n# Synthetic T1 release revision.\n')
         git('add','--','scripts','SKILL.md',cwd=cls.t)
         git('-c','user.name=AGM isolated fixture','-c','user.email=fixture@invalid',
-            '-c','commit.gpgsign=false','commit','--quiet','-m','Actual M4-07 implementation snapshot for isolated acceptance',cwd=cls.t)
+            '-c','commit.gpgsign=false','commit','--quiet','-m','Frozen synthetic formal T1 schema3',cwd=cls.t)
         cls.p_source=source(cls.p,'0.4.0');cls.t_source=source(cls.t,'0.4.1')
         cls.parent=git('rev-parse','HEAD^',cwd=cls.t)
         cls.changed=git('diff','--name-only',cls.parent,'HEAD',cwd=cls.t).splitlines()
@@ -79,12 +86,7 @@ class RealUpgradeTests(unittest.TestCase):
         self.config=paths.select_platform(paths.load_agents_table(),'darwin')
         self.request={'home':str(self.home),'platform_config':self.config,'agents':None,'search_paths':[],
                       'app_directories':[],'operation_id':'actual-p-install','source':copy.deepcopy(self.p_source)}
-        # P 是真实历史快照:其安装器按当时(v1.11 之前)的路径表合同工作,仍读取
-        # user_skill_roots 等本轮已移除的字段。给 P 的自装请求配 P 自己的表,
-        # 保证“P 用自己的安装器与表完成安装”;T 侧流程照旧用当前表(新代码不再读该字段)。
-        p_config=json.loads((self.p/'scripts/agents.json').read_text())['platforms']['darwin']
-        p_request=dict(self.request,platform_config=p_config,
-                       search_paths=[self.seed_codex()] if codex else [])
+        p_request=dict(self.request,search_paths=[self.seed_codex()] if codex else [])
         request_file=self.area/'p-request.json';request_file.write_text(json.dumps(p_request))
         program='''import json,sys
 sys.path.insert(0,sys.argv[1]+"/scripts")
@@ -97,25 +99,12 @@ print(json.dumps(result))
             env=dict(os.environ,HOME=str(self.home),PYTHONDONTWRITEBYTECODE='1'),capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr)
         self.runtime=install._runtime(self.request)
-        self.assertFalse(versions.root(self.runtime).exists(),'Historical P really uses its original installer')
-        # P 装机自证:用 P 自己的代码与其原始落位只读巡检一次(rename 之前)。
-        p_check=subprocess.run([sys.executable,'-B',str(self.home/'.local/share/agent-group-memory/scripts/agm.py'),'check-memory','--all'],
-            env=dict(os.environ,HOME=str(self.home),PYTHONDONTWRITEBYTECODE='1'),capture_output=True,text=True)
-        self.assertEqual(p_check.returncode,0,p_check.stderr)
-        self.assertEqual(json.loads(p_check.stdout)['command'],'check-memory')
-        # §23 改名:夹具把 P 的落位预置到新名(相当于“以 §23 新布局落位的 P 机器”)。
-        # 测试的自变量是真实代码版本链与转换合同,不是目录名;真机在 M4-10 全量重建,
-        # 不存在旧名落位的已装机器。P 自建的 bootstrap(~/.agents-group-install-*)
-        # 保留旧名原地——新代码按新名枚举,不读它。
-        for old,new in ((self.home/'.agents-group',self.home/'.mem-sharing'),
-                        (self.home/'.local/share/agent-group-memory',self.home/'.local/share/mem-sharing'),
-                        (self.home/'.local/share/agent-group-memory-versions',self.home/'.local/share/mem-sharing-versions')):
-            if old.exists():old.rename(new)
+        self.assertTrue(versions.root(self.runtime).exists())
         before=json.loads(self.runtime.registry.read_bytes())['product']
         target,_=install._source({'source':self.t_source})
-        self.conversion={'before':{'schema_version':2,'product_structure_version':1,
+        self.conversion={'before':{'schema_version':3,'product_structure_version':1,
             'product_code_version':before['product_code_version'],'source':before['source']},
-            'after':{'schema_version':2,'product_structure_version':1,'product_code_version':'0.4.1',
+            'after':{'schema_version':3,'product_structure_version':1,'product_code_version':'0.4.1',
             'source':{k:target[k] for k in ('url','commit','tree_sha256')}},'direction':'upgrade','entries':'preserve'}
         self.request.update(source=copy.deepcopy(self.t_source),operation_id='actual-p-to-t',conversions=[self.conversion])
         for name in ('memories/user.bin','references/user.bin','skills/other/user.bin','mcp/user.bin'):
@@ -136,21 +125,16 @@ print(json.dumps(result))
 
     def verify(self,version):
         allowed=paths.allowed_user_paths(self.request['platform_config'],None,home=str(self.home))
-        if version==self.p_source['version']:
-            # 回滚到 P:台账仍是改名前 product_id,按 §23 白名单前驱语义装载。
-            data=upgrade._load_whitelisted_predecessor(self.runtime.registry,
-                upgrade._legacy_contract_load_paths(self.runtime,allowed))
-        else:
-            data=registry.require_installed(registry.load_registry(self.runtime.registry,allowed_user_paths=allowed))
+        data=registry.require_installed(registry.load_registry(self.runtime.registry,allowed_user_paths=allowed))
         self.assertEqual(data['product']['product_code_version'],version)
-        self.assertEqual(data['schema_version'],2);self.assertEqual(data['product']['product_structure_version'],1)
+        self.assertEqual(data['schema_version'],3);self.assertEqual(data['product']['product_structure_version'],1)
         install._code_matches(self.runtime,data['product'])
         self.assertEqual(self.user_before,{name:(self.runtime.root/name).read_bytes() for name in self.user_before})
         result=self.command('--help');self.assertEqual(result.returncode,0,result.stderr)
         self.assertFalse(upgrade.marker(self.runtime).exists())
         return data
 
-    def test_actual_development_chain_upgrade_noop_and_persistent_rollback(self):
+    def test_frozen_formal_chain_upgrade_noop_and_persistent_rollback(self):
         plan=self.plan();result=self.apply(plan);self.assertEqual(result['status'],'completed')
         self.verify('0.4.1')
         self.assertEqual(install.inspect_machine(self.request)['scene'],'same')
@@ -166,10 +150,10 @@ print(json.dumps(result))
         print('REAL_CHAIN',json.dumps({'P_commit':self.p_source['commit'],'T_commit':self.t_source['commit'],
             'T_parent':self.parent,'P_manifest':plan['before_inventory']['release']['source']['tree_sha256'],
             'T_manifest':plan['target_inventory']['release']['source']['tree_sha256'],'changed_files':self.changed,
-            'P_self_installed':True,'P_command_ran':True,'T_command_ran':True,'same_version_zero_mtime':True}))
+            'T0_self_installed':True,'T0_command_ran':True,'T1_command_ran':True,'same_version_zero_mtime':True}))
         # Register a project after upgrading. A release rollback must retain it.
         project=self.area/'project';project.mkdir();git('init','--quiet',cwd=project)
-        request=dict(home=str(self.home),project=str(project),platform_config=self.config,agents=['codex'],memory_choice='no',
+        request=dict(home=str(self.home),project=str(project),platform_config=self.config,agents=['codex'],memory_choice='disabled',
                      **seed_project_executors(self.home))
         preview=enable.run(request);self.assertEqual(preview['status'],'approval_required',preview)
         request['approval']=approved(json.loads(preview['next_action']))
@@ -218,85 +202,6 @@ print(json.dumps(result))
                             fixture.verify('0.4.1' if action=='continue' else '0.4.0')
                             print('REAL_FILE_WINDOW',relative,when,action)
                         finally:fixture.doCleanups()
-
-    def test_upgrade_makes_legacy_projection_inert_and_idempotent(self):
-        # 主 Agent 裁定 A 用例:P 带投影与旧入口合同装机 → T 升级:
-        # 升级成功、用户内容字节不变、旧投影对象在 T 下退化为惰性(不再被规划触碰)、
-        # 同版重装幂等。§23 改名语义:P 时代旧标记块(agent-group-memory:*)在 T 下
-        # 是历史内容(漂移处理):装配计划提出追加新标记块,旧块原文字节保留。
-        fixture=RealUpgradeTests();fixture.setUp(codex=True)
-        try:
-            entry=fixture.home/'.codex/AGENTS.md'
-            projection=fixture.home/'.codex/skills/agent-group-memory'
-            self.assertTrue(entry.is_file(),entry)
-            self.assertTrue(projection.is_symlink(),projection)
-            link_target=os.readlink(projection);entry_bytes=entry.read_bytes()
-            plan=fixture.plan();result=fixture.apply(plan)
-            self.assertEqual(result['status'],'completed',result)
-            data=fixture.verify('0.4.1')
-            # 旧入口块原文与投影链接字节/目标不变(entries:'preserve';投影惰性保留)。
-            self.assertEqual(entry.read_bytes(),entry_bytes)
-            self.assertTrue(projection.is_symlink())
-            self.assertEqual(os.readlink(projection),link_target)
-            # 转换处理器注销账内旧投影登记(磁盘链接原地保留);入口对象仍在账内。
-            self.assertNotIn('skill_symlink',{o['kind'] for o in data['machine']['objects'].values()})
-            self.assertIn(str(entry)+'#public-source',data['machine']['objects'])
-            # T 下对已装 codex 重跑入口装配:旧 created 单元(marker=agent-group-memory:*)
-            # 身份不可变(registry 冻结合同),新标记块不追加——装配按 registry_invalid
-            # 拒绝且零写入;旧块按 §23 漂移语义原地保留。真机无 P 升级机(§26:M4-10
-            # 全量重建),该场景随白名单删除轮一并调整。
-            request={'home':str(fixture.home),'platform_config':fixture.config,'agents':['codex'],
-                     'search_paths':[fixture.codex_bin],'app_directories':[]}
-            def content_outside_entry_backups():
-                # 零写入按内容判定:执行被拒的事务会留下锁/备份目录及目录 mtime 痕迹
-                # (事务机制产物,内容不受管),排除 backups 后比较 mode+bytes。
-                return {k:(v[0],v[2]) for k,v in fixture.snapshot().items() if not k.startswith('.mem-sharing/backups')}
-            before_entries=content_outside_entry_backups()
-            outcome=user_entries.run_user_entries(request)
-            self.assertEqual(outcome['status'],'approval_required',outcome)
-            approval=json.loads(outcome['next_action'])
-            approval.update(confirmed_at='2026-10-30T00:00:00Z',reference='rename round entry confirmation')
-            executed=user_entries.run_user_entries(dict(request,approval=approval))
-            self.assertEqual(executed['status'],'failed',executed)
-            self.assertEqual(executed['errors'][0]['code'],'registry_invalid',executed)
-            self.assertEqual(content_outside_entry_backups(),before_entries)
-            self.assertEqual(entry.read_bytes(),entry_bytes)
-            self.assertEqual(os.readlink(projection),link_target)
-            # 同版重装幂等:零写入、零 mtime 变化。
-            before=fixture.snapshot()
-            same=upgrade.plan_upgrade(dict(fixture.request,operation_id='inert-same'))
-            self.assertTrue(same['noop']);self.assertTrue(upgrade.execute_upgrade(same)['noop'])
-            self.assertEqual(before,fixture.snapshot())
-            print('REAL_INERT_PROJECTION link_preserved; legacy_block_drift_blocked_zero_writes; same_release_noop')
-        finally:fixture.doCleanups()
-
-    def test_entry_contract_hash_outside_whitelist_still_rejected(self):
-        # 负例:user_entries.py 哈希落在精确白名单之外(即使转换表其余部分完全合法)
-        # 仍按“无转换处理器”拒绝,零写入。
-        t2=self.base/'T-mismatch'
-        subprocess.run(['git','clone','--quiet','--no-hardlinks',str(self.t),str(t2)],check=True,capture_output=True)
-        victim=t2/'scripts/agm_core/user_entries.py'
-        victim.write_bytes(victim.read_bytes()+b'\n# fixture contract hash mismatch\n')
-        git('add','--','scripts/agm_core/user_entries.py',cwd=t2)
-        git('-c','user.name=AGM isolated fixture','-c','user.email=fixture@invalid',
-            '-c','commit.gpgsign=false','commit','--quiet','-m','contract mismatch variant',cwd=t2)
-        t2_source=source(t2,'0.4.2')
-        fresh,_=install._source({'source':t2_source})
-        request=dict(self.request,source=t2_source,operation_id='contract-mismatch',conversions=[{
-            'before':self.conversion['before'],
-            'after':{'schema_version':2,'product_structure_version':1,'product_code_version':'0.4.2',
-                     'source':{k:fresh[k] for k in ('url','commit','tree_sha256')}},
-            'direction':'upgrade','entries':'preserve'}])
-        registry_before=self.runtime.registry.read_bytes();tree_before=self.snapshot()
-        # §23 后非白名单目标对改名前台账一律拒绝:装载(product identity)或
-        # 入口合同守卫(no handler),取决于现场;两者都必须零写入。
-        with self.assertRaises(ValueError) as ctx:
-            upgrade.plan_upgrade(request)
-        message=str(ctx.exception)
-        self.assertTrue('no handler' in message or 'product identity' in message, message)
-        self.assertEqual(self.runtime.registry.read_bytes(),registry_before)
-        self.assertEqual(self.snapshot(),tree_before)
-        print('REAL_CONTRACT_WHITELIST mismatch_hash_rejected_zero_writes')
 
     def test_recovery_runs_from_fixed_toolkit_after_installer_self_replacement(self):
         plan=self.plan()

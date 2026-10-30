@@ -180,6 +180,23 @@ class InstallerTests(InstallFixture):
         self.assertEqual(code,2);self.assertEqual(out['errors'][0]['code'],'runtime_missing')
         self.assertIn('manually',out['errors'][0]['message']);self.assertEqual(list(self.home.iterdir()),[])
 
+    def test_ck_route_failures_keep_independent_command_and_main_product(self):
+        self.codex();self.execute()
+        before=self.snapshot()
+        code,result=self.invoke('--context-keeper','--ck-source',str(self.area/'missing-ck-source'))
+        self.assertEqual(code,2,result)
+        self.assertEqual(result['command'],'install-context-keeper')
+        self.assertEqual(result['context_keeper']['status'],'unavailable')
+        self.assertEqual(before,self.snapshot())
+        marker=self.home/'.mem-sharing-upgrade.json';marker.write_text('{}')
+        before=self.snapshot()
+        code,result=self.invoke('--context-keeper')
+        self.assertEqual(code,2,result)
+        self.assertEqual(result['command'],'install-context-keeper')
+        self.assertEqual(result['context_keeper']['status'],'failed')
+        self.assertEqual(result['errors'][0]['code'],'machine_upgrade_pending')
+        self.assertEqual(before,self.snapshot())
+
     def test_entry_failure_after_code_copy_is_partial_with_recovery(self):
         plan=cli.plan_machine(self.request)
         with patch.object(user_install,'_stage_entries',side_effect=ValueError('entry assembly failed')):
@@ -243,7 +260,7 @@ class UpgradeInstallerTests(UpgradeFixture):
 
 
 class MigrationInstallerTests(MigrationFixture):
-    def test_schema1_routes_through_upgrade_migration_and_code_placement(self):
+    def test_schema1_is_read_only_rejected_and_preserved(self):
         target=self.area/'verified target';(target/'scripts/agm_core').mkdir(parents=True)
         for name,raw in {'SKILL.md':b'# verified target\n','scripts/agm.py':b'print("target")\n',
                          'scripts/agm_core/__init__.py':b''}.items():
@@ -254,17 +271,10 @@ class MigrationInstallerTests(MigrationFixture):
                  'source':source,'agents':None,'search_paths':[],'app_directories':[],
                  'operation_id':'fixture-m408-schema1','legacy_registries':[str(self.old)],
                  'legacy_source_commits':{str(self.old):OLD_COMMIT}}
-        plan=cli.plan_machine(request)
-        self.assertEqual(plan['channel'],'upgrade');self.assertIsNotNone(plan['plan']['migration_plan'])
-        self.assertFalse(plan['entry_requested'])
-        result=cli.execute_machine(plan,approved(plan),request=request)
-        self.assertEqual(result['status'],'completed',result)
-        self.assertTrue(self.old.is_dir());self.assertTrue((self.old/'redirect.json').is_file())
-        data=self.load()
-        # M4-03 deliberately maps backup_manifest to its verified archived copy;
-        # compare the exact approved migration output, not old physical paths.
-        self.assertEqual(data['projects'],plan['plan']['migration_plan']['after_registry']['projects'])
-        for key,old in self.original['projects'].items():
-            self.assertEqual(data['projects'][key]['memory_authorization'],old['memory_authorization'])
-            self.assertEqual(data['projects'][key]['authorization_evidence'],old['authorization_evidence'])
-        self.assertEqual((self.runtime.code/'SKILL.md').read_bytes(),(target/'SKILL.md').read_bytes())
+        before={str(p.relative_to(self.old)):(p.lstat().st_mode, p.read_bytes() if p.is_file() else None) for p in [self.old,*self.old.rglob('*')]}
+        with self.assertRaises(cli.InstallError) as rejected:
+            cli.plan_machine(request)
+        self.assertEqual(rejected.exception.code, 'machine_route_unsupported')
+        self.assertEqual(before, {str(p.relative_to(self.old)):(p.lstat().st_mode, p.read_bytes() if p.is_file() else None) for p in [self.old,*self.old.rglob('*')]})
+        self.assertFalse((self.old/'redirect.json').exists())
+        self.assertFalse(self.runtime.code.exists())

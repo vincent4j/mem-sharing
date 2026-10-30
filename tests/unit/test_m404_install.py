@@ -58,6 +58,17 @@ class InstallFixture(unittest.TestCase):
 
 
 class InstallTests(InstallFixture):
+    def test_old_installation_plan_cannot_replay_into_schema3(self):
+        plan=self.plan();plan['versions']['schema_version']=2
+        body=dict(plan);body.pop('plan_sha256')
+        plan['plan_sha256']=legacy.digest(legacy.encoded(body))
+        before=list(self.home.iterdir())
+        with self.assertRaisesRegex(ValueError,'diagnostic-only'):
+            install._validate(plan,historical=True)
+        with self.assertRaises(ValueError):
+            install.execute_install(plan,approved(plan),request=self.request)
+        self.assertEqual(list(self.home.iterdir()),before)
+
     def test_empty_classification_and_preview_are_zero_write(self):
         self.assertEqual(install.inspect_machine(self.request)['scene'],'empty')
         plan=self.plan();self.assertEqual(plan['channel'],'fresh')
@@ -236,8 +247,8 @@ class InstallTests(InstallFixture):
                          legacy_source_commits={str(fixture.old):OLD_COMMIT})
             before=fixture.old.read_bytes()
             scene=install.inspect_machine(request)
-            self.assertEqual(scene['scene'],'valid_old',scene)
-            self.assertTrue(scene['content_candidate'])
+            self.assertEqual(scene['scene'],'unsupported',scene)
+            self.assertEqual(scene['channel'],'stop')
             with self.assertRaises(ValueError):install.plan_install(request)
             self.assertEqual(fixture.old.read_bytes(),before)
             self.assertEqual((root/'memories/MEMORY.md').read_bytes(),b'v0 old')

@@ -24,10 +24,6 @@ from .layout import RuntimeLayout
 from .transaction import Snapshot, TransactionError, _apply, _atomic_file, read_snapshot
 
 PRODUCT = 'mem-sharing'
-# §23 改名前的历史 product_id:仅用于识别白名单前驱(P)现场 C 上的旧代码清单,
-# 不是当前产品身份;台账装载仍只接受当前 id(白名单转换经 upgrade 规范化)。
-LEGACY_PRODUCT_ID = 'agent-group-memory'
-SCHEMA = 1
 JOURNAL_KEYS = 'schema_version product_id operation_id plan approval status intent created_directories completed snapshot_complete snapshot_location entry_registry_sha256 final_registry_sha256'
 PLAN_KEYS = 'schema_version command operation_id channel layout source source_files tools versions requested_agents effective_agents entry_plan entry_inputs observations scene_sha256 legacy_identity legacy_import outputs directories bootstrap journal staged_registry metadata_scopes changes agent_facts source_tree_sha256 inventory plan_sha256'
 
@@ -147,7 +143,7 @@ def _code_matches(runtime, product):
     marker = runtime.code / '.agm-code-manifest.json'
     meta = migrate._json(marker)
     registry._keys(meta, 'product_id source files', 'code manifest')
-    if meta['product_id'] not in (PRODUCT, LEGACY_PRODUCT_ID) or meta['source'] != product['source']:
+    if meta['product_id'] != PRODUCT or meta['source'] != product['source']:
         _fail('Code/ledger identity mismatch')
     expected = {str(runtime.code):_node(runtime.code), str(marker):_node(marker)}
     for item in meta['files']:
@@ -227,31 +223,15 @@ def inspect_machine(request):
             target = request.get('source',{}).get('version')
             newer = isinstance(product,dict) and ((isinstance(product.get('product_structure_version'),int) and product['product_structure_version']>1)
                      or target and re.fullmatch(r'\d+\.\d+\.\d+',str(product.get('product_code_version'))) and tuple(map(int,product['product_code_version'].split('.')))>tuple(map(int,target.split('.'))))
-            if type(version) is int and version>2 or newer:
+            if type(version) is int and version>3 or newer:
                 result.update(scene='future',errors=['unsupported future version'])
                 return result
-            if version == 1:
-                _fail('schema1 at V is not a supported legacy source')
             allowed = paths.allowed_user_paths(request['platform_config'],None,home=str(runtime.home))
-            # v1.11:已装前驱(P)代码的 agents.json 自带 user_skill_roots 时,其 machine
-            # 账可能登记旧投影对象(当前收窄路径表已不含投影位)。只读路由装载并入
-            # 前驱自身投影位;写入授权仍由 upgrade 的精确白名单把关,此处零写入。
-            from . import upgrade as upgrade_module
-            try:
-                installed_table = migrate._json(runtime.code/'scripts/agents.json')
-            except (OSError, ValueError):
-                installed_table = None
-            if isinstance(installed_table, dict) and any(
-                    isinstance(entry, dict) and 'user_skill_roots' in entry
-                    for platform in installed_table.get('platforms', {}).values()
-                    if isinstance(platform, dict) for entry in platform.values()):
-                allowed = upgrade_module._legacy_contract_load_paths(runtime, allowed)
-            # §23:白名单前驱(P)台账的 product_id 是改名前旧值——路由装载按改名语义
-            # 内存规范化;精确写入授权仍由 upgrade 的白名单+转换表把关。
-            if upgrade_module._predecessor_whitelisted(runtime, request.get('source')):
-                data = upgrade_module._load_whitelisted_predecessor(runtime.registry, allowed)
-            else:
-                data = registry.require_installed(registry.load_registry(runtime.registry,allowed_user_paths=allowed))
+            if type(version) is int and version in (1, 2):
+                registry.load_diagnostic_registry(runtime.registry, allowed_user_paths=allowed)
+                result.update(scene='unsupported', channel='stop', errors=['Old development ledger is diagnostic-only; preserve and reinstall'])
+                return result
+            data = registry.require_installed(registry.load_registry(runtime.registry,allowed_user_paths=allowed))
             _code_matches(runtime,data['product'])
             # Simultaneous regular old ledger is never selected by mtime.
             for old in known_old:
@@ -281,16 +261,9 @@ def inspect_machine(request):
         if any(_node(p)['kind']!='absent' for p in known_old):
             allowed=paths.allowed_user_paths(request['platform_config'],None,home=str(runtime.home))
             existing=[p for p in known_old if os.path.lexists(p)]
-            for old in existing:
-                commit=request.get('legacy_source_commits',{}).get(str(old))
-                if not commit:_fail('Pinned legacy source identity required')
-                migrate._code_inventory(old,commit)
             scene=migrate.inspect_migration(runtime,existing,allowed_user_paths=allowed)
             result['legacy_product']=scene
-            if scene['scene']=='legacy_only':
-                result.update(scene='valid_old',channel='upgrade',content_candidate=any((runtime.legacy_root/n).exists() for n in legacy.ROOTS))
-            else:
-                _fail('Legacy product state: '+scene['scene'])
+            result.update(scene='unsupported',channel='stop',errors=[scene['message']])
             return result
         # §23:v0 源与目标分离——历史位置 ~/.agents-group(legacy_root)只作只读
         # v0 源,完整枚举进 observations 绑定 scene;产品自身永不写入该目录。
@@ -449,7 +422,7 @@ def plan_install(request):
     saved_inputs={k:copy.deepcopy(request[k]) for k in ('platform_config','agents','search_paths','app_directories','user_candidates') if k in request}
     plan={'schema_version':2,'command':'install-machine','operation_id':op,'channel':scene['channel'],
           'layout':runtime.describe(),'source':source,'source_files':files,'tools':tools,
-          'versions':{'schema_version':2,'product_structure_version':1,'product_code_version':source['version']},
+          'versions':{'schema_version':3,'product_structure_version':1,'product_code_version':source['version']},
           'requested_agents':(entry_result.get('agents') or {}).get('requested',paths.resolve_agents(request.get('agents'))),
           'agent_facts':{a:{'status':fact['status'],'fingerprint':detect.detection_fingerprint(fact)} for a,fact in entry_result['detection']['agents'].items()},
           'effective_agents':(entry_result.get('agents') or {}).get('effective',[]),'entry_plan':entry_plan,'entry_inputs':saved_inputs,
@@ -476,16 +449,16 @@ def plan_install(request):
 
 
 def _validate(plan, *, historical=False):
-    old = historical and isinstance(plan,dict) and type(plan.get('schema_version')) is int and plan.get('schema_version')==1 and 'inventory' not in plan
-    registry._keys(plan,' '.join(k for k in PLAN_KEYS.split() if not old or k!='inventory'),'install plan')
+    registry._keys(plan,PLAN_KEYS,'install plan')
     body=dict(plan); digest=body.pop('plan_sha256')
-    if legacy.digest(legacy.encoded(body))!=digest or plan['schema_version']!=(1 if old else 2) or plan['command']!='install-machine':
+    if legacy.digest(legacy.encoded(body))!=digest or plan['schema_version']!=2 or plan['command']!='install-machine':
         _fail('Invalid installation plan')
+    if plan['versions'] != {'schema_version':3,'product_structure_version':1,'product_code_version':plan['source']['version']}:
+        _fail('Old development installation journal is diagnostic-only; preserve and reinstall')
     runtime=RuntimeLayout(Path(plan['layout']['root']).parent)
     runtime.validate_paths(); _real_chain(runtime.code,runtime.home)
-    if not old:
-        versions.validate(runtime,plan['inventory'])
-        if plan['inventory']!=versions.descriptor(runtime,plan['source'],plan['source_files']):_fail('Inventory/source mismatch')
+    versions.validate(runtime,plan['inventory'])
+    if plan['inventory']!=versions.descriptor(runtime,plan['source'],plan['source_files']):_fail('Inventory/source mismatch')
     op=migrate._op(plan['operation_id'])
     bootstrap=runtime.home/('.mem-sharing-install-'+op)
     if plan['layout']!=runtime.describe() or plan['bootstrap']!=str(bootstrap) or plan['journal']!=str(bootstrap/'journal.json') or plan['staged_registry']!=str(bootstrap/'staged-registry.json'):

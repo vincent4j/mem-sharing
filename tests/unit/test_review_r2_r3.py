@@ -33,7 +33,7 @@ class RebuildTests(EnableFixture):
         first = self.two_projects()
         path = self.runtime.registry
         raw = json.loads(path.read_bytes())
-        raw['projects'][first]['checkouts'][first]['states']['source_available']['status'] = 'INVALID'
+        raw['projects'][first]['memory_policy'] = 'INVALID'
         path.write_text(json.dumps(raw))
         return first, path
 

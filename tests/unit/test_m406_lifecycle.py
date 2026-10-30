@@ -27,12 +27,8 @@ class LifecycleTests(EnableFixture):
         preview=remove.run(request)
         if preview['status']=='completed':return preview
         self.assertEqual(preview['status'],'approval_required',preview)
-        p=self.load()['projects'][str(self.root)];a=p['checkouts'][str(self.root)]
-        approval={'command':'remove-memory','main_checkout':str(self.root),'checkout':str(self.root),
-            'git_common_dir':a['git_common_dir'],'agents':a['agents'],'memory_authorization':None,
-            'store_path':a['store']['path'],'provider_source':p['provider_source'],'provider_fingerprints':[],
-            'changes':[{k:c[k] for k in ('path','operation','before_fingerprint','after_fingerprint')} for c in preview['changes']],
-            'confirmed_at':NOW,'reference':'explicit removal approval'}
+        approval=json.loads(preview['next_action'])
+        approval.update(confirmed_at=NOW,reference='explicit removal approval')
         return remove.run(dict(request,approval=approval))
 
     def report(self):
@@ -67,7 +63,7 @@ class LifecycleTests(EnableFixture):
 
     def test_managed_bridge_edit_still_stops_enable_and_remove(self):
         self.apply('yes',True);path=self.root/'AGENTS.md'
-        path.write_bytes(path.read_bytes().replace(b'Keeper rules',b'foreign bridge'))
+        path.write_bytes(path.read_bytes().replace(enable.EXPERIENCE_TEXT.encode(),b'foreign bridge'))
         before=self.runtime.registry.read_bytes();self.request['approval']=None
         self.assertEqual(enable.run(self.request)['errors'][0]['code'],'drift')
         self.assertEqual(remove.run(dict(self.request,approval=None))['errors'][0]['code'],'drift')
@@ -80,7 +76,7 @@ class LifecycleTests(EnableFixture):
         self.assertFalse((self.root/'.workbuddy/memory/MEMORY.md').exists())
         self.assertTrue((self.root/'.workbuddy/memory').is_dir())
         self.assertTrue((self.root/'AGENTS.md').is_file())
-        self.assertTrue((self.root/'docs/context-keeper/memory-keeper.md').exists())
+        self.assertFalse((self.root/'docs/context-keeper').exists())
 
     def test_CLAUDE_added_user_bytes_preserved_without_whole_file_guard(self):
         self.apply('yes',True);path=self.root/'CLAUDE.md';user=b'\r\nUser rules\xff\n'
@@ -115,14 +111,15 @@ class LifecycleTests(EnableFixture):
         self.assertEqual(next(o for o in self.load()['projects'][str(self.root)]['checkouts'][str(self.root)]['objects'].values() if o['kind']=='import')['ownership'],'reused')
         self.assertEqual(self.remove_project()['status'],'completed');self.assertEqual(path.read_bytes(),b'@AGENTS.md\n')
 
-    def test_yes_to_no_plan_revokes_created_triggers_keeps_store_and_source(self):
-        self.apply('yes',True);store=self.root/'docs/context-keeper';before={str(p):p.read_bytes() for p in store.rglob('*') if p.is_file()}
-        self.calls.clear();self.request.update(approval=None,memory_choice='no')
+    def test_follow_to_disabled_plan_adds_guard_keeps_store_and_source(self):
+        store=self.root/'docs/context-keeper';store.mkdir(parents=True);(store/'memory-keeper.md').write_bytes(b'user store\xff\r\n')
+        self.apply('yes',True);before={str(p):p.read_bytes() for p in store.rglob('*') if p.is_file()}
+        self.calls.clear();self.request.update(approval=None,memory_choice='disabled')
         preview=enable.run(self.request);plan=json.loads(preview['next_action'])
-        self.assertTrue(any(c['operation']=='remove' for c in plan['changes']))
-        self.assertEqual(plan['memory_transition']['after'],'no');self.assertTrue(plan['changes'])
+        self.assertTrue(plan['changes'])
+        self.assertEqual(plan['memory_transition']['after'],'disabled');self.assertTrue(plan['changes'])
         result=self.execute_preview(preview);self.assertEqual(result['status'],'completed',result)
-        p=self.load()['projects'][str(self.root)];self.assertEqual(p['memory_authorization'],'no')
+        p=self.load()['projects'][str(self.root)];self.assertEqual(p['memory_policy'],'disabled')
         self.assertEqual(self.calls,[])
         for path in (self.root/'AGENTS.md',self.root/'CLAUDE.md',self.root/'.workbuddy/memory/MEMORY.md'):
             if path.exists():self.assertNotIn(b'<!-- context-keeper:',path.read_bytes())
@@ -130,24 +127,24 @@ class LifecycleTests(EnableFixture):
         self.assertFalse((self.root/'.codex/skills/context-keeper').is_symlink())
         self.assertEqual(before,{str(p):p.read_bytes() for p in store.rglob('*') if p.is_file()})
         self.assertTrue((self.source/'scripts/install.py').exists())
-        print('DECLINE',json.dumps({'authorization':p['memory_authorization'],'created_bridges_removed':True,'denial_guard':True,'store_preserved':True,'plan_changes':len(plan['changes'])}))
+        print('DECLINE',json.dumps({'authorization':p['memory_policy'],'automatic_recording_guard':True,'short_protocol_preserved':True,'denial_guard':True,'store_preserved':True,'plan_changes':len(plan['changes'])}))
 
     def test_reused_bridge_preserved_with_denial_even_after_project_remove(self):
         self.apply('yes',True);data=self.load();a=data['projects'][str(self.root)]['checkouts'][str(self.root)]
-        obj=next(o for o in a['objects'].values() if o['path']==str(self.root/'CLAUDE.md') and o['kind']=='block')
+        obj=next(o for o in a['objects'].values() if o['path']==str(self.root/'AGENTS.md') and o['kind']=='block')
         unit=bytes.fromhex(obj['lifecycle']['unit_hex']);obj.pop('lifecycle');obj.update(ownership='reused',original_existed=True,backup_manifest=None)
         from agm_core.paths import allowed_user_paths
         self.runtime.registry.write_bytes(registry.serialize_registry(data,allowed_user_paths=allowed_user_paths(self.config,None,home=str(self.home))))
-        self.request.update(approval=None,memory_choice='no');result=self.execute_preview(enable.run(self.request))
+        self.request.update(approval=None,memory_choice='disabled');result=self.execute_preview(enable.run(self.request))
         self.assertEqual(result['status'],'completed',result)
-        path=self.root/'CLAUDE.md';self.assertIn(unit,path.read_bytes());self.assertIn(enable.DENIED_MARKER['start'].encode(),path.read_bytes())
+        path=self.root/'AGENTS.md';self.assertIn(unit,path.read_bytes());self.assertIn(enable.DENIED_MARKER['start'].encode(),path.read_bytes())
         self.assertEqual(self.remove_project()['status'],'completed')
         self.assertIn(unit,path.read_bytes());self.assertIn(enable.DENIED_MARKER['start'].encode(),path.read_bytes())
-        self.assertEqual(self.load()['projects'][str(self.root)]['memory_authorization'],'no')
+        self.assertEqual(self.load()['projects'][str(self.root)]['memory_policy'],'disabled')
 
     def test_reenable_removes_only_owned_denial_with_explicit_plan(self):
-        self.apply('yes',True);self.request.update(approval=None,memory_choice='no');self.execute_preview(enable.run(self.request))
-        self.request.update(approval=None,memory_choice='yes')
+        self.apply('yes',True);self.request.update(approval=None,memory_choice='disabled');self.execute_preview(enable.run(self.request))
+        self.request.update(approval=None,memory_choice='follow_ck')
         result=self.execute_preview(enable.run(self.request));self.assertEqual(result['status'],'completed',result)
         self.assertNotIn(enable.DENIED_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
         self.assertIn(enable.KEEPER_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
@@ -161,8 +158,9 @@ class LifecycleTests(EnableFixture):
         result=self.execute_preview(enable.run(self.request));self.assertEqual(result['status'],'completed',result)
         self.assertEqual(self.load()['projects'][str(self.root)]['checkouts'][str(self.root)]['agents'],['codex'])
         self.assertFalse((self.root/'CLAUDE.md').exists());self.assertFalse((self.home/'.workbuddy').exists())
-        before=self.runtime.registry.read_bytes();self.request.update(agents=['claude'],approval=None)
-        self.assertEqual(enable.run(self.request)['errors'][0]['code'],'agent_not_installed');self.assertEqual(self.runtime.registry.read_bytes(),before)
+        before=self.runtime.registry.read_bytes();self.request.update(agents=['claude'],approval=None,memory_choice=None)
+        result=enable.run(self.request);self.assertEqual(result['errors'][0]['code'],'agent_not_installed',result)
+        self.assertFalse(result['installation']['effective']);self.assertEqual(self.runtime.registry.read_bytes(),before)
 
     def test_no_installed_executor_does_not_create_project_entries(self):
         self.request.update(agents=None,search_paths=[],app_directories=[])
@@ -172,15 +170,17 @@ class LifecycleTests(EnableFixture):
         self.assertEqual(result['status'],'gaps',result);self.assertFalse((self.root/'AGENTS.md').exists())
         self.assertEqual(self.runtime.registry.read_bytes(),before)
 
-    def test_WorkBuddy_installed_without_native_directory_is_partial_without_mkdir(self):
-        self.request.update(agents=['workbuddy'],memory_choice='yes')
+    def test_WorkBuddy_pointer_waits_for_native_directory_without_mkdir(self):
+        self.request.update(agents=['workbuddy'],memory_choice='follow_ck')
         preview=enable.run(self.request)
         self.assertEqual(json.loads(preview['next_action'])['native_pending'],['workbuddy'])
         self.assertFalse((self.root/'.workbuddy/memory').exists())
-        result=self.execute_preview(preview);self.assertEqual(result['status'],'gaps',result)
+        result=self.execute_preview(preview);self.assertEqual(result['status'],'completed',result)
+        self.assertTrue(any('pointer waits for actual use' in w for w in result['warnings']))
         self.assertFalse((self.root/'.workbuddy/memory').exists());self.assertEqual(self.calls,[])
         a=self.load()['projects'][str(self.root)]['checkouts'][str(self.root)]
-        self.assertEqual(a['states']['bridge_assembled']['workbuddy']['status'],'blocked')
+        self.assertNotIn('states',a)
+        self.assertFalse(any(Path(o['path']).name=='MEMORY.md' for o in a['objects'].values()))
 
     def test_project_remove_retains_machine_installation_and_user_objects(self):
         self.runtime.code.mkdir(parents=True);(self.runtime.code/'SKILL.md').write_text('# installed product\n')
@@ -195,22 +195,20 @@ class LifecycleTests(EnableFixture):
         self.assertTrue((self.home/'.codex/AGENTS.md').is_file())
         self.assertTrue(all(obj['consumers']==[] for obj in self.load()['machine']['objects'].values()))
 
-    def test_R4_missing_source_scripts_is_readonly_gap_not_ready(self):
+    def test_missing_ck_scripts_has_no_health_gap_and_is_readonly(self):
         self.apply('yes',True);(self.source/'scripts/install.py').unlink();(self.source/'scripts/context_keeper_probe.py').unlink()
         before={str(p):(p.read_bytes(),p.stat().st_mtime_ns) for p in self.area.rglob('*') if p.is_file() and not p.is_symlink()}
-        with patch('agm_core.enable._call',side_effect=AssertionError('check must not call provider')):
-            result=self.report()
-        report=result['projects'][0];self.assertEqual(report['states']['source_available']['status'],'missing')
-        self.assertIn('source_missing',{g['code'] for g in report['gaps']})
+        result=self.report()
+        report=result['projects'][0];self.assertEqual(report['gaps'],[])
+        self.assertTrue(set(report['states']).isdisjoint({'source_available','skill_installed','bridge_assembled','store_authorized_ready'}))
         self.assertEqual(before,{str(p):(p.read_bytes(),p.stat().st_mtime_ns) for p in self.area.rglob('*') if p.is_file() and not p.is_symlink()})
-        print('SOURCE',json.dumps({'source_status':report['states']['source_available']['status'],'gap_codes':[g['code'] for g in report['gaps']]}))
 
-    def test_R4_wrong_source_type_or_changed_approved_bytes_blocks(self):
+    def test_external_ck_source_changes_do_not_change_project_health(self):
         self.apply('yes',True);path=self.source/'scripts/install.py';original=path.read_bytes()
         path.write_bytes(original+b'\n# changed')
-        report=self.report()['projects'][0];self.assertEqual(report['states']['source_available']['status'],'blocked')
+        report=self.report()['projects'][0];self.assertEqual(report['gaps'],[])
         path.unlink();path.symlink_to(self.source/'scripts/context_keeper_probe.py')
-        report=self.report()['projects'][0];self.assertEqual(report['states']['source_available']['status'],'blocked')
+        report=self.report()['projects'][0];self.assertEqual(report['gaps'],[])
 
 
     def test_old_base_block_can_be_removed_as_free_rules(self):
@@ -234,13 +232,13 @@ class LifecycleTests(EnableFixture):
     def test_revocation_succeeds_when_all_registered_executors_are_now_absent(self):
         self.apply('yes',True)
         self.request.update(search_paths=[],app_directories=[],user_candidates={},
-            agents=None,approval=None,memory_choice='no')
+            agents=None,approval=None,memory_choice='disabled')
         # Existing configuration produces only unknown hints, never installed facts.
         (self.home/'Applications/WorkBuddy.app').rename(self.area/'retired-WorkBuddy.app')
         result=self.execute_preview(enable.run(self.request))
         self.assertEqual(result['status'],'completed',result)
-        self.assertEqual(self.load()['projects'][str(self.root)]['memory_authorization'],'no')
-        self.assertNotIn(enable.KEEPER_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
+        self.assertEqual(self.load()['projects'][str(self.root)]['memory_policy'],'disabled')
+        self.assertIn(enable.KEEPER_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
         self.assertIn(enable.DENIED_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
 
     def test_pure_reference_only_file_deleted_and_corrupt_lifecycle_rejected(self):

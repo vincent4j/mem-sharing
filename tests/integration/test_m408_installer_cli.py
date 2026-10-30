@@ -55,7 +55,7 @@ class InstallerCLITests(unittest.TestCase):
         code,result=self.run_cli('--approval-file',self.approve(plan),'--project',str(self.cwd))
         self.assertEqual(code,0,result);self.assertEqual(result['status'],'completed')
         self.assertIn(str(self.cwd),result['project_commands'][0]);self.assertFalse(result['project_root_required'])
-        self.assertEqual(result['versions'],{'schema_version':2,'product_structure_version':1,'product_code_version':'0.4.0'})
+        self.assertEqual(result['versions'],{'schema_version':3,'product_structure_version':1,'product_code_version':'0.4.0'})
         self.assertEqual(list(self.home.rglob('__pycache__')),[])
         self.assertEqual(list(self.source.rglob('__pycache__')),[])
         installed=Path(result['layout']['code'])
@@ -88,6 +88,56 @@ class InstallerCLITests(unittest.TestCase):
             report=json.loads(proc.stdout)
             self.assertIn('scripts/install.py',report['next_action'],report)
             self.assertEqual(before,self.snapshot());self.assertFalse((self.home/'.mem-sharing').exists())
+
+    def test_context_keeper_route_is_independent_and_uses_synthetic_pinned_source(self):
+        sys.path.insert(0,str(REPO/'tests/unit'))
+        from test_ck_install import UPSTREAM
+        package=self.area/'codex-fixture';(package/'bin').mkdir(parents=True)
+        exe=package/'bin/codex';exe.write_text('#!/bin/sh\n');exe.chmod(0o755)
+        (package/'package.json').write_text(json.dumps({'name':'@openai/codex','version':'1.0','bin':{'codex':'bin/codex'}}))
+        self.env['PATH']=str(package/'bin')+':'+self.env['PATH']
+        # Hermetic detection: real /Applications (e.g. a host-installed WorkBuddy.app)
+        # must not leak into connected; empty app_directories scopes detection to PATH.
+        request_file=self.area/'ck-route-request.json'
+        request_file.write_text(json.dumps({'app_directories':[]}))
+        code,preview=self.run_cli('--request-file',str(request_file),
+                                  '--source',str(self.source),'--commit',self.commit,'--version','0.4.0')
+        self.assertEqual(code,5,preview)
+        code,main=self.run_cli('--approval-file',self.approve(preview['approval_plan']))
+        self.assertEqual(code,0,main)
+        self.assertEqual(main['context_keeper']['status'],'skipped')
+        self.assertEqual(main['agents']['connected'],['codex'])
+        ck=self.area/'CK fixture';(ck/'scripts').mkdir(parents=True)
+        (ck/'SKILL.md').write_text('name: context-keeper\n')
+        (ck/'scripts/install.py').write_text(UPSTREAM)
+        def git(*args):
+            return subprocess.run(['git','-C',str(ck),*args],env=self.env,capture_output=True,text=True,check=True).stdout.strip()
+        git('init');git('add','SKILL.md','scripts/install.py')
+        git('-c','user.name=fixture','-c','user.email=fixture@example.invalid','commit','-m','isolated CK fixture')
+        pin=git('rev-parse','HEAD')
+        # Test-only subprocess shim: pin and durable-location check are replaced
+        # for the synthetic temp checkout, without production override flags.
+        shim=self.area/'ck-cli-fixture.py'
+        shim.write_text('import sys\nsys.path.insert(0,'+repr(str(self.source/'scripts'))+')\n'
+            'import install\ninstall.ck_install.PIN='+repr(pin)+'\n'
+            'install.ck_install._durable_source=lambda *a:None\n'
+            'raise SystemExit(install.main(sys.argv[1:]))\n')
+        self.cli=shim
+        before=self.snapshot()
+        for args in (['--context-keeper','--acquire'],['--context-keeper','--recover','/x','--action','continue'],
+                     ['--context-keeper','--version','0.4.0'],['--ck-source',str(ck)]):
+            code,bad=self.run_cli(*args);self.assertEqual(code,2,bad)
+            self.assertEqual(before,self.snapshot())
+        code,preview=self.run_cli('--context-keeper','--ck-source',str(ck))
+        self.assertEqual(code,5,preview);self.assertEqual(before,self.snapshot())
+        plan=preview['approval_plan'];self.assertEqual(plan['command'],'install-context-keeper')
+        self.assertEqual(plan['main_operation_id'],main['operation_id'])
+        self.assertEqual(plan['agents'],['codex']);self.assertEqual(plan['source']['commit'],pin)
+        code,result=self.run_cli('--context-keeper','--approval-file',self.approve(plan))
+        self.assertEqual(code,0,result);self.assertEqual(result['status'],'configured')
+        self.assertEqual(result['runtime_acceptance'],'pending')
+        self.assertTrue((self.home/'.codex/skills/context-keeper').is_symlink())
+        self.assertTrue(Path(result['journal']).is_file())
 
     def test_acquisition_is_separate_approved_and_pinned_using_local_git_transport(self):
         # The product transport is fixed to OFFICIAL. Only this child process gets

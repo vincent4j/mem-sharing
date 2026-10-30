@@ -1,20 +1,8 @@
-"""只读 check-memory 命令体(M2-05)。
+"""Read-only project-entry inspection with ownership and byte-drift evidence.
 
-职责:项目装配状态报告(四态现场观测)、入口块存在/漂移、@AGENTS.md 引用、
-AGENTS.override.md 告警、registry 对照、非引用规则增长告警、执行器安装信号(hint)、
---all 巡检矩阵(已纳管项目 × 已接入执行器)。
-接入集以 registry 各项目 agents 的并集为依据,不使用目录安装 hint 扩大目标。
-
-零写入合同(D7 / architecture §5):不 mkdir、不建锁(write_lock 仅写操作使用)、
-不修漂移/补入口、不更新 registry 时间戳、不调用可能写缓存的 Keeper 探针——
-第四态无法用只读证据判定时一律 unknown,不假装 ready。registry 缺失/损坏时仅在内存
-重建可观察事实;--all 失去索引只报告范围不完整,不扫描未知项目,不宣称已巡检全部。
-
-request/build_request 合同见 agm.py;返回 dict 的 status 仅用 completed/gaps/failed,
-changes 恒为空(候选修复放 next_action),projects[] 每项含本模块定义的缺口清单 gaps[]:
-{"code","agent","path","detail","suggestion"},suggestion ∈ enable/manual/null。
+CK availability, source code and record-store state belong to CK. A disabled
+policy is an intentional state, never a health gap. No locks, caches or writes.
 """
-
 from __future__ import annotations
 
 import os
@@ -26,18 +14,16 @@ from pathlib import Path
 from . import paths as agm_paths
 from .entries import EntryConflict, block_fingerprint, managed_span, sha256, verify_link, free_project_rules, reference_span
 from .project import ProjectError, resolve_project
-from .registry import RegistryError, load_registry, require_installed
+from .registry import RegistryError, RegistryMigrationRequired, load_registry, load_diagnostic_registry, require_installed
 
-# 两对桥接标记与上游 install.py / templates/workbuddy-bridge.md 一致,仅用于
-# 未登记现场的只读观察;已登记现场的权威标记来自 registry 对象。
+# Current memSharing protocol markers; registered objects remain authoritative.
 BRIDGE_MARKERS = {
-    "context-keeper": ("<!-- context-keeper:start -->", "<!-- context-keeper:end -->"),
-    "mem-sharing": ("<!-- context-keeper:workbuddy:start -->", "<!-- context-keeper:workbuddy:end -->"),
+    "project-experience": ("<!-- mem-sharing:project-experience:start -->", "<!-- mem-sharing:project-experience:end -->"),
+    "project-rules": ("<!-- mem-sharing:project-rules:start -->", "<!-- mem-sharing:project-rules:end -->"),
 }
 ALL_MARKER_PAIRS = tuple(BRIDGE_MARKERS.values())
 IMPORT_REFERENCE_LINE = b"@AGENTS.md"
 OVERRIDE_BASENAME = "AGENTS.override.md"
-SKILL_NAME = "context-keeper"
 
 STATUS_COMPLETED = "completed"
 STATUS_GAPS = "gaps"
@@ -102,6 +88,12 @@ def _load_registry_state(registry_path, allowed_user_paths):
         return None, "registry 文件不存在: %s" % registry_path
     try:
         return require_installed(load_registry(registry_path, allowed_user_paths=allowed_user_paths)), None
+    except RegistryMigrationRequired:
+        try:
+            historical = load_diagnostic_registry(registry_path, allowed_user_paths=allowed_user_paths)
+            return None, "schema=%s read-only diagnosis; preserve historical bytes and reinstall; pre-release migration unsupported" % historical["schema_version"]
+        except RegistryError as exc:
+            return None, "historical registry strict diagnosis failed: %s" % exc
     except RegistryError as exc:
         return None, "registry 校验失败(损坏或含越界对象): %s" % exc
 
@@ -259,59 +251,6 @@ def _agent_objects(objects, shared_objects, checkout, agent):
     return result
 
 
-def _bridge_fact(agent, platform_config, *, home, checkout, objects, statuses):
-    entry = platform_config[agent]
-    bridge_path = agm_paths.expand_path(entry["project_bridge_entry"], home=home, project=checkout)
-    related = [
-        (oid, obj)
-        for oid, obj in objects.items()
-        if obj["kind"] in ("block", "user_convention") and obj["path"] == bridge_path
-        and obj.get("marker")==dict(zip(("start","end"),BRIDGE_MARKERS[entry["bridge_owner"]]))
-    ]
-    if related:
-        states = [statuses.get(oid, "unverified") for oid, _ in related]
-        if any(s in ("blocked",) for s in states):
-            return _fact("blocked", "%s 标记/落点冲突: %s" % (agent, bridge_path)), bridge_path
-        if any(s == "drifted" for s in states):
-            return _fact("blocked", "%s 受管块指纹漂移: %s" % (agent, bridge_path)), bridge_path
-        if any(s == "missing" for s in states):
-            return _fact("missing", "%s 受管块缺失: %s" % (agent, bridge_path)), bridge_path
-        return _fact("ready", "%s 桥接块就绪: %s" % (agent, bridge_path)), bridge_path
-    on_disk, data = _observe_path(bridge_path)
-    if on_disk == "absent":
-        return _fact("missing", "%s 桥接入口文件不存在: %s" % (agent, bridge_path)), bridge_path
-    if on_disk != "file":
-        return _fact("blocked", "%s 桥接入口不是普通文件: %s" % (agent, bridge_path)), bridge_path
-    start, end = BRIDGE_MARKERS[entry["bridge_owner"]]
-    try:
-        span = managed_span(data, start, end)
-    except EntryConflict as exc:
-        return _fact("blocked", "%s 桥接标记异常(%s): %s" % (agent, exc, bridge_path)), bridge_path
-    if span is None:
-        return _fact("missing", "%s 桥接块未找到(未登记现场仅观察标记): %s" % (agent, bridge_path)), bridge_path
-    return _fact("ready", "%s 桥接标记存在(未登记,无登记指纹可核对): %s" % (agent, bridge_path)), bridge_path
-
-
-def _skill_fact(agent, platform_config, *, home, checkout, objects, statuses):
-    entry = platform_config[agent]
-    roots = [agm_paths.expand_path(r, home=home, project=checkout) for r in entry["project_skill_roots"]]
-    candidates = [Path(r) / SKILL_NAME for r in roots]
-    found = [str(p) for p in candidates if p.is_dir() and (p / "SKILL.md").is_file()]
-    broken = [str(p) for p in candidates if os.path.lexists(p) and str(p) not in found]
-    related_bad = [
-        oid
-        for oid, obj in objects.items()
-        if obj["kind"] == "skill_symlink" and statuses.get(oid) in ("drifted", "blocked")
-    ]
-    if related_bad:
-        return _fact("blocked", "%s Skill 链接漂移/冲突: %s" % (agent, ", ".join(sorted(related_bad))))
-    if broken:
-        return _fact("blocked", "%s Skill 落点不可用(断链/非目录/缺 SKILL.md): %s" % (agent, "; ".join(broken)))
-    if found:
-        return _fact("ready", "%s Skill 已安装: %s" % (agent, "; ".join(found)))
-    return _fact("missing", "%s Skill 根下未见 %s(检查根: %s)" % (agent, SKILL_NAME, "; ".join(roots)))
-
-
 def _import_rule_warnings(agent, platform_config, *, home, checkout, objects):
     """import 模式入口文件的非引用规则增长告警(DESIGN §4.2 瘦身终态)。
 
@@ -380,7 +319,7 @@ def _entry_warnings(agents, platform_config, *, home, checkout):
             if user_kind == "file":
                 text = user_data.decode("utf-8", "replace")
                 if "AGENTS.md" in text and "唯一" in text and "context-keeper" not in text:
-                    warnings.append("workbuddy_convention_review: %s 含旧的唯一规则来源表述且未见 context-keeper 例外,请人工核对桥接冲突(不输出正文)" % user_path)
+                    warnings.append("workbuddy_convention_review: %s 含旧的唯一规则来源表述，请人工核对项目经历协议(不输出正文)" % user_path)
     return warnings
 
 
@@ -397,42 +336,7 @@ def _discovery(platform_config, *, home, checkout):
 
 
 def _empty_states(agents, note):
-    return {
-        "source_available": _fact("unknown", note),
-        "skill_installed": {agent: _fact("unknown", note) for agent in agents},
-        "bridge_assembled": {agent: _fact("unknown", note) for agent in agents},
-        "store_authorized_ready": _fact("unknown", note),
-    }
-
-
-def _store_fact_and_gaps(project_entry, assembly):
-    """第四态只读判定:不调用 Keeper 探针,证据不足一律 unknown(architecture §2.3)。"""
-    if project_entry is None:
-        return _fact("unknown", "项目未登记,记忆授权与库状态未知"), []
-    auth = project_entry["memory_authorization"]
-    store = assembly["store"] if assembly else None
-    if auth is None:
-        return _fact("unknown", "项目记忆授权未登记(null)"), []
-    if auth == "no":
-        return (
-            _fact("blocked", "memory_authorization=no(登记):check 以缺口说明记忆未启用"),
-            [_gap("memory_not_enabled", "用户已选择 no,记忆档未启用;如需启用须用户明确授权 --memory", suggestion="manual")],
-        )
-    if store is None or not store["location_approved"] or store["path"] is None:
-        return (
-            _fact("blocked", "记忆位置未获批(location_approved=false 或 path=null)"),
-            [_gap("store_location_unapproved", "授权 yes 但记录库位置未获批", suggestion="manual")],
-        )
-    path = store["path"]
-    if not os.path.isdir(path):
-        return (
-            _fact("missing", "获批记录库位置不存在: %s" % path),
-            [_gap("store_missing", "获批记录库位置不存在: %s" % path, path=path, suggestion="manual")],
-        )
-    return (
-        _fact("unknown", "库目录存在: %s;只读检查不调用可能写缓存的 Keeper 探针,无法判定库可用/迁移状态" % path),
-        [],
-    )
+    return {'entries': {a: _fact('unknown', note) for a in agents}}
 
 
 def _runtime_output(assembly, object_gaps, warnings):
@@ -534,93 +438,29 @@ def _observe_project(
     obj_gaps = _object_gaps(observations)
     gaps.extend(obj_gaps)
 
-    # 四态现场观测(不信任登记时间戳,逐项重新只读核实)。
-    if project_entry is not None and project_entry.get("provider_source"):
-        provider = project_entry["provider_source"]
-        required=[Path(provider)/'SKILL.md',Path(provider)/'scripts/install.py',Path(provider)/'scripts/context_keeper_probe.py']
-        absent=[p for p in required if _observe_path(str(p))[0]=='absent']
-        invalid=[p for p in required if _observe_path(str(p))[0] not in ('absent','file') or p.is_symlink() or p.resolve()!=p]
-        if absent:
-            source_fact=_fact('missing','provider 必需文件缺失: '+', '.join(map(str,absent)))
-            for p in absent:gaps.append(_gap('source_missing','provider 必需文件缺失',path=str(p),suggestion='manual'))
-        elif invalid:
-            source_fact=_fact('blocked','provider 必需文件类型/链接异常: '+', '.join(map(str,invalid)))
-            for p in invalid:gaps.append(_gap('source_invalid','provider 必需文件不是可信普通文件',path=str(p),suggestion='manual'))
-        else:
-            try:
-                from .enable import _source_fingerprints,_source_evidence
-                fingerprints=_source_fingerprints(Path(provider))
-                expected=assembly['states']['source_available']['evidence'] if assembly else None
-                if expected and expected.startswith('Keeper source sha256:') and expected!=_source_evidence(fingerprints):
-                    raise ValueError('provider 与已批准源码指纹不同')
-                source_fact=_fact('ready','provider 最低文件集、Git 身份与可用批准指纹只读核验: '+provider)
-            except (ValueError,OSError) as exc:
-                source_fact=_fact('blocked',str(exc));gaps.append(_gap('source_invalid',str(exc),path=provider,suggestion='manual'))
-    else:
-        source_fact = _fact("unknown", "未登记 provider 源码位置" if project_entry is not None else "项目未登记,源码位置未知")
-
-    skill_facts, bridge_facts = {}, {}
+    report["memory_policy"] = project_entry["memory_policy"] if project_entry else None
+    # CK availability and store contents belong to CK, never health gaps here.
     for agent in agents:
         agent_objects = _agent_objects(objects, shared_objects, checkout, agent)
-        skill_facts[agent] = _skill_fact(agent, platform_config, home=home, checkout=checkout, objects=agent_objects, statuses=statuses)
-        bridge_fact, bridge_path = _bridge_fact(agent, platform_config, home=home, checkout=checkout, objects=agent_objects, statuses=statuses)
-        memory_denied=project_entry is not None and project_entry.get("memory_authorization")=="no"
-        if memory_denied:bridge_fact=_fact("blocked","本项目自动记忆授权为 no;历史桥接/Skill 不授予自动写入权限")
-        bridge_facts[agent] = bridge_fact
-        # 对象级缺口已定位到路径时不重复报事实级缺口;未登记现场没有对象可依,才报事实级。
-        agent_gap_paths = {
-            item["path"]
-            for item in observations
-            if agent in item["agents"] and item["status"] in ("missing", "drifted", "blocked")
-        }
-        skill_object_gap = any(
-            agent in item["agents"] and item["kind"] == "skill_symlink"
-            and item["status"] in ("missing", "drifted", "blocked") for item in observations
-        )
-        if not memory_denied and skill_facts[agent]["status"] in ("missing", "blocked") and not skill_object_gap:
-            blocked = skill_facts[agent]["status"] == "blocked"
-            gaps.append(_gap("skill_conflict" if blocked else "skill_missing", skill_facts[agent]["evidence"], agent=agent, suggestion="manual" if blocked else "enable"))
-        if not memory_denied and bridge_fact["status"] == "missing" and bridge_path not in agent_gap_paths:
-            gaps.append(_gap("bridge_missing", bridge_fact["evidence"], agent=agent, path=bridge_path, suggestion="enable"))
-        elif not memory_denied and bridge_fact["status"] == "blocked" and bridge_path not in agent_gap_paths:
-            gaps.append(_gap("bridge_conflict", bridge_fact["evidence"], agent=agent, path=bridge_path, suggestion="manual"))
-        entry = platform_config[agent]
-        rule_path = agm_paths.expand_path(entry["project_rule_entry"], home=home, project=checkout)
-        rule_kind, _ = _observe_path(rule_path)
-        if rule_kind != "file" and rule_path not in agent_gap_paths and not any(
-            g["code"] == "rule_entry_unavailable" and g["path"] == rule_path for g in gaps
-        ):
-            gaps.append(_gap("rule_entry_unavailable", "规则入口缺失或不是普通文件", agent=agent, path=rule_path, suggestion="enable" if rule_kind == "absent" else "manual"))
-        if entry["rule_mode"] == "import_agents":
-            kind, data = _observe_path(rule_path)
-            if (kind != "file" or not _reference_line_present(data)) and not any(
-                g["code"] == "import_reference_missing" and g["path"] == rule_path for g in gaps
-            ):
-                gaps.append(_gap("import_reference_missing", "入口缺少可核对的 @AGENTS.md 引用行", agent=agent, path=rule_path, suggestion="enable" if kind in ("file", "absent") else "manual"))
-        warnings.extend(_import_rule_warnings(agent, platform_config, home=home, checkout=checkout, objects=agent_objects))
-
-    store_fact, store_gaps = _store_fact_and_gaps(project_entry, assembly)
-    if any(g["code"] == "identity_mismatch" for g in gaps):
-        store_fact = _fact("blocked", "Git 身份失配,登记授权不适用于当前 checkout;须人工核对")
-    gaps.extend(store_gaps)
-    report["states"] = {
-        "source_available": source_fact,
-        "skill_installed": skill_facts,
-        "bridge_assembled": bridge_facts,
-        "store_authorized_ready": store_fact,
-    }
-    report["runtime_acceptance"] = _runtime_output(assembly, bool(gaps), warnings)
-    warnings.extend(_override_warnings(checkout, home))
-    warnings.extend(_entry_warnings(agents, platform_config, home=home, checkout=checkout))
-    evidence.extend(
-        [
-            fact["evidence"]
-            for fact in [source_fact, store_fact]
-            + list(skill_facts.values())
-            + list(bridge_facts.values())
-            if fact.get("evidence")
-        ]
-    )
+        rule_path = agm_paths.expand_path(platform_config[agent]["project_rule_entry"], home=home, project=checkout)
+        if agent == 'claude' and assembly is not None and not any(
+                obj['kind'] == 'import' and obj['path'] == rule_path for obj in agent_objects.values()):
+            continue  # Installed but not yet explicitly used/assembled in this project.
+        if agent == 'workbuddy' and not (Path(checkout)/'.workbuddy/memory').exists():
+            warnings.append('WorkBuddy pointer pending actual use; native directory is not created by memSharing')
+            continue
+        # disabled may be a deliberately removed project; only retained guard objects are checked.
+        if report['memory_policy'] != 'disabled':
+            kind, raw = _observe_path(rule_path)
+            if kind != 'file':
+                gaps.append(_gap('rule_entry_unavailable','Rule entry missing or conflicting',agent=agent,path=rule_path,suggestion='enable' if kind=='absent' else 'manual'))
+            elif platform_config[agent]['rule_mode']=='import_agents' and not _reference_line_present(raw):
+                gaps.append(_gap('import_reference_missing','Missing @AGENTS.md reference',agent=agent,path=rule_path,suggestion='enable'))
+        warnings.extend(_import_rule_warnings(agent,platform_config,home=home,checkout=checkout,objects=agent_objects))
+    report['states'] = {'entries': {item['path']:item['status'] for item in observations}}
+    report['runtime_acceptance'] = _runtime_output(assembly,bool(gaps),warnings)
+    warnings.extend(_override_warnings(checkout,home))
+    warnings.extend(_entry_warnings(agents,platform_config,home=home,checkout=checkout))
     return report
 
 

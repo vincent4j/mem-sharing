@@ -24,84 +24,8 @@ sys.path.insert(0, str(REPO / "scripts"))
 sys.path.insert(0, str(REPO / "tests/unit"))
 from runtime_fixture import seed_runtime, seed_project_executors, CLI_DETECTION_BOOTSTRAP
 
-INSTALL_STUB = r'''import json, sys, traceback
-from pathlib import Path
-BRIDGE_START = "<!-- context-keeper:start -->"
-BRIDGE_END = "<!-- context-keeper:end -->"
-BRIDGE = f"{BRIDGE_START}\nKeeper rules\n{BRIDGE_END}\n"
-WORKBUDDY_BRIDGE_START = "<!-- context-keeper:workbuddy:start -->"
-WORKBUDDY_BRIDGE_END = "<!-- context-keeper:workbuddy:end -->"
-WORKBUDDY_BRIDGE = f"{WORKBUDDY_BRIDGE_START}\nUpstream WorkBuddy rules\n{WORKBUDDY_BRIDGE_END}\n"
-SKILLS = {"codex": (".agents/skills", ".codex/skills"), "claude": (".claude/skills",), "workbuddy": (".workbuddy/skills",)}
-
-def main():
-    args = sys.argv[1:]
-    def value(name): return args[args.index(name)+1]
-    source = Path(__file__).resolve().parents[1]
-    if "--ensure-bridge" in args:
-        root = Path(value("--root"))
-        bridge = root / (".workbuddy/memory/MEMORY.md" if "--workbuddy" in args else "AGENTS.md" if "--codex" in args else "CLAUDE.md")
-        assert (WORKBUDDY_BRIDGE if "--workbuddy" in args else BRIDGE).rstrip() in bridge.read_text()
-        print(json.dumps(dict(scope="project", bridge=str(bridge), action="unchanged")))
-        sys.exit(0)
-    root = Path(value("--project"))
-    links, rules = [], []
-    for agent, bases in SKILLS.items():
-        if "--" + agent not in args: continue
-        links += [str(root / base / "context-keeper") for base in bases]
-        rules.append(str(root / (".workbuddy/memory/MEMORY.md" if agent == "workbuddy" else "AGENTS.md" if agent == "codex" else "CLAUDE.md")))
-    if "--approved" not in args:
-        print(json.dumps(dict(approval_required=True, skill_entries=links, rule_files=rules)))
-        sys.exit(0)
-    for link in links:
-        assert Path(link).is_symlink() and Path(link).resolve() == source
-    for rule in rules:
-        assert (WORKBUDDY_BRIDGE if Path(rule).name == "MEMORY.md" else BRIDGE).rstrip() in Path(rule).read_text()
-    print(json.dumps(dict(scope="project", project=str(root))))
-
-try:
-    main()
-except SystemExit:
-    raise
-except BaseException:
-    (Path(__file__).resolve().parents[1] / "trace.log").open("a").write(
-        repr(sys.argv) + "\n" + traceback.format_exc() + "\n")
-    raise
-'''
-
-PROBE_STUB = r'''import sys, traceback
-from pathlib import Path
-
-def main():
-    args = sys.argv[1:]
-    def value(name): return args[args.index(name)+1]
-    root, store = Path(value("--root")), Path(value("--store-dir"))
-    mode = (Path(__file__).resolve().parents[1] / "mode")
-    mode = mode.read_text() if mode.exists() else ""
-    if mode == "migration": sys.exit(3)
-    complete = (store / "memory-keeper.md").is_file() and all(
-        (store / name).is_dir() for name in ("plans", "worklogs", "evolution"))
-    if "--approved" not in args:
-        sys.exit(0 if complete else 5)
-    if not complete:  # 幂等 init:已有完整库时不改写任何字节
-        store.mkdir(parents=True, exist_ok=True)
-        (store / "memory-keeper.md").write_text("# keeper store\n")
-        if mode == "partial": sys.exit(2)
-        for name in ("plans", "worklogs", "evolution"):
-            (store / name).mkdir(exist_ok=True)
-        if store != root / "docs/context-keeper":
-            (root / "context-keeper.json").write_text('{"directory": "%s"}' % str(store))
-    print("store ready")
-
-try:
-    main()
-except SystemExit:
-    raise
-except BaseException:
-    (Path(__file__).resolve().parents[1] / "trace.log").open("a").write(
-        repr(sys.argv) + "\n" + traceback.format_exc() + "\n")
-    raise
-'''
+INSTALL_STUB = "raise AssertionError('project enable must not invoke CK installer')\n"
+PROBE_STUB = "raise AssertionError('project enable must not invoke CK probe')\n"
 
 
 class CliHarness(unittest.TestCase):
@@ -165,6 +89,7 @@ class CliHarness(unittest.TestCase):
             chunks.append(data)
         os.close(master)
         proc.stderr.read()
+        proc.stderr.close()
         proc.wait()
         text = b"".join(chunks).decode("utf-8", "replace")
         return proc.returncode, json.loads(text[text.index("{"):])
@@ -184,23 +109,8 @@ class CliHarness(unittest.TestCase):
     def approve_remove(self):
         rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
         self.assertEqual(rc, 5, envelope)
-        project = json.loads(self.registry.read_text())["projects"][str(self.root)]
-        assembly = project["checkouts"][str(self.root)]
-        common = subprocess.run(["git", "-C", str(self.root), "rev-parse", "--git-common-dir"],
-                                check=True, capture_output=True, text=True).stdout.strip()
-        approval = {
-            "schema_version": 1, "command": "remove-memory",
-            "main_checkout": str(self.root), "checkout": str(self.root),
-            "git_common_dir": str((self.root / common).resolve()),
-            "agents": assembly["agents"], "memory_authorization": None,
-            "store_path": assembly["store"]["path"], "provider_source": project["provider_source"],
-            "provider_fingerprints": [],
-            "changes": [{"path": c["path"], "operation": c["operation"],
-                         "before_fingerprint": c["before_fingerprint"],
-                         "after_fingerprint": c["after_fingerprint"]}
-                        for c in envelope["changes"]],
-            "confirmed_at": "2026-10-29T00:00:00Z", "reference": "m2-07 removal approval",
-        }
+        approval=json.loads(envelope['next_action'])
+        approval.update(confirmed_at='2026-10-30T00:00:00Z',reference='exact CLI removal confirmation')
         path = self.area / ("approval-%d.json" % next(self._approvals))
         path.write_text(json.dumps(approval, ensure_ascii=False, indent=2), encoding="utf-8")
         return self.cli(["remove-memory", "--project", str(self.root),
@@ -217,7 +127,7 @@ class CliHarness(unittest.TestCase):
         """完整装配记忆档:先建项目 Skill 链接供源发现,再预览→批准→执行。"""
         (self.root/".workbuddy/memory").mkdir(parents=True,exist_ok=True)  # Native WorkBuddy-created fixture, §8.2.
         self.link_alias()
-        return self.approve(["enable-memory", "--project", str(self.root), "--memory"], edit=edit)
+        return self.approve(["enable-memory", "--project", str(self.root), "--memory", "--agent", "codex", "claude", "workbuddy"], edit=edit)
 
     def check(self, *extra):
         return self.cli(["check-memory", "--project", str(self.root), *extra])
@@ -249,299 +159,107 @@ class CliHarness(unittest.TestCase):
 
 
 class IdempotencyTests(CliHarness):
+    def test_default_cli_does_not_precreate_or_patch_installed_claude(self):
+        for existing in (False,True):
+            with self.subTest(existing=existing):
+                root=self.area/('existing-claude' if existing else 'unused-claude');root.mkdir();self.git('init','-q',str(root))
+                entry=root/'CLAUDE.md'
+                if existing:entry.write_bytes(b'private rules\xff\r\n')
+                before=(entry.read_bytes(),entry.stat().st_mtime_ns) if existing else None
+                rc,result=self.approve(['enable-memory','--project',str(root)])
+                self.assertEqual(rc,0,result)
+                self.assertEqual(result['projects'][0]['agents'],['codex','claude','workbuddy'])
+                if existing:self.assertEqual((entry.read_bytes(),entry.stat().st_mtime_ns),before)
+                else:self.assertFalse(entry.exists())
+                self.assertFalse((root/'.workbuddy').exists())
+                rc,result=self.cli(['check-memory','--project',str(root)])
+                self.assertEqual(rc,0,result)
+                rc,result=self.approve(['enable-memory','--project',str(root),'--agent','claude'])
+                self.assertEqual(rc,0,result);self.assertIn(b'@AGENTS.md',entry.read_bytes())
+                if existing:self.assertTrue(entry.read_bytes().startswith(before[0]))
+
     def test_second_enable_changes_no_byte_or_mtime(self):
-        rc, _ = self.enable_memory()
-        self.assertEqual(rc, 0)
-        before = self.outputs_snapshot()
-        rc, envelope = self.cli(["enable-memory", "--project", str(self.root)])
-        self.assertEqual(rc, 0, envelope)
-        self.assertEqual(envelope["changes"], [], envelope)
-        self.assertEqual(self.outputs_snapshot(), before,
-                         "二次 enable 不得改变任何输出字节或 mtime(registry 证据时间戳与备份除外)")
+        rc,_=self.enable_memory();self.assertEqual(rc,0)
+        before=self.outputs_snapshot();rc,result=self.cli(['enable-memory','--project',str(self.root)])
+        self.assertEqual(rc,0,result);self.assertEqual(result['changes'],[]);self.assertEqual(self.outputs_snapshot(),before)
 
-    def test_cleared_bridge_check_only_reports_then_enable_repairs(self):
-        _, _ = self.enable_memory()
-        path = self.root / "AGENTS.md"
-        original = path.read_bytes()
-        start = b"<!-- context-keeper:start -->"
-        end = b"<!-- context-keeper:end -->"
-        left, right = original.index(start), original.index(end) + len(end)
-        cleared = original[:left] + original[right:]
-        path.write_bytes(cleared)
-        watched = [self.root / ".git"]
-        before = self.snapshot(self.root, self.home, self.install.parent, exclude=watched)
+    def test_cleared_pointer_check_only_reports_then_enable_repairs(self):
+        self.assertEqual(self.enable_memory()[0],0)
+        path=self.root/'.workbuddy/memory/MEMORY.md';raw=path.read_bytes();path.unlink()
+        before=self.outputs_snapshot();rc,result=self.check()
+        self.assertEqual(rc,1,result);self.assertEqual(before,self.outputs_snapshot());self.assertFalse(path.exists())
+        rc,result=self.cli(['enable-memory','--project',str(self.root)])
+        self.assertEqual(rc,0,result);self.assertEqual(path.read_bytes(),raw)
 
-        rc, envelope = self.check()
-        self.assertEqual(rc, 1, envelope)
-        codes = {gap["code"] for gap in envelope["projects"][0]["gaps"]}
-        self.assertIn("object_missing", codes)
-        self.assertEqual(self.snapshot(self.root, self.home, self.install.parent, exclude=watched),
-                         before, "check 只报告不修复,任何文件字节/mtime 不得变化")
+    def test_no_ck_source_is_needed_and_no_store_initialized(self):
+        shutil.rmtree(self.keeper)
+        rc,result=self.approve(['enable-memory','--project',str(self.root)])
+        self.assertEqual(rc,0,result);self.assertEqual(self.check()[0],0)
+        self.assertFalse((self.root/'docs/context-keeper').exists())
 
-        rc, envelope = self.cli(["enable-memory", "--project", str(self.root)])
-        self.assertEqual(rc, 0, envelope)
-        self.assertEqual(path.read_bytes(), original,
-                         "幂等补装必须精确恢复被清空的桥接块,其余字节原样")
+    def test_legacy_keeper_block_requires_exact_review(self):
+        old=b'<!-- context-keeper:start -->\nlegacy CK\n<!-- context-keeper:end -->'
+        (self.root/'AGENTS.md').write_bytes(b'user rules\xff\r\n'+old)
+        rc,result=self.cli(['enable-memory','--project',str(self.root)])
+        self.assertEqual(rc,5,result);plan=json.loads(result['next_action'])
+        self.assertEqual(bytes.fromhex(plan['legacy_bridge_transition'][0]['before_hex']),old)
+        self.assertIn(old,(self.root/'AGENTS.md').read_bytes())
+        self.assertEqual(self.approve(['enable-memory','--project',str(self.root)])[0],0)
+        self.assertNotIn(old,(self.root/'AGENTS.md').read_bytes())
+        self.assertTrue((self.root/'AGENTS.md').read_bytes().startswith(b'user rules\xff\r\n'))
 
+    def test_disabled_persisted_healthy_and_no_silent_flip(self):
+        argv=['enable-memory','--project',str(self.root),'--no-memory']
+        self.assertEqual(self.approve(argv)[0],0)
+        self.assertEqual(self.check()[0],0)
+        self.assertEqual(self.cli(['enable-memory','--project',str(self.root)])[0],0)
+        self.assertEqual(json.loads(self.registry.read_bytes())['projects'][str(self.root)]['memory_policy'],'disabled')
+        self.assertEqual(self.cli(['enable-memory','--project',str(self.root),'--memory'])[0],5)
+        self.assertEqual(self.approve(['enable-memory','--project',str(self.root),'--memory'])[0],0)
 
-class InstallOrderTests(CliHarness):
-    def test_group_first_then_keeper(self):
-        rc, envelope = self.approve(["enable-memory", "--project", str(self.root), "--no-memory"])
-        self.assertEqual(rc, 0, envelope)
-        self.assertTrue((self.root / "AGENTS.md").read_bytes()
-                        .startswith(b"# " + self.root.name.encode()))
-        self.assertFalse((self.root / "docs/context-keeper").exists())
+    def test_invalid_legacy_approval_fields_rejected(self):
+        def edit(plan):plan['provider_source']=str(self.keeper)
+        rc,result=self.approve(['enable-memory','--project',str(self.root)],edit=edit)
+        self.assertEqual(rc,2,result);self.assertFalse((self.root/'AGENTS.md').exists())
 
-        rc, envelope = self.enable_memory()
-        self.assertEqual(rc, 0, envelope)
-        states = envelope["projects"][0]["states"]
-        self.assertEqual(states["store_authorized_ready"]["status"], "ready")
-        self.assertTrue(all(f["status"] == "ready" for f in states["skill_installed"].values()))
-        self.assertTrue(all(f["status"] == "ready" for f in states["bridge_assembled"].values()))
-        self.assertIn(b"Keeper rules", (self.root / "AGENTS.md").read_bytes())
-        ledger = json.loads(self.registry.read_text())
-        assembly = ledger["projects"][str(self.root)]["checkouts"][str(self.root)]
-        # §8.1: free rules carry no managed base ownership.
-        self.assertNotIn(str(self.root / "AGENTS.md") + "#base", assembly["objects"])
-        alias = assembly["objects"][str(self.root / ".agents/skills/context-keeper")]
-        self.assertEqual(alias["ownership"], "reused", "先置链接由 AGM 接管为 reused,不改写")
+    def test_foreign_skill_copy_untouched(self):
+        path=self.root/'.codex/skills/context-keeper';path.mkdir(parents=True);(path/'local').write_bytes(b'private')
+        self.assertEqual(self.enable_memory()[0],0);self.assertEqual((path/'local').read_bytes(),b'private')
 
-    def test_keeper_first_adoption_preserves_user_bytes(self):
-        bridge = b"<!-- context-keeper:start -->\nKeeper rules\n<!-- context-keeper:end -->"
-        prefix = b"legacy project rules\r\n"
-        (self.root / "AGENTS.md").write_bytes(prefix + bridge + b"\r\nuser tail\n")
-        (self.root / "CLAUDE.md").write_bytes(b"@AGENTS.md\n" + bridge + b"\n")
-        for base in (".agents/skills", ".codex/skills", ".claude/skills", ".workbuddy/skills"):
-            target = self.root / base / "context-keeper"
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.symlink_to(self.keeper, target_is_directory=True)
+    def test_corrupt_registry_conservative_all_commands(self):
+        self.assertEqual(self.enable_memory()[0],0);self.registry.write_bytes(b'{broken')
+        before=self.outputs_snapshot()
+        rc,result=self.cli(['enable-memory','--project',str(self.root)]);self.assertEqual(rc,2,result)
+        self.assertEqual(self.check()[0],1)
+        self.assertEqual(self.cli_tty(['remove-memory','--project',str(self.root)])[0],2)
+        self.assertEqual(self.registry.read_bytes(),b'{broken');self.assertEqual(before,self.outputs_snapshot())
 
-        # §8.2: fixture represents a native WorkBuddy-opened project.
-        (self.root / ".workbuddy/memory").mkdir(parents=True, exist_ok=True)
-        rc, envelope = self.approve(["enable-memory", "--project", str(self.root), "--memory"])
-        self.assertEqual(rc, 0, envelope)
-        data = (self.root / "AGENTS.md").read_bytes()
-        self.assertTrue(data.startswith(prefix), "既有 Keeper 装配被接管时用户前缀必须原样")
-        self.assertTrue(data.endswith(b"\r\nuser tail\n"))
-        self.assertEqual(data.count(bridge), 1)
-        ledger = json.loads(self.registry.read_text())
-        objects = ledger["projects"][str(self.root)]["checkouts"][str(self.root)]["objects"]
-        self.assertEqual(objects[str(self.root / "AGENTS.md") + "#keeper"]["ownership"], "reused")
-        self.assertNotIn(str(self.root / "AGENTS.md") + "#base", objects,
-                         "§8.1: AGENTS 非桥接正文为自由规则,不登记整文件基线")
-
-
-class BoundaryTests(CliHarness):
-    def test_no_memory_persisted_check_gap_and_no_silent_flip(self):
-        rc, _ = self.approve(["enable-memory", "--project", str(self.root), "--no-memory"])
-        self.assertEqual(rc, 0)
-        self.assertFalse((self.root / "docs/context-keeper").exists())
-
-        rc, envelope = self.check()
-        self.assertEqual(rc, 1, envelope)
-        gaps = envelope["projects"][0]["gaps"]
-        self.assertIn("memory_not_enabled", [g["code"] for g in gaps])
-
-        rc, envelope = self.cli(["enable-memory", "--project", str(self.root)])
-        self.assertEqual(rc, 0, envelope)
-        self.assertEqual(envelope["changes"], [])
-        ledger = json.loads(self.registry.read_text())
-        self.assertEqual(ledger["projects"][str(self.root)]["memory_authorization"], "no",
-                         "重复 enable 不得把拒绝过的记忆选择翻转成 yes")
-        self.assertFalse((self.root / "docs/context-keeper").exists())
-
-    def test_custom_store_location_via_approval(self):
-        custom = self.area / "custom-store"
-        rc, _ = self.enable_memory(edit=lambda plan: plan.update(store_path=str(custom)))
-        self.assertEqual(rc, 0)
-        self.assertTrue((custom / "memory-keeper.md").is_file())
-        config = json.loads((self.root / "context-keeper.json").read_text())
-        self.assertEqual(config["directory"], str(custom))
-        ledger = json.loads(self.registry.read_text())
-        store = ledger["projects"][str(self.root)]["checkouts"][str(self.root)]["store"]
-        self.assertEqual(store["path"], str(custom))
-        self.assertFalse((self.root / "docs/context-keeper").exists())
-
-        rc, envelope = self.cli(["enable-memory", "--project", str(self.root)])
-        self.assertEqual(rc, 0, envelope)
-        self.assertTrue((custom / "memory-keeper.md").is_file())
-        self.assertEqual(json.loads((self.root / "context-keeper.json").read_text())["directory"],
-                         str(custom), "幂等重装不得移动已获批库位置")
-
-    def test_approved_store_conflicting_with_local_config_rejected(self):
-        """现场 context-keeper.json 已指向别处时,批准的库位置不得改写现场配置。"""
-        self.link_alias()
-        elsewhere = self.area / "elsewhere-store"
-        (self.root / "context-keeper.json").write_text('{"directory": "%s"}' % str(elsewhere))
-        rc, envelope = self.approve(
-            ["enable-memory", "--project", str(self.root), "--memory"],
-            edit=lambda plan: plan.update(store_path=str(self.area / "approved-store")))
-        self.assertEqual(rc, 2, envelope)
-        self.assertEqual(envelope["errors"][0]["code"], "approval_mismatch")
-        self.assertFalse((self.area / "approved-store").exists(),
-                         "位置冲突被拒时不得创建或移动任何库")
-        self.assertFalse((self.root / "AGENTS.md").exists())
-        self.assertEqual(json.loads((self.root / "context-keeper.json").read_text())["directory"],
-                         str(elsewhere))
-
-    def test_skill_copy_directory_conflict_rejected_untouched(self):
-        # 复制目录放 .codex 根(坏落点),好链接放 .agents 根保住源发现,让冲突真正进入计划。
-        self.link_alias()
-        copy = self.root / ".codex/skills/context-keeper"
-        copy.mkdir(parents=True)
-        (copy / "SKILL.md").write_text("copied skill\n")
-        before = self.snapshot(self.root, exclude=[self.root / ".git"])
-        rc, envelope = self.cli(["enable-memory", "--project", str(self.root), "--memory"])
-        self.assertEqual(rc, 2, envelope)
-        self.assertEqual(envelope["errors"][0]["code"], "path_conflict")
-        self.assertEqual(self.snapshot(self.root, exclude=[self.root / ".git"]), before,
-                         "复制目录冲突时现场字节不得被改动")
-        self.assertEqual(json.loads(self.registry.read_bytes())["projects"], {})
-        self.assertFalse((self.root / "AGENTS.md").exists())
-
-    def test_corrupt_registry_conservative_across_cli_commands(self):
-        rc, _ = self.approve(["enable-memory", "--project", str(self.root), "--no-memory"])
-        self.assertEqual(rc, 0)
-        healthy = self.registry.read_bytes()
-        corrupt = b"{corrupt registry"
-        self.registry.write_bytes(corrupt)
-
-        rc, envelope = self.check()
-        self.assertEqual(rc, 1, envelope)
-        self.assertTrue(any("registry" in w for w in envelope["warnings"]))
-        self.assertEqual(self.registry.read_bytes(), corrupt, "check 不得重写损坏 registry")
-
-        common = subprocess.run(["git", "-C", str(self.root), "rev-parse", "--git-common-dir"],
-                                check=True, capture_output=True, text=True).stdout.strip()
-        approval = {"schema_version": 1, "command": "remove-memory",
-                    "main_checkout": str(self.root), "checkout": str(self.root),
-                    "git_common_dir": str((self.root / common).resolve()),
-                    "agents": ["codex", "claude", "workbuddy"], "memory_authorization": None,
-                    "store_path": None, "provider_source": None, "provider_fingerprints": [],
-                    "changes": [], "confirmed_at": "2026-10-29T00:00:00Z",
-                    "reference": "corrupt registry removal attempt"}
-        path = self.area / "remove-approval.json"
-        path.write_text(json.dumps(approval), encoding="utf-8")
-        rc, envelope = self.cli(["remove-memory", "--project", str(self.root),
-                                 "--approval-file", str(path)])
-        self.assertEqual(rc, 2, envelope)
-        self.assertEqual(envelope["errors"][0]["code"], "registry_invalid")
-        self.assertEqual(self.registry.read_bytes(), corrupt)
-        self.assertTrue((self.root / "AGENTS.md").exists(), "损坏登记下 remove 不得删除任何输出")
-
-        rc, envelope = self.cli(["enable-memory", "--project", str(self.root), "--no-memory"])
-        self.assertEqual(rc, 2, envelope)
-        self.assertEqual(envelope["errors"][0]["code"], "registry_invalid")
-        self.assertEqual(self.registry.read_bytes(), corrupt)
-        self.assertFalse(self.runtime.lock.exists())
-
-    def test_remove_twice_then_reenable_full_cycle(self):
-        rc, _ = self.enable_memory()
-        self.assertEqual(rc, 0)
-        store_marker = (self.root / "docs/context-keeper/memory-keeper.md").read_bytes()
-
-        rc, envelope = self.approve_remove()
-        self.assertEqual(rc, 0, envelope)
-        agents_left = (self.root / "AGENTS.md").read_bytes()
-        self.assertNotIn(b"mem-sharing:rules", agents_left)
-        self.assertNotIn(b"context-keeper:start", agents_left,
-                         "AGM 创建的受管块应被摘除(块间残余字节按字节精确保留)")
-        self.assertFalse((self.root / "CLAUDE.md").exists(),
-                         "§8.1: 新 v2 纯入口有独立创建证据,可删除空薄壳")
-        self.assertEqual((self.root / "docs/context-keeper/memory-keeper.md").read_bytes(),
-                         store_marker, "记录库资产在 remove 后必须原样保留")
-        for base in (".codex", ".claude", ".workbuddy"):
-            self.assertFalse((self.root / base / "skills/context-keeper").exists(),
-                             "%s Skill 链接(AGM created)应被移除" % base)
-        self.assertTrue((self.root / ".agents/skills/context-keeper").is_symlink(),
-                        "用户预置的 .agents 链接(reused)必须保留,不改写不删除")
-
-        rc, envelope = self.cli_tty(["remove-memory", "--project", str(self.root)])
-        self.assertEqual(rc, 0, envelope)
-        self.assertEqual(envelope["changes"], [], "二次 remove 必须零变更完成")
-        rc, envelope = self.cli(["remove-memory", "--project", str(self.root)])
-        self.assertEqual(rc, 5, envelope)
-
-        rc, envelope = self.check()
-        self.assertEqual(rc, 1, envelope)
-
-        rc, envelope = self.enable_memory()
-        self.assertEqual(rc, 0, envelope)
-        states = envelope["projects"][0]["states"]
-        self.assertEqual(states["store_authorized_ready"]["status"], "ready")
-        self.assertIn(b"Keeper rules", (self.root / "AGENTS.md").read_bytes())
+    def test_remove_twice_then_explicit_reenable_cycle(self):
+        self.assertEqual(self.enable_memory()[0],0)
+        rc,result=self.approve_remove();self.assertEqual(rc,0,result)
+        self.assertNotIn(b'mem-sharing:project-experience',(self.root/'AGENTS.md').read_bytes())
+        self.assertIn(b'mem-sharing:memory-denied',(self.root/'AGENTS.md').read_bytes())
+        self.assertEqual(self.cli_tty(['remove-memory','--project',str(self.root)])[0],0)
+        self.assertEqual(self.check()[0],0)
+        self.assertEqual(self.approve(['enable-memory','--project',str(self.root),'--memory'])[0],0)
+        self.assertEqual(self.check()[0],0)
 
     def test_check_all_two_projects_zero_write(self):
-        rc, _ = self.enable_memory()
-        self.assertEqual(rc, 0)
-        second = self.area / "second"
-        second.mkdir()
-        self.git("init", "-q", str(second))
-        alias = second / ".agents/skills/context-keeper"
-        alias.parent.mkdir(parents=True)
-        alias.symlink_to(self.keeper, target_is_directory=True)
-        # §8.2: native-ready fixture; AGM must not manufacture this directory.
-        (second / ".workbuddy/memory").mkdir(parents=True)
-        rc, envelope = self.approve(["enable-memory", "--project", str(second), "--memory"])
-        self.assertEqual(rc, 0, envelope)
+        self.assertEqual(self.enable_memory()[0],0)
+        other=self.area/'second';other.mkdir();self.git('init','-q',str(other))
+        self.assertEqual(self.approve(['enable-memory','--project',str(other),'--agent','codex'])[0],0)
+        before=self.snapshot(self.area,exclude=[self.root/'.git',other/'.git'])
+        rc,result=self.cli(['check-memory','--all'])
+        self.assertEqual(rc,1,result)  # Matrix reports Claude/WB not yet assembled in second project.
+        self.assertEqual(len(result['projects']),2)
+        self.assertEqual(before,self.snapshot(self.area,exclude=[self.root/'.git',other/'.git']))
 
-        before = self.snapshot(self.root, second, self.home, self.install.parent,
-                               exclude=[self.root / ".git", second / ".git"])
-        rc, envelope = self.cli(["check-memory", "--all"])
-        self.assertEqual(rc, 0, envelope)
-        self.assertEqual([p["checkout"] for p in envelope["projects"]],
-                         [str(self.root), str(second)])
-        self.assertEqual(self.snapshot(self.root, second, self.home, self.install.parent,
-                                       exclude=[self.root / ".git", second / ".git"]), before,
-                         "check --all 对全部已登记项目零写入")
-
-        path = second / "AGENTS.md"
-        data = path.read_bytes()
-        # §8.1: free project rules do not drift; the actual bridge still does.
-        path.write_bytes(data + b"\nFree user rules\n")
-        rc, envelope = self.cli(["check-memory", "--all"])
-        self.assertEqual(rc, 0, envelope)
-        path.write_bytes(path.read_bytes().replace(b"Keeper rules", b"edited bridge"))
-        rc, envelope = self.cli(["check-memory", "--all"])
-        self.assertEqual(rc, 1, envelope)
-        by_project = {p["checkout"]: p for p in envelope["projects"]}
-        self.assertFalse(by_project[str(self.root)]["gaps"])
-        self.assertTrue(by_project[str(second)]["gaps"])
-
-    def test_partial_init_failure_keeps_prior_state_and_store_assets(self):
-        rc, _ = self.approve(["enable-memory", "--project", str(self.root), "--no-memory"])
-        self.assertEqual(rc, 0)
-        registry_before = self.registry.read_bytes()
-        agents_before = (self.root / "AGENTS.md").read_bytes()
-
-        (self.keeper / "mode").write_text("partial")
-        rc, envelope = self.enable_memory()
-        self.assertEqual(rc, 2, envelope)
-        self.assertEqual(envelope["errors"][0]["code"], "keeper_failed")
-        self.assertEqual(self.registry.read_bytes(), registry_before,
-                         "Provider init 部分失败时旧 registry 必须原样保留")
-        self.assertEqual((self.root / "AGENTS.md").read_bytes(), agents_before,
-                         "已提交配置不得因记忆档失败而漂移")
-        self.assertTrue((self.root / "docs/context-keeper/memory-keeper.md").exists(),
-                        "部分写入的库资产必须保留现场")
-        self.assertFalse((self.root / "docs/context-keeper/plans").exists())
-
-        (self.keeper / "mode").unlink()
-        rc, envelope = self.enable_memory()
-        self.assertEqual(rc, 0, envelope)
-        self.assertTrue((self.root / "docs/context-keeper/plans").is_dir())
+    def test_noninteractive_remove_never_consumes_stdin_as_approval(self):
+        self.assertEqual(self.enable_memory()[0],0);before=self.outputs_snapshot()
+        rc,result=self.cli(['remove-memory','--project',str(self.root)])
+        self.assertEqual(rc,5,result);self.assertEqual(before,self.outputs_snapshot())
 
     def test_no_pycache_or_lock_residue(self):
-        rc, _ = self.enable_memory()
-        self.assertEqual(rc, 0)
-        rc, _ = self.check()
-        self.assertEqual(rc, 0)
-        rc, _ = self.approve_remove()
-        self.assertEqual(rc, 0)
-        residues = [p for p in self.area.rglob("__pycache__")]
-        self.assertEqual(residues, [], "CLI 冷启动与全周期不得留下字节码缓存")
-        self.assertFalse((self.runtime.lock).exists(), "锁必须正常释放")
-
-
-if __name__ == "__main__":
-    unittest.main()
+        self.assertEqual(self.enable_memory()[0],0);self.assertEqual(self.check()[0],0)
+        self.assertFalse(list(self.install.rglob('__pycache__')))
+        self.assertFalse(self.runtime.lock.exists());self.assertFalse(self.runtime.transaction_lock.exists())

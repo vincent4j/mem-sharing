@@ -23,12 +23,15 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agm_core import detect, legacy_import as legacy, migrate, paths, registry
-from agm_core import upgrade, user_entries, user_install
+from agm_core import upgrade, user_entries, user_install, ck_install
 
 OFFICIAL = 'https://github.com/vincent4j/mem-sharing'
 LEGACY_OFFICIAL = 'https://github.com/vincent4j/agent-group-memory'  # 远程改名前的旧 URL,仍视作官方来源
 INPUT_KEYS = {'source', 'conversions', 'legacy_registries', 'legacy_source_commits',
-              'evidence_files', 'legacy_identity'}
+              'evidence_files', 'legacy_identity',
+              # Explicit detection inputs: keep cold-CLI tests and M4-09/M4-10-A
+              # rehearsals deterministic on machines with real executors installed.
+              'search_paths', 'app_directories', 'user_candidates'}
 
 
 class InstallError(ValueError):
@@ -178,7 +181,7 @@ def plan_machine(request):
     saved['operation_id'] = inner['operation_id']
     return _seal({'schema_version': 1, 'command': 'install-machine-cli',
         'operation_id': inner['operation_id'], 'layout': inner['layout'],
-        'channel': inner['channel'], 'versions': {'schema_version': 2, 'product_structure_version': 1,
+        'channel': inner['channel'], 'versions': {'schema_version': 3, 'product_structure_version': 1,
                                                 'product_code_version': source['version']},
         'source': source, 'request': saved, 'scene': scene['scene'],
         'scene_sha256': legacy.digest(legacy.encoded(scene['observations'])),
@@ -312,6 +315,8 @@ def build_parser():
     p.add_argument('--acquire', action='store_true', help='Separate official pinned-source acquisition plan')
     p.add_argument('--staging', help='Absolute absent acquisition directory')
     p.add_argument('--project', help='Actual absolute project root for reported follow-up commands only')
+    p.add_argument('--context-keeper', action='store_true', help='Independent optional CK user-install plan')
+    p.add_argument('--ck-source', help='Absolute durable clean CK checkout at the integration pin')
     return p
 
 
@@ -325,6 +330,29 @@ def run(args):
     approval = _json(args.approval_file) if args.approval_file else None
     ordinary = any(getattr(args, name) for name in ('source', 'source_manifest', 'commit', 'version',
                     'request_file', 'operation_id', 'agent', 'acquire', 'staging', 'project'))
+    if args.context_keeper:
+        if any(getattr(args, name) for name in ('source', 'source_manifest', 'commit', 'version',
+                'request_file', 'agent', 'acquire', 'staging', 'project', 'recover', 'action')):
+            raise InstallError('--context-keeper cannot mix with recovery/acquisition/ordinary installation')
+        if approval and approval.get('command') != 'install-context-keeper':
+            raise InstallError('CK requires a separate install-context-keeper approval')
+        home = os.environ.get('HOME')
+        if not home:
+            raise InstallError('Explicit HOME is required')
+        request = {'home': str(Path(home).resolve()),
+                   'platform_config': paths.select_platform(paths.load_agents_table(), sys.platform)}
+        runtime = user_install._runtime(request)
+        data = registry.load_registry(runtime.registry, allowed_user_paths=paths.allowed_user_paths(
+            request['platform_config'], None, home=request['home']))
+        op = args.operation_id or (approval or {}).get('main_operation_id') or data['product']['last_operation_id']
+        source = args.ck_source or (approval or {}).get('source', {}).get('root')
+        plan = ck_install.plan_context_keeper(request, op, source)
+        if approval:
+            return ck_install.execute_context_keeper(plan, approval, request=request)
+        return {'command': 'install-context-keeper', 'status': 'approval_required',
+                'approval_required': True, 'approval_plan': plan, 'context_keeper': {'status': 'not_started'}}
+    if args.ck_source or (approval and approval.get('command') == 'install-context-keeper'):
+        raise InstallError('CK source/approval requires --context-keeper')
     if approval and approval.get('command') == 'acquire-machine-source' and not ordinary and not args.recover and not args.action:
         return execute_acquisition(approval_without_evidence(approval), approval)
     if args.recover:
@@ -376,7 +404,7 @@ def run(args):
                    datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex)
     plan = plan_machine(request)
     if approval is not None:
-        return execute_machine(plan, approval, request=request, project=args.project)
+        return ck_install.tail(execute_machine(plan, approval, request=request, project=args.project), request)
     report = _report(plan, 'approval_required', project=args.project)
     report.update(approval_required=True, approval_plan=plan)
     # Read-only same-version/no-entry-difference remains a plan, never applies.
@@ -396,10 +424,13 @@ def main(argv=None):
         args = build_parser().parse_args(argv)
         result = run(args)
     except (ValueError, OSError, subprocess.SubprocessError, KeyError, TypeError) as exc:
-        result = {'schema_version': 1, 'command': 'install-machine', 'status': 'failed',
+        ck_route = any(token.split('=', 1)[0] == '--context-keeper' for token in argv)
+        result = {'schema_version': 1, 'command': 'install-context-keeper' if ck_route else 'install-machine', 'status': 'failed',
                   'errors': [{'code': getattr(exc, 'code', 'install_failed'), 'message': str(exc)}]}
+        if ck_route:
+            result['context_keeper'] = {'status': 'unavailable' if getattr(exc, 'code', None) == 'ck_source_unavailable' else 'failed'}
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
-    return 5 if result['status'] == 'approval_required' else 0 if result['status'] in ('completed', 'acquired', 'rolled_back') else 2
+    return 5 if result['status'] == 'approval_required' else 0 if result['status'] in ('completed', 'configured', 'acquired', 'rolled_back') else 2
 
 
 if __name__ == '__main__':

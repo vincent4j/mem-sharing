@@ -95,15 +95,16 @@ def _approval_data(**overrides):
         "checkout": "/TestHome/src/demo",
         "git_common_dir": "/TestHome/src/demo/.git",
         "agents": ["codex", "claude", "workbuddy"],
-        "memory_authorization": "yes",
-        "store_path": None,
-        "provider_source": None,
-        "provider_fingerprints": [],
+        "memory_policy": "follow_ck",
         "changes": [],
         "confirmed_at": "2026-10-29T12:00:00Z",
         "reference": "用户 2026-10-29 会话确认",
     }
     data.update(overrides)
+    if data['command'] == 'remove-memory':
+        data.setdefault('registry_sha256', 'a'*64)
+        if 'memory_policy' not in overrides:
+            data['memory_policy'] = 'disabled'
     return data
 
 
@@ -648,7 +649,7 @@ class CliRoutingTests(CliTestCase):
 
     def test_remove_with_approval_file_reaches_remove_kernel(self):
         data = _approval_data(
-            command="remove-memory", agents=["codex"], memory_authorization=None
+            command="remove-memory", agents=["codex"]
         )
         path = _write_json(data)
         captured = {}
@@ -782,35 +783,27 @@ class ApprovalFileTests(unittest.TestCase):
             self._validate(data)
         self.assertEqual(ctx.exception.code, "approval_file_invalid")
 
-    def test_remove_requires_null_memory_authorization(self):
-        data = _approval_data(command="remove-memory", memory_authorization="yes")
+    def test_remove_requires_disabled_policy(self):
+        data = _approval_data(command="remove-memory", memory_policy="follow_ck")
         with self.assertRaises(agm.CliError) as ctx:
             self._validate(data, command="remove-memory", agents=None)
-        self.assertEqual(ctx.exception.code, "approval_mismatch")
+        self.assertEqual(ctx.exception.code, "approval_file_invalid")
 
     def test_memory_choice_conflict_rejected(self):
-        data = _approval_data()
-        data["memory_authorization"] = "no"
+        data = _approval_data(memory_policy="disabled")
         with self.assertRaises(agm.CliError) as ctx:
-            self._validate(data, memory_choice="yes")
+            self._validate(data, memory_choice="follow_ck")
         self.assertEqual(ctx.exception.code, "approval_mismatch")
 
     def test_bad_sha256_rejected(self):
-        data = _approval_data()
-        data["provider_fingerprints"] = [
-            {"path": "/TestHome/src/keeper", "sha256": "XYZ"}
-        ]
+        data = _approval_data(command="remove-memory", registry_sha256="XYZ")
         with self.assertRaises(agm.CliError) as ctx:
-            self._validate(data)
+            self._validate(data, command="remove-memory")
         self.assertEqual(ctx.exception.code, "approval_file_invalid")
 
     def test_valid_fingerprint_accepted(self):
-        data = _approval_data()
-        data["provider_source"] = "/TestHome/src/context-keeper"
-        data["provider_fingerprints"] = [
-            {"path": "/TestHome/src/context-keeper", "sha256": "a" * 64}
-        ]
-        self.assertIsNotNone(self._validate(data))
+        data = _approval_data(command="remove-memory", registry_sha256="a"*64)
+        self.assertIsNotNone(self._validate(data, command="remove-memory"))
 
     def test_bad_operation_rejected(self):
         data = _approval_data()
@@ -847,7 +840,7 @@ class ApprovalFileTests(unittest.TestCase):
             self._validate(data)
         self.assertEqual(ctx.exception.code, "approval_file_invalid")
 
-    def test_relative_store_path_rejected(self):
+    def test_retired_store_path_rejected(self):
         data = _approval_data()
         data["store_path"] = "relative/store"
         with self.assertRaises(agm.CliError) as ctx:

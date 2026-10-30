@@ -1,5 +1,6 @@
 """M2-06 tests: every registry, entry and memory asset is a temp fixture."""
 import copy
+import json
 import subprocess
 import sys
 import tempfile
@@ -45,7 +46,6 @@ class RemoveFixture(unittest.TestCase):
         self.store = self.repo / 'docs/context-keeper'
         self.store.mkdir(parents=True)
         (self.store / 'memory-keeper.md').write_bytes(b'private memory')
-        self.assembly['store']['path'] = str(self.store)
         self.entry = self.repo / 'AGENTS.md'
         self.entry.write_bytes(b'\xef\xbb\xbfoutside\xff\r\n' + BLOCK + b'\r\nnew user text')
         self.add_object('block', self.entry)
@@ -77,11 +77,8 @@ class RemoveFixture(unittest.TestCase):
         self.save()
         preview = self.call()
         self.assertEqual(preview['status'], 'approval_required', preview)
-        self.request['approval'] = {'command': 'remove-memory', 'main_checkout': self.main,
-            'checkout': self.main, 'git_common_dir': str(self.identity.git_common_dir), 'agents': ['codex'],
-            'memory_authorization': None, 'store_path': str(self.store), 'provider_source': None,
-            'provider_fingerprints': [], 'changes': [{k: v for k, v in c.items() if k in
-              ('path', 'operation', 'before_fingerprint', 'after_fingerprint')} for c in preview['changes']]}
+        self.request['approval'] = json.loads(preview['next_action'])
+        self.request['approval'].update(confirmed_at='2026-10-30T00:00:00Z',reference='exact remove confirmation')
         return preview
 
 
@@ -98,7 +95,7 @@ class RemoveUnitTests(RemoveFixture):
             obj = self.assembly['objects'][str(self.entry)]
             obj.update(ownership=ownership, original_existed=True if ownership == 'reused' else None)
             updated, changes, warnings = plan_remove(self.data, self.identity)
-            self.assertEqual(updated, self.data)
+            self.assertEqual(updated['projects'][self.main]['memory_policy'], 'disabled')
             self.assertEqual(changes, [])
             self.assertTrue(warnings)
         path = self.repo / 'CLAUDE.md'
