@@ -2,10 +2,10 @@
 
 多 Agent 跨执行器共享记忆:**不重复造轮子**。项目规则统一到项目根 `AGENTS.md`,项目记忆直接复用 context-keeper;本仓库只做跨执行器的互通与编排,并定义清楚三套系统的分工边界。
 
-- 版本:v1.2(2026-10-30,边界修正:`~/.agents-group` 为本产品用户级层,随产品安装创建;旧手工实现由产品替代,新增 M4)
+- 版本:v1.3(2026-10-30,升级语义:既有 `~/.agents-group` 手工实现定为**旧版本 v0**,本产品为 v1,接管方式=**版本升级**而非外来实现迁移)
 - 覆盖执行器:**Codex、Claude Code、WorkBuddy**
-- 历史沿革:v0.1 自建项目记忆已废弃(能力归 context-keeper);v0.2 起定位编排层;v1.1 按评审修订;v1.2 用户级层并入产品范围;v1.1 按评审修订:check 收敛为只读、状态文件更名、记录库授权四态、验收改为三执行器接力闭环、M1 范围收敛、跨平台收紧
-- **本期范围不含 Skills/MCP 管理**(用户决定,留待后续;项目级 Skills/MCP 继续由旧 `project_manage.py` 负责)
+- 历史沿革:v0.1 自建项目记忆已废弃(能力归 context-keeper);v0.2 起定位编排层;v1.1 按评审修订(check 只读、状态文件更名、授权四态、三执行器接力验收、M1 收敛、跨平台收紧);v1.2 用户级层并入产品范围;v1.3 迁移定性为升级
+- **本期范围不含 Skills/MCP 管理**(用户决定,留待后续;项目级 Skills/MCP 继续由 v0 旧版 `project_manage.py` 负责,升级后由本产品接管)
 
 ---
 
@@ -24,13 +24,13 @@
 | 用户级 | `~/.codex/AGENTS.md` + `~/.codex/memories/`(自动) | `~/.claude/CLAUDE.md` + `~/.claude/projects/*/memory/`(自动) | `~/.workbuddy/MEMORY.md` + 云端画像(自动) |
 | 项目级 | 项目根 `AGENTS.md`(根→cwd 逐级链) | `CLAUDE.md` 系列(根常驻、子目录按需) | `<项目根>/.workbuddy/memory/` |
 
-本产品覆盖**用户级与项目级两层**:用户级公共源落位 `~/.agents-group`(安装本产品时自动创建);项目级为编排层。本机既有的 `~/.agents-group` 手工实现是先行的自制品,**将被本产品替代**(内容迁移保留,脚本体系换代,见 §8 M4)。
+本产品覆盖**用户级与项目级两层**:用户级公共源落位 `~/.agents-group`(安装本产品时自动创建);项目级为编排层。本机既有的 `~/.agents-group` 手工实现是本产品的**旧版本(v0,先行自制品)**,本产品即**新版本(v1)**;v0 → v1 按**升级**处理:家目录内容(用户数据)保留,机制(脚本体系)换代,升级后由产品台账接管(见 §8 M4)。
 
 ### 1.2 三套系统分工边界(核心)
 
 | 系统 | 职责 | 不做什么 |
 |---|---|---|
-| `~/.agents-group`(**本产品用户级层**,随产品安装创建) | 跨项目、跨执行器的用户级公共规则、共享 Skills/MCP 的公共源与入口装配 | 本机旧手工实现(manage/sync/project_manage)将被产品替代(M4 迁移);替代完成前过渡期并存 |
+| `~/.agents-group`(**本产品用户级层**,随产品安装创建) | 跨项目、跨执行器的用户级公共规则、共享 Skills/MCP 的公共源与入口装配 | 本机既有实现即 v0 旧版本,按升级流程升入本产品(M4);升级完成前过渡期并存 |
 | **context-keeper**([github.com/vincent4j/context-keeper](https://github.com/vincent4j/context-keeper),项目记忆运行时,独立产品) | 项目记忆的一切:记录库(默认 `docs/context-keeper/`,支持自定义)、保存/继续/查找、按证据自我进化、Skill 安装器、Codex/Claude 已验收 bridge、迁移门禁 | 不感知 Group、不做跨执行器编排、不管用户级 |
 | **agent-group-memory**(本仓库) | 编排:规则装配(基座)、记忆装配(安装/桥接/记录库授权/验收)、存量整理、联动 | 不存记忆、不定义记忆结构、不做蒸馏/进化/历史回溯、**不做 Skills/MCP(本期不做)**、不反向写私有记忆库 |
 
@@ -127,7 +127,7 @@ check-memory  [--project <Git根>|--all]
 
 - **先 Group 后 Keeper**:周一只装基座;此后 `check` 检测到 Keeper 已就绪时**只报告"可装配"**;实际装配由用户运行 `enable-memory` 完成(同意即装,不再重复询问要不要装 Keeper 本身);基座不动;
 - **先 Keeper 后 Group**:检测到项目已有 Keeper 痕迹(记录库/已装 Skill/bridge)→ 不重装,**接管纳管**:逐项校验并把已有对象记账为"复用"(非本工具创建),只补缺口(WorkBuddy 桥接、AGENTS.md 基座、`@AGENTS.md` 引用),提示存量整理;
-- **纳管状态(项目内零新增文件)**:全部状态集中在本工具安装目录的 `registry.json`(键:项目主 checkout 绝对路径;值:记忆授权 yes/no、四态、执行器清单、入口指纹、所有权记账)。**项目内不建任何状态文件**——`.agents-group/` 项目目录归旧 `project_manage.py`,本工具完全不碰,状态互踩风险随之消除。registry 损坏时 `check` 可从现场(入口块、Skill、记录库)重建装配事实;记忆授权选择无法从现场重建,重新询问一次即可;
+- **纳管状态(项目内零新增文件)**:全部状态集中在本工具安装目录的 `registry.json`(键:项目主 checkout 绝对路径;值:记忆授权 yes/no、四态、执行器清单、入口指纹、所有权记账)。**项目内不建任何状态文件**——`.agents-group/` 项目目录归 v0 的 `project_manage.py`,本工具完全不碰,状态互踩风险随之消除。registry 损坏时 `check` 可从现场(入口块、Skill、记录库)重建装配事实;记忆授权选择无法从现场重建,重新询问一次即可;
 - **迁移门禁联动**:Keeper 命令返回"需要迁移"(退出码 3)时,本工具立即停止相关读写并转告用户走 Keeper 迁移流程,不绕过门禁。
 
 ### 4.5 后装 Agent 的纳入与触发链
@@ -193,13 +193,14 @@ agent-group-memory/
 │   └── agent-group-memory/   #   本产品自身落位(唯一源)
 ├── mcp/                      # 无密钥 MCP 声明,一文件一 server(<name>.json)
 ├── backups/                  # 操作前时间戳备份(带保留期限,90 天提醒清理)
-└── var/                      # 本机状态:registry.json(项目纳管 + 用户级指针记账)、进程锁
+└── var/                      # 本机状态:registry.json(项目纳管 + 用户级指针记账)、结构版本号、进程锁
 ```
 
-- **内容四目录(memories/references/skills/mcp)是产品结构**;本机旧手工实现的迁移由 M4 迁移工具一次性处理(旧脚本退役、内容迁入),**不进入产品目录结构**——新用户安装时不存在旧实现;
-- **状态收编**:旧实现散落的多套状态文件由 `var/registry.json` 统一替代(代码仓库内的 `scripts/registry.json` 随 M4 迁移至此,仓库不再持有本机状态);
+- **内容四目录(memories/references/skills/mcp)是产品结构**;本机 v0 旧版本由 M4 **升级流程**一次性升入(旧脚本退役归档、内容原样保留),升级机制本身不进入产品目录结构——新用户全新安装,无升级路径;
+- **版本化升级**:`~/.agents-group` 是产品的家目录,**跨版本持续存在**;`var/` 记录结构版本号,后续任何结构演进(v1 → v2 …)复用同一升级框架:备份 → 数据保留 → 机制换代 → 台账接管;
+- **状态收编**:v0 散落的多套状态文件由 `var/registry.json` 统一替代(代码仓库内的 `scripts/registry.json` 随 M4 迁移至此,仓库不再持有本机状态);
 - 各执行器的用户级入口文件(`~/.codex/AGENTS.md` 等)不在本目录——它们是装配产物,由 registry 记账;
-- 确切迁移与并存切换策略由 M4 任务书定,本结构为目标态。
+- 确切升级与并存切换策略由 M4 任务书定,本结构为目标态。
 
 **项目内产物(每个纳管项目)**:
 
@@ -288,12 +289,12 @@ M3 已将 WorkBuddy 桥接交由 context-keeper 安装器管理。AGM 从上游�
 | M1.5(独立) | 用户级全面整理;(如需)memories/ 升级为"索引 + 主题文件"结构 | 用户逐项确认的迁移报告 |
 | M2 工具化 | 单一 CLI + 执行器路径表 + registry;平台矩阵(安装/重装/卸载/失败恢复,macOS 优先) | knowwind、poster-fit 复制,幂等重装通过 |
 | M3 上游回传(工作区实现) | 上游已接管 WorkBuddy 模板/install/ensure;本仓库改读上游模板并调用安装器,私有模板已删除 | 旧块字节兼容、无双入口、三项目只读 check;证据见 docs/acceptance/m3。未 commit/push,真机新会话验收可选 |
-| M4 用户级层产品化 | **安装即建 `~/.agents-group`**(公共源结构:memories 索引+主题、references、skills、mcp)+ 用户级入口指针装配 + **旧手工实现迁移替代**:内容(memories/references/skills/mcp)原样迁入,旧脚本(manage/sync/project_manage)退役归档;替代期间新旧并存、逐项切换 | 迁移报告逐项确认;三执行器用户级指针新会话验收 |
+| M4 用户级层产品化 | **安装即建 `~/.agents-group`**(公共源结构:memories 索引+主题、references、skills、mcp)+ 用户级入口指针装配 + **v0 → v1 升级**:既有 v0(manage/sync/project_manage)按升级处理——内容(memories/references/skills/mcp)原样保留,旧脚本退役归档,结构版本号写入 `var/`;升级期间新旧并存、逐项切换 | 升级报告逐项确认;三执行器用户级指针新会话验收 |
 | 后续 | 项目级 Skills/MCP 管理纳入(旧 project_manage 职责);其余执行器按同模式逐家接入 | — |
 
 ## 9. 对既有 `~/.agents-group` 实现的借鉴与简化
 
-既有实现(manage/sync/project_manage 等约 900 行 Python + 约 500 行测试)是本仓库前身。
+既有实现(manage/sync/project_manage 等约 900 行 Python + 约 500 行测试)是本产品的 v0 旧版本,也是本仓库前身。
 
 **直接借鉴**:标记块+指纹+幂等(冲突/漂移即拒绝);写后读回+快照回滚(恢复失败报错并保留现场);操作前时间戳备份与 manifest 可逆恢复;进程锁;信任登记放项目外(registry 的先例);不自动吸收原生安装、无密钥纪律(本期虽不管理 Skills/MCP,纪律保留);"静态配置不算数"与自然语言操作约定;配单元测试。
 
