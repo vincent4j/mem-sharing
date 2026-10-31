@@ -1097,7 +1097,7 @@
   "candidate_013": {
     "version": "0.1.3",
     "baseline_head": "0f690ef7aabf747a23bacc7662c19bee34c4bf52",
-    "final_clean_commit": null,
+    "final_clean_commit": "b85f7cf3e29bfdb371b3bfb6ff2d0a20cf0ceb6e",
     "tree_sha256": "68b4c3dcf83a4d5ba54d0b00748605fc01c6a39c7c46087cc9e73e028423cf8c",
     "files": [
       {
@@ -1639,7 +1639,8 @@
         "cli_recovery_test": "1 passed; /private/tmp/memsharing-branch-cli-recovery-test.log",
         "adjacent_tests": "2 passed (executor report)",
         "result": "All valid independent work integrated; no branch commits outside main."
-      }
+      },
+      "committed_and_pushed": "b85f7cf3e29bfdb371b3bfb6ff2d0a20cf0ceb6e"
     }
   }
 }
