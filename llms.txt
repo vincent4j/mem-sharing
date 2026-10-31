@@ -11,7 +11,7 @@ memSharing(多 Agent 记忆共享与融合):纯文件、零服务、一句话安
 
 ## 体系文档
 
-- [系统架构](docs/architecture.md):R/C/V 布局、台账 schema=3、事务与恢复、接入与升级机制。
+- [系统架构](docs/architecture.md):R/C/V 布局、台账 schema=3、事务与恢复、五家执行器接入与升级机制。
 - [操作手册](docs/operations.md):安装/启用/批量/停用/整理/健康检查/排查的完整操作说明。
 - [验收门禁总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md):分层结论与历史精确定位；当前 M4-10 证据仍在工作树。
 
@@ -24,4 +24,4 @@ memSharing(多 Agent 记忆共享与融合):纯文件、零服务、一句话安
 
 ## 项目经历(由 Context Keeper 管理)
 
-- [docs/context-keeper/（源码仓库）](https://github.com/vincent4j/mem-sharing/tree/main/docs/context-keeper):本仓库自身的工作记录库,随 Git 走,三家执行器共写。
+- [docs/context-keeper/（源码仓库）](https://github.com/vincent4j/mem-sharing/tree/main/docs/context-keeper):本仓库自身的工作记录库,随 Git 走,由 Context Keeper 管理；固定 pin 用户级安装仅支持 Codex、Claude Code、WorkBuddy，新增 dsh/zcode 跳过用户级安装（reason=upstream_unsupported）。

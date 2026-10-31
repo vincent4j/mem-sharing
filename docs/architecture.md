@@ -103,13 +103,15 @@ linked worktree 不作为可启用项目，移动或重新 clone 后须重新核
 
 为什么这样设计：命令外壳与文件操作内核分离，项目操作不会顺手扩大到装机。
 
-## 4. 三家执行器接入
+## 4. 五家执行器接入
 
 ### 用户级入口
 
 Codex 使用 `~/.codex/AGENTS.md`。
 Claude Code 使用 `~/.claude/CLAUDE.md`。
 WorkBuddy 使用 `~/.workbuddy/MEMORY.md`。
+DeepSeek Harness（`dsh`）使用 `~/.dsh/AGENTS.md`，ZCode（`zcode`）使用 `~/.zcode/AGENTS.md`。
+缺省目标仍为 `codex/claude/workbuddy`，两家新增桌面端须显式选择；机器安装重复 `--agent dsh --agent zcode`，项目启用用 `--agent dsh zcode`。两家共用公共索引，私文独有内容保留。
 安装为验证为 installed 的目标写入用户级公共指针与自身规则；菜单与详细使用约定在公共指南，不整段驻留用户文件。缺失的执行器用户目录不预建。
 既有专属内容保留，用户规则整理是另一个显式流程。
 产品不建立公共 Skills/MCP 目录，也不投影 memSharing Skill。
@@ -126,7 +128,7 @@ WorkBuddy 桥接已配置也不能直接宣布运行时加载成功。
 
 ### 项目级实际使用驱动
 
-`AGENTS.md` 是共享项目规则基座，不依赖安装 Codex；Codex 原生读取，无需额外引用文件。
+`AGENTS.md` 是共享项目规则基座，不依赖安装 Codex；Codex、DeepSeek Harness 与 ZCode 均原生读取，无需额外引用文件或隐藏项目桥接。
 只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立。
 默认接入由当前实际执行者按指南以 `--agent <当前执行者>` 执行；不带 agent 参数按已安装事实处理，可能顺带补齐其他执行器已存在的原生目录，仅用于用户显式要求全体或批量接入，不改 CLI 语义。
 机器探测到执行器安装或原生目录存在，不等于当前执行者实际使用。
@@ -137,6 +139,8 @@ Claude 自身实际使用时按 `--agent claude` 精确接入，可幂等补 `@A
 该路径按精确计划添加引用，不把机器上已安装 Claude 当作预建条件。
 WorkBuddy 仅在 `.workbuddy/memory/` 原生目录已存在时补规则指针。
 原生目录缺失时报告待实际使用，不提前创建目录。
+
+DeepSeek Harness 本次合同限默认 coding `cordis` preset 与默认根；非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根，检查不回传变量值，自定义配置未验证。`ZCODE_HOME` 不是 ZCode 规则根。两家静态支持 `~/.agents/skills` 及各自用户 Skill 根，不创建投影，不代表实际加载。详见[操作手册](operations.md#桌面端默认根与验证边界)。
 
 为什么这样设计：机器安装清单不代表每个项目都使用每个执行器。
 
@@ -211,7 +215,7 @@ Python/Git 缺失时，系统包管理器准备属于外层 Agent 职责。
 当前 Python CLI 不自行安装运行时依赖。
 主安装完成后才生成 `install-context-keeper` 独立封皮。
 对 Context Keeper 的安装同意仅以真实交互回车为准，EOF、非交互或空格不算。
-Context Keeper 固定源码与全部实际接入执行器绑定，由其安装器负责用户级 Skill。
+Context Keeper 封皮仍绑定固定源码与全部实际接入执行器；其固定 pin 安装器只支持 Codex、Claude Code、WorkBuddy 的 flags，由其负责用户级 Skill。`dsh`、`zcode` 明确跳过（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响新两家的 memSharing 接入。
 Context Keeper 失败不回滚主产品，也不合报为全部成功；结果不明不自动重放。
 
 为什么这样设计：主产品与可选引擎有独立授权、失败边界和交付证据。
@@ -255,5 +259,5 @@ Context Keeper 失败不回滚主产品，也不合报为全部成功；结果�
 为什么这样设计：把兼容承诺放在稳定发行边界，避免为未发行状态维护永久转换链。
 
 静态入口正确、夹具测试通过、真实 HOME 安装和新会话加载是不同证据。
-本文描述机制，不将配置成功解释为三家运行时验收完成。
+本文描述机制，不将配置成功解释为所有执行器运行时验收完成。
 实际操作见 [操作手册](operations.md)，具体命令以当前 `--help` 为准。

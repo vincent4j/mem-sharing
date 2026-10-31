@@ -236,7 +236,7 @@ def _report(plan, status, *, result=None, entries=None, project=None):
                    'absent': [a for a, f in facts.items() if f['status'] == 'absent'],
                    'unknown': [a for a, f in facts.items() if f['status'] == 'unknown'],
                    'unselected': [a for a in facts if a not in requested],
-                   'note': '已安装的已适配执行器默认全部接入,无需选择;未适配的执行器不在覆盖范围,由后续版本按路径表扩展'},
+                   'note': '默认接入范围为 codex/claude/workbuddy;dsh/zcode 需显式 --agent 指定;未适配的执行器不在覆盖范围,由后续版本按路径表扩展'},
         'copies': imported.get('items', []),
         'code_copies': plan['plan']['source_files'],
         'exclusions': ['v0 skills/scripts/state/mcp stay in place; only memories/references are imported',
@@ -349,7 +349,7 @@ def build_parser():
     p.add_argument('--version', help='Target product code version MAJOR.MINOR.PATCH')
     p.add_argument('--request-file', help='Absolute JSON: conversions/legacy ledger identity/evidence inputs')
     p.add_argument('--operation-id')
-    p.add_argument('--agent', action='append', choices=['codex', 'claude', 'workbuddy'])
+    p.add_argument('--agent', action='append', choices=['codex', 'claude', 'workbuddy', 'dsh', 'zcode'])
     p.add_argument('--approval-file', help='Absolute JSON exact plan plus confirmed_at/reference')
     p.add_argument('--recover', help='Absolute operation journal; independent recovery mode')
     p.add_argument('--action', choices=['continue', 'rollback'], help='Recovery action')
@@ -387,7 +387,17 @@ def run(args):
             request['platform_config'], None, home=request['home']))
         op = args.operation_id or (approval or {}).get('main_operation_id') or data['product']['last_operation_id']
         source = args.ck_source or (approval or {}).get('source', {}).get('root')
-        plan = ck_install.plan_context_keeper(request, op, source)
+        try:
+            plan = ck_install.plan_context_keeper(request, op, source)
+        except ck_install.CKError as exc:
+            if exc.code != 'ck_no_supported_agents':
+                raise
+            skipped = [{'agent': a, 'reason': 'upstream_unsupported'} for a in paths.AGENT_ORDER
+                       if a in data['machine']['agents'] and a not in ck_install.LABELS]
+            return {'command': 'install-context-keeper', 'status': 'skipped',
+                    'reason': 'upstream_unsupported', 'skipped_upstream_agents': skipped,
+                    'approval_required': False, 'context_keeper': {'status': 'skipped', 'reason': 'upstream_unsupported',
+                                                                'skipped_upstream_agents': skipped}}
         if approval:
             return ck_install.execute_context_keeper(plan, approval, request=request)
         return {'command': 'install-context-keeper', 'status': 'approval_required',
@@ -478,7 +488,7 @@ def main(argv=None):
         if ck_route:
             result['context_keeper'] = {'status': 'unavailable' if getattr(exc, 'code', None) == 'ck_source_unavailable' else 'failed'}
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
-    return 5 if result['status'] == 'approval_required' else 0 if result['status'] in ('completed', 'configured', 'acquired', 'rolled_back') else 2
+    return 5 if result['status'] == 'approval_required' else 0 if result['status'] in ('completed', 'configured', 'acquired', 'rolled_back', 'skipped') else 2
 
 
 if __name__ == '__main__':

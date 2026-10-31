@@ -42,6 +42,32 @@
         "rule_mode": "user_convention",
         "bridge_owner": "mem-sharing",
         "runtime_status": "pending"
+      },
+      "dsh": {
+        "user_entry": "{home}/.dsh/AGENTS.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/AGENTS.md",
+        "project_skill_roots": ["{project}/.dsh/skills", "{project}/.agents/skills"],
+        "installation_signals": [
+          {"kind": "directory_exists", "path": "{home}/.dsh", "strength": "hint"},
+          {"kind": "macos_app_bundle", "bundle_name": "DeepSeek Harness.app", "product_name": "DeepSeek Harness", "require_bundle_version": true, "require_signature_identifier_match": true, "strength": "strong"}
+        ],
+        "rule_mode": "native",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
+      },
+      "zcode": {
+        "user_entry": "{home}/.zcode/AGENTS.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/AGENTS.md",
+        "project_skill_roots": ["{project}/.zcode/skills", "{project}/.agents/skills"],
+        "installation_signals": [
+          {"kind": "directory_exists", "path": "{home}/.zcode", "strength": "hint"},
+          {"kind": "macos_app_bundle", "bundle_name": "ZCode.app", "product_name": "ZCode", "require_bundle_version": true, "require_signature_identifier_match": true, "strength": "strong"}
+        ],
+        "rule_mode": "native",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
       }
     }
   }

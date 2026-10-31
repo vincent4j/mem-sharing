@@ -22,7 +22,13 @@ import os
 import re
 import sys
 
-AGENT_ORDER = ("codex", "claude", "workbuddy")
+# 全量支持清单(2026-10-31 桌面双端适配裁定):dsh=DeepSeek Harness 桌面端,
+# zcode=ZCode 桌面端,均原生读取项目根 AGENTS.md。AGENT_ORDER 是唯一排序/枚举
+# 真源(registry、检测、台账校验、迁移扫描都按它取全集);DEFAULT_AGENTS 仅是
+# 用户请求缺省(--agent 未提供时的目标),保留旧三家,新增执行器必须显式
+# --agent dsh/zcode 接入,不因缺省预建入口。
+AGENT_ORDER = ("codex", "claude", "workbuddy", "dsh", "zcode")
+DEFAULT_AGENTS = ("codex", "claude", "workbuddy")
 AGENTS = frozenset(AGENT_ORDER)
 
 AGENT_FIELDS = (
@@ -232,7 +238,7 @@ def _validate_table(data):
         if unknown:
             _fail(
                 "agents_table_invalid",
-                "平台 %s 含未知执行器: %s(仅 codex/claude/workbuddy)" % (name, ", ".join(unknown)),
+                "平台 %s 含未知执行器: %s(仅 codex/claude/workbuddy/dsh/zcode)" % (name, ", ".join(unknown)),
             )
         for agent, entry in platform.items():
             _validate_agent(name, agent, entry)
@@ -264,20 +270,25 @@ def select_platform(table, platform):
     return platforms[platform]
 
 
-def resolve_agents(requested=None):
-    """执行器目标选择:None → 缺省三家;非法名/重复值拒绝;输出按 AGENT_ORDER 排序。
+def resolve_agents(requested=None, *, default=None):
+    """执行器目标选择;非法名/重复值拒绝;输出按 AGENT_ORDER 排序。
+
+    requested=None → default(缺省 DEFAULT_AGENTS 旧三家;--agent 未提供时不因
+    缺省预建 dsh/zcode 入口)。需要"全量支持清单"语义的调用方(检测、台账
+    user-path 白名单、check 巡检、迁移读者扫描)必须显式传 default=AGENT_ORDER,
+    否则已登记的新执行器会被漏检或台账拒绝。
 
     目标只由显式 --agent 与缺省规则决定;安装目录信号(hint)不参与本函数,
-    残留目录不得缩减或扩大目标(裁定:--agent 缺省固定三家)。
+    残留目录不得缩减或扩大目标(裁定:--agent 缺省固定旧三家)。
     """
     if requested is None:
-        return list(AGENT_ORDER)
+        return list(default if default is not None else DEFAULT_AGENTS)
     if isinstance(requested, str) or not isinstance(requested, (list, tuple)):
-        raise PathsError("invalid_agent", "--agent 需要执行器列表(仅 codex/claude/workbuddy)")
+        raise PathsError("invalid_agent", "--agent 需要执行器列表(仅 codex/claude/workbuddy/dsh/zcode)")
     seen = set()
     for name in requested:
         if name not in AGENTS:
-            raise PathsError("invalid_agent", "未知执行器: %r(仅 codex/claude/workbuddy)" % (name,))
+            raise PathsError("invalid_agent", "未知执行器: %r(仅 codex/claude/workbuddy/dsh/zcode)" % (name,))
         if name in seen:
             raise PathsError("invalid_agent", "重复执行器: %s(--agent 值必须唯一)" % name)
         seen.add(name)
@@ -312,11 +323,13 @@ def expand_path(template, *, home, project=None):
 def installation_hints(platform_config, agents=None, *, home, project=None):
     """只读收集目录安装信号(hint 级);强信号的三态核验归 agm_core.detect。
 
-    目录存在只表示安装线索(可能为残留),目录缺失不能证明未安装;
-    本函数结果不得用于改变目标选择或授权任何写入。
+    agents=None 时按全量支持清单(AGENT_ORDER)枚举:巡检/发现是只读观察能力,
+    新执行器(dsh/zcode)不因缺省接入策略被隐藏。目录存在只表示安装线索(可能
+    为残留),目录缺失不能证明未安装;本函数结果不得用于改变目标选择或授权
+    任何写入。
     """
     hints = []
-    for agent in resolve_agents(agents):
+    for agent in resolve_agents(agents, default=AGENT_ORDER):
         entry = platform_config[agent]
         for signal in entry["installation_signals"]:
             if signal["strength"] != "hint":
@@ -340,9 +353,12 @@ def allowed_user_paths(platform_config, agents, *, home):
     M2-02 内核合同:凡涉及 user/machine 对象的 registry load/validate/serialize/commit
     必须传该列表,不在表内的用户级路径一律拒绝;CLI 层不得自行放宽。v1.11(2026-10-30
     裁定)起列表仅含用户级入口文件——产品自身 Skill 投影取消,不再包含任何 Skill 位。
+    agents=None 表示"全部支持执行器"(五家全集):台账加载/校验必须覆盖已登记的
+    dsh/zcode 用户对象,否则显式接入后 check/remove/升级会误判越界;缺省接入
+    三家的语义由调用方经 resolve_agents 表达,不在本函数重复。
     """
     collected = []
-    for agent in resolve_agents(agents):
+    for agent in resolve_agents(agents, default=AGENT_ORDER):
         expanded = expand_path(platform_config[agent]["user_entry"], home=home)
         if expanded not in collected:
             collected.append(expanded)

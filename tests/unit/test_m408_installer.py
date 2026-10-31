@@ -59,8 +59,9 @@ class InstallerTests(InstallFixture):
         code,done=self.invoke('--approval-file',self.approval_file(p),'--project',str(self.area/'actual project'))
         self.assertEqual(code,0,done);self.assertEqual(done['status'],'completed')
         self.assertEqual(done['agents']['connected'],[]);self.assertTrue(done['connection_pending'])
-        # 装机枚举逐家列出已适配执行器,默认全部接入,未适配不在覆盖范围。
-        self.assertIn('默认全部接入',done['agents']['note'])
+        # 装机枚举逐家列出五家安装事实;默认接入范围是旧三家,dsh/zcode 需显式指定。
+        self.assertIn('默认接入范围为 codex/claude/workbuddy',done['agents']['note'])
+        self.assertIn('dsh/zcode 需显式 --agent 指定',done['agents']['note'])
         self.assertEqual(sorted(done['agents']),['absent','connected','note','unknown','unselected'])
         # v1.11 裁定 §14.4:装完报告不再携带新会话自检提示。
         self.assertNotIn('runtime_acceptance',done)

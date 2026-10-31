@@ -71,12 +71,16 @@ PUBLIC_LAYOUT_PREDECESSORS = (
 )
 PUBLIC_MEMORY_LAYOUT_CONVERSION = {'type': public_layout.HANDLER_TYPE}
 
-# 目标合同冻结字面量(2026-10-31 定稿冻结;模块再修改须显式重冻结并留测试证据,
-# 冻结完整性由 test_public_layout 的 freeze-integrity 用例守护)。
+# 目标合同冻结字面量(2026-10-31 定稿冻结;2026-10-31 桌面双端适配按裁定显式
+# 重冻结——agents.json 增 dsh/zcode 五家、user_entries.py 增专属兜底/DSH_HOME
+# 守卫、public_layout.py native 模板按执行器分派。SOURCE 前身合同
+# (WORKBUDDY_ENTRY_CONVERSION / PUBLIC_LAYOUT_BEFORE_CONTRACT / PREDECESSORS)
+# 保持原值不动;版本仍 0.1.3;冻结完整性由 test_public_layout 的 freeze-integrity
+# 用例守护)。
 PUBLIC_LAYOUT_TARGET_CONTRACT = {
-    'scripts/agents.json': '9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab',
-    'scripts/agm_core/user_entries.py': '71c591a9e964c10dae34b85488640f2a06c4b8af03b204ec5d16bfc1d4a125b6',
-    'scripts/agm_core/public_layout.py': '7765c9e9eaf96eca1580ce83e8a30e77f48f7a8465e46e504a2ff02902ba3a06',
+    'scripts/agents.json': '5aff7ec53cfddea2dca86e844a85903411c017488dd66f5f8ea7cb3e2a07f038',
+    'scripts/agm_core/user_entries.py': '48e5677857b2aaece1cf2e711db4bb90ec2b9d6447b3baf682b76959c422346f',
+    'scripts/agm_core/public_layout.py': 'b1ab0123bcea50884a37bb6890e0e23938c73a470577d65ae654b1936016d96f',
 }
 
 

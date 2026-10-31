@@ -76,9 +76,9 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 - **给项目停用记忆**：只撤销该项目允许撤销的受管入口；项目记忆内容、项目经历记录库与用户记忆全部保留。该项目记为已停用，默认不会再自动启用。
 - **给项目启用记忆**：主要用于显式恢复已停用的项目；进入未登记的 Git 项目会默认开启项目记忆（非 Git 目录与 linked worktree 不触发），已停用的项目默认不恢复。
 
-`AGENTS.md` 是共享的项目记忆基座，不依赖安装 Codex——只用 Claude、WorkBuddy 或两者组合同样成立。各家专属入口由实际使用驱动：Claude 的引用、WorkBuddy 的桥接都等它们真正用上时才补，不预建文件；机器上装了某个 Agent，不等于它已在使用。菜单与使用细则由公共指南按需读取，各家 Agent 的用户文件只保留公共指针与自身规则。
+`AGENTS.md` 是共享的项目记忆基座，不依赖安装 Codex——只用 Claude、WorkBuddy 或两者组合同样成立。DeepSeek Harness 与 ZCode 桌面端同样原生读取 `AGENTS.md`（用户入口分别为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`），接入时显式指定 `dsh`、`zcode`；默认选择仍为 Codex、Claude Code、WorkBuddy。各家专属入口由实际使用驱动：Claude 的引用、WorkBuddy 的桥接都等它们真正用上时才补，不预建文件；机器上装了某个 Agent，不等于它已在使用。菜单与使用细则由公共指南按需读取，各家 Agent 的用户文件只保留公共指针与自身规则。
 
-**想要项目经历？** 在需要的项目里使用 `/context-keeper`：首次按 Context Keeper 的流程初始化记录库，记录库建在项目里、随 Git 走，各家 Agent 共用（安装时会问一句要不要装它：回车＝同意，输入 n 跳过）；没装它，用户记忆与项目记忆照常工作。
+**想要项目经历？** 在需要的项目里使用 `/context-keeper`：首次按 Context Keeper 的流程初始化记录库，记录库建在项目里、随 Git 走，各家 Agent 共用（安装时会问一句要不要装它：回车＝同意，输入 n 跳过）。用户级安装目前覆盖 Codex、Claude Code 与 WorkBuddy；DeepSeek Harness 与 ZCode 暂不在其安装范围，不影响它们共享记忆。没装它，用户记忆与项目记忆照常工作。
 
 命令参数、停用与恢复的精确语义见 [SKILL.md](SKILL.md) 与 [INSTALL.md](INSTALL.md)。
 

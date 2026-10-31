@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import sys
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -85,6 +86,16 @@ CLAUDE_FALLBACK_TEXT = (
 )
 WORKBUDDY_FALLBACK_TEXT = "仅 WorkBuddy 在本项目实际使用产生原生 .workbuddy/memory 目录，且项目已启用、政策非 disabled 时，补顶部 AGENTS.md 指针；保留已有正文字节，不预建原生目录。"
 CODEX_FALLBACK_TEXT = "Codex 原生读取共享项目规则基座 AGENTS.md，自身无额外专属项目入口；该基座默认建立遵公共治理条款，已 disabled 项目不自动恢复。"
+# 桌面双端(2026-10-31 冻结合同):dsh=DeepSeek Harness、zcode=ZCode 均原生读取
+# 项目根 AGENTS.md(rule_mode=native),用户入口分别是 ~/.dsh/AGENTS.md 与
+# ~/.zcode/AGENTS.md。兜底文本各写自身执行器称谓,不复用 CODEX_FALLBACK_TEXT,
+# 迁移/连接校验按块内语义精确区分执行器。
+DSH_FALLBACK_TEXT = ("DeepSeek Harness 原生读取共享项目规则基座 AGENTS.md，自身无额外专属项目入口；"
+                     "该基座默认建立遵公共治理条款，已 disabled 项目不自动恢复。"
+                     "用户入口仅支持默认根 ~/.dsh/AGENTS.md，DSH_HOME 重定向时不接入。")
+ZCODE_FALLBACK_TEXT = ("ZCode 原生读取共享项目规则基座 AGENTS.md 与用户级 ~/.zcode/AGENTS.md，自身无额外专属项目入口；"
+                       "该基座默认建立遵公共治理条款，已 disabled 项目不自动恢复。")
+NATIVE_FALLBACK_TEXTS = {"codex": CODEX_FALLBACK_TEXT, "dsh": DSH_FALLBACK_TEXT, "zcode": ZCODE_FALLBACK_TEXT}
 
 # Claude 自身 fallback 的独立受管块标记:与公共指针 import 并存于 CLAUDE.md,
 # 迁移/连接校验按此标记精确识别,不与 BASE_MARKER 公共源块混用。
@@ -568,6 +579,38 @@ def public_read_text(memory_index):
     return "开始任务前读取并遵守 %s;读不到就说明。" % memory_index
 
 
+def native_public_source_block(agent, memory_index):
+    """native 执行器的用户级公共源受管块(公共指针 + 执行器专属兜底)。
+
+    codex 分支与既有内联构造字节一致(公共布局迁移幂等依赖该字节);dsh/zcode
+    是 2026-10-31 新增桌面端,首版即新模板,无历史旧模板。
+    """
+    return _wrap_block(BASE_MARKER, "\n".join(
+        [public_read_text(memory_index), NATIVE_FALLBACK_TEXTS[agent]]))
+
+
+def dsh_home_redirected(home):
+    """DSH_HOME 是否把 DeepSeek Harness 用户根重定向到非默认位置(纯布尔)。
+
+    上游语义(冻结合同):先按 strip 判空,空白视为未设置;非空则保留原文作为
+    根,~/ 或波浪号加反斜杠前缀按本函数收到的 home 展开(不用进程 HOME),
+    仅转换此前缀的分隔符,再做绝对路径规范化;
+    规范化后等于 <home>/.dsh 不算重定向。只返回布尔,原始环境值不得进入错误
+    信息或报告(可能含用户私有路径)。
+    """
+    value = os.environ.get("DSH_HOME")
+    if value is None or not value.strip():
+        return False
+    root = value
+    if root.startswith("~"):
+        rest = root[1:]
+        if not rest:
+            root = str(home)
+        elif rest.startswith(("/", "\\")):
+            root = str(home) + "/" + rest[1:]
+    return os.path.abspath(root) != os.path.abspath(os.path.join(str(home), ".dsh"))
+
+
 def _public_block_intact(raw, obj, memory_index, agent):
     span = managed_span(raw, **_marker_args(obj["marker"]))
     if span is None:
@@ -691,6 +734,14 @@ def _plan(request, runtime, detection, effective, *, transaction):
         _preflight_machine_units(ledger)
     planner = _Planner(config=config, runtime=runtime, ledger=ledger,
                        detection=detection, effective=effective, transaction=transaction)
+    if "dsh" in effective and dsh_home_redirected(home):
+        # 冻结合同:DSH_HOME 重定向时默认入口不被读取;fail closed,不写无效文件。
+        # 只说明变量名与默认根支持范围,不回传 DSH_HOME 原始值(隐私)。
+        raise UserEntryError(
+            "dsh_home_redirected",
+            "DSH_HOME 已把 DeepSeek Harness 用户根重定向到非默认位置,默认入口不会被该应用读取;"
+            "本产品仅支持默认根 ~/.dsh(即 <home>/.dsh),请清除该重定向后重试;"
+            "整单停止,零写入。")
     for agent in effective:
         entry = config[agent]
         user_path = Path(agm_paths.expand_path(entry["user_entry"], home=home))
@@ -703,9 +754,8 @@ def _plan(request, runtime, detection, effective, *, transaction):
                                       WORKBUDDY_FALLBACK_TEXT])),
                                  "#convention", append_to_unblocked=True, note_label="user convention", update_registered=True)
         elif entry["rule_mode"] == "native":
-            body = "\n".join([
-                public_read_text(planner.memory_index), CODEX_FALLBACK_TEXT])
-            planner.marker_block(agent, user_path, _wrap_block(BASE_MARKER, body),
+            planner.marker_block(agent, user_path,
+                                 native_public_source_block(agent, planner.memory_index),
                                  "#public-source", append_to_unblocked=True, note_label="public-source block")
         elif entry["rule_mode"] == "import_agents":
             # Claude 经 @import 读公共源;自身 fallback 以独立受管块随入口落盘,

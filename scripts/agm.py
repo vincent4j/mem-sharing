@@ -154,7 +154,7 @@ def build_parser():
         "--agent",
         nargs="+",
         metavar="AGENT",
-        help="目标执行器,一次多个唯一值(codex/claude/workbuddy);缺省三家",
+        help="目标执行器,一次多个唯一值(codex/claude/workbuddy/dsh/zcode);缺省 codex/claude/workbuddy 三家,dsh/zcode 需显式指定",
     )
     memory_group = enable.add_mutually_exclusive_group()
     memory_group.add_argument(

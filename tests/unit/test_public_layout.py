@@ -316,6 +316,53 @@ class PublicLayoutMigrationFixture(unittest.TestCase):
         self.assertEqual({a: status[a]['status'] for a in ('claude', 'workbuddy')},
                          {'claude': 'connected', 'workbuddy': 'connected'})
 
+    def test_registered_new_native_entries_remain_byte_identical_during_migration(self):
+        facts = detect.detect_agents(self.config, None, home=str(self.home),
+            search_paths=[str(self.bin_dir)], app_directories=[])
+        for agent in ('dsh', 'zcode'):
+            facts['agents'][agent] = copy.deepcopy(facts['agents']['codex'])
+        request = dict(self.req13, agents=['dsh', 'zcode'])
+        with patch.dict(os.environ, DSH_HOME=''), patch.object(detect, 'detect_agents', return_value=facts):
+            preview = user_entries.run_user_entries(request)
+            self.assertEqual(preview['status'], 'approval_required', preview)
+            approval = json.loads(preview['next_action'])
+            request['approval'] = approved({k:v for k,v in approval.items() if k not in ('confirmed_at','reference')})
+            self.assertEqual(user_entries.run_user_entries(request)['status'], 'completed')
+        private = {a: (self.home/('.'+a)/'AGENTS.md').read_bytes() for a in ('dsh', 'zcode')}
+        plan, request = self.plan()
+        done = self.apply(plan, request)
+        self.assertEqual(done['status'], 'completed', done)
+        for a, raw in private.items():
+            self.assertEqual((self.home/('.'+a)/'AGENTS.md').read_bytes(), raw)
+        status = user_entries.connection_status(self.runtime, self.config, self.ledger(), ['dsh','zcode'])
+        self.assertEqual([status[a]['status'] for a in ('dsh', 'zcode')], ['connected', 'connected'])
+
+    def test_new_desktop_readers_are_scanned_and_private_files_preserved(self):
+        for agent in ('dsh', 'zcode'):
+            with self.subTest(agent=agent):
+                entry = self.home/('.'+agent)/'AGENTS.md'
+                entry.parent.mkdir()
+                private = b'private desktop rules\xff\r\n'
+                entry.write_bytes(private)
+                before = self.snapshot()
+                plan, request = self.plan()
+                self.assertEqual(self.snapshot(), before)
+                migration = plan['plan']['migration_plan']
+                self.assertIn(str(entry), migration['observations'])
+                self.assertFalse(any(t['path'] == str(entry) for t in migration['targets']))
+                entry.write_bytes(private + user_entries.native_public_source_block(
+                    agent, self.runtime.root/'memories/MEMORY.md'))
+                before = self.snapshot()
+                with self.assertRaises(ValueError) as stopped: self.plan()
+                self.assertIn('unregistered_public_reader', str(stopped.exception))
+                self.assertEqual(self.snapshot(), before)
+                entry.write_bytes(private)
+        plan, request = self.plan()
+        done = self.apply(plan, request)
+        self.assertEqual(done['status'], 'completed', done)
+        for agent in ('dsh', 'zcode'):
+            self.assertEqual((self.home/('.'+agent)/'AGENTS.md').read_bytes(), private)
+
     def test_unregistered_public_reader_blocks_before_code_upgrade(self):
         variant = self.make_variant(CONNECTED=('codex', 'workbuddy'))
         claude = variant.home / '.claude/CLAUDE.md'

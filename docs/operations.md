@@ -53,7 +53,12 @@ Agent 展示完整计划并绑定真实确认，将计划连同 `confirmed_at/re
 python3 scripts/install.py --approval-file /absolute/path/install-approval.json
 ```
 
-安装可重复 `--agent codex --agent claude` 限定目标，仍须通过安装事实核验。
+支持 `codex/claude/workbuddy/dsh/zcode` 五家，缺省仍选择旧三家；新两家须显式选择。安装可重复 `--agent codex --agent claude` 或 `--agent dsh --agent zcode` 限定目标，仍须通过安装事实核验。来源与预览批准流程不变。
+
+```bash
+python3 scripts/install.py --source-manifest /absolute/path/source.json --agent dsh --agent zcode
+```
+
 `--project` 只用于报告后续项目命令，不表示安装时顺便启用项目。
 
 为什么这样设计：先固定来源与现场再写入，安装请求能落实到可核对的精确变更。
@@ -76,7 +81,12 @@ WorkBuddy 只在 `.workbuddy/memory/` 原生目录存在时补规则指针，不
 启用不调用 Context Keeper 安装器、不安装项目级 Skill、不创建其记录库。
 未装 Context Keeper 仍可使用用户记忆与项目规则，只是没有项目经历能力。
 若需精确非交互批准，先查看预览，再加 `--approval-file /absolute/enable-approval.json`。
-`--agent codex claude` 可一次选择多个唯一值；未显式选择时按已安装事实处理。
+项目启用 `--agent codex claude` 或 `--agent dsh zcode` 可一次选择多个唯一值；未显式选择时仍只在默认旧三家中按已安装事实处理。
+
+```bash
+python3 scripts/agm.py enable-memory --project /absolute/path/project --agent dsh zcode
+```
+
 写前发现受管单元漂移则停止，批准文件不能强制覆盖漂移保护。
 
 为什么这样设计：规则接入与项目经历激活分开，默认流程不为未使用的执行器创建文件。
@@ -151,6 +161,16 @@ check 只报告登记与现场缺口，不写锁、不备份、不修复、不�
 
 为什么这样设计：巡检可以安全重复，修复必须落实到另一次明确的写入计划。
 
+### 桌面端默认根与验证边界
+
+DeepSeek Harness（`dsh`）用户入口为 `~/.dsh/AGENTS.md`，ZCode（`zcode`）为 `~/.zcode/AGENTS.md`；均共用公共记忆索引，保留各自私文，项目原生读取根 `AGENTS.md`，无需额外桥接。默认项目接入仍由当前实际执行者显式使用自身 ID，不预建其他执行器入口，也不恢复 disabled。
+
+DSH 本次限默认 coding `cordis` preset 与默认根。接入规划自动检查 `DSH_HOME`，非默认根拒绝默认入口接入，错误不回传变量值。`DSH_AGENTS_HOME` 影响共享 Skill 根，目前不自动检测，也不承诺默认共享 Skill 目录已被客户端发现。显式插件配置也可能覆盖根，自定义配置与桌面进程实际环境未验证。`ZCODE_HOME` 不是 ZCode 规则根，不能用它推导规则位置。
+
+静态读取逻辑支持 DSH 的 `~/.dsh/skills`、ZCode 的 `~/.zcode/skills`，以及两者共用的 `~/.agents/skills`；项目侧也有各自隐藏目录与 `.agents/skills` 发现逻辑。memSharing 不创建、复制或投影这些 Skill。静态发现与符号链接支持不等于桌面实际加载通过。
+
+原生入口证据见[桌面合同（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/desktop-agent-contracts.md)。原生入口静态证据不代表运行时加载通过；两款桌面端新会话的用户规则、项目规则和 Skill 加载验收均为 pending。
+
 ## 7. 用户记忆整理与 Context Keeper 激活
 
 “整理用户记忆”由 Agent 调用 `user_rules_organize.py` 的预览与执行 API。
@@ -172,7 +192,9 @@ python3 scripts/install.py --context-keeper --approval-file /absolute/ck-approva
 
 源码须为持久、干净且符合固定 pin 的 checkout，目前不自动下载。
 只有真实交互回车表示同意，空格、EOF 或非交互输入不算。
-同意后为全部实际接入执行器安装用户级 Context Keeper，落位由其自有安装器负责。
+同意后为已接入的 Codex、Claude Code、WorkBuddy 安装用户级 Context Keeper，落位由其自有安装器负责。固定 pin 安装器仅支持旧三家的 flags；`dsh`、`zcode` 明确跳过用户级 CK 安装（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响新两家的 memSharing 接入，不可宣称它们已安装 CK 或新会话已通过。
+仅接入 `dsh/zcode` 时，`--context-keeper` 输出 `status=skipped`、`reason=upstream_unsupported` 与 `skipped_upstream_agents`；交互安装尾步的 `context_keeper` 同样为 `status=skipped`、`reason=upstream_unsupported`，主安装保持 `status=completed`。混合接入执行时，`agents` 仅列受支持的执行器；跳过项列于 `skipped_upstream_agents`，每项为 `{"agent":"dsh或zcode","reason":"upstream_unsupported"}`（`agent` 取实际 ID）。`upstream_unsupported` 是原因，不是顶层状态。
+
 缺源、失败或结果不明分别报告，主产品成功保留，结果不明不自动重放。
 在需要的项目首次运行 `/context-keeper`，按其流程确认并初始化项目经历库。
 后续保存、续接、查找与迁移门禁全部遵守 Context Keeper；需要迁移时先停止相关读写。

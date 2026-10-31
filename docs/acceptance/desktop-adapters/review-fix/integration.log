@@ -1,0 +1,40 @@
+..........................................................................
+----------------------------------------------------------------------
+Ran 74 tests in 112.166s
+
+OK
+CLI DECLINE policy=disabled; denial guard present; store/source unchanged
+CLI SOURCE missing CK has no health gap; zero persistent writes
+REAL_FILE_WINDOW .agm-code-manifest.json before continue
+REAL_FILE_WINDOW .agm-code-manifest.json before rollback
+REAL_FILE_WINDOW .agm-code-manifest.json after continue
+REAL_FILE_WINDOW .agm-code-manifest.json after rollback
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py before continue
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py after continue
+REAL_FILE_WINDOW scripts/agm_core/upgrade.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/user_install.py before continue
+REAL_FILE_WINDOW scripts/agm_core/user_install.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/user_install.py after continue
+REAL_FILE_WINDOW scripts/agm_core/user_install.py after rollback
+REAL_FILE_WINDOW scripts/agm_core/versions.py before continue
+REAL_FILE_WINDOW scripts/agm_core/versions.py before rollback
+REAL_FILE_WINDOW scripts/agm_core/versions.py after continue
+REAL_FILE_WINDOW scripts/agm_core/versions.py after rollback
+REAL_CHAIN {"P_commit": "666cc56752b2c363d65f2339b2bec4e9f6289385", "T_commit": "da2959b5e2f586a969bebe1dca93a7c78096b942", "T_parent": "666cc56752b2c363d65f2339b2bec4e9f6289385", "P_manifest": "5b46207dbc01ede24da6397c8dfc5b764dd10a264ddcf20f16629a1a63d18b10", "T_manifest": "5981b6e6e199598d36fbf766ace61aa2e5530830a5fce57b3cc0bc5e0c8064a8", "changed_files": ["scripts/agm_core/upgrade.py", "scripts/agm_core/user_install.py", "scripts/agm_core/versions.py"], "T0_self_installed": true, "T0_command_ran": true, "T1_command_ran": true, "same_version_zero_mtime": true}
+REAL_ROLLBACK version=0.4.0; post-upgrade project and authorization preserved; user bytes unchanged
+REAL_PHASE prepare continue completed 
+REAL_PHASE prepare rollback rolled_back 
+REAL_PHASE archive continue completed 
+REAL_PHASE archive rollback rolled_back 
+REAL_PHASE inventory continue completed 
+REAL_PHASE inventory rollback rolled_back 
+REAL_PHASE code continue completed 
+REAL_PHASE code rollback rolled_back 
+REAL_PHASE verify continue completed 
+REAL_PHASE verify rollback rolled_back 
+REAL_PHASE commit continue completed finish_only
+REAL_PHASE commit rollback completed finish_only
+REAL_FIXED_TOOLKIT source unavailable; installer replaced; fixed launcher recovered; T CLI runs
+M408 ACQUIRE c391879325b751d6bf5eb60feba2140cd2bfafcc local transport acquired; separate read_only plan; installation completed
+M408 COLD 7c3472de3e4c70637b4ba525ad51fff556831405 non_git_cwd completed; same_release zero_writes_mtimes; runtime pending

@@ -434,7 +434,10 @@ def detect_agents(platform_config, agents=None, *, home, search_paths=None,
         "rules_version": DETECT_RULES_VERSION,
         "agents": {},
     }
-    for agent in agm_paths.resolve_agents(agents):
+    # agents=None 是"全量支持清单"语义(五家):安装事实报告必须覆盖 dsh/zcode,
+    # 否则显式接入预览(install.plan_machine agent_facts)会漏报或 KeyError。
+    # 用户请求缺省三家由 CLI/命令体经 resolve_agents 先行收敛,不经本函数。
+    for agent in agm_paths.resolve_agents(agents, default=agm_paths.AGENT_ORDER):
         result["agents"][agent] = _detect_one(
             agent, platform_config[agent], home=home,
             search_paths=resolved_search, user_candidates=user_candidates,

@@ -15,8 +15,16 @@ from . import entries, layout, legacy_import as legacy, migrate, paths, registry
 from .transaction import Snapshot, _atomic_file, read_snapshot, write_lock
 
 PIN = '695074ee4b6ddb9999be858093f833d6377bd641'
-PROMPT = '最后：为了让你的所有项目都能记住并续接工作经历，我们将为已接入的每个 Agent 安装项目经历引擎 Context Keeper（用户级）——它与本产品出自同一作者。同意吗？（回车=同意，n=跳过）'
+PROMPT = '最后：为了让你的所有项目都能记住并续接工作经历，我们将为已接入且受支持的 Agent（Codex、Claude Code、WorkBuddy）安装项目经历引擎 Context Keeper（用户级）——它与本产品出自同一作者。同意吗？（回车=同意，n=跳过）'
+# 上游安装器(pinned PIN)仅认这三家(LABELS/ROOTS/RULES 的键集即上游 --agent
+# flags)。dsh/zcode 已接入时:不冒支持、不传上游未知 flags、不改上游——在计划
+# 里明确列为 skipped 并照常为旧三家安装;三家均不在场才显式拒绝,该拒绝不回滚
+# 也不影响主产品安装结果。
 LABELS = {'codex': 'Codex', 'claude': 'Claude Code', 'workbuddy': 'WorkBuddy'}
+# 主产品接入名单(五家)独立于上游 LABELS:tail 的"已装上入口"描述本产品接入
+# 范围,不得用上游支持集过滤后冒称全部接入;CK 上游不支持者另行单独说明。
+PRODUCT_LABELS = {'codex': 'Codex', 'claude': 'Claude Code', 'workbuddy': 'WorkBuddy',
+                  'dsh': 'DeepSeek Harness', 'zcode': 'ZCode'}
 ROOTS = {'codex': ['.agents/skills', '.codex/skills'],
          'claude': ['.claude/skills'], 'workbuddy': ['.workbuddy/skills']}
 RULES = {'codex': '.codex/AGENTS.md', 'claude': '.claude/CLAUDE.md',
@@ -168,6 +176,13 @@ def plan_context_keeper(request, main_operation_id, source=None, *, runner=None)
     runtime, data, agents = _scene(request, main_operation_id)
     if not agents:
         _fail('No connected executors; connect an executor before installing CK', 'ck_no_agents')
+    supported = [a for a in agents if a in LABELS]
+    skipped = [a for a in agents if a not in LABELS]
+    if not supported:
+        _fail('已接入执行器(%s)均不在 Context Keeper 上游安装器支持范围(仅 Codex/Claude Code/'
+              'WorkBuddy);明确跳过 CK 用户级安装,不影响本产品接入,也不修改上游' % ', '.join(agents),
+              'ck_no_supported_agents')
+    agents = supported
     identity = _source(source or discover_source(runtime.home), runtime)
     skills = [str(runtime.home/r/'context-keeper') for a in agents for r in ROOTS[a]]
     rules = [str(runtime.home/RULES[a]) for a in agents]
@@ -203,6 +218,7 @@ def plan_context_keeper(request, main_operation_id, source=None, *, runner=None)
         'main_operation_id': main_operation_id, 'home': str(runtime.home),
         'platform_config': request['platform_config'], 'registry_path': str(runtime.registry),
         'registry_sha256': legacy.digest(runtime.registry.read_bytes()), 'agents': agents,
+        'skipped_upstream_agents': [{'agent': a, 'reason': 'upstream_unsupported'} for a in skipped],
         'main_journal': {'path': str(main_journal), 'fingerprint': observations[str(main_journal)]},
         'source': identity, 'preview_argv': argv, 'argv': argv+['--approved'],
         'interpreter': {'path': interpreter, 'fingerprint': user_install._node(interpreter)},
@@ -329,6 +345,8 @@ def execute_context_keeper(plan, approval, *, request=None, runner=None):
             record['errors'] = [{'code': 'ck_readback_failed', 'message': 'CK target metadata cannot be verified; inspect journal'}]
         save()
     return {'command': 'install-context-keeper', 'status': record['status'],
+            'agents': list(plan['agents']),
+            'skipped_upstream_agents': list(plan['skipped_upstream_agents']),
             'main_operation_id': plan['main_operation_id'], 'journal': str(journal),
             'approval_required': record['status'] == 'approval_required',
             'errors': record.get('errors', []), 'runtime_acceptance': 'pending'}
@@ -347,9 +365,15 @@ def tail(report, request, *, stdin=None, stderr=None):
         runtime = user_install._runtime(request)
         data = registry.load_registry(runtime.registry, allowed_user_paths=paths.allowed_user_paths(
             request['platform_config'], None, home=request['home']))
-        connected = [LABELS[a] for a in paths.AGENT_ORDER if a in data['machine']['agents']]
-        print('已创建用户记忆中枢'+('，已为'+ '、'.join(connected)+'装上入口。' if connected else '。'),
-              file=stderr, flush=True)
+        connected_all = [a for a in paths.AGENT_ORDER if a in data['machine']['agents']]
+        # 主产品接入名单按五家 PRODUCT_LABELS 全量报告;CK 上游不支持者单独说明。
+        connected = [PRODUCT_LABELS[a] for a in connected_all if a in PRODUCT_LABELS]
+        ck_skipped = [a for a in connected_all if a not in LABELS]
+        message = '已创建用户记忆中枢'+('，已为'+ '、'.join(connected)+'装上入口。' if connected else '。')
+        if ck_skipped:
+            message += '（%s 不在 Context Keeper 上游支持范围，跳过其 CK 用户级安装，不影响本产品接入。）' \
+                % '、'.join(PRODUCT_LABELS.get(a, a) for a in ck_skipped)
+        print(message, file=stderr, flush=True)
         print(PROMPT, file=stderr, flush=True)
         failure = None
         try:
@@ -359,6 +383,7 @@ def tail(report, request, *, stdin=None, stderr=None):
             print('CK 安装预览暂不可用：'+str(exc), file=stderr, flush=True)
         if failure is None:
             print('CK 预览：'+json.dumps({'agents': plan['agents'], 'source': plan['source']['root'],
+                'skipped_upstream_agents': plan['skipped_upstream_agents'],
                 'commit': plan['source']['commit'], 'files': plan['skill_entries']+plan['rule_files'],
                 'plan_sha256': plan['plan_sha256']}, ensure_ascii=False), file=stderr, flush=True)
         if stdin.readline() not in ('\n', '\r\n'):
@@ -372,6 +397,10 @@ def tail(report, request, *, stdin=None, stderr=None):
         if report['context_keeper']['status'] == 'configured':
             print('已安装 Context Keeper。可在任意项目里输入 /context-keeper；首次保存按 CK 流程确认记录库位置，记录库随项目 Git 管理，所有 Agent 共用。', file=stderr)
     except (ValueError, OSError, subprocess.SubprocessError) as exc:
+        if getattr(exc, 'code', None) == 'ck_no_supported_agents':
+            report['context_keeper'] = {'status': 'skipped', 'reason': 'upstream_unsupported',
+                'skipped_upstream_agents': [{'agent': a, 'reason': 'upstream_unsupported'} for a in ck_skipped]}
+            return report
         report['context_keeper'] = {'status': 'unavailable', 'errors': [
             {'code': getattr(exc, 'code', 'ck_install_unavailable'), 'message': str(exc)}],
             'next_action': 'Run scripts/install.py --context-keeper --ck-source /absolute/durable/context-keeper after supplying a clean source at '+PIN}

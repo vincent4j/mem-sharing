@@ -273,7 +273,8 @@ class ThreeStateRulesTests(DetectFixture):
 
     def test_fingerprint_ignores_observation_timestamps(self):
         self.npm_package("@openai/codex")
-        clock = iter("2026-10-30T04:39:0%dZ" % n for n in range(10))
+        # detect(None) 现枚举五家(顶层+每Agent各一时间戳),两轮共 12 个值,给足余量。
+        clock = iter("2026-10-30T04:39:0%dZ" % n for n in range(30))
         original, detect._utc_now = detect._utc_now, lambda: next(clock)
         try:
             first = self.detect()

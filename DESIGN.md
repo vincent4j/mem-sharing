@@ -4,7 +4,7 @@
 
 ## 定位与边界
 
-memSharing（多 Agent 记忆共享与融合，Multi-Agent Memory Sharing & Fusion）是跨执行器的规则共享与经历编排层，覆盖 Codex、Claude Code、WorkBuddy。纯文件、零服务，使用 Python 标准库；当前实证平台为 macOS，Windows/Linux 未验证。
+memSharing（多 Agent 记忆共享与融合，Multi-Agent Memory Sharing & Fusion）是跨执行器的规则共享与经历编排层，覆盖 Codex、Claude Code、WorkBuddy、DeepSeek Harness 与 ZCode 桌面端。缺省选择仍为前三家，新增两家须显式指定 `dsh`、`zcode`。纯文件、零服务，使用 Python 标准库；当前实证平台为 macOS，Windows/Linux 未验证。
 
 不增加向量库、界面、模型配置、数据库或通用 provider 框架。不管理共享 Skills/MCP，不投影 memSharing 自身 Skill，不写各执行器的自动私有记忆库。其他记忆工具可独立共存，本产品不集成或管理其服务端。
 
@@ -15,6 +15,8 @@ memSharing（多 Agent 记忆共享与融合，Multi-Agent Memory Sharing & Fusi
 | 用户记忆 | `~/.mem-sharing/memories/` | 跨项目公共规则与偏好，跟人走 |
 | 项目记忆 | 项目根 `AGENTS.md` | 项目构建、约束与工作规则，随 Git 走 |
 | 项目经历 | Context Keeper 管理的项目记录库，默认 `docs/context-keeper/` | 进度、事实、日志与经验，随 Git 走 |
+
+固定 pin 的 Context Keeper 安装器仅支持 Codex、Claude Code、WorkBuddy 的 flags；`dsh`、`zcode` 明确跳过用户级 CK 安装（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响 memSharing 接入。
 
 Context Keeper 是可选的项目经历引擎；不装它仍可共享用户记忆和项目规则。其记录格式、保存、续接、查找、迁移与首次建库授权归 Context Keeper 自身，本产品不复制其逻辑、不修改上游。
 
@@ -30,7 +32,7 @@ R 为 `~/.mem-sharing`，仅包含 memories/references/backups/var；C 为 `~/.l
 
 用户安装对话、依赖检查、一次确认、静默执行与 Context Keeper 独立尾步以 [INSTALL](INSTALL.md) 为唯一操作合同。Python ≥3.9；缺 Python/Git 的准备由外层 Agent 编排，Python CLI 不自行装依赖。后装执行器仅由用户主动请求接入，不自动发现或提示。
 
-`installed` 只证明探测到应用；`connected` 证明入口登记、指纹与读取语义静态成立；真实会话读取另行验证。不能把主安装成功或静态接入当作三家运行成功。
+`installed` 只证明探测到应用；`connected` 证明入口登记、指纹与读取语义静态成立；真实会话读取另行验证。不能把主安装成功或静态接入当作所有执行器运行成功。新增两家本轮未真实安装，桌面新会话验收仍为 pending。
 
 ## 项目入口与生命周期
 
@@ -43,6 +45,10 @@ R 为 `~/.mem-sharing`，仅包含 memories/references/backups/var；C 为 `~/.l
 | Codex | `AGENTS.md`（原生读取） | 无额外兜底入口；共享基座由任一实际使用的已接入执行者按政策建立 |
 | Claude Code | `CLAUDE.md` 中 `@AGENTS.md` | 不带 `--agent` 的通用 enable 不触碰；Claude 自身实际使用时按 `--agent claude` 精确接入、幂等补引用（兜底规则在其自身用户文件）；其它执行者默认流程不预建；保留已有正文 |
 | WorkBuddy | `.workbuddy/memory/MEMORY.md` 顶部指针 | 原生目录由实际使用产生后补指针，不预建；原生正文原字节保留，运行时未验限制单列 |
+| DeepSeek Harness（`dsh`） | `AGENTS.md`（原生读取） | 用户入口 `~/.dsh/AGENTS.md`，无额外项目桥接；本次限默认 coding `cordis` preset 与默认根 |
+| ZCode（`zcode`） | `AGENTS.md`（原生读取） | 用户入口 `~/.zcode/AGENTS.md`，无额外项目桥接；`ZCODE_HOME` 不是规则根 |
+
+两款桌面端共用公共记忆索引，各自私文保留，不创建 Skill 投影。静态支持 `~/.agents/skills` 与各自用户 Skill 根，不代表实际加载通过。非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根；检查不回传值，自定义配置未验证。详细边界见[操作手册](docs/operations.md#桌面端默认根与验证边界)。
 
 短协议只说明经历库位置、`/context-keeper` 入口与职责。默认启用不调用 Context Keeper 安装、不装项目级 Skill、不创建记录库；首次 `/context-keeper` 按 Context Keeper 流程处理。旧桥接 created/reused/漂移必须按精确计划和所有权分别处理，不能拿旧标记当任意替换授权。
 

@@ -1,0 +1,32 @@
+......................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 582 tests in 278.536s
+
+OK
+DECLINE {"authorization": "disabled", "automatic_recording_guard": true, "short_protocol_preserved": true, "denial_guard": true, "store_preserved": true, "plan_changes": 1}
+PHASE prepare before continue completed 0.4.1
+PHASE prepare before rollback rolled_back 0.4.0
+PHASE prepare after continue completed 0.4.1
+PHASE prepare after rollback rolled_back 0.4.0
+PHASE archive before continue completed 0.4.1
+PHASE archive before rollback rolled_back 0.4.0
+PHASE archive after continue completed 0.4.1
+PHASE archive after rollback rolled_back 0.4.0
+PHASE inventory before continue completed 0.4.1
+PHASE inventory before rollback rolled_back 0.4.0
+PHASE inventory after continue completed 0.4.1
+PHASE inventory after rollback rolled_back 0.4.0
+PHASE code before continue completed 0.4.1
+PHASE code before rollback rolled_back 0.4.0
+PHASE code after continue completed 0.4.1
+PHASE code after rollback rolled_back 0.4.0
+PHASE verify before continue completed 0.4.1
+PHASE verify before rollback rolled_back 0.4.0
+PHASE verify after continue completed 0.4.1
+PHASE verify after rollback rolled_back 0.4.0
+PHASE commit before continue completed 0.4.1
+PHASE commit before rollback rolled_back 0.4.0
+PHASE commit after continue completed 0.4.1
+PHASE commit after rollback completed 0.4.1
+REBUILD {"projects_before": 2, "preview_rebuild": {"classification": "registry_project_corrupt", "reason": "invalid memory policy", "registry_sha256": "49d4dc35c801fb3a797a71df69860123245903a97fea876d4cec9709119a6855", "registry_bytes": 12947, "project_count": 2, "removed_projects": [{"main_checkout": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmpfotw0_pj/project with spaces", "record_sha256": "4d650f84a4d2361a7f939a15a12f9923fe826b1ffd86f82c55bb4ab40399c0ea"}, {"main_checkout": "/private/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/tmpfotw0_pj/second-project", "record_sha256": "22a8c043358d8a40028e38c8988b8d91486b86f9c96eadbbe4ed41ef6cdf49d4"}], "removed_shared_objects": [], "scope": "reset all project registrations and shared consumer indexes; preserve machine identity and all user files"}, "without_separate_approval": "approval_required", "result": "completed", "projects_after": 1}
+RACE recovery_required external edit

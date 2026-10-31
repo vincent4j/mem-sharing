@@ -1,0 +1,9 @@
+{
+  "scripts/agm_core/upgrade.py": "34f628737538aeaa6b9ba2883f1a272e23e161128a0494332b8e361a0a335973",
+  "scripts/agm_core/user_entries.py": "48e5677857b2aaece1cf2e711db4bb90ec2b9d6447b3baf682b76959c422346f",
+  "scripts/agm_core/user_rules_organize.py": "d3807d8a3d728f4b91463fdebb42ed81fb3af2b3772cd6fab1565633fe94fad0",
+  "tests/unit/test_desktop_adapters.py": "8ba50ee1f00bf469879d802816d0c8bf51ce60badff135bfce1f7206651aa0a4",
+  "tests/unit/test_m408_organize.py": "2058044e974c7d0c2a1eba8168411294cc5dafc592627124e5e20bec7d66449e",
+  "docs/operations.md": "51c260791954232200811fd8b572b7043ab3d912ad26ee4e3b88f8036eed4c2d",
+  "docs/acceptance/desktop-agent-contracts.md": "2e61b0f1ddbc7596de92df9e8f7dad3f95dad967f65a8e163ae04285de25906f"
+}

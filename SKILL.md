@@ -24,6 +24,8 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 停用之外的进阶选项：仅禁止自动项目经历记录与初始化而保留入口，使用 `enable-memory --project <根> --no-memory`；它不执行 remove。两者均登记 disabled，默认启用与批量均不翻转；解除走菜单“给项目启用记忆”的显式 `--memory` 并批准精确计划。
 
+支持 `codex`、`claude`、`workbuddy`、`dsh`、`zcode` 五家；缺省仍选择前三家，新增两家须显式指定。机器安装重复 `--agent dsh --agent zcode`，项目启用用 `--agent dsh zcode` 一次多值；来源与预览批准沿用 INSTALL。DeepSeek Harness 与 ZCode 的用户入口分别为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`，共享公共索引，保留各自私文；项目均原生读取 `AGENTS.md`，无需额外桥接。默认根、Skill 静态支持与运行限制见[操作手册](docs/operations.md#桌面端默认根与验证边界)。
+
 后装 Agent 不自动发现、不自动提示；仅用户主动选“添加新的 Agent”后核验安装事实。名字、残留目录或 hint 不能代替 installed。absent 不创建入口，unknown 只报告不写。机器台账中的事实记录不驱动自动接入。
 
 ## 安装与项目默认启用
@@ -46,7 +48,7 @@ Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep
 
 用户记忆是跨项目习惯，位于 `~/.mem-sharing/memories/`；项目记忆是 `AGENTS.md` 规则；项目经历是 Context Keeper 的进度、决策、日志与积累，记录库默认位于项目 `docs/context-keeper/`，具体由 Context Keeper 定义。
 
-装机尾步按安装页的固定正向问句征询 Context Keeper 用户级安装，回车同意，n 跳过。同意后走 `scripts/install.py --context-keeper` 独立路由与 `install-context-keeper` 封皮，由 Context Keeper 自有安装器为全部已接入执行器安装；其 Skill 落位由 Context Keeper 负责。EOF、非交互或空格不视为同意；缺源或失败独立报告，不回滚主产品。来源与批准细节按需读 INSTALL。未装 Context Keeper 不报产品错误，用户记忆和项目记忆照常工作。
+装机尾步按安装页的固定正向问句征询 Context Keeper 用户级安装，回车同意，n 跳过。同意后走 `scripts/install.py --context-keeper` 独立路由与 `install-context-keeper` 封皮，由 Context Keeper 自有安装器为已接入的 Codex、Claude Code、WorkBuddy 安装；固定 pin 的安装器仅支持这三家的 flags，`dsh`、`zcode` 明确跳过（`reason=upstream_unsupported`），混合接入时旧三家仍可安装，不影响新两家的 memSharing 接入。其 Skill 落位由 Context Keeper 负责。EOF、非交互或空格不视为同意；缺源或失败独立报告，不回滚主产品。来源与批准细节按需读 INSTALL。未装 Context Keeper 不报产品错误，用户记忆和项目记忆照常工作。
 
 项目 enable 不再调用 Context Keeper 安装器，不安装项目级其 Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 Context Keeper 首次命令，memSharing 不接管保存或查找流程。disabled 优先禁止自动经历，已有 Context Keeper 自动规则不得覆盖；其脚本本身不读取该政策，不能宣称硬拒写。手动 Context Keeper 操作仍按明确请求与其自身门禁处理。
 
@@ -64,7 +66,7 @@ Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep
 
 机器批准采用完整 `approval_plan` 加真实确认出处，来源和现场变化必须重核；项目显式写操作遵守匹配计划，不自造批准。机器恢复使用 `--recover <journal绝对路径> --action continue|rollback`，执行另需 `--approval-file`，不能与普通安装混用。无 `--force/--repair`，不擅自删锁。
 
-底层诊断保留状态、精确变化、错误和恢复位置；成功对话遵守安装页的极简报告，不倾倒路径或未安装名单，不添加新会话自检提示。失败或 partial 如实说明未完成，不能凭退出码 0 声称三家运行时均已生效。
+底层诊断保留状态、精确变化、错误和恢复位置；成功对话遵守安装页的极简报告，不倾倒路径或未安装名单，不添加新会话自检提示。失败或 partial 如实说明未完成，不能凭退出码 0 声称所有执行器运行时均已生效。
 
 项目写操作无批准先预览；批量待批准退出码 5，`next_action` 提供完整批量封皮模板，变更 `applied=false` 不表示已写入。schema=3 为活动合同，旧 v1/v2 仅只读诊断，旧开发版与旧标记不做迁移；详情按需读 INSTALL。
 

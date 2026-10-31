@@ -74,6 +74,24 @@ def _valid_table():
                     bridge_owner="mem-sharing",
                     runtime_status="pending",
                 ),
+                "dsh": _agent_entry(
+                    user_entry="{home}/.dsh/AGENTS.md",
+                    project_skill_roots=["{project}/.dsh/skills", "{project}/.agents/skills"],
+                    installation_signals=[
+                        {"kind": "directory_exists", "path": "{home}/.dsh", "strength": "hint"}
+                    ],
+                    bridge_owner="mem-sharing",
+                    runtime_status="pending",
+                ),
+                "zcode": _agent_entry(
+                    user_entry="{home}/.zcode/AGENTS.md",
+                    project_skill_roots=["{project}/.zcode/skills", "{project}/.agents/skills"],
+                    installation_signals=[
+                        {"kind": "directory_exists", "path": "{home}/.zcode", "strength": "hint"}
+                    ],
+                    bridge_owner="mem-sharing",
+                    runtime_status="pending",
+                ),
             }
         },
     }
@@ -310,10 +328,14 @@ class InstallationHintTests(unittest.TestCase):
     def test_hints_report_existence_with_hint_strength(self):
         os.makedirs(os.path.join(self.home, ".codex"))
         hints = paths.installation_hints(self.config, home=self.home)
-        self.assertEqual(len(hints), 3)
+        # agents=None 是全量支持清单语义:五家各一条目录 hint(缺省接入三家
+        # 的语义由 resolve_agents 表达,不缩减只读发现面)。
+        self.assertEqual(len(hints), 5)
         by_agent = {hint["agent"]: hint for hint in hints}
         self.assertTrue(by_agent["codex"]["exists"])
         self.assertFalse(by_agent["workbuddy"]["exists"])
+        self.assertFalse(by_agent["dsh"]["exists"])
+        self.assertFalse(by_agent["zcode"]["exists"])
         for hint in hints:
             self.assertEqual(hint["strength"], "hint")
             self.assertEqual(hint["kind"], "directory_exists")

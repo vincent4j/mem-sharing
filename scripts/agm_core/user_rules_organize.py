@@ -18,7 +18,7 @@ from .transaction import Change, Snapshot, Transaction, TransactionError, read_s
 
 COMMAND = 'organize-user-rules'
 _COMMON = re.compile(r'中文|语言|简洁|简体|繁体|提交|commit|风格|流程|偏好|批准|确认|测试|核验|验证|证据|先规划|先分析|先计划|勿|不要|禁止|不得|format|concise|approval|language', re.I)
-_SPECIFIC = re.compile(r'codex|claude|workbuddy|cursor|paseo|openai|anthropic|mcp|skills?|执行器专属|专属|agent专用|\.codex|\.claude|\.workbuddy|[~/$][\w./-]+|`[^`]+`|\b(?:npm|npx|uvx|python\d*|git|bash|zsh)\s+[-\w]', re.I)
+_SPECIFIC = re.compile(r'codex|claude|workbuddy|cursor|paseo|openai|anthropic|dsh|zcode|deepseek|DeepSeek Harness|ZCode|mcp|skills?|执行器专属|专属|agent专用|\.codex|\.claude|\.workbuddy|\.dsh|\.zcode|~/.dsh|~/.zcode|[~/$][\w./-]+|`[^`]+`|\b(?:npm|npx|uvx|python\d*|git|bash|zsh)\s+[-\w]', re.I)
 _MARKER = re.compile(rb'<!-- mem-sharing:([a-zA-Z0-9_-]+):start -->')
 
 
@@ -61,6 +61,12 @@ def _protected(data, path, runtime, objects):
     spans = []
     markers = {(match.group(0), b'<!-- mem-sharing:'+match.group(1)+b':end -->')
                for match in _MARKER.finditer(data)}
+    # External CK blocks remain opaque, regardless of executor or registration.
+    # The same strict parser rejects missing, duplicate and reversed markers;
+    # the overlap check below also covers CK/CK and CK/AGM crossings.
+    markers.update((b'<!-- context-keeper'+suffix+b':start -->',
+                    b'<!-- context-keeper'+suffix+b':end -->')
+                   for suffix in (b'', b':workbuddy'))
     # End-only/unknown damaged AGM markup must not become ordinary rule text.
     ends = re.findall(rb'<!-- mem-sharing:([a-zA-Z0-9_-]+):end -->', data)
     if set(ends) != {match.group(1) for match in _MARKER.finditer(data)}:

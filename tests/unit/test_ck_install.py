@@ -85,6 +85,82 @@ class CKInstallTests(InstallFixture):
         plan=plan or self.plan_ck()
         return ck.execute_context_keeper(plan,approved(plan),request=self.request,**kwargs)
 
+    def connect_desktops(self):
+        facts = detect.detect_agents(self.config, None, home=str(self.home),
+            search_paths=self.request['search_paths'], app_directories=[])
+        for agent in ('dsh', 'zcode'):
+            facts['agents'][agent] = copy.deepcopy(facts['agents']['codex'])
+        req = dict(self.request, agents=['dsh', 'zcode'])
+        with patch.dict(os.environ, DSH_HOME=''), patch.object(detect, 'detect_agents', return_value=facts):
+            preview = user_entries.run_user_entries(req)
+            self.assertEqual(preview['status'], 'approval_required', preview)
+            plan = json.loads(preview['next_action'])
+            req['approval'] = approved({k:v for k,v in plan.items() if k not in ('confirmed_at','reference')})
+            done = user_entries.run_user_entries(req)
+            self.assertEqual(done['status'], 'completed', done)
+
+    def test_mixed_upstream_support_reports_skipped_and_preserves_desktop_bytes(self):
+        self.connect_desktops()
+        private = {a: (self.home/('.'+a)/'AGENTS.md').read_bytes() for a in ('dsh', 'zcode')}
+        before = self.snapshot()
+        plan = self.plan_ck()
+        skipped = [{'agent': a, 'reason': 'upstream_unsupported'} for a in ('dsh', 'zcode')]
+        self.assertEqual(plan['agents'], ['codex'])
+        self.assertEqual(plan['skipped_upstream_agents'], skipped)
+        self.assertEqual(self.snapshot(), before)
+        self.assertNotIn('--dsh', plan['argv']); self.assertNotIn('--zcode', plan['argv'])
+        result = self.apply(plan)
+        self.assertEqual(result['status'], 'configured', result)
+        self.assertEqual(result['agents'], ['codex'])
+        self.assertEqual(result['skipped_upstream_agents'], skipped)
+        for a, raw in private.items():
+            self.assertEqual((self.home/('.'+a)/'AGENTS.md').read_bytes(), raw)
+            self.assertFalse((self.home/('.'+a)/'skills').exists())
+
+    def test_desktop_only_ck_skip_never_invokes_upstream_or_changes_product(self):
+        self.connect_desktops()
+        data = json.loads(self.runtime.registry.read_bytes())
+        data['machine']['agents'].pop('codex')
+        data['machine']['objects'] = {k:v for k,v in data['machine']['objects'].items() if 'codex' not in v['agents']}
+        self.runtime.registry.write_bytes(registry.serialize_registry(data,
+            allowed_user_paths=paths.allowed_user_paths(self.config, None, home=str(self.home))))
+        before = self.snapshot()
+        with patch.object(ck, '_invoke', side_effect=AssertionError('unsupported upstream call')):
+            with self.assertRaises(ck.CKError) as stopped: self.plan_ck()
+        self.assertEqual(stopped.exception.code, 'ck_no_supported_agents')
+        self.assertEqual(self.snapshot(), before)
+        output = io.StringIO()
+        result = ck.tail({'status': 'completed'}, self.request, stdin=TTY('\n'), stderr=output)
+        self.assertEqual(result['status'], 'completed')
+        self.assertEqual(result['context_keeper']['status'], 'skipped')
+        self.assertEqual(result['context_keeper']['reason'], 'upstream_unsupported')
+        self.assertEqual([x['agent'] for x in result['context_keeper']['skipped_upstream_agents']], ['dsh', 'zcode'])
+        for name in ('DeepSeek Harness', 'ZCode'):
+            self.assertIn(name, output.getvalue())
+        self.assertIn('上游支持范围', output.getvalue())
+        from test_m408_installer import cli
+        from contextlib import redirect_stdout
+        output = io.StringIO()
+        with patch.dict(os.environ, HOME=str(self.home)), redirect_stdout(output):
+            code = cli.main(['--context-keeper'])
+        self.assertEqual(code, 0)
+        result = json.loads(output.getvalue())
+        self.assertEqual(result['status'], 'skipped')
+        self.assertEqual(result['reason'], 'upstream_unsupported')
+        self.assertEqual([x['agent'] for x in result['skipped_upstream_agents']], ['dsh', 'zcode'])
+        self.assertEqual(self.snapshot(), before)
+
+    def test_no_connected_agent_keeps_missing_agent_error(self):
+        data = json.loads(self.runtime.registry.read_bytes())
+        data['machine'] = {'agents': {}, 'objects': {}}
+        self.runtime.registry.write_bytes(registry.serialize_registry(data,
+            allowed_user_paths=paths.allowed_user_paths(self.config, None, home=str(self.home))))
+        before = self.snapshot()
+        with patch.object(ck, '_invoke', side_effect=AssertionError('no upstream call')):
+            with self.assertRaises(ck.CKError) as stopped: self.plan_ck()
+        self.assertEqual(stopped.exception.code, 'ck_no_agents')
+        self.assertEqual(self.snapshot(), before)
+
     def test_preview_is_read_only_exact_scope_and_commit_content(self):
         before=self.snapshot(); plan=self.plan_ck()
         self.assertEqual(before,self.snapshot())

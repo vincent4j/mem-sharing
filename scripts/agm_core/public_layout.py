@@ -449,13 +449,17 @@ def _block_entry(agent, mode, path, snap, units, memory_index, runtime):
     actual = sha256(snap.data[span[0]:span[1]])
     if actual != trusted:
         _fail('drift', '受管块现场哈希与登记不一致(手改),拒绝整单: ' + str(path))
-    old_block = old_codex_block(memory_index, runtime.code) if mode == 'native' \
-        else old_workbuddy_block(memory_index, runtime.code)
-    new_block = new_codex_block(memory_index) if mode == 'native' \
-        else new_workbuddy_block(memory_index)
+    if mode == 'native':
+        # native 新模板按执行器分派(codex 字节与历史 new_codex_block 一致);
+        # 旧模板仅存在于 codex——dsh/zcode 首版即新模板,无历史模板可转换。
+        new_block = user_entries.native_public_source_block(agent, memory_index)
+        old_block = old_codex_block(memory_index, runtime.code) if agent == 'codex' else None
+    else:
+        new_block = new_workbuddy_block(memory_index)
+        old_block = old_workbuddy_block(memory_index, runtime.code)
     if actual == sha256(new_block):
         return [], []  # 已是新模板,幂等
-    if actual != sha256(old_block):
+    if old_block is None or actual != sha256(old_block):
         _fail('entry_semantics_missing', '登记内容既非已知旧模板也非新模板,拒绝整单: ' + str(path))
     outside = snap.data[:span[0]] + snap.data[span[1]:]
     new_data = render_block(snap.data, new_block, **_BASE, expected_fingerprint=trusted)
@@ -701,8 +705,8 @@ def _build_changes(plan):
             span = managed_span(snap.data, **_BASE)
             mode = _mode_for(target['agent'])
             memory_index = Path(plan['handler']['memory_index'])
-            new_block = new_codex_block(memory_index) if mode == 'native' else \
-                new_workbuddy_block(memory_index)
+            new_block = user_entries.native_public_source_block(target['agent'], memory_index) \
+                if mode == 'native' else new_workbuddy_block(memory_index)
             data = render_block(snap.data, new_block, **_BASE,
                                 expected_fingerprint=sha256(snap.data[span[0]:span[1]]))
         else:

@@ -309,6 +309,8 @@ def _entry_warnings(agents, platform_config, *, home, checkout):
         path = agm_paths.expand_path(entry["project_rule_entry"], home=home, project=checkout)
         kind, data = _observe_path(path)
         if kind == "file":
+            # 32KiB 预算告警是 Codex 专属语义;DSH coding preset(maxBytes=65536)与
+            # ZCode 单文件(100KiB)阈值/语义不同,不套用同一告警,暂不新告警。
             if agent == "codex" and len(data) >= 32 * 1024:
                 warnings.append("entry_budget: %s 已达 32KiB;仅根入口即达到默认规则预算,祖先/子目录链未统计" % path)
             if agent == "claude" and len(data.splitlines()) >= 200:

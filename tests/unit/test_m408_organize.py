@@ -227,3 +227,106 @@ class OrganizeTests(unittest.TestCase):
         request=dict(self.request,home=str(alias/'home'))
         plan=self.preview(request);self.assertEqual(plan['layout']['root'],str(self.runtime.root))
         self.assertEqual(org.execute_organize(plan,self.approve(plan),request=request)['status'],'completed')
+
+
+class CKProtectionTests(unittest.TestCase):
+    """CK owns both marker variants in every executor's entry, never AGM."""
+
+    def scene(self, agent, raw):
+        fixture = OrganizeTests('runTest')
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        path = fixture.home / ('.'+agent) / {'claude': 'CLAUDE.md', 'workbuddy': 'MEMORY.md'}.get(agent, 'AGENTS.md')
+        path.parent.mkdir(exist_ok=True)
+        path.write_bytes(raw)
+        fixture.request['agents'] = [agent]
+        return fixture, path
+
+    def test_complete_variants_are_opaque_with_legal_rules_before_and_after(self):
+        for agent in paths.AGENT_ORDER:
+            for suffix in ('', ':workbuddy'):
+                for newline in ('\n', '\r\n'):
+                    with self.subTest(agent=agent, suffix=suffix, newline=repr(newline)):
+                        start = '<!-- context-keeper'+suffix+':start -->'
+                        end = '<!-- context-keeper'+suffix+':end -->'
+                        ck = newline.join((start, '## Context Keeper', '',
+                            '- 使用简体中文，提交前测试。', '- 回答应简洁明确。', '',
+                            '保存前核验证据。', 'CK_PRIVATE_SENTINEL', end)).encode()
+                        before = ('- 提交信息请使用简体中文。'+newline+newline).encode()
+                        after = (newline+newline+'- 测试完成后核验证据。'+newline).encode()
+                        # Also preserve existing AGM blocks and both native imports.
+                        agm = b'<!-- mem-sharing:rules:start -->\nAGM opaque\n<!-- mem-sharing:rules:end -->'
+                        imports = b'@AGENTS.md\n'
+                        fixture, path = self.scene(agent, before+agm+b'\n'+imports+ck+after)
+                        public_import = ('@'+str(fixture.memories/'MEMORY.md')+'\r\n').encode()
+                        path.write_bytes(public_import+path.read_bytes())
+                        initial = path.read_bytes(); snapshot = fixture.snapshot()
+                        plan = fixture.preview()
+                        self.assertEqual(fixture.snapshot(), snapshot)
+                        self.assertEqual(len(plan['items']), 2)
+                        self.assertEqual([i['action'] for i in plan['items']], ['move', 'move'])
+                        self.assertFalse(any('CK_PRIVATE_SENTINEL' in i['text'] or 'context-keeper' in i['text'] for i in plan['items']))
+                        self.assertTrue(any(initial[u['start']:u['end']] == ck for u in plan['protected_units']))
+                        result = org.execute_organize(plan, fixture.approve(plan))
+                        self.assertEqual(result['status'], 'completed', result)
+                        expected = initial
+                        for item in sorted(plan['items'], key=lambda i:i['start'], reverse=True):
+                            expected = expected[:item['start']]+expected[item['end']:]
+                        self.assertEqual(path.read_bytes(), expected)
+                        self.assertIn(ck, expected); self.assertIn(agm, expected)
+                        self.assertIn(imports, expected); self.assertIn(public_import, expected)
+                        self.assertEqual(fixture.runtime.registry.read_bytes(), fixture.vbefore)
+                        topic = (fixture.memories/'user-rules.md').read_bytes()
+                        self.assertNotIn(ck, topic); self.assertNotIn(b'CK_PRIVATE_SENTINEL', topic)
+                        self.assertNotIn(b'context-keeper', topic)
+
+    def test_two_complete_ck_variants_coexist_without_becoming_candidates(self):
+        for agent in paths.AGENT_ORDER:
+            with self.subTest(agent=agent):
+                blocks = [b'<!-- context-keeper'+suffix+b':start -->\n- '+
+                          '测试使用简体中文。'.encode()+b'\n<!-- context-keeper'+suffix+b':end -->'
+                          for suffix in (b'', b':workbuddy')]
+                raw = b'\r\n\r\n'.join(blocks)
+                fixture, path = self.scene(agent, raw)
+                before = fixture.snapshot()
+                result = org.run(fixture.request)
+                self.assertEqual(result['status'], 'completed', result)
+                self.assertEqual(result['approval_plan']['items'], [])
+                self.assertEqual(fixture.snapshot(), before)
+                self.assertEqual(path.read_bytes(), raw)
+
+    def test_damaged_ck_markers_refuse_preview_and_approved_execution_zero_write(self):
+        for agent in paths.AGENT_ORDER:
+            for suffix in (b'', b':workbuddy'):
+                start = b'<!-- context-keeper'+suffix+b':start -->'
+                end = b'<!-- context-keeper'+suffix+b':end -->'
+                other_suffix = b':workbuddy' if not suffix else b''
+                other_start = b'<!-- context-keeper'+other_suffix+b':start -->'
+                other_end = b'<!-- context-keeper'+other_suffix+b':end -->'
+                agm_start = b'<!-- mem-sharing:rules:start -->'
+                agm_end = b'<!-- mem-sharing:rules:end -->'
+                shapes = {
+                    'start_only': [start], 'end_only': [end],
+                    'duplicate_start': [start, start, end],
+                    'duplicate_end': [start, end, end],
+                    'duplicate_pair': [start, end, start, end],
+                    'reverse': [end, start],
+                    'ck_cross': [start, other_start, end, other_end],
+                    'ck_agm_cross': [start, agm_start, end, agm_end],
+                    'agm_ck_cross': [agm_start, start, agm_end, end],
+                }
+                for name, markers in shapes.items():
+                    with self.subTest(agent=agent, suffix=suffix, shape=name):
+                        fixture, path = self.scene(agent, '- 提交前测试。\n'.encode())
+                        good_plan = fixture.preview()
+                        # A formerly valid exact approval must not override malformed CK.
+                        path.write_bytes(b'\r\n\r\n'.join(markers)+'\r\n- 提交前测试。\r\n'.encode())
+                        before = fixture.snapshot()
+                        result = org.plan_organize(fixture.request)
+                        self.assertEqual(result['status'], 'failed', result)
+                        self.assertEqual(result['errors'][0]['code'], 'entry_conflict')
+                        self.assertEqual(fixture.snapshot(), before)
+                        result = org.run(dict(fixture.request, approval=fixture.approve(good_plan)))
+                        self.assertEqual(result['status'], 'failed', result)
+                        self.assertEqual(result['errors'][0]['code'], 'entry_conflict')
+                        self.assertEqual(fixture.snapshot(), before)

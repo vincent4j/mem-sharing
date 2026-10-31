@@ -22,7 +22,10 @@ class WorkBuddyContractUpgradeTests(InstallFixture):
         super().setUp()
         # Synthetic predecessor content; only pin constants are substituted.
         # All source validation, transactions, private bytes and recovery are real.
-        (self.source/'scripts/agents.json').write_bytes((REPO/'scripts/agents.json').read_bytes())
+        # Keep the historical three-agent table: the current five-agent table is
+        # a different contract and must not masquerade as this predecessor.
+        (self.source/'scripts/agents.json').write_bytes(_git('cat-file', 'blob',
+            '0f690ef7aabf747a23bacc7662c19bee34c4bf52:scripts/agents.json'))
         (self.source/'scripts/agm_core/user_entries.py').write_text('# synthetic old WB entry contract\n')
         self.request['source'].update(version='0.1.0', files=self.files(self.source))
         self.codex(); self.execute()

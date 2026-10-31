@@ -17,9 +17,11 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 3. **完成后极简报告。** 例如：“已创建用户记忆中枢，已为 Codex、Claude Code 启用用户记忆入口。”名单必须来自实际结果。不报产品代码路径，不提未安装执行器，不加新会话自检提示，也不加“将来新装 Agent”提示句。后装接入说明在 [README](README.md)。失败或 partial 不套用成功句式。
 4. **紧接着询问 Context Keeper。** 使用以下固定正向话术，回车同意，输入 n 跳过：
 
-> 最后：为了让你的所有项目都能记住并续接工作经历，我们将为已接入的每个 Agent 安装项目经历引擎 Context Keeper（用户级）——它与本产品出自同一作者。同意吗？
+> 最后：为了让你的所有项目都能记住并续接工作经历，我们将为已接入且受支持的 Agent（Codex、Claude Code、WorkBuddy）安装项目经历引擎 Context Keeper（用户级）——它与本产品出自同一作者。同意吗？
 
-同意后由安装器编排 Context Keeper 自有安装器，为**全部已接入执行器**完成用户级安装，Skill 落位由 Context Keeper 负责。只有明确的交互回车才算同意；无响应、非交互 EOF 不等于同意。装后只提醒：“在任意需要的项目里使用 `/context-keeper`。首次使用按它的流程创建项目记录库，记录库随 Git 走，各家 Agent 共用。”到此结束。
+同意后由安装器编排 Context Keeper 自有安装器，为**已接入的 Codex、Claude Code、WorkBuddy**完成用户级安装，Skill 落位由 Context Keeper 负责。只有明确的交互回车才算同意；无响应、非交互 EOF 不等于同意。装后只提醒：“在任意需要的项目里使用 `/context-keeper`。首次使用按它的流程创建项目记录库，记录库随 Git 走，各家 Agent 共用。”到此结束。
+
+固定 pin 的 Context Keeper 安装器仅支持旧三家的 flags；DeepSeek Harness（`dsh`）与 ZCode（`zcode`）跳过用户级 CK 安装（`reason=upstream_unsupported`）。混合接入时旧三家仍可安装，不影响新两家的 memSharing 接入；不可把两家报告为 CK 已安装。
 
 跳过 Context Keeper 不影响用户记忆与项目记忆。装 Context Keeper 不等于所有项目立即创建记录库；项目经历按项目首次命令激活。装后 Context Keeper 的命令、记录格式、保存与查找行为均由其自行定义，memSharing 只保留桥接文本协议。
 
@@ -52,13 +54,20 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 
 活动台账为 schema=3。旧 v1/v2 仅严格只读诊断与保全；旧开发版不承诺升级，旧标记视为漂移停止并指引保全后重装。不提供逆 schema 迁移；升级承诺自首个正式发行开始。真实 v0 memories/references 双目录导入仍保留。
 
+## 支持的执行器
+
+支持 Codex、Claude Code、WorkBuddy、DeepSeek Harness 桌面端（`dsh`）与 ZCode 桌面端（`zcode`）。缺省目标仍为 `codex/claude/workbuddy`，新增两家须显式选择；用户入口分别为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`，项目均原生读取 `AGENTS.md`，不新增隐藏桥接或 Skill 投影。共用公共记忆索引，各自私文保留。默认项目接入由当前实际执行者显式使用自身 ID，不预建其他执行器入口，disabled 不恢复。
+
+两家均仅有默认根的静态支持；DSH 限本次默认 coding `cordis` preset，非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根，检查不回传变量值。自定义配置未验证；`ZCODE_HOME` 不是 ZCode 规则根。Skill 发现及验收边界见[操作手册](docs/operations.md#桌面端默认根与验证边界)。
+
 ## 给执行 Agent 的命令与批准合同
 
-以下参数以当前源码 CLI help 为准；尖括号内容须替换为真实核验值。普通安装预览二选一：
+以下参数以当前源码 CLI help 为准；尖括号内容须替换为真实核验值。普通安装来源参数二选一；显式选择执行器的示例如下：
 
 ```text
 python3 -B scripts/install.py --source /absolute/path/clean-checkout --commit <完整SHA> --version <SemVer>
 python3 -B scripts/install.py --source-manifest /absolute/path/source.json --agent codex --agent claude
+python3 -B scripts/install.py --source-manifest /absolute/path/source.json --agent dsh --agent zcode
 ```
 
 `source.json` 含 `root/url/commit/version/files`，不与 source/commit/version 混用。无批准输出 `approval_plan`，批准文件为完整计划加真实 `confirmed_at/reference`，`confirmed_at` 须使用真实 UTC 的 `YYYY-MM-DDTHH:MM:SS[.小数]Z` 格式；不使用 `+00:00` 或本地时区。一次用户确认由执行编排绑定到精确计划，不额外制造逐项确认，也不伪造确认。锁内重核，计划外变化停止。
@@ -82,13 +91,15 @@ python3 -B scripts/install.py --context-keeper --approval-file /absolute/ck-appr
 
 可用 `--operation-id <已完成主操作>` 绑定主操作；此路由与普通安装、获取、恢复互斥。封皮绑定已 committed 主日志、台账、全部实际接入者、Context Keeper pin、执行内容与目标指纹；主产品待恢复时拒绝。Context Keeper 来源须为既存、干净、固定 pin 的持久独立 checkout，可从唯一用户级别名发现或显式提供，目前不自动下载；缺源独立报告 unavailable，主产品保留成功。结果不明不自动重放，Context Keeper 自身回滚不由 memSharing 提供。
 
+仅接入 `dsh/zcode` 时，`--context-keeper` 输出 `status=skipped`、`reason=upstream_unsupported` 与 `skipped_upstream_agents`；交互安装尾步的 `context_keeper` 同样为 `status=skipped`、`reason=upstream_unsupported`，主安装保持 `status=completed`。混合接入执行时，`agents` 仅列受支持的执行器；跳过项列于 `skipped_upstream_agents`，每项为 `{"agent":"dsh或zcode","reason":"upstream_unsupported"}`（`agent` 取实际 ID）。`upstream_unsupported` 是原因，不是顶层状态。
+
 ## 诊断报告与用户简报
 
 完整底层报告保留给执行 Agent 和验收使用，不在成功对话中逐项倾倒。至少保留：状态与通道，R/C/V，代码/结构/schema 三版本及升级前后值，URL/commit/清单哈希，op 与恢复位置，已接入/absent/unknown/未选事实，复制/排除/冲突项，实际项目下一步，以及运行时验证状态。
 
 既有字段包括 `status/layout/versions/source/operation_id/recovery/agents/copies/exclusions/project_commands/entry_status/connection_pending`（运行状态位于 `entry_status.<agent>.runtime_acceptance`），预览带 `approval_plan`。下载成功而入口失败必须 partial；无 installed 不得说各家已启用。静态入口读回与新会话表现分开记录，用户简报不添加自检要求。
 
-主产品与 Context Keeper 分层报告：主产品完成后，Context Keeper 可为跳过、unavailable、失败或 configured；其失败不回滚主产品，也不能合报全成功。configured 仅证明安装与字节读回，不证明执行器新会话已加载。
+主产品与 Context Keeper 分层报告：主产品完成后，Context Keeper 可为跳过（`skipped`）、unavailable、失败或 configured；其失败不回滚主产品，也不能合报全成功。configured 仅证明安装与字节读回，不证明执行器新会话已加载。
 
 ## 项目使用
 
@@ -96,6 +107,7 @@ python3 -B scripts/install.py --context-keeper --approval-file /absolute/ck-appr
 
 ```bash
 python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" enable-memory --project /absolute/path/to/project --agent <当前执行者>
+python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" enable-memory --project /absolute/path/to/project --agent dsh zcode
 python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" check-memory --project /absolute/path/to/project
 ```
 
