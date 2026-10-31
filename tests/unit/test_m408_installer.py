@@ -134,7 +134,7 @@ class InstallerTests(InstallFixture):
         self.assertEqual(done['status'],'completed',done)
         entry=self.home/'.codex/AGENTS.md'
         self.assertTrue(entry.is_file())
-        self.assertIn('/mem-sharing 菜单',entry.read_text())
+        self.assertIn(user_entries.CODEX_FALLBACK_TEXT,entry.read_text())
         self.assertFalse((self.home/'.codex/skills').exists())
 
     def test_v0_layered_index_and_original_bytes_preserved(self):
@@ -144,12 +144,18 @@ class InstallerTests(InstallFixture):
         result=cli.execute_machine(plan,approved(plan),request=self.request)
         self.assertEqual(result['status'],'completed',result)
         index=(self.runtime.root/'memories/MEMORY.md').read_text()
-        self.assertIn('L0 恒读',index)
-        # v1.11/v1.12:治理条款、Claude 兜底条款与菜单进入 v0 新索引模板;
-        # 指纹随模板由 manifest 绑定,v0 原文复制语义不变。
+        self.assertIn('L0 恒读本索引',index)
+        # 公共分层:索引头=读取契约/预算/公共治理/指南指针;Claude 兜底不再进公共侧。
         self.assertIn(user_entries.GOVERNANCE_RULES_TEXT,index)
-        self.assertIn(user_entries.CLAUDE_FALLBACK_TEXT,index)
-        self.assertIn('/mem-sharing 菜单',index)
+        self.assertIn('[使用约定](topics/使用约定.md)',index)
+        self.assertNotIn(user_entries.CLAUDE_FALLBACK_TEXT,index)
+        self.assertNotIn('批量启用项目记忆',index)
+        # v0 旧占位主题目录整行删除;指南主题在 v0 导入场景同样建立。
+        self.assertNotIn('主题目录',index)
+        self.assertNotIn('[目录](topics/)',index)
+        topic=(self.runtime.root/'memories/topics/使用约定.md').read_text()
+        self.assertIn('/mem-sharing 菜单',topic)
+        self.assertIn('--agent <当前执行器>',topic)
         package=Path(plan['plan']['legacy_import']['package'])
         self.assertEqual((package/'memories/MEMORY.md').read_bytes(),original['memories/MEMORY.md'])
         self.assertTrue((self.runtime.legacy_root/'skills/example.txt').is_file())
@@ -159,17 +165,22 @@ class InstallerTests(InstallFixture):
     def test_fresh_l0_l1_l2_templates_no_sidecars(self):
         self.execute()
         index=(self.runtime.root/'memories/MEMORY.md').read_text()
-        self.assertIn('L0 恒读 → 需要时读该主题 L1',index)
+        self.assertIn('L0 恒读本索引',index)
         self.assertIn('一句话当前结论 + 链接',index)
         self.assertIn('使用约定：',index);self.assertIn('(topics/使用约定.md)',index)
         self.assertIn(user_entries.GOVERNANCE_RULES_TEXT,index)
-        self.assertIn(user_entries.CLAUDE_FALLBACK_TEXT,index)
-        self.assertIn('/mem-sharing 菜单',index)
-        self.assertIn('批量启用记忆',index)
+        self.assertIn('按需操作指南',index);self.assertIn('同义自然语言操作',index)
+        self.assertIn('不回指其他菜单',index)
+        self.assertNotIn(user_entries.CLAUDE_FALLBACK_TEXT,index)
+        self.assertNotIn('批量启用项目记忆',index)
         topic=(self.runtime.root/'memories/topics/使用约定.md').read_text()
         self.assertLess(topic.index('## L1 概要'),topic.index('## L2 正文'))
         self.assertIn('当前有效结论',topic);self.assertIn('待办',topic)
-        self.assertIn(user_entries.GOVERNANCE_RULES_TEXT,topic)
+        self.assertIn('/mem-sharing 菜单',topic)
+        self.assertIn('批量启用项目记忆',topic)
+        self.assertIn('L0 索引一主题一行',topic)
+        self.assertIn('--agent <当前执行器>',topic)
+        self.assertNotIn(user_entries.GOVERNANCE_RULES_TEXT,topic)
         self.assertEqual({p.suffix for p in (self.runtime.root/'memories').rglob('*') if p.is_file()},{'.md'})
 
     def test_repeatable_agents_and_explicit_absent_reject_without_writes(self):

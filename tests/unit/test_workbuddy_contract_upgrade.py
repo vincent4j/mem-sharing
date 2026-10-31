@@ -34,6 +34,10 @@ class WorkBuddyContractUpgradeTests(InstallFixture):
                                   commit='b'*40, files=self.files(self.target))
         self.policy = copy.deepcopy(upgrade.WORKBUDDY_ENTRY_CONVERSION)
         self.policy['before_contract']['scripts/agm_core/user_entries.py'] = self.request['source']['files']['scripts/agm_core/user_entries.py']
+        # 机制测试:前后合同摘要随场景/当前内核动态替换,不冒充固定历史哈希;
+        # 010→011 真实历史链不在本文件锁定,生产常量门禁由
+        # WorkBuddyFixedGateTests 不打补丁回归覆盖。
+        self.policy['after_contract']['scripts/agm_core/user_entries.py'] = legacy.digest(Path(user_entries.__file__).read_bytes())
         self.addCleanup(patch.stopall)
         patch.object(upgrade, 'WORKBUDDY_PREDECESSOR', self.old_product['source']).start()
         patch.object(upgrade, 'WORKBUDDY_ENTRY_CONVERSION', self.policy).start()
@@ -188,3 +192,69 @@ class WorkBuddyContractUpgradeTests(InstallFixture):
         retry = cli.plan_machine(self.req)
         self.assertTrue(retry['plan']['noop']); self.assertTrue(retry['entry_plan'])
         self.assertEqual(self.apply(retry)['status'], 'completed')
+
+
+def _git(*args):
+    return subprocess.run(['git', '-C', str(REPO), *args], capture_output=True, check=True).stdout
+
+
+class WorkBuddyFixedGateTests(InstallFixture):
+    """不打补丁的固定门禁回归:生产常量保持精确历史哈希,当前新合同放行不了。
+
+    010→011 的 WORKBUDDY 前后合同哈希必须仍是旧值(155e…→eda7…),且换成当前
+    user_entries.py 的目标既不能借旧 handler 也不能借 preserve 通过合同门禁。
+    """
+
+    OLD_USER_ENTRIES_SHA = '155eba8df9b14ccb96e017bc19e3975930be544019fdb1d3aaa17f3aa563be44'
+    OLD_PREDECESSOR_COMMIT = '4cfe7bedfde695b0bd4085ccc453afd3ef161711'
+
+    def test_production_contract_hashes_stay_pinned_to_history(self):
+        contract = upgrade.WORKBUDDY_ENTRY_CONVERSION
+        self.assertEqual(contract['before_contract']['scripts/agm_core/user_entries.py'],
+                         self.OLD_USER_ENTRIES_SHA)
+        self.assertEqual(contract['after_contract']['scripts/agm_core/user_entries.py'],
+                         'eda73b02e99d8092f6f587d786d163efd4d8bbc72340e79de0ad1ffabd25c85a')
+        self.assertEqual(upgrade.WORKBUDDY_PREDECESSOR['commit'], self.OLD_PREDECESSOR_COMMIT)
+        # 当前内核的入口合同已不同于历史 0.1.1 合同,不能与固定常量混同。
+        current = legacy.digest(Path(user_entries.__file__).read_bytes())
+        self.assertNotEqual(current, contract['after_contract']['scripts/agm_core/user_entries.py'])
+
+    def test_current_contract_cannot_pass_via_old_handler_or_preserve(self):
+        # 前身侧安装真实的 010 合同字节(从 Git 历史导出),目标侧换成当前内核字节。
+        old_bytes = _git('cat-file', 'blob', self.OLD_PREDECESSOR_COMMIT +
+                         ':scripts/agm_core/user_entries.py')
+        self.assertEqual(legacy.digest(old_bytes), self.OLD_USER_ENTRIES_SHA)
+        (self.source/'scripts/agm_core/user_entries.py').write_bytes(old_bytes)
+        (self.source/'scripts/agents.json').write_bytes(_git(
+            'cat-file', 'blob', self.OLD_PREDECESSOR_COMMIT + ':scripts/agents.json'))
+        self.request['source'].update(version='0.1.0', files=self._files(self.source))
+        self.execute()
+        old_product = json.loads(self.runtime.registry.read_bytes())['product']
+
+        target = self.area/'release-current'
+        shutil.copytree(self.source, target)
+        (target/'scripts/agm_core/user_entries.py').write_bytes(Path(user_entries.__file__).read_bytes())
+        target_source = dict(self.request['source'], root=str(target), version='0.1.1',
+                             commit='c'*40, files=self._files(target))
+        before = {str(p.relative_to(self.home)): p.read_bytes() if p.is_file() else None
+                  for p in self.home.rglob('*') if not p.is_symlink()}
+        for entries in ('preserve', copy.deepcopy(upgrade.WORKBUDDY_ENTRY_CONVERSION)):
+            with self.subTest(entries=entries if isinstance(entries, str) else entries['type']):
+                req = dict(self.request, source=target_source, operation_id='gate-%s' % (
+                    'preserve' if isinstance(entries, str) else 'handler'))
+                source, _ = user_install._source(req)
+                req['conversions'] = [{'before': dict(schema_version=3, product_structure_version=1,
+                                                      product_code_version='0.1.0', source=old_product['source']),
+                                       'after': dict(schema_version=3, product_structure_version=1,
+                                                     product_code_version='0.1.1',
+                                                     source={k: source[k] for k in ('url', 'commit', 'tree_sha256')}),
+                                       'direction': 'upgrade', 'entries': entries}]
+                with self.assertRaises(ValueError):
+                    cli.plan_machine(req)
+                after = {str(p.relative_to(self.home)): p.read_bytes() if p.is_file() else None
+                         for p in self.home.rglob('*') if not p.is_symlink()}
+                self.assertEqual(after, before)
+
+    def _files(self, root):
+        return {str(p.relative_to(root)): legacy.digest(p.read_bytes())
+                for p in root.rglob('*') if p.is_file()}

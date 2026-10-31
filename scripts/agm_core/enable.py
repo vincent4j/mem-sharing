@@ -15,7 +15,7 @@ BASE_MARKER = {"start": "<!-- mem-sharing:rules:start -->", "end": "<!-- mem-sha
 LEGACY_WORKBUDDY_MARKER = {"start": "<!-- context-keeper:workbuddy:start -->", "end": "<!-- context-keeper:workbuddy:end -->"}
 WORKBUDDY_MARKER = {"start": "<!-- mem-sharing:project-rules:start -->", "end": "<!-- mem-sharing:project-rules:end -->"}
 DENIED_MARKER = {"start":"<!-- mem-sharing:memory-denied:start -->", "end":"<!-- mem-sharing:memory-denied:end -->"}
-DENIED_TEXT = "本项目已撤销自动记忆授权。本段优先于本文件中的历史 context-keeper 桥接和 Skill 触发说明：不得自动记录本项目经历、初始化或建库，不得因残留 Skill/桥接恢复旧授权；CK 安装与已有记录库保留；手动 CK 操作仍按用户明确请求与 CK 自身流程执行。只有用户重新明确批准本项目 enable-memory --memory 后才可恢复自动记录。"
+DENIED_TEXT = "本项目已撤销自动记忆授权。本段优先于本文件中的历史 context-keeper 桥接和 Skill 触发说明：不得自动记录本项目经历、初始化或建库，不得因残留 Skill/桥接恢复旧授权；Context Keeper 安装与已有记录库保留；手动 Context Keeper 操作仍按用户明确请求与 Context Keeper 自身流程执行。只有用户重新明确批准本项目 enable-memory --memory 后才可恢复自动记录。"
 
 EXCEPTION_MARKER = {"start": "<!-- mem-sharing:keeper-exception:start -->", "end": "<!-- mem-sharing:keeper-exception:end -->"}
 
@@ -43,7 +43,7 @@ def _marker_args(marker):
 
 
 EXPERIENCE_TEXT = ("位置：项目经历记录库由 Context Keeper 管理，默认位于 docs/context-keeper/。\n"
-                   "入口：使用 /context-keeper，首次保存按 CK 流程确认位置并初始化。\n"
+                   "入口：使用 /context-keeper，首次保存按 Context Keeper 流程确认位置并初始化。\n"
                    "职责：命令、记录格式、保存与查找流程由 Context Keeper 自行定义。")
 
 

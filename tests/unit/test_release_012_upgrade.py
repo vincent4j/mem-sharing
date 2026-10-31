@@ -1,11 +1,17 @@
 """0.1.1 -> 0.1.2 candidate upgrade: entries='preserve', contract unchanged.
 
-The 0.1.1 predecessor is the real release identity, rebuilt byte-exact from
-read-only Git history (ls-tree/cat-file, no invented identity). The 0.1.2
-target is the real working-tree 30-file payload; its commit is a synthetic
-draft value because the clean release SHA exists only after commit. The
-install/upgrade kernel is real throughout; only executor detection uses
-synthetic facts, and no real HOME, client or CK is touched.
+The 0.1.1 predecessor and the 0.1.2 target are both real release identities,
+rebuilt byte-exact from read-only Git history (ls-tree/cat-file, no invented
+identity and never the evolving worktree). The 0.1.2 target is the committed
+candidate 0f690ef with its real commit SHA and tree hash. The install/upgrade
+kernel is real throughout; only executor detection uses synthetic facts, and
+no real HOME, client or CK is touched.
+
+Fixture caveat: the 0.1.1 baseline is installed with the CURRENT install
+kernel, so its generated user templates are current-shaped. This test
+therefore proves the code preserve mechanism (entry bytes untouched), not
+historical template generation; the 0.1.3 migration tests must generate old
+entries/public layout with the actual old modules.
 """
 import copy
 import importlib.util
@@ -30,7 +36,12 @@ PREDECESSOR = {
     'commit': '04c32e24b9ab9504514908f2368cddca4356e478',
     'tree_sha256': '15cd779745ab6ef80f3d966ef8c9850ee1e87abc48c314158a6502434127e179',
 }
-SYNTHETIC_TARGET_COMMIT = 'f' * 40  # draft value; never presented as a frozen release
+# Frozen 0.1.2 candidate payload: committed 0f690ef with its real SHA/tree,
+# never the working tree.
+TARGET_012 = {
+    'commit': '0f690ef7aabf747a23bacc7662c19bee34c4bf52',
+    'tree_sha256': '1fb1e199c992e07747bbf031fcb83cd74d2b85b5c9c491cda7d2836fca1dd353',
+}
 LEGACY_SHIPPED = ('SKILL.md', 'README.md', 'INSTALL.md', 'llms.txt')  # 0.1.1 manifest rule
 
 
@@ -103,32 +114,30 @@ class Release012UpgradeTests(InstallFixture):
             'memories/MEMORY.md': (self.runtime.root/'memories/MEMORY.md').read_bytes(),
         }
 
-        # 0.1.2 target: the real working tree 30-file payload.
-        entries = []
-        for record in _git('ls-files', '-z').decode().split('\0'):
-            if record and cli._managed_source(record):
-                mode = '100755' if (REPO/record).stat().st_mode & 0o111 else '100644'
-                entries.append((mode, record, 'worktree'))
-        self.assertEqual(len(entries), 30)
+        # 0.1.2 target: byte-exact export of the committed 0.1.2 candidate
+        # (30 files from 0f690ef), frozen so later worktree edits cannot
+        # masquerade as the historical 0.1.2 release payload.
+        records = []
+        for record in _git('ls-tree', '-rz', TARGET_012['commit']).decode().split('\0'):
+            if record:
+                meta, path = record.split('\t', 1)
+                mode, kind, blob = meta.split()
+                if kind == 'blob' and cli._managed_source(path):
+                    records.append((mode, path, blob))
+        self.assertEqual(len(records), 30)
         self.next_root = self.area/'release-012'
-        self.next_files = {}
-        for mode, rel, _ in entries:
-            raw = (REPO/rel).read_bytes()
-            path = self.next_root/rel
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(raw)
-            path.chmod(0o755 if mode == '100755' else 0o644)
-            self.next_files[rel] = legacy.digest(raw)
+        self.next_files = _export(self.next_root, records)
         self.next_source = {'root': str(self.next_root), 'url': PREDECESSOR['url'],
-                            'commit': SYNTHETIC_TARGET_COMMIT, 'version': '0.1.2',
+                            'commit': TARGET_012['commit'], 'version': '0.1.2',
                             'files': self.next_files}
         checked, _ = install._source(dict(source=self.next_source))
         self.target_tree = checked['tree_sha256']
+        self.assertEqual(self.target_tree, TARGET_012['tree_sha256'])
         self.before = {'schema_version': 3, 'product_structure_version': 1,
                        'product_code_version': '0.1.1', 'source': dict(PREDECESSOR)}
         self.after = {'schema_version': 3, 'product_structure_version': 1,
                       'product_code_version': '0.1.2',
-                      'source': {'url': PREDECESSOR['url'], 'commit': SYNTHETIC_TARGET_COMMIT,
+                      'source': {'url': PREDECESSOR['url'], 'commit': TARGET_012['commit'],
                                  'tree_sha256': self.target_tree}}
         self.req12 = dict(self.request, source=self.next_source, agents=None,
                           operation_id='upgrade-012',
@@ -245,7 +254,7 @@ class Release012UpgradeTests(InstallFixture):
         req = dict(self.req12, source=drift_source)
         req['conversions'] = [dict(self.req12['conversions'][0],
                                    after=dict(self.after, source={'url': PREDECESSOR['url'],
-                                                                  'commit': SYNTHETIC_TARGET_COMMIT,
+                                                                  'commit': TARGET_012['commit'],
                                                                   'tree_sha256': checked['tree_sha256']}))]
         rejected(req, 'no handler for changed entry contract')
 

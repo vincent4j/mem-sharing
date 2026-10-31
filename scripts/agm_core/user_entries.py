@@ -6,12 +6,16 @@ are reported and never written; an explicitly requested agent that is not
 installed stops the whole request before any write.
 
 Templates reuse the existing M2/M3 semantics instead of a second dialect:
+- 公共分层(2026-10-31 裁定):公共 MEMORY 只存读取契约、预算、公共治理与按需操作
+  指南指针;六项菜单、绝对命令与 L0/L1/L2 维护规则由主题《使用约定》承载;
+- 各 Agent 用户入口只含公共索引指针与自身专属规则,不复制公共治理或菜单;
 - WorkBuddy 用户约定: enable.py 的既有 user_convention 文本与 BASE_MARKER(测试锁定
-  两处文本一致),机器级块在其后追加 v1.11 治理条款与 /mem-sharing 菜单;
-- Codex 用户级公共源块(native): 同一 BASE_MARKER 机制,追加“开工先读公共记忆”指针块
-  (DESIGN §4.8),指向本机公共源索引 R/memories/MEMORY.md,并携带治理条款与菜单;
-- Claude @import(import_agents): 复用 enable.py 的引用行语义,引用同一公共源索引;
-  治理条款与菜单由公共源文本承载(v1.11:产品自身 Skill 投影取消,无任何 Skill 落点)。
+  两处文本一致),机器级块=指针+用户约定+WorkBuddy 专属 fallback;
+- Codex 用户级公共源块(native): 同一 BASE_MARKER 机制,“开工先读公共记忆”指针块
+  (DESIGN §4.8)指向本机公共源索引 R/memories/MEMORY.md,并携带 Codex 专属 fallback;
+- Claude @import(import_agents): 复用 enable.py 的引用行语义,引用同一公共源索引,
+  并以独立 CLAUDE_FALLBACK_MARKER 块携带 Claude 自身 fallback——Claude 不只依赖
+  公共索引,公共侧移除 Claude 条款后仍保有本机兜底规则。
 
 Managed-block semantics for registered machine units: on-disk bytes differing
 from the registered fingerprint is drift and stops the whole order (no template
@@ -63,38 +67,95 @@ def _installer_source(code, fingerprint, *, preview):
 # enable.py 的既有 WorkBuddy 用户约定文本(读它复用,不另造第二份);测试锁定一致。
 WORKBUDDY_CONVENTION_TEXT = "项目规则读取当前项目根 AGENTS.md。保留已有公共源与用户约定。"
 
-# v1.11/v1.12/§16(2026-10-30 用户裁定)用户规则治理条款与 /mem-sharing 会话菜单:
-# 写入用户级入口文本与公共源模板;菜单逐项映射既有命令与安装器参数,零新机制。
-# 术语用“启用/停用”(用户裁定,装配不好理解),命令名 enable-memory 等保持不变。
+# v1.11/v1.12/§16(2026-10-30 用户裁定)用户规则治理条款:公共治理留在公共源索引,
+# 各 Agent 入口不复制。术语用“启用/停用”(用户裁定),命令名 enable-memory 等保持不变;
+# 用户可见文案写 Context Keeper 完整名称,不改 API 标识或历史记录。
 GOVERNANCE_RULES_TEXT = (
-    "用户规则治理:公共内容只写公共指定文件(R/memories)，Agent 独有内容保留于各自用户文件，永不并入公共或自动删除。"
+    "用户规则治理：公共内容只写公共指定文件（R/memories），Agent 独有内容保留于各自用户文件，永不并入公共或自动删除。"
     "进入 Git 主 checkout 时，未登记项目默认启用项目规则：创建缺失的 AGENTS.md 骨架并追加项目经历短协议，已有全文保留。"
-    "默认启用不创建 CK 记录库、不调用 CK 安装或初始化；首次 /context-keeper 进入 CK 流程，首次保存按其流程确认位置。"
-    "项目政策已为 disabled 时，默认流程不得重新启用入口、自动记录经历或初始化；已有 CK 自动规则也不能覆盖此政策。"
+    "默认启用不创建 Context Keeper 记录库、不调用 Context Keeper 安装或初始化；首次 /context-keeper 进入 Context Keeper 流程，首次保存按其流程确认位置。"
+    "项目政策已为 disabled 时，默认流程不得重新启用入口、自动记录经历或初始化；已有 Context Keeper 自动规则也不能覆盖此政策。"
     "重新启用须用户显式执行 enable-memory；解除 disabled 须显式 enable-memory --memory 并批准精确计划。"
-    "Claude 和 WorkBuddy 项目入口只由各自实际使用时补齐，其他执行器不得预建；非 Git 目录和 linked worktree 不触发。"
+    "各 Agent 只维护自身专属项目入口（Claude 的 CLAUDE.md、WorkBuddy 的原生 memory 指针），由各自实际使用时补齐，其他执行器不得预建；"
+    "AGENTS.md 是共享项目规则基座，不依赖 Codex，无 Codex 的机器同样成立，其默认建立遵本治理条款；非 Git 目录和 linked worktree 不触发。"
 )
 CLAUDE_FALLBACK_TEXT = (
     "仅 Claude Code 在本项目实际使用且项目已启用、政策非 disabled 时补引用：CLAUDE.md 不存在才创建仅含 @AGENTS.md 的文件；"
     "已有正文必须完整保留，仅追加缺失的 @AGENTS.md 引用行，重复执行不改字节。"
 )
 WORKBUDDY_FALLBACK_TEXT = "仅 WorkBuddy 在本项目实际使用产生原生 .workbuddy/memory 目录，且项目已启用、政策非 disabled 时，补顶部 AGENTS.md 指针；保留已有正文字节，不预建原生目录。"
-CODEX_FALLBACK_TEXT = "仅 Codex 首次实际使用时，按默认启用条款补缺失 AGENTS.md；已 disabled 项目不自动恢复。"
+CODEX_FALLBACK_TEXT = "Codex 原生读取共享项目规则基座 AGENTS.md，自身无额外专属项目入口；该基座默认建立遵公共治理条款，已 disabled 项目不自动恢复。"
+
+# Claude 自身 fallback 的独立受管块标记:与公共指针 import 并存于 CLAUDE.md,
+# 迁移/连接校验按此标记精确识别,不与 BASE_MARKER 公共源块混用。
+CLAUDE_FALLBACK_MARKER = {"start": "<!-- mem-sharing:claude-fallback:start -->",
+                          "end": "<!-- mem-sharing:claude-fallback:end -->"}
 
 
 def agent_group_menu_text(code):
     """菜单文本;命令基路径为受管产品代码 C(layout.code),逐项映射既有 CLI。"""
     cli = "python3 %s/scripts/agm.py" % code
     installer = "python3 %s/scripts/install.py" % code
+    skill = "%s/SKILL.md" % code
     return (
         "/mem-sharing 菜单:\n"
-        "给项目启用记忆：为当前项目建立共享规则入口 → %s enable-memory --project <项目绝对路径> --memory\n"
         "添加新的 Agent：接入已安装的执行器 → %s --agent <执行器名>\n"
+        "批量启用项目记忆：扫描给定目录，汇总预览后一次批准 → %s enable-memory-batch --directory <目录绝对路径>\n"
+        "整理用户记忆：公共与独有分开，逐条计划后一次批准 → 治理流程见 %s\n"
         "健康检查：只读检查已登记入口 → %s check-memory --project <项目绝对路径>\n"
-        "停用记忆：撤入口并保留数据 → %s remove-memory --project <项目绝对路径>；仅禁自动项目经历记录、保留入口用 enable-memory --no-memory\n"
-        "整理用户规则：公共与独有分开，逐条计划后一次批准 → 按 SKILL.md 治理流程执行\n"
-        "批量启用记忆：扫描给定目录，汇总预览后一次批准 → %s enable-memory-batch --directory <目录绝对路径>\n"
-        % (cli, installer, cli, cli, cli)
+        "给项目停用记忆：撤项目记忆入口并保留数据 → %s remove-memory --project <项目绝对路径>；仅禁自动项目经历记录、保留入口用 enable-memory --no-memory\n"
+        "给项目启用记忆：显式恢复已停用项目或手动启用项目记忆 → %s enable-memory --project <项目绝对路径> --memory；新 Git 主 checkout 默认启用、disabled 不自动恢复语义不变\n"
+        % (installer, cli, skill, cli, cli, cli)
+    )
+
+
+def public_memory_contract_text():
+    """公共 MEMORY 头部契约:读取契约、预算、公共治理与按需操作指南指针。
+
+    公共治理全文留在此处;菜单/绝对命令/L0L1L2 维护规则由《使用约定》主题承载,
+    指南不回指菜单;相对链接以 MEMORY 所在目录解析,指南缺失时停止相关操作。
+    """
+    return (
+        "读取契约：L0 恒读本索引 → 需要该主题时读其 L1 概要段 → 仍不足才读 L2 全文；"
+        "相对链接以本文件所在目录解析，指向的内容缺失时停止相关操作。\n"
+        "预算：L0 一主题一行：主题名 + 一句话当前结论 + 链接；索引 ≤200 行 / 25KB；"
+        "增加主题文件，不加长索引；摘要在记忆整理时手写，不自动生成。\n"
+        + GOVERNANCE_RULES_TEXT + "\n"
+        "按需操作指南：/mem-sharing 菜单、绝对命令与公共记忆维护规则由主题《使用约定》承载"
+        "（[使用约定](topics/使用约定.md)）；仅在用户明确 /mem-sharing、提出同义自然语言操作"
+        "或默认项目接入前读取；该指南不回指其他菜单。\n"
+    )
+
+
+def usage_convention_topic_text(code):
+    """新装主题《使用约定》:操作指南本体,承接六项菜单、绝对命令与 L0/L1/L2 维护。
+
+    指南不循环回指菜单;本指南内相对链接以指南自身目录(topics/)解析,
+    受管产品命令与 Skill 路径用安装代码 C 的绝对路径。规则驱动的默认项目
+    接入由当前实际执行器带 --agent 发起(不带 --memory,先查 disabled 并跳过),
+    不让当前会话无参数顺带改动其他执行器入口;显式菜单启用保留 --memory。
+    """
+    cli = "python3 %s/scripts/agm.py" % code
+    return (
+        "# 使用约定\n\n"
+        "## L1 概要\n\n"
+        "当前有效结论：公共记忆采用索引与主题文件，摘要由 Agent 手写，不自动生成。\n"
+        "本主题即操作指南：/mem-sharing 菜单、绝对命令与公共记忆 L0/L1/L2 维护规则都在本文件正文，不回指其他菜单。\n"
+        "待办：有新事实且获准记录时，更新对应主题结论与索引行。\n\n"
+        "## L2 正文\n\n"
+        "### /mem-sharing 菜单\n\n"
+        + agent_group_menu_text(code) + "\n"
+        "### 公共记忆维护（L0/L1/L2）\n\n"
+        "L0 索引一主题一行：主题名 + 一句话当前结论 + 链接，≤200 行 / 25KB；增加主题文件，不加长索引。\n"
+        "L1 位于主题文件开头，简列当前有效结论与待办；L2 为全文及 references/ 手册，仅在概要不足时读取。\n"
+        "摘要在记忆整理时手写，不自动生成。本指南内相对链接以本文件所在目录（topics/）解析；"
+        "受管产品命令与 Skill 路径使用安装代码的绝对路径。\n\n"
+        "### 项目接入约定\n\n"
+        "规则驱动的默认接入由当前实际执行器发起：%s enable-memory --project <项目绝对路径> --agent <当前执行器>；"
+        "执行前先检查项目政策，已 disabled 的项目跳过、不由本路径恢复（解除 disabled 须用户显式 --memory 并批准精确计划）；"
+        "各 Agent 专属项目入口按当前执行器自身用户文件中的规则维护，公共指南不承载执行器专属细节。\n"
+        "当前会话不得无参数顺带改动其他执行器的入口。"
+        "用户显式授权的全体接入或批量启用沿用现有命令语义，本约定不改变任何命令默认。\n" % cli
     )
 
 
@@ -300,10 +361,125 @@ class _Planner:
         self.objects[oid] = self._new_object(oid, "user_convention", path, agent, "created",
                                              marker=BASE_MARKER, value=desired)
 
+    def claude_fallback_block(self, agent, path, block):
+        """Plan Claude's own fallback managed block (CLAUDE_FALLBACK_MARKER).
+
+        与公共指针 import 行共存于 CLAUDE.md;块内容即模板本身。shared 归属的
+        文件只引用不迁移:语义/哈希一致时零写引用并保留 pending,缺语义零写拒绝;
+        machine 已登记分支同样校验块内语义,哈希一致不等于语义就位。
+        """
+        marker = CLAUDE_FALLBACK_MARKER
+        existing = self.units.get((str(path), marker["start"]))
+        shared_whole_file = self._shared_whole_file_owners(path)
+        snap = self.snapshot(path)
+        if snap.kind not in ("absent", "file"):
+            raise UserEntryError("path_conflict", "用户级入口不是普通文件/缺失: " + str(path))
+        try:
+            actual = block_fingerprint(snap.data or b"", **_marker_args(marker))
+        except EntryConflict as exc:
+            raise UserEntryError("entry_conflict", "Claude 兜底块标记异常: %s" % exc)
+        desired = sha256(block)
+        if existing is not None and existing["scope"] == "user":
+            self._verify_shared_unit(existing, path)
+            if not _claude_fallback_block_intact(snap.data, (existing.get("fingerprint") or {}).get("value")):
+                raise UserEntryError("entry_semantics_missing",
+                                     "共享 Claude 兜底块缺少专属语义，需专用精确治理: " + str(path))
+            self.notes.append("referenced shared claude fallback: %s" % path)
+            return
+        oid = str(path) + "#claude-fallback"
+        if existing is not None:  # machine unit already registered
+            trusted = (existing.get("fingerprint") or {}).get("value")
+            if actual is not None and trusted is not None and actual != trusted:
+                raise UserEntryError("drift", "受管块被改(漂移),整单停写: " + str(path))
+            if actual is not None and actual != desired:
+                raise UserEntryError("entry_semantics_missing",
+                                     "已登记 Claude 兜底块内容非模板，需先精确治理: " + str(path))
+            if actual is None:
+                if trusted is not None and trusted != desired:
+                    raise UserEntryError(
+                        "drift",
+                        "受管块缺失且登记内容非模板,需人工恢复,不以模板覆盖: " + str(path))
+                new = render_append(snap.data or b"", block)
+                self.after[Path(path)] = Snapshot("file", new, snap.mode if snap.kind == "file" else 0o600)
+                self._adopt_existing(oid, existing, agent=agent,
+                                     fingerprint={"algorithm": "sha256", "basis": "block_bytes", "value": desired})
+                return
+            self._adopt_existing(oid, existing, agent=agent,
+                                 fingerprint=None if trusted is not None else
+                                 {"algorithm": "sha256", "basis": "block_bytes", "value": actual})
+            return
+        if actual is not None:
+            if actual != desired:
+                raise UserEntryError("entry_semantics_missing",
+                                     "未登记 Claude 兜底块内容非模板，需先精确治理: " + str(path))
+            if shared_whole_file:
+                # shared 整文件承载的入口:兜底字节已就位也只引用,不登记机器
+                # 对象假冒连接,保留 pending 交专用迁移收编。
+                self.notes.append("referenced shared claude fallback bytes: %s" % path)
+                return
+            self.objects[oid] = self._new_object(oid, "block", path, agent, "reused",
+                                                 marker=marker, value=actual)
+            return
+        if shared_whole_file:
+            # 追加即改写 shared 整文件:普通接入零写拒绝,交专用精确迁移。
+            raise UserEntryError("ownership_conflict",
+                                 "共享整文件单元(%s)承载该入口，补 Claude 兜底块需专用精确迁移: %s"
+                                 % (",".join(shared_whole_file), path))
+        new = render_append(snap.data or b"", block)
+        self.after[Path(path)] = Snapshot("file", new, snap.mode if snap.kind == "file" else 0o600)
+        self.objects[oid] = self._new_object(oid, "block", path, agent, "created",
+                                             marker=marker, value=desired)
+
+    def _shared_whole_file_owners(self, path):
+        """同路径 shared(user scope)整文件单元登记 ID(kind import/file, marker=None)。"""
+        if self.ledger is None:
+            return []
+        return sorted(oid for oid, obj in self.ledger["shared_objects"].items()
+                      if obj["path"] == str(path) and obj["marker"] is None
+                      and obj["kind"] in ("import", "file"))
+
+    def protect_shared_whole_files(self):
+        """普通接入不得改写 shared 整文件单元:定稿前终局保护,零写拒绝。
+
+        需要改动这类承载文件(如为 Claude 补兜底块)属专用精确迁移;
+        不扩大 rebind 更新 shared,也不把 shared 复制收编为 machine。
+        """
+        if self.ledger is None:
+            return
+        for path, snap in self.after.items():
+            if snap == self.before.get(path):
+                continue
+            owners = self._shared_whole_file_owners(path)
+            if owners:
+                raise UserEntryError(
+                    "ownership_conflict",
+                    "共享整文件单元(%s)承载该入口，普通接入不得隐式迁移；需专用精确迁移后再接入: %s"
+                    % (",".join(owners), path))
+
+    def rebind_import_fingerprints(self):
+        """同一文件随后追加其他受管单元时,把 import 指纹重绑到最终整文件字节。
+
+        import 的 basis 是整文件哈希,不构成正文删除权;重绑只改指纹,
+        不改变 ownership/agents 等登记语义,且只作用于本次规划的 machine 对象。
+        """
+        for oid, obj in list(self.objects.items()):
+            if obj["kind"] != "import":
+                continue
+            path = Path(obj["path"])
+            if path in self.after:
+                obj["fingerprint"] = {"algorithm": "sha256", "basis": "file_bytes",
+                                      "value": self.after[path].fingerprint}
+
     def import_line(self, agent, path, line):
         """Plan the Claude-style @import reference (kind import, whole-file hash)."""
         oid = str(path) + "#import"
         existing = self.units.get((str(path), None))
+        if existing is not None and (existing["kind"] != "import" or existing["marker"] is not None):
+            # 旧 file 整文件记录不得被当成引用记录收编:不换 kind、不刷新基线。
+            raise UserEntryError(
+                "ownership_conflict",
+                "同路径登记不是 import 引用单元(kind=%s,marker=%r)，拒绝收编，需精确治理: %s"
+                % (existing["kind"], existing["marker"], path))
         if existing is not None and existing["scope"] == "user":
             snap = self.snapshot(path)
             if snap.kind == "absent" or (snap.kind == "file" and not any(
@@ -415,29 +591,67 @@ def connection_status(runtime, config, ledger, agents):
         candidates = [o for o in objects if o["path"] == str(path) and agent in o["agents"]]
         shared = any(o["path"] == str(path) and agent in o["agents"] for o in ledger["shared_objects"].values())
         reason = "machine_entry_not_registered_shared_reference" if shared and not candidates else "entry_not_registered"
-        for obj in candidates:
-            try:
-                _require_real_parents(path, runtime.home)
-                snap = read_snapshot(path)
-                if snap.kind != "file":
-                    reason = "entry_missing_or_not_file"
-                    continue
-                if obj["kind"] == "import" and config[agent]["rule_mode"] == "import_agents":
-                    line = ("@" + str(runtime.root / "memories/MEMORY.md")).encode()
-                    intact = sum(p.strip() == line for p in snap.data.splitlines()) == 1
-                elif obj["kind"] in ("block", "user_convention") and config[agent]["rule_mode"] != "import_agents":
-                    intact = _public_block_intact(snap.data, obj, runtime.root / "memories/MEMORY.md", agent)
-                else:
-                    intact = False
-                if intact:
-                    reason = None
-                    break
-                reason = "entry_drift_or_semantics_missing"
-            except (ValueError, OSError):
-                reason = "entry_unreadable_or_conflict"
+        if candidates:
+            # 连接证据要求该入口的全部登记机器单元就位且语义匹配;Claude(import_agents)
+            # 必须同时具备公共指针 import 与自身 fallback 块两类证据,旧 import-only
+            # 登记(迁移前台账)不算已接入。
+            reasons = []
+            passed = set()
+            for obj in candidates:
+                try:
+                    _require_real_parents(path, runtime.home)
+                    snap = read_snapshot(path)
+                    if snap.kind != "file":
+                        reasons.append("entry_missing_or_not_file")
+                        continue
+                    if obj["kind"] == "import" and config[agent]["rule_mode"] == "import_agents":
+                        line = ("@" + str(runtime.root / "memories/MEMORY.md")).encode()
+                        intact = sum(p.strip() == line for p in snap.data.splitlines()) == 1
+                        evidence = "public_import"
+                    elif obj["kind"] in ("block", "user_convention") and config[agent]["rule_mode"] != "import_agents":
+                        intact = _public_block_intact(snap.data, obj, runtime.root / "memories/MEMORY.md", agent)
+                        evidence = "public_pointer"
+                    elif (obj["kind"] == "block" and obj.get("marker") == CLAUDE_FALLBACK_MARKER
+                            and config[agent]["rule_mode"] == "import_agents"):
+                        trusted = (obj.get("fingerprint") or {}).get("value")
+                        intact = (_claude_fallback_block_intact(snap.data, trusted))
+                        evidence = "claude_fallback"
+                    else:
+                        intact, evidence = False, None
+                    if intact and evidence is not None:
+                        passed.add(evidence)
+                    elif not intact:
+                        reasons.append("entry_drift_or_semantics_missing")
+                except (ValueError, OSError):
+                    reasons.append("entry_unreadable_or_conflict")
+            required = ({"public_import", "claude_fallback"}
+                        if config[agent]["rule_mode"] == "import_agents" else {"public_pointer"})
+            if not required <= passed:
+                reasons.append("entry_evidence_incomplete")
+            reason = None if not reasons else reasons[0]
         result[agent] = {"status": "connected" if reason is None else "pending", "reason": reason,
                          "runtime_acceptance": "pending"}
     return result
+
+
+def _claude_fallback_block_intact(raw, trusted):
+    """核验 Claude 兜底块:登记哈希一致且块内语义就是 fallback 模板。
+
+    语义以标记内内容为准(不搜文件内任意位置的同名文本,不审核自由私人正文);
+    已登记哈希只能证明与登记一致,不能证明块承载了专属兜底语义。
+    """
+    try:
+        span = managed_span(raw, **_marker_args(CLAUDE_FALLBACK_MARKER))
+    except EntryConflict:
+        return False
+    if span is None:
+        return False
+    block = raw[span[0]:span[1]]
+    if block != _wrap_block(CLAUDE_FALLBACK_MARKER, CLAUDE_FALLBACK_TEXT):
+        return False
+    if trusted is None:
+        return True
+    return sha256(block) == trusted
 
 
 def render_append(data, block):
@@ -477,29 +691,34 @@ def _plan(request, runtime, detection, effective, *, transaction):
         _preflight_machine_units(ledger)
     planner = _Planner(config=config, runtime=runtime, ledger=ledger,
                        detection=detection, effective=effective, transaction=transaction)
-    governance = GOVERNANCE_RULES_TEXT
-    menu = agent_group_menu_text(runtime.code)
     for agent in effective:
         entry = config[agent]
         user_path = Path(agm_paths.expand_path(entry["user_entry"], home=home))
         _require_real_parents(user_path, runtime.home)
         if entry["rule_mode"] == "user_convention":
+            # 入口只含公共索引指针与自身专属规则;公共治理/菜单由公共源承载。
             planner.marker_block(agent, user_path,
                                  _wrap_block(BASE_MARKER, "\n".join(
-                                     [public_read_text(planner.memory_index), WORKBUDDY_CONVENTION_TEXT, governance,
-                                      WORKBUDDY_FALLBACK_TEXT, menu])),
+                                     [public_read_text(planner.memory_index), WORKBUDDY_CONVENTION_TEXT,
+                                      WORKBUDDY_FALLBACK_TEXT])),
                                  "#convention", append_to_unblocked=True, note_label="user convention", update_registered=True)
         elif entry["rule_mode"] == "native":
             body = "\n".join([
-                "开始任务前读取并遵守 %s;读不到就说明。" % planner.memory_index,
-                governance, CODEX_FALLBACK_TEXT, menu])
+                public_read_text(planner.memory_index), CODEX_FALLBACK_TEXT])
             planner.marker_block(agent, user_path, _wrap_block(BASE_MARKER, body),
                                  "#public-source", append_to_unblocked=True, note_label="public-source block")
         elif entry["rule_mode"] == "import_agents":
-            # Claude 经 @import 读公共源;治理条款与菜单由公共源文本承载。
+            # Claude 经 @import 读公共源;自身 fallback 以独立受管块随入口落盘,
+            # 不依赖公共索引承载 Claude 专属条款。
             planner.import_line(agent, user_path, ("@" + str(planner.memory_index)).encode("utf-8"))
+            planner.claude_fallback_block(agent, user_path,
+                                          _wrap_block(CLAUDE_FALLBACK_MARKER, CLAUDE_FALLBACK_TEXT))
         else:  # pragma: no cover - 路径表枚举已限定 rule_mode
             raise UserEntryError("agents_table_invalid", "未知 rule_mode: %r" % entry["rule_mode"])
+        # Claude 兜底块在 import 行之后追加:同文件 import 登记按最终字节重绑。
+        planner.rebind_import_fingerprints()
+        # 终局保护:shared 整文件单元承载的入口不允许被普通接入改写(零写拒绝)。
+        planner.protect_shared_whole_files()
     requested = agm_paths.resolve_agents(request.get("agents"))
     agent_records = planner.machine_agent_records()
     machine_agents = sorted(a for a, record in agent_records.items() if record is not None)

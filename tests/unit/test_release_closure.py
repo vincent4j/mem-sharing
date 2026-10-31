@@ -29,17 +29,23 @@ def shipped_doc_links(doc):
                 yield number, target
 
 
+def _manifest_names():
+    """当前 payload 的受管文件名:tracked + untracked(未 commit 的新模块不得漏包)。"""
+    names = subprocess.run(
+        ['git', '-C', str(REPO), 'ls-files', '--cached', '--others', '--exclude-standard', '-z'],
+        capture_output=True, text=True, check=True).stdout.split('\0')
+    return {name for name in names if name and cli._managed_source(name)}
+
+
 class ReleaseClosureTests(unittest.TestCase):
-    def test_manifest_is_thirty_files(self):
-        tracked = subprocess.run(['git', '-C', str(REPO), 'ls-files', '-z'],
-                                 capture_output=True, text=True, check=True).stdout.split('\0')
-        manifest = {name for name in tracked if name and cli._managed_source(name)}
-        self.assertEqual(len(manifest), 30, sorted(manifest))
+    def test_manifest_is_thirty_one_files_including_public_layout(self):
+        manifest = _manifest_names()
+        # 0.1.3 dev payload:30 冻结文件 + 新迁移模块 public_layout.py = 31。
+        self.assertIn('scripts/agm_core/public_layout.py', manifest)
+        self.assertEqual(len(manifest), 31, sorted(manifest))
 
     def test_shipped_doc_links_stay_inside_manifest(self):
-        tracked = subprocess.run(['git', '-C', str(REPO), 'ls-files', '-z'],
-                                 capture_output=True, text=True, check=True).stdout.split('\0')
-        manifest = {name for name in tracked if name and cli._managed_source(name)}
+        manifest = _manifest_names()
         for doc in cli.SHIPPED_DOCS:
             for number, target in shipped_doc_links(doc):
                 with self.subTest(link=f'{doc}:{number} -> {target}'):

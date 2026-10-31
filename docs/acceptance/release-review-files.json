@@ -1093,5 +1093,553 @@
     ],
     "staged_paths": []
   },
-  "candidate_phase_backup": "/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/mem-sharing-candidate-before-q2h13w44"
+  "candidate_phase_backup": "/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/mem-sharing-candidate-before-q2h13w44",
+  "candidate_013": {
+    "version": "0.1.3",
+    "baseline_head": "0f690ef7aabf747a23bacc7662c19bee34c4bf52",
+    "final_clean_commit": null,
+    "tree_sha256": "68b4c3dcf83a4d5ba54d0b00748605fc01c6a39c7c46087cc9e73e028423cf8c",
+    "files": [
+      {
+        "path": "DESIGN.md",
+        "sha256": "b4c19a66c93269042749b9d2d42893a1cd40774f7b99cd55a4137a2c320c5c4e",
+        "mode": 420
+      },
+      {
+        "path": "INSTALL.md",
+        "sha256": "2a6f59e201665ef50d00d306ba29d3a7ea2d732e437f7333ef94ac0a874da4aa",
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "sha256": "40fcee3971612db9e9ab987ad3439e21579685047ddca83eca27d7dabd4f5401",
+        "mode": 420
+      },
+      {
+        "path": "SKILL.md",
+        "sha256": "140a3193507fe954ea695cb75898e0654c69261d4fa8d899d1af6e287e023da4",
+        "mode": 420
+      },
+      {
+        "path": "docs/architecture.md",
+        "sha256": "4bfb37b8d935fbdfec661473643b9d5e1734106d9f76d4f71fe34ace05985971",
+        "mode": 420
+      },
+      {
+        "path": "docs/operations.md",
+        "sha256": "55f6c8855fa8cb96b35fda8cb8fdb695d0950938604d96ec1924216f24fb8b98",
+        "mode": 420
+      },
+      {
+        "path": "llms.txt",
+        "sha256": "fa304b87981a8a05088d70b68f46502a5ddd0ed1d970500f2fefbcaed49906ee",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agents.json",
+        "sha256": "9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm.py",
+        "sha256": "9a55ccc6a4633f56804b80038287edb4f8cc7df396754f4acea6a02051f1998d",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/batch_enable.py",
+        "sha256": "78369ad55edf8d7f3cec42bb8dc707cd8602dbff1e7a2b09be4587f4b7b4f099",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/check.py",
+        "sha256": "407870efb31dba4f4c2764367bb485871902a20a99b69fde448722bc7cebe7da",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/ck_install.py",
+        "sha256": "cf38c4b131141e4d00dc83aa1142895f3fbabfadb1e839df1909f9ed376cee4c",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/detect.py",
+        "sha256": "97119e4d2b63b0539d45f674a8a7301c2d7ac65a7d73b664d3616ac6ac8932c1",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/enable.py",
+        "sha256": "77994bb45901663d7c71671e5b78ef14652fb6cdcbb2e14f30e2c809f56fd23b",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/entries.py",
+        "sha256": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/layout.py",
+        "sha256": "254f28dca67b0277480eb2001ec98f52102989cdaa4ee97a0d7e2540333ecb44",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/legacy_import.py",
+        "sha256": "cf77248dbe8c2fd844a29a8c95c99dfaa772e31408d32b68f0ae9ff3adaad73c",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/migrate.py",
+        "sha256": "e8d6685897bf47603666ef31fea0d1fd0593a0845362efc8b32722aa0af7c46b",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/paths.py",
+        "sha256": "663196f97b7fe2567f79d7a5a08e12ea8f074d01e1e41c4796befebe0cd040c4",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/project.py",
+        "sha256": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/public_layout.py",
+        "sha256": "7765c9e9eaf96eca1580ce83e8a30e77f48f7a8465e46e504a2ff02902ba3a06",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/registry.py",
+        "sha256": "bdf867bef60a636721c615d462ad9efac2c4dee4f99aca458e1b0c300d296d34",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/remove.py",
+        "sha256": "f67fa93aa24dfbbca3183714a6facbf89a479e79eacd6271a82e0a3ba3867283",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/transaction.py",
+        "sha256": "32b05568b060138429a408381ec5b1a67bb9bc187052569290f828b45dd1a06e",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/upgrade.py",
+        "sha256": "a9e48ce43fd91f69c6e32547d414d75c6b860b08d972eeb58c17ae6c18f7185c",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/user_entries.py",
+        "sha256": "71c591a9e964c10dae34b85488640f2a06c4b8af03b204ec5d16bfc1d4a125b6",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/user_install.py",
+        "sha256": "173f2a2ae89f59e3ccc0cc118edf421cac957aca9b6f7adfd58a064a03ee37b5",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/user_rules_organize.py",
+        "sha256": "b752974c662a715efe96da40929ad2219e997f4d8986094534c0b88166e43d4f",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/versions.py",
+        "sha256": "74b611283e393450dd77a10afeab76b415144d0ba49d296b4e0a92a637bcbe7b",
+        "mode": 420
+      },
+      {
+        "path": "scripts/install.py",
+        "sha256": "c1f6caff132432b46bf21c09a619f4ee68dfeb68f5ce23ecd65589b830103896",
+        "mode": 420
+      }
+    ],
+    "commit_paths": [
+      "DESIGN.md",
+      "INSTALL.md",
+      "README.md",
+      "SKILL.md",
+      "docs/acceptance/index.md",
+      "docs/acceptance/release-review-files.json",
+      "docs/acceptance/release-review.md",
+      "docs/architecture.md",
+      "docs/context-keeper/memory-keeper.md",
+      "docs/context-keeper/worklogs/2026-10-31-公共记忆分层与独立执行器接入.md",
+      "docs/operations.md",
+      "llms.txt",
+      "scripts/agm_core/enable.py",
+      "scripts/agm_core/public_layout.py",
+      "scripts/agm_core/registry.py",
+      "scripts/agm_core/transaction.py",
+      "scripts/agm_core/upgrade.py",
+      "scripts/agm_core/user_entries.py",
+      "scripts/agm_core/user_install.py",
+      "scripts/install.py",
+      "tests/unit/test_m404_install.py",
+      "tests/unit/test_m405_user_entries.py",
+      "tests/unit/test_m408_installer.py",
+      "tests/unit/test_public_layout.py",
+      "tests/unit/test_release_012_upgrade.py",
+      "tests/unit/test_release_closure.py",
+      "tests/unit/test_workbuddy_contract_upgrade.py"
+    ],
+    "commit_message": "feat: layer public memory and add exact 0.1.3 migration",
+    "scope": "local code and synthetic acceptance only; no real HOME changes",
+    "validation": {
+      "full_unit": {
+        "tests": 557,
+        "seconds": 527.293,
+        "ok": false,
+        "log": "/private/tmp/memsharing-guaji-final-validation/unit.log"
+      },
+      "full_integration": {
+        "tests": 74,
+        "seconds": 223.805,
+        "ok": false,
+        "log": "/private/tmp/memsharing-guaji-final-validation/integration.log"
+      },
+      "unit_followup": {
+        "tests": 11,
+        "seconds": 14.427,
+        "ok": true,
+        "log": "/private/tmp/memsharing-guaji-final-validation/unit-followup.log"
+      },
+      "integration_followup": {
+        "tests": 2,
+        "seconds": 16.219,
+        "ok": true,
+        "log": "/private/tmp/memsharing-guaji-final-validation/integration-followup.log"
+      },
+      "full_snapshot_unchanged": true,
+      "post_full_changed_files": [
+        "scripts/agm_core/upgrade.py",
+        "tests/unit/test_public_layout.py"
+      ],
+      "post_full_new_unit_test_methods": 1,
+      "post_full_enhanced_existing_unit_methods": 1,
+      "final_modified_files": 15,
+      "target_payload_files": 31,
+      "final_diff_sha256": "26cae6d0751b15867fb12e09c53ed9c6ea5eae5d666f06cb525466d04b85b0a4",
+      "all_failures_closed_by_scoped_followup": true,
+      "limitations": [
+        "No final whole-suite rerun after the scoped two-file post-full fix",
+        "No real HOME, installed product, client acceptance, commit, push, tag or deployment",
+        "Target clean commit and complete target release tree identity remain to be frozen by main agent"
+      ]
+    },
+    "closure_matrix": [
+      {
+        "issue": "P1-shared-write",
+        "closure": "Shared whole files remain read-only during ordinary accession",
+        "test": "test_m405_user_entries.UserEntryFixture.test_shared_import_without_fallback_is_rejected_zero_write",
+        "file": "tests/unit/test_m405_user_entries.py",
+        "line": 615
+      },
+      {
+        "issue": "P1-file-kind",
+        "closure": "Old file ownership cannot be adopted as import",
+        "test": "test_m405_user_entries.UserEntryFixture.test_file_kind_record_at_import_slot_is_never_adopted",
+        "file": "tests/unit/test_m405_user_entries.py",
+        "line": 631
+      },
+      {
+        "issue": "P1-shared-semantics",
+        "closure": "Shared fallback requires exact semantic content",
+        "test": "test_m405_user_entries.UserEntryFixture.test_shared_fallback_hash_match_without_semantics_is_rejected",
+        "file": "tests/unit/test_m405_user_entries.py",
+        "line": 672
+      },
+      {
+        "issue": "P1-consumer",
+        "closure": "Unregistered private Claude file stays untouched",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_private_only_claude_file_is_observed_never_touched",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 434
+      },
+      {
+        "issue": "P1-no-created-escalation",
+        "closure": "Existing Claude fallback is reused, never created",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_existing_fallback_without_slot_registers_reused_not_created",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 459
+      },
+      {
+        "issue": "P1-private-bytes",
+        "closure": "Existing fallback position and trailing Context Keeper bytes preserved",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_existing_claude_fallback_keeps_trailing_private_context_keeper_bytes",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 1038
+      },
+      {
+        "issue": "P1-direct-api",
+        "closure": "Serialized code_plan cannot create internal capability",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_code_plan_cannot_be_supplied_directly",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 873
+      },
+      {
+        "issue": "P1-contract",
+        "closure": "Exact predecessor/conversion/target contract",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_conversion_schema_rejections_are_zero_write",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 488
+      },
+      {
+        "issue": "P1-frozen-hash",
+        "closure": "Literal target hashes match current modules",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_frozen_target_contract_matches_running_kernel",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 1151
+      },
+      {
+        "issue": "R1-plan-binding",
+        "closure": "Manifest output injection and before image mutation rejected",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_r1_manifest_tamper_and_injection_reject_recovery",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 652
+      },
+      {
+        "issue": "R1-backups",
+        "closure": "Last backup corruption rejects before first restoration",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_r1_last_backup_corrupt_is_zero_write",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 670
+      },
+      {
+        "issue": "R1-lock",
+        "closure": "Recovery materials rechecked after acquiring lock",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_recovery_rechecks_material_after_machine_lock_acquisition",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 906
+      },
+      {
+        "issue": "R2-journal",
+        "closure": "Journal failure cannot activate guard",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_pre_guard_journal_failure_does_not_activate_guard",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 994
+      },
+      {
+        "issue": "R2-guard",
+        "closure": "Another operation guard is never overwritten",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_foreign_guard_race_is_never_overwritten",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 1012
+      },
+      {
+        "issue": "R2-process-crash",
+        "closure": "Guard-only actual process crash can safely finalize rollback",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_crash_immediately_after_guard_is_recoverable",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 1026
+      },
+      {
+        "issue": "R2-second-backup",
+        "closure": "Complete prewrite manifest and all-before cleanup after second backup failure",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_second_backup_failure_full_manifest_prewrite_cleanup",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 1105
+      },
+      {
+        "issue": "R3-consumers",
+        "closure": "Untouched reader appearing during migration blocks public deletion",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_dynamic_untouched_reader_after_hook_blocks_public_removal",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 880
+      },
+      {
+        "issue": "R3-mode",
+        "closure": "Registry mode-only third state blocks recovery",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_registry_mode_only_recovery_change_is_rejected",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 898
+      },
+      {
+        "issue": "R3-unknown-reader",
+        "closure": "Symlink or damaged public markers fail closed",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_unknown_symlink_reader_and_damaged_public_marker_fail_closed",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 1072
+      },
+      {
+        "issue": "R4-before-V",
+        "closure": "Actual process death before V and frozen launcher rollback",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_real_process_crash_before_v_and_fixed_launcher_rollback",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 828
+      },
+      {
+        "issue": "R4-after-V",
+        "closure": "Frozen launcher works despite changed active C",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_real_process_crash_after_v_fixed_tools_survive_active_code_change",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 849
+      },
+      {
+        "issue": "R4-tools",
+        "closure": "Changed frozen toolkit blocks recovery",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_r4_fixed_toolkit_tamper_blocks_recovery_intact_toolkit_works",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 740
+      },
+      {
+        "issue": "R5-V2",
+        "closure": "Committed V2 and foreign bytes are never rolled back",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_r5_v2_foreign_edits_never_rollback_registry",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 752
+      },
+      {
+        "issue": "R6-mixed",
+        "closure": "Fake rolled_back status cannot clear mixed outputs",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_r6_fake_rolled_back_with_mixed_outputs_rejected",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 774
+      },
+      {
+        "issue": "R6-terminal",
+        "closure": "Finish synchronizes both terminal manifests; repeats refuse",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_r6_v2_finish_syncs_both_manifests_and_repeats_refuse",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 785
+      },
+      {
+        "issue": "equal-V-before",
+        "closure": "All-after without committed manifest still permits rollback",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_equal_v_real_crash_before_manifest_commit_can_rollback",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 939
+      },
+      {
+        "issue": "equal-V-after",
+        "closure": "Committed manifest finish preserves main journal and Context Keeper source",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_equal_v_real_crash_after_manifest_commit_finish_and_context_keeper_source",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 950
+      },
+      {
+        "issue": "equal-V-third-state",
+        "closure": "Third state or missing/invalid manifest refuses recovery",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_equal_v_committed_third_state_and_invalid_manifest_refuse",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 969
+      },
+      {
+        "issue": "equal-V-diagnostic",
+        "closure": "Precommit diagnostic reports rollback rather than guessing V2",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_equal_v_precommit_error_reports_rollback",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 1091
+      },
+      {
+        "issue": "equal-V-commit-fact",
+        "closure": "Postcommit exception preserves durable manifest committed",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_equal_v_post_commit_exception_preserves_durable_commit_fact",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 1056
+      },
+      {
+        "issue": "only-Claude",
+        "closure": "Claude-only migration and actual project assembly without Codex",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_only_claude_real_assembly_without_codex_or_workbuddy",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 599
+      },
+      {
+        "issue": "only-WorkBuddy",
+        "closure": "WorkBuddy-only migration and project assembly without Codex",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_only_workbuddy_real_assembly_without_codex_or_claude",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 566
+      },
+      {
+        "issue": "public-tail",
+        "closure": "Only exact old product directory line removed; user tail and legacy links preserved",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_v0_imported_index_placeholder_line_deleted_tail_preserved",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 537
+      },
+      {
+        "issue": "013-old-layout-resume",
+        "closure": "0.1.3 code noop retains required old-layout migration",
+        "test": "test_public_layout.PublicLayoutMigrationFixture.test_interrupt_before_public_index_rolls_back_then_fresh_preview",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 346
+      },
+      {
+        "issue": "013-new-layout-noop",
+        "closure": "Already migrated 0.1.3 is a true zero-write no-op",
+        "test": "test_public_layout.PublicLayoutMigrationFixture.test_upgrade_runs_migration_to_v2_and_preserves_private_bytes",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 229
+      },
+      {
+        "issue": "non-013-noop",
+        "closure": "Other identical releases never dispatch the 0.1.3 migration",
+        "test": "test_public_layout.PublicLayoutHardeningTests.test_same_version_other_release_does_not_dispatch_layout_migration",
+        "file": "tests/unit/test_public_layout.py",
+        "line": 1134
+      },
+      {
+        "issue": "legacy-WB-metadata",
+        "closure": "Legacy frozen toolkit result remains product_code; fresh entry approval still required",
+        "test": "test_workbuddy_contract_upgrade.WorkBuddyContractUpgradeTests.test_continue_is_code_only_then_requires_fresh_entry_approval",
+        "file": "tests/unit/test_workbuddy_contract_upgrade.py",
+        "line": 181
+      }
+    ],
+    "frozen_contract": {
+      "scripts/agents.json": "9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab",
+      "scripts/agm_core/user_entries.py": "71c591a9e964c10dae34b85488640f2a06c4b8af03b204ec5d16bfc1d4a125b6",
+      "scripts/agm_core/public_layout.py": "7765c9e9eaf96eca1580ce83e8a30e77f48f7a8465e46e504a2ff02902ba3a06"
+    },
+    "code_test_hashes": {
+      "scripts/agm_core/enable.py": "77994bb45901663d7c71671e5b78ef14652fb6cdcbb2e14f30e2c809f56fd23b",
+      "scripts/agm_core/public_layout.py": "7765c9e9eaf96eca1580ce83e8a30e77f48f7a8465e46e504a2ff02902ba3a06",
+      "scripts/agm_core/registry.py": "bdf867bef60a636721c615d462ad9efac2c4dee4f99aca458e1b0c300d296d34",
+      "scripts/agm_core/transaction.py": "32b05568b060138429a408381ec5b1a67bb9bc187052569290f828b45dd1a06e",
+      "scripts/agm_core/upgrade.py": "a9e48ce43fd91f69c6e32547d414d75c6b860b08d972eeb58c17ae6c18f7185c",
+      "scripts/agm_core/user_entries.py": "71c591a9e964c10dae34b85488640f2a06c4b8af03b204ec5d16bfc1d4a125b6",
+      "scripts/agm_core/user_install.py": "173f2a2ae89f59e3ccc0cc118edf421cac957aca9b6f7adfd58a064a03ee37b5",
+      "scripts/install.py": "c1f6caff132432b46bf21c09a619f4ee68dfeb68f5ce23ecd65589b830103896",
+      "tests/unit/test_m404_install.py": "7bfc35cd7f0897e441b3af90fc65714d1a625942dbd3620e2d1ba03cd4d0c4b6",
+      "tests/unit/test_m405_user_entries.py": "baf3e6e9afbaa66edddeb887b6aa8d254b4d0584090946f07f18b10745566f6a",
+      "tests/unit/test_m408_installer.py": "07ded1e201dc23aee907ec775e864d9ff2d4d3228d6a14ba00552c973ae5b293",
+      "tests/unit/test_public_layout.py": "2b089fe48f25b921763e9152c46c9cd207c7a6b1df7c28026dfaf1a2c06dc6c1",
+      "tests/unit/test_release_012_upgrade.py": "c13b0cf97f87d0448793c122f976c35e9b98740214c16ff065b42993a4fea50c",
+      "tests/unit/test_release_closure.py": "06d16ddaf6a927a6e91353459c23ce4c5480f1a88065f45992c87f7f9fd5288c",
+      "tests/unit/test_workbuddy_contract_upgrade.py": "585734bffd4d2d057f5d222e103db6aade8737576be922ffff5a6db0c4e4b24f"
+    },
+    "post_full_diff": "--- a/scripts/agm_core/upgrade.py\n+++ b/scripts/agm_core/upgrade.py\n@@ -52,8 +52,8 @@\n }\n \n # 0.1.3 public-memory-layout-v1:两个精确前身(0.1.1=04c32e2,0.1.2=0f690ef,\n-# tree 均经 git 核验)。前身合同为冻结历史字节;目标合同在模板定稿冻结为字面量,\n-# 冻结前按当前内核取摘要,由固定 handler 校验运行模块与目标一致。\n+# tree 均经 git 核验)。前身及目标合同均为冻结的发行字面量;\n+# 固定 handler 校验运行模块与精确目标合同一致。\n PUBLIC_LAYOUT_TARGET_VERSION = '0.1.3'\n PUBLIC_LAYOUT_BEFORE_CONTRACT = {\n     'scripts/agents.json': '9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab',\n@@ -301,7 +301,8 @@\n         with public_layout._upgrade_preview(after_raw.hex()):\n             migration_plan = public_layout.plan_migration(\n                 dict(request, operation_id=op), code_plan={'after_registry_hex': after_raw.hex()})\n-    elif noop and (runtime.code / 'scripts/agm_core/public_layout.py').is_file():\n+    elif (noop and source['version'] == PUBLIC_LAYOUT_TARGET_VERSION\n+          and (runtime.code / 'scripts/agm_core/public_layout.py').is_file()):\n         # 同版代码 noop 但旧布局仍须生成迁移;布局/入口全新才是真零写 noop。\n         candidate = public_layout.plan_migration(dict(request, operation_id=op))\n         if not candidate['noop']:\n@@ -601,7 +602,10 @@\n     if entry_conversion == PUBLIC_MEMORY_LAYOUT_CONVERSION:\n         result.update(scope='product_code', entry_phase='migration_pending',\n                       entry_next_action='外层 execute_machine 以同一批准运行 public_layout 迁移;代码恢复不装配入口')\n-    elif entry_conversion == WORKBUDDY_ENTRY_CONVERSION:\n+    elif (isinstance(entry_conversion, dict)\n+          and entry_conversion.get('type') == 'workbuddy-public-index-v1'):\n+        # Result metadata retains the legacy classification. Execution still\n+        # requires the exact pinned dict and source contract in _conversion/_plan.\n         result.update(scope='product_code', entry_phase='not_run_by_upgrade_core',\n                       entry_next_action='Preview and approve same-release install.py --agent workbuddy; code recovery does not assemble user entries')\n     return result\n--- a/tests/unit/test_public_layout.py\n+++ b/tests/unit/test_public_layout.py\n@@ -849,7 +849,9 @@\n     def test_real_process_crash_after_v_fixed_tools_survive_active_code_change(self):\n         plan, request = self.plan()\n         inner = plan['plan']\n-        upgrade.execute_upgrade(inner, approved(inner), request=request)\n+        code_result = upgrade.execute_upgrade(inner, approved(inner), request=request)\n+        self.assertEqual(code_result['scope'], 'product_code')\n+        self.assertEqual(code_result['entry_phase'], 'migration_pending')\n         migration = inner['migration_plan']\n         self._crash_migration_process(migration, request, 'after_write', self.runtime.registry)\n         # Activity in C must not affect the frozen recovery interpreter/imports.\n@@ -1129,6 +1131,23 @@\n         self.assertFalse(Path(migration['guard']).exists())\n         self.assertEqual(before, {raw: public_layout._observe(Path(raw)) for raw in before})\n \n+    def test_same_version_other_release_does_not_dispatch_layout_migration(self):\n+        plan, request = self.plan()\n+        self.assertEqual(self.apply(plan, request)['status'], 'completed')\n+        data = self.ledger()\n+        data['product']['product_code_version'] = '0.4.1'\n+        self.runtime.registry.write_bytes(registry.serialize_registry(\n+            data, allowed_user_paths=paths.allowed_user_paths(self.config, None, home=str(self.home))))\n+        other_source = dict(self.next_source, version='0.4.1')\n+        request = dict(self.req13, source=other_source, operation_id='other-same-version')\n+        before = self.snapshot()\n+        with patch.object(public_layout, 'plan_migration', side_effect=AssertionError('wrong migration route')):\n+            same = upgrade.plan_upgrade(request)\n+            self.assertTrue(same['noop'])\n+            self.assertIsNone(same['migration_plan'])\n+            self.assertTrue(upgrade.execute_upgrade(same, request=request)['noop'])\n+        self.assertEqual(before, self.snapshot())\n+\n     def test_frozen_target_contract_matches_running_kernel(self):\n         # 冻结完整性:目标合同字面量 == 当前内核摘要;模块再修改必须显式重冻结。\n         frozen = upgrade.PUBLIC_LAYOUT_TARGET_CONTRACT\n",
+    "readme_revision_note": "Restored user-requested 4fe6c46 presentation style; code/test hashes unchanged.",
+    "menu_sync_validation": {
+      "templates": {
+        "tests": 73,
+        "seconds": 10.031,
+        "result": "OK"
+      },
+      "migration": {
+        "tests": 82,
+        "seconds": 344.413,
+        "result": "OK"
+      },
+      "full_suite_rerun": false,
+      "notes": "Menu names/order and guide rendering changed; historical predecessor templates unchanged; target contract explicitly refrozen; no version increase."
+    },
+    "branch_audit": {
+      "worktrees": 7,
+      "unmerged_commits": 0,
+      "backup": "/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/memsharing-precommit-all-worktrees-uwrla6ub",
+      "independent_addition": "test_cli_recover_maps_continue_to_finish",
+      "superseded_work_preserved": true,
+      "old_drafts_and_static_fixtures": "Preserved externally; not restored over current contracts or dynamic fixtures.",
+      "validation": {
+        "cli_recovery_test": "1 passed; /private/tmp/memsharing-branch-cli-recovery-test.log",
+        "adjacent_tests": "2 passed (executor report)",
+        "result": "All valid independent work integrated; no branch commits outside main."
+      }
+    }
+  }
 }

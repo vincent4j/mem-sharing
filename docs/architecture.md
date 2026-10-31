@@ -1,10 +1,10 @@
-状态：文档版本 1.1；2026-10-31 收尾；源码机制与实际验收分层。
+状态：文档版本 1.2；2026-10-31 公共记忆分层修订；源码机制、本轮目标与实际验收分层。
 
 # memSharing 系统架构
 
 memSharing 为多个执行器提供同一份用户规则和项目规则入口。
 它使用 Python 标准库、Markdown 文件和 JSON 台账，不运行常驻服务。
-本文描述当前机制，依据 [DESIGN](../DESIGN.md) 与 `scripts/` 实现。
+本文描述当前机制与已批准的公共记忆分层目标，依据 [DESIGN](../DESIGN.md) 与 `scripts/` 实现；分层目标的运行结论以验收为准。
 裁定存在替代关系时采用当前有效条款，不把撤销的实现承诺列为能力。
 
 ## 1. 三层记忆与职责
@@ -13,15 +13,19 @@ memSharing 为多个执行器提供同一份用户规则和项目规则入口。
 
 用户记忆保存跨项目的工作习惯、偏好与通用约束。
 公共源位于 `~/.mem-sharing/memories/`，入口为 `MEMORY.md`。
+`MEMORY.md` 只保留短读取契约、200 行/25KB 预算、公共治理要点、按需指南指针与真实主题索引；六项菜单与详细 L0/L1/L2 维护规则集中在 `topics/使用约定.md`，不在索引重复全文。
+各执行器的原生用户入口只写公共指针与自身规则；Claude 的项目兜底规则在它自己的用户文件，不放公共索引。
+触发 `/mem-sharing` 及同义操作或默认项目接入前，先按指针读公共指南；索引中的相对链接以 `MEMORY.md` 所在目录解析，指南内链接以指南所在目录解析；指南缺失时停止相关操作；索引只指向指南，不回圈复制菜单。
 索引指向主题文件，参考资料放在 `references/`。
-各执行器的原生用户入口通过受管约定读取公共源。
 公共内容的整理和写入由 Agent 按规则执行，不经过模型服务或向量检索。
+该分层为本轮实现目标，运行验证以验收总览为准。
 
 为什么这样设计：个人工作方式跟着人走，避免在每个项目重复维护。
 
 ### 项目记忆
 
 项目根 `AGENTS.md` 是项目规则唯一真源。
+它是共享基座，任何实际使用的已接入执行者都可按政策默认建立，不依赖安装 Codex。
 它包含项目约束、必要骨架和项目经历协议，不承载工作日志。
 规则随 Git 走，本机启用事实则记录在仓库外的台账中。
 子目录要求可留在子目录规则文件，WorkBuddy 的子目录可见性有边界。
@@ -31,11 +35,11 @@ memSharing 为多个执行器提供同一份用户规则和项目规则入口。
 
 ### 项目经历
 
-项目经历保存进度、决策、工作日志与经验，由 Context Keeper（keeper）管理。
-默认记录库为 `docs/context-keeper/`，实际位置和授权按 keeper 自身流程确定。
-用户级 keeper 安装不等于项目记录库已经初始化。
-项目首次 `/context-keeper` 命令按 keeper 流程激活记录库。
-memSharing 不定义日志格式、不蒸馏内容，也不接管 keeper 的保存与查找逻辑。
+项目经历保存进度、决策、工作日志与经验，由 Context Keeper 管理。
+默认记录库为 `docs/context-keeper/`，实际位置和授权按 Context Keeper 自身流程确定。
+用户级 Context Keeper 安装不等于项目记录库已经初始化。
+项目首次 `/context-keeper` 命令按 Context Keeper 流程激活记录库。
+memSharing 不定义日志格式、不蒸馏内容，也不接管 Context Keeper 的保存与查找逻辑。
 
 为什么这样设计：规则和经历分开维护，编排层不复制记忆引擎的职责。
 
@@ -49,6 +53,7 @@ V 为唯一活动台账：`~/.mem-sharing/var/registry.json`。
 ```text
 ~/.mem-sharing/
   memories/MEMORY.md
+  memories/topics/使用约定.md
   references/
   backups/
   var/
@@ -83,7 +88,7 @@ linked worktree 不作为可启用项目，移动或重新 clone 后须重新核
 - `check-memory`：只读核查登记和现场。
 
 `scripts/install.py` 是独立机器安装入口，负责安装、获取、升级及恢复路由。
-它另提供 `--context-keeper`，执行与主安装分开的 keeper 用户级安装。
+它另提供 `--context-keeper`，执行与主安装分开的 Context Keeper 用户级安装。
 项目命令不隐式完成机器安装或机器升级。
 
 `paths.py` 和 `agents.json` 定义执行器与平台路径白名单。
@@ -94,7 +99,7 @@ linked worktree 不作为可启用项目，移动或重新 clone 后须重新核
 `user_entries.py` 管理机器用户入口，`user_rules_organize.py` 提供整理向导 API。
 `legacy_import.py`、`user_install.py`、`migrate.py` 处理安装及存量证据。
 `versions.py`、`upgrade.py` 管理发行库存、版本切换和升级恢复。
-`ck_install.py` 编排 keeper 自有安装器，不在项目 enable 中调用它。
+`ck_install.py` 编排 Context Keeper 自有安装器，不在项目 enable 中调用它。
 
 为什么这样设计：命令外壳与文件操作内核分离，项目操作不会顺手扩大到装机。
 
@@ -105,10 +110,10 @@ linked worktree 不作为可启用项目，移动或重新 clone 后须重新核
 Codex 使用 `~/.codex/AGENTS.md`。
 Claude Code 使用 `~/.claude/CLAUDE.md`。
 WorkBuddy 使用 `~/.workbuddy/MEMORY.md`。
-安装为验证为 installed 的目标写入用户级公共源指针与项目接入约定。
+安装为验证为 installed 的目标写入用户级公共指针与自身规则；菜单与详细使用约定在公共指南，不整段驻留用户文件。缺失的执行器用户目录不预建。
 既有专属内容保留，用户规则整理是另一个显式流程。
 产品不建立公共 Skills/MCP 目录，也不投影 memSharing Skill。
-`/mem-sharing` 是规则文本承载的约定菜单，自然语言也可触发。
+`/mem-sharing` 是公共指南承载的约定菜单，自然语言也可触发；触发时先读指南，指南缺失停止相关操作。
 
 ### 安装事实与运行事实
 
@@ -121,9 +126,13 @@ WorkBuddy 桥接已配置也不能直接宣布运行时加载成功。
 
 ### 项目级实际使用驱动
 
-Codex 原生读取 `AGENTS.md`，无需额外引用文件。
-默认 `enable-memory` 完全不触碰 `CLAUDE.md`，包括已有文件。
-Claude 在该项目实际使用时，由其用户级兜底规则补 `@AGENTS.md`。
+`AGENTS.md` 是共享项目规则基座，不依赖安装 Codex；Codex 原生读取，无需额外引用文件。
+只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立。
+默认接入由当前实际执行者按指南以 `--agent <当前执行者>` 执行；不带 agent 参数按已安装事实处理，可能顺带补齐其他执行器已存在的原生目录，仅用于用户显式要求全体或批量接入，不改 CLI 语义。
+机器探测到执行器安装或原生目录存在，不等于当前执行者实际使用。
+不带 `--agent` 的通用 `enable-memory` 不触碰 `CLAUDE.md`，包括已有文件。
+Claude 自身实际使用时按 `--agent claude` 精确接入，可幂等补 `@AGENTS.md` 引用；该兜底规则位于 Claude 自身用户文件，不放公共索引。
+其它执行者默认流程不预建 `CLAUDE.md`。
 显式 `enable-memory --agent claude` 是另一条有意接入路径。
 该路径按精确计划添加引用，不把机器上已安装 Claude 当作预建条件。
 WorkBuddy 仅在 `.workbuddy/memory/` 原生目录已存在时补规则指针。
@@ -140,8 +149,8 @@ WorkBuddy 仅在 `.workbuddy/memory/` 原生目录已存在时补规则指针。
 `machine` 保存执行器安装事实、静态入口状态、运行验收与机器受管对象。
 项目记录包含 checkout 身份、执行器清单、入口对象和记忆政策。
 项目政策仅为 `follow_ck` 或 `disabled`。
-台账不再保存 keeper provider、四态就绪探针或记录库授权字段。
-记录库授权由 keeper 自行管理，不从残留文件推断。
+台账不再保存 Context Keeper provider、四态就绪探针或记录库授权字段。
+记录库授权由 Context Keeper 自行管理，不从残留文件推断。
 
 受管对象记录路径、种类、作用域、执行器、标记、指纹与备份证据。
 所有权为 `created`、`reused` 或 `unknown`。
@@ -197,23 +206,23 @@ v0 源为 `~/.agents-group`，只复制获准的 memories/references。
 执行前在锁内重新核对，现场变化要求重新预览，批准不授权计划外修改。
 获取是单独的 `--acquire` 计划，获取完成不代表产品已经安装。
 
-五拍对话由执行 Agent 编排：请求、检查确认、静默安装结论、keeper 询问、用法提醒。
+五拍对话由执行 Agent 编排：请求、检查确认、静默安装结论、Context Keeper 询问、用法提醒。
 Python/Git 缺失时，系统包管理器准备属于外层 Agent 职责。
 当前 Python CLI 不自行安装运行时依赖。
 主安装完成后才生成 `install-context-keeper` 独立封皮。
-keeper 仅真实交互回车算同意，EOF、非交互或空格不算。
-keeper 固定源码与全部实际接入执行器绑定，由 keeper 安装器负责用户级 Skill。
-keeper 失败不回滚主产品，也不合报为全部成功；结果不明不自动重放。
+对 Context Keeper 的安装同意仅以真实交互回车为准，EOF、非交互或空格不算。
+Context Keeper 固定源码与全部实际接入执行器绑定，由其安装器负责用户级 Skill。
+Context Keeper 失败不回滚主产品，也不合报为全部成功；结果不明不自动重放。
 
 为什么这样设计：主产品与可选引擎有独立授权、失败边界和交付证据。
 
 ## 8. 项目启用、批量与停用
 
-未登记 Git 主 checkout 的默认启用由用户级规则驱动，并非后台监听。
+未登记 Git 主 checkout 的默认启用由用户级规则与公共指南驱动，当前实际执行者以 `--agent <当前执行者>` 执行，并非后台监听。
 启用保留已有规则正文，补缺失骨架与项目经历短协议。
 协议只说明位置、命令入口和职责，不初始化记录库、不安装项目 Skill。
 已登记 disabled 项目不被默认条款重新启用。
-旧 keeper 桥接替换须有显式计划：created 退役重建，reused 展示确认，漂移停止。
+旧 Context Keeper 桥接替换须有显式计划：created 退役重建，reused 展示确认，漂移停止。
 
 批量扫描含给定目录自身，不进入 `.git`，不跟随目录符号链接。
 只对新的 Git 主 checkout 形成计划，已启用和 disabled 项目跳过。
@@ -223,13 +232,13 @@ keeper 失败不回滚主产品，也不合报为全部成功；结果不明不�
 
 停用分三层语义：
 
-- 菜单“停用记忆”调用 `remove-memory`，撤销允许撤销的入口与桥接，保留数据。
+- 菜单“给项目停用记忆”调用 `remove-memory`，撤销允许撤销的入口与桥接，保留数据。
 - remove 后登记 disabled，默认启用不再触发；恢复须显式 `enable-memory --memory`。
 - `enable-memory --no-memory` 保留规则接入，禁止自动项目经历记录及初始化。
 
-停用防护优先于残留 keeper 自动规则，但不是 keeper 脚本硬拒写接口。
-手动 keeper 操作仍遵循用户明确请求与 keeper 自身流程。
-机器安装、用户记忆、keeper 安装和项目经历数据不因项目停用被删除。
+停用防护优先于残留 Context Keeper 自动规则，但不是其脚本的硬拒写接口。
+手动 Context Keeper 操作仍遵循用户明确请求与其自身流程。
+机器安装、用户记忆、Context Keeper 安装和项目经历数据不因项目停用被删除。
 
 为什么这样设计：撤销接入和暂停自动记录是不同需求，数据始终作为用户资产保留。
 

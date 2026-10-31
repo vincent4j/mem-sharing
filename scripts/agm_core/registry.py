@@ -764,7 +764,8 @@ def _objects(data):
 
 
 def commit_registry(path, data, *, transaction, expected, changes=(),
-                    allowed_user_paths=None, previous=None, rebuild=False, rebuild_confirmation=None):
+                    allowed_user_paths=None, previous=None, rebuild=False,
+                    rebuild_confirmation=None, registry_authoritative=False):
     """Validate and commit registry last, including evidence for new created units.
 
     expected is the exact registry snapshot read by the caller. Existing valid
@@ -841,4 +842,7 @@ def commit_registry(path, data, *, transaction, expected, changes=(),
             _fail("creation fingerprint does not match actual write")
     content = serialize_registry(data, allowed_user_paths=allowed_user_paths,
                                  _pending_manifest=str(transaction.manifest_path))
-    return transaction.run(changes, registry_change=Change.file(path, content, expected=expected))
+    change = Change.file(path, content, expected=expected)
+    if registry_authoritative:
+        return transaction.run(changes, registry_change=change, registry_authoritative=True)
+    return transaction.run(changes, registry_change=change)

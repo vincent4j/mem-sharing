@@ -240,7 +240,7 @@ class Transaction:
         if read_snapshot(path) != expected:
             raise TransactionError("readback mismatch: " + str(path))
 
-    def run(self, changes, *, registry_change=None):
+    def run(self, changes, *, registry_change=None, registry_authoritative=False):
         changes = list(changes)
         if registry_change is not None:
             changes.append(registry_change)
@@ -252,7 +252,7 @@ class Transaction:
                     raise TransactionError("duplicate transaction output")
                 seen.add(path)
                 if read_snapshot(path) != change.expected:
-                    raise TransactionError("output drifted before transaction: " + str(path), code="drift")
+                    raise TransactionError("output drifted before transaction: " + str(change.path), code="drift")
                 if change.after.kind == "file" and change.expected.kind == "symlink":
                     raise TransactionError("file/link conflict", code="path_conflict")
                 if change.after.kind == "symlink" and change.expected.kind not in ("absent", "symlink"):
@@ -264,19 +264,32 @@ class Transaction:
             if not active:
                 return {"status": "unchanged", "manifest": None, "changed": []}
             attempted = []
+            registry_written = False
             self.manifest = {"schema_version": 1, "operation": self.operation,
                              "status": "prepared", "registry_path": str(registry_change.path) if registry_change else None,
                              "created_directories": [], "entries": [], "error": None}
             try:
                 self.directory.mkdir(parents=True, mode=0o700)
+                if registry_authoritative:
+                    # Freeze the complete approved output set before any backup
+                    # write can fail. No attempted output exists in this phase.
+                    self.manifest['entries'] = [
+                        {'path': str(c.path),
+                         'before': _metadata(c.expected, path=c.path,
+                                             backup=str(i)+'.before' if c.expected.kind == 'file' else None),
+                         'after': _metadata(c.after, path=c.path),
+                         'attempted': False, 'restoration': 'not_needed'}
+                        for i, c in enumerate(active)]
+                    self._save()
                 for i, change in enumerate(active):
                     backup = None
                     if change.expected.kind == "file":
                         backup = str(i) + ".before"
                         _atomic_file(self.directory / backup, change.expected.data, 0o600)
-                    self.manifest["entries"].append({"path": str(change.path),
-                        "before": _metadata(change.expected, path=change.path, backup=backup),
-                        "after": _metadata(change.after, path=change.path), "attempted": False, "restoration": "not_needed"})
+                    if not registry_authoritative:
+                        self.manifest["entries"].append({"path": str(change.path),
+                            "before": _metadata(change.expected, path=change.path, backup=backup),
+                            "after": _metadata(change.after, path=change.path), "attempted": False, "restoration": "not_needed"})
                 self._save()
                 self.manifest["status"] = "applying"
                 self._save()
@@ -306,6 +319,8 @@ class Transaction:
                         for prior, _ in attempted[:-1]:
                             self._verify(prior.path, prior.after)
                     _apply(change.path, change.after, expected=change.expected)
+                    if change is registry_change:
+                        registry_written = True
                     self.hook("after_write", change.path)
                     self._verify(change.path, change.after)
                 # Recheck every config before committing/returning. Registry is
@@ -314,7 +329,38 @@ class Transaction:
                     self._verify(change.path, change.after)
                 self.manifest["status"] = "committed"
                 self._save()
+                if registry_authoritative:
+                    self.hook("after_commit", self.manifest_path)
             except BaseException as exc:
+                # 极窄 opt-in(仅迁移等显式权威提交方使用):注册表 _apply 已完成
+                # (读回=after)即不可逆——无论其他输出是否第三态,保全部现场,
+                # 不再写任何输出;V 自身第三态同样保全拒绝(不回滚其它输出制造
+                # 混合态)。仅确定 V 未提交且读回=before 才走常规回滚;其他使用者
+                # 默认行为完全不变。
+                if registry_authoritative and registry_change is not None:
+                    current_v = read_snapshot(registry_change.path)
+                    equal_v = registry_change.expected == registry_change.after
+                    durable_commit = False
+                    if equal_v:
+                        try:
+                            saved = json.loads(self.manifest_path.read_bytes())
+                            durable_commit = saved == self.manifest and saved['status'] == 'committed'
+                        except (OSError, ValueError, KeyError):
+                            pass
+                    if registry_written or current_v != registry_change.expected or durable_commit:
+                        # An equal-V commit is recorded in the existing durable
+                        # manifest. Never erase that commit fact on an exception.
+                        if not equal_v:
+                            self.manifest['status'] = 'recovery_required'
+                            self.manifest['error'] = str(exc)
+                            self._save()
+                        raise TransactionError(str(exc), code='recovery_required',
+                                               manifest=self.manifest_path) from exc
+                    if equal_v and self.manifest['status'] == 'committed':
+                        # A failed commit readback is uncertain, never grounds
+                        # for restoring output bytes after a possible commit.
+                        raise TransactionError(str(exc), code='recovery_required',
+                                               manifest=self.manifest_path) from exc
                 errors = []
                 for change, entry in reversed(attempted):
                     try:

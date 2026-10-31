@@ -16,6 +16,7 @@ from pathlib import Path
 
 from . import legacy_import as legacy, migrate, paths, registry, user_entries, versions
 from . import user_install as install
+from . import public_layout
 from .layout import RuntimeLayout
 from .transaction import Snapshot, _apply, read_snapshot
 
@@ -49,6 +50,58 @@ WORKBUDDY_ENTRY_CONVERSION = {
         'scripts/agm_core/user_entries.py': 'eda73b02e99d8092f6f587d786d163efd4d8bbc72340e79de0ad1ffabd25c85a',
     },
 }
+
+# 0.1.3 public-memory-layout-v1:两个精确前身(0.1.1=04c32e2,0.1.2=0f690ef,
+# tree 均经 git 核验)。前身及目标合同均为冻结的发行字面量;
+# 固定 handler 校验运行模块与精确目标合同一致。
+PUBLIC_LAYOUT_TARGET_VERSION = '0.1.3'
+PUBLIC_LAYOUT_BEFORE_CONTRACT = {
+    'scripts/agents.json': '9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab',
+    'scripts/agm_core/user_entries.py': 'eda73b02e99d8092f6f587d786d163efd4d8bbc72340e79de0ad1ffabd25c85a',
+}
+PUBLIC_LAYOUT_PREDECESSORS = (
+    {'product_code_version': '0.1.1', 'source': {
+        'url': 'https://github.com/vincent4j/mem-sharing',
+        'commit': '04c32e24b9ab9504514908f2368cddca4356e478',
+        'tree_sha256': '15cd779745ab6ef80f3d966ef8c9850ee1e87abc48c314158a6502434127e179'}},
+    {'product_code_version': '0.1.2', 'source': {
+        'url': 'https://github.com/vincent4j/mem-sharing',
+        'commit': '0f690ef7aabf747a23bacc7662c19bee34c4bf52',
+        'tree_sha256': '1fb1e199c992e07747bbf031fcb83cd74d2b85b5c9c491cda7d2836fca1dd353'}},
+)
+PUBLIC_MEMORY_LAYOUT_CONVERSION = {'type': public_layout.HANDLER_TYPE}
+
+# 目标合同冻结字面量(2026-10-31 定稿冻结;模块再修改须显式重冻结并留测试证据,
+# 冻结完整性由 test_public_layout 的 freeze-integrity 用例守护)。
+PUBLIC_LAYOUT_TARGET_CONTRACT = {
+    'scripts/agents.json': '9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab',
+    'scripts/agm_core/user_entries.py': '71c591a9e964c10dae34b85488640f2a06c4b8af03b204ec5d16bfc1d4a125b6',
+    'scripts/agm_core/public_layout.py': '7765c9e9eaf96eca1580ce83e8a30e77f48f7a8465e46e504a2ff02902ba3a06',
+}
+
+
+def _public_layout_target_contract():
+    """目标合同摘要:固定字面量,不再随当前内核动态自算。"""
+    frozen = dict(PUBLIC_LAYOUT_TARGET_CONTRACT)
+    placeholder = frozen['scripts/agm_core/public_layout.py']
+    if placeholder is None:
+        _fail('Conversion contract is not frozen for this release', 'upgrade_unsupported')
+    return frozen
+
+
+def _public_layout_before(before):
+    return any(before['product_code_version'] == item['product_code_version']
+               and before['source'] == item['source']
+               for item in PUBLIC_LAYOUT_PREDECESSORS)
+
+
+def _public_layout_conversion(before, after, direction, entry_conversion, request):
+    return (entry_conversion == PUBLIC_MEMORY_LAYOUT_CONVERSION
+            and direction == 'upgrade'
+            and request.get('agents') is None
+            and _public_layout_before(before)
+            and after['schema_version'] == 3 and after['product_structure_version'] == 1
+            and after['product_code_version'] == PUBLIC_LAYOUT_TARGET_VERSION)
 
 
 def _workbuddy_conversion(before, after, direction, entry_conversion):
@@ -129,6 +182,8 @@ def _conversion(request, data, target, direction):
         elif (_workbuddy_conversion(before, after, direction, item['entries'])
               and request.get('agents') == ['workbuddy']):
             matches.append(item)
+        elif _public_layout_conversion(before, after, direction, item['entries'], request):
+            matches.append(item)
     if len(matches) != 1:
         _fail('Future/unknown release or no exact supported conversion', 'upgrade_unsupported')
     return matches[0]
@@ -200,12 +255,27 @@ def _plan(request, *, allow_marker=False):
         if direction == 'rollback' and not versions.installed_before(runtime, target):
             _fail('Rollback target has no verified successful installation receipt')
         conversion = None if noop else _conversion(request, data, target, direction)
+        # public-layout 目标合同含专用迁移模块;_ENTRY_CONTRACT_NAMES 保持两键历史
+        # 语义,门禁比较时按目标合同全集对齐。
+        contract_after_full = dict(contract_after,
+                                   **{'scripts/agm_core/public_layout.py':
+                                      source['files'].get('scripts/agm_core/public_layout.py')})
         if contract_before != contract_after:
             entry_conversion = (conversion or {}).get('entries')
-            if (entry_conversion != WORKBUDDY_ENTRY_CONVERSION
-                    or contract_before != WORKBUDDY_ENTRY_CONVERSION['before_contract']
-                    or contract_after != WORKBUDDY_ENTRY_CONVERSION['after_contract']
-                    or legacy.digest(Path(user_entries.__file__).read_bytes()) != contract_after['scripts/agm_core/user_entries.py']):
+            if (entry_conversion == PUBLIC_MEMORY_LAYOUT_CONVERSION
+                    and contract_before == PUBLIC_LAYOUT_BEFORE_CONTRACT
+                    and contract_after_full == _public_layout_target_contract()
+                    and legacy.digest(Path(user_entries.__file__).read_bytes())
+                    == contract_after_full['scripts/agm_core/user_entries.py']
+                    and legacy.digest(Path(public_layout.__file__).read_bytes())
+                    == contract_after_full['scripts/agm_core/public_layout.py']):
+                pass  # 固定 handler 审查实际模块可信;入口/公共迁移由专用模块执行。
+            elif (entry_conversion == WORKBUDDY_ENTRY_CONVERSION
+                    and contract_before == WORKBUDDY_ENTRY_CONVERSION['before_contract']
+                    and contract_after == WORKBUDDY_ENTRY_CONVERSION['after_contract']
+                    and legacy.digest(Path(user_entries.__file__).read_bytes()) == contract_after['scripts/agm_core/user_entries.py']):
+                pass
+            else:
                 _fail('Conversion has no handler for changed entry contract')
         elif conversion and conversion['entries'] != 'preserve':
             _fail('WorkBuddy conversion requires its exact changed contract')
@@ -224,6 +294,19 @@ def _plan(request, *, allow_marker=False):
         else: after = {'kind':'absent'}
         outputs.append({'path':str(path), 'before':before, 'after':after})
     after_raw = current.data if noop else registry.serialize_registry(data, allowed_user_paths=allowed)
+    # 0.1.3 public-memory-layout:迁移子计划嵌入 sealed 升级计划,外层一次批准绑定
+    # 两子计划;预览阶段即触发未登记读者门禁,零写拒绝可预见的失败升级。
+    if not noop and isinstance((conversion or {}).get('entries'), dict) \
+            and conversion['entries'].get('type') == public_layout.HANDLER_TYPE:
+        with public_layout._upgrade_preview(after_raw.hex()):
+            migration_plan = public_layout.plan_migration(
+                dict(request, operation_id=op), code_plan={'after_registry_hex': after_raw.hex()})
+    elif (noop and source['version'] == PUBLIC_LAYOUT_TARGET_VERSION
+          and (runtime.code / 'scripts/agm_core/public_layout.py').is_file()):
+        # 同版代码 noop 但旧布局仍须生成迁移;布局/入口全新才是真零写 noop。
+        candidate = public_layout.plan_migration(dict(request, operation_id=op))
+        if not candidate['noop']:
+            migration_plan = candidate
     archive = runtime.backups/('upgrade-'+op)
     dirs = {str(runtime.backups)}
     for output in outputs:
@@ -264,6 +347,10 @@ def _plan(request, *, allow_marker=False):
                 {'path':str(archive),'operation':'before_archive'},
                 {'path':str(bootstrap),'operation':'fixed_toolkit_and_journal'}]
              )
+    if migration_plan is not None:
+        plan['metadata_scopes'].append(migration_plan['backup_scope'])
+        plan['changes'] += [dict(t, operation='migrate_public_layout') for t in migration_plan['targets']]
+        plan['changes'].append({'path': migration_plan['backup_scope'], 'operation': 'fixed_migration_recovery_material'})
     return _seal(plan)
 
 
@@ -283,7 +370,10 @@ def _validate(plan):
     if (plan['layout']!=runtime.describe() or plan['bootstrap']!=str(bootstrap)
             or plan['journal']!=str(bootstrap/'journal.json') or plan['archive']!=str(runtime.backups/('upgrade-'+op))):
         _fail('Upgrade path scope mismatch')
-    if plan['metadata_scopes'] != [str(bootstrap),plan['archive'],str(versions.root(runtime))]:
+    expected_metadata = [str(bootstrap), plan['archive'], str(versions.root(runtime))]
+    if plan['migration_plan'] is not None:
+        expected_metadata.append(plan['migration_plan']['backup_scope'])
+    if plan['metadata_scopes'] != expected_metadata:
         _fail('Upgrade metadata scope mismatch')
     if plan['direction'] not in ('upgrade','rollback') or type(plan['noop']) is not bool: _fail('Invalid upgrade type')
     if plan['launcher_hex']!=LAUNCHER.hex():_fail('Recovery launcher drift')
@@ -315,7 +405,16 @@ def _validate(plan):
         if Path(item['path']).name!=item['path'] or not item['path'].endswith('.py'): _fail('Tool escapes toolkit')
         registry._digest(item['sha256'])
     if plan['migration_plan'] is not None:
-        _fail('Pre-release migration is unsupported', 'upgrade_unsupported')
+        migration = plan['migration_plan']
+        migration_body = dict(migration)
+        migration_digest = migration_body.pop('plan_sha256', None)
+        if (not isinstance(migration, dict) or migration_digest is None
+                or legacy.digest(legacy.encoded(migration_body)) != migration_digest
+                or migration.get('command') != 'migrate-public-layout'
+                or migration.get('guard') != str(runtime.home / '.mem-sharing-upgrade.json')
+                or not ((plan.get('conversion') or {}).get('entries') == PUBLIC_MEMORY_LAYOUT_CONVERSION
+                        or plan['noop'])):
+            _fail('Pre-release migration is unsupported', 'upgrade_unsupported')
     return runtime
 
 
@@ -500,7 +599,13 @@ def _finalize(journal,hook):
     result = {'status':'completed','operation_id':plan['operation_id'],'journal':plan['journal'],
               'version':plan['source']['version'],'direction':plan['direction']}
     entry_conversion = (plan.get('conversion') or {}).get('entries')
-    if isinstance(entry_conversion, dict) and entry_conversion.get('type') == 'workbuddy-public-index-v1':
+    if entry_conversion == PUBLIC_MEMORY_LAYOUT_CONVERSION:
+        result.update(scope='product_code', entry_phase='migration_pending',
+                      entry_next_action='外层 execute_machine 以同一批准运行 public_layout 迁移;代码恢复不装配入口')
+    elif (isinstance(entry_conversion, dict)
+          and entry_conversion.get('type') == 'workbuddy-public-index-v1'):
+        # Result metadata retains the legacy classification. Execution still
+        # requires the exact pinned dict and source contract in _conversion/_plan.
         result.update(scope='product_code', entry_phase='not_run_by_upgrade_core',
                       entry_next_action='Preview and approve same-release install.py --agent workbuddy; code recovery does not assemble user entries')
     return result

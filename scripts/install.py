@@ -23,7 +23,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agm_core import detect, legacy_import as legacy, migrate, paths, registry
-from agm_core import upgrade, user_entries, user_install, ck_install
+from agm_core import upgrade, user_entries, user_install, ck_install, public_layout
 
 OFFICIAL = 'https://github.com/vincent4j/mem-sharing'
 LEGACY_OFFICIAL = 'https://github.com/vincent4j/agent-group-memory'  # 远程改名前的旧 URL,仍视作官方来源
@@ -180,6 +180,8 @@ def plan_machine(request):
         # Later executor onboarding is user-initiated only. Facts below are a
         # report, never a driver for discovering/promoting new machine consumers.
         data = (inner.get('migration_plan') or {}).get('after_registry')
+        if data is None and inner.get('migration_plan'):
+            data = json.loads(bytes.fromhex(inner['migration_plan']['v2_registry_hex']))
         if data is None:
             data = json.loads(bytes.fromhex(inner['before_registry_hex']))
         requested = sorted(data['machine']['agents'])
@@ -246,7 +248,7 @@ def _report(plan, status, *, result=None, entries=None, project=None):
         'changes': plan['changes'], 'result': result, 'entries': entries}
 
 
-def execute_machine(plan, approval, *, request=None, project=None):
+def execute_machine(plan, approval, *, request=None, project=None, hook=None):
     if project:
         _absolute(project)  # Report arguments must fail before the first write.
     evidence = _approve(plan, approval)
@@ -268,6 +270,24 @@ def execute_machine(plan, approval, *, request=None, project=None):
         report['errors'] = [{'code': getattr(exc, 'code', 'execution_failed'), 'message': str(exc)}]
         return report
     # Code and V now committed. New entry failure is partial, never installed-ready.
+    # 0.13 public-memory-layout:同一外层批准驱动迁移子计划;只有 V2 读回才
+    # completed,否则 partial + migration_phase=pending/recovery_required。
+    migration = inner.get('migration_plan')
+    if migration is not None:
+        try:
+            migration_result = public_layout.execute_migration(
+                migration, dict(migration, **evidence), request=request, hook=hook)
+        except Exception as exc:
+            guard_pending = os.path.lexists(migration['guard'])
+            report = _report(plan, 'partial', result=result, project=project)
+            report['migration_phase'] = 'recovery_required' if guard_pending else 'pending'
+            report['recovery_required'] = guard_pending
+            report['errors'] = [{'code': getattr(exc, 'code', 'migration_failed'),
+                                 'message': str(exc),
+                                 'recovery': ('public_layout.plan_recovery(%s) 预览恢复' % migration['journal'])
+                                 if guard_pending else '修正后重新预览外层计划'}]
+            return report
+        result = dict(result, migration=migration_result)
     if not plan['entry_requested']:
         return _report(plan, 'completed', result=result, project=project)
     try:
@@ -381,15 +401,22 @@ def run(args):
             raise InstallError('--recover requires --action and cannot mix with installation/acquisition arguments')
         journal = str(_absolute(args.recover))
         command = _json(journal).get('plan', {}).get('command')
-        module = {'install-machine': user_install, 'upgrade-machine': upgrade, 'migrate-machine': migrate}.get(command)
+        module = {'install-machine': user_install, 'upgrade-machine': upgrade,
+                  'migrate-machine': migrate, 'migrate-public-layout': public_layout}.get(command)
         if module is None:
             raise InstallError('Unknown recovery journal')
-        plan = module.plan_recovery(journal, action=args.action)
+        # 标准 CLI 动作到迁移恢复的映射:continue=finish(仅 V2 已提交),
+        # rollback=rollback(仅 V1);不造与现 CLI 无关的新命令。
+        action = {'continue': 'finish'}.get(args.action, args.action) \
+            if command == 'migrate-public-layout' else args.action
+        plan = module.plan_recovery(journal, action=action)
         if approval is None:
             return {'status': 'approval_required', 'approval_required': True, 'approval_plan': plan}
         _approve(plan, approval)
         recover = {'install-machine': user_install.recover_install,
-                   'upgrade-machine': upgrade.recover_upgrade, 'migrate-machine': migrate.recover_migration}[command]
+                   'upgrade-machine': upgrade.recover_upgrade,
+                   'migrate-machine': migrate.recover_migration,
+                   'migrate-public-layout': public_layout.recover_migration}[command]
         return recover(plan, approval)
     if args.action:
         raise InstallError('--action is only valid with --recover')

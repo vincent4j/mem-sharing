@@ -7,6 +7,7 @@
 | M1 | 静态装配、数据读回、Codex/Claude N1/N2 | **部分通过**；标准闭环有流程偏差/答案污染，WorkBuddy 负向未验。原始判定 `f06db31:docs/acceptance/m1-07/evidence.md` |
 | M2 | 本地实现、macOS 安装/卸载/恢复、两项目装配与 Codex/Claude 读回 | **运行验收部分通过**；WorkBuddy 两项目新会话未做、Claude 未显式走 Skill/resume，Windows/Linux 未验。原始 `f06db31:docs/acceptance/m2-08/README.md` 的 second-run；[M2-09 日志](../context-keeper/worklogs/2026-10-29-M2-09平台矩阵与发布前文档.md) |
 | M3 | 旧管理器现场处置 | 沿用前轮结论，本次不重跑、不扩成 M4 接力证据 |
+| 0.1.3 公共记忆分层 | 首装模板、无 Codex 组合、固定两前身迁移与恢复 | **限定本地代码/合成验收通过**；整合与修后定向证据见[当前质量报告](release-review.md)，未提交/未真实部署，运行暂停项不变 |
 | M4-02～08 | 布局、台账、安装、入口、生命周期、升级、改名及治理 | 沿用各子项实现/合成验收；历史 `f06db31:docs/acceptance/m4/` 下对应 verdict，不替代真实客户端验证 |
 | M4-09 | 62 案证据矩阵 | **限定合成范围通过**：43 executed 通过、15 blocked 原因合理、4 not_in_scope 归 M4-10；另发现1项菜单缺陷已在后续修复。不是63案或62案全部运行通过 |
 | M4-10 | 本机安装/v0 导入、0.1.1 WorkBuddy 修复部署、部分新会话 | **部分通过、未关闭**；部署与静态读回成立，WorkBuddy 修复后新会话/CK 实际尾步及其他门禁未验，用户已暂停相关运行活动。详见[当前判定](m4/m4-10-runtime/verdict.md) |

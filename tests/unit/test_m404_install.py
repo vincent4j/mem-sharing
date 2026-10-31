@@ -99,10 +99,11 @@ class InstallTests(InstallFixture):
         self.execute(plan)
         entry=self.home/'.codex/AGENTS.md'
         self.assertTrue(entry.is_file())
-        # v1.11:入口含治理条款与菜单;无 Skill 投影落点。
+        # 公共分层:入口=公共索引指针+Codex 专属规则;治理与菜单在公共源,不进入口。
         body=entry.read_text()
-        self.assertIn(user_entries.GOVERNANCE_RULES_TEXT,body)
-        self.assertIn('/mem-sharing 菜单',body)
+        self.assertIn(user_entries.CODEX_FALLBACK_TEXT,body)
+        self.assertNotIn(user_entries.GOVERNANCE_RULES_TEXT,body)
+        self.assertNotIn('/mem-sharing 菜单',body)
         self.assertFalse((self.home/'.codex/skills').exists())
         self.assertFalse((self.home/'.claude').exists());self.assertFalse((self.home/'.workbuddy').exists())
         data=registry.load_registry(self.runtime.registry,allowed_user_paths=paths.allowed_user_paths(self.config,None,home=str(self.home)))

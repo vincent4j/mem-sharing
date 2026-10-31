@@ -1,11 +1,11 @@
 ---
 name: mem-sharing
-description: memSharing，多 Agent 记忆共享与融合。提供用户记忆与项目规则的启用、检查、停用、主动接入与整理操作路由；项目经历交由 Context Keeper。
+description: memSharing，多 Agent 记忆共享与融合。提供用户记忆与项目记忆的启用、检查、停用、主动接入与整理操作路由；项目经历交由 Context Keeper。
 ---
 
 # memSharing 操作说明
 
-唯一设计依据：[DESIGN.md](DESIGN.md) 与[系统架构](docs/architecture.md)。本文是仓库内操作说明，菜单由用户级规则文本承载，不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 keeper 集成已通过；M4-09 的本地范围与阻断项见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)。
+唯一设计依据：[DESIGN.md](DESIGN.md) 与[系统架构](docs/architecture.md)。本文是仓库内操作说明，菜单与详细使用约定由公共指南 `~/.mem-sharing/memories/topics/使用约定.md` 承载，各执行器用户文件只保留公共指针与自身规则；不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 Context Keeper 集成已通过；M4-09 的本地范围与阻断项见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)。
 
 ## 会话入口与六项菜单
 
@@ -13,52 +13,52 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 | 选项 | 操作路由 |
 |---|---|
-| 给项目启用记忆 | 建立或显式恢复当前项目入口 → `scripts/agm.py enable-memory --project <根> --memory`。 |
 | 添加新的 Agent | 核验 installed 后同版接入 → `scripts/install.py --agent <名字>`，来源参数见 INSTALL。 |
+| 批量启用项目记忆 | 扫目录、集中预览批准 → `scripts/agm.py enable-memory-batch --directory <目录>`。 |
+| 整理用户记忆 | 逐条计划、一次批准 → 下文“用户记忆治理”的模块 API 流程。 |
 | 健康检查 | 只读检查当前项目 → `scripts/agm.py check-memory --project <根>`，全量用 `--all`。 |
-| 停用记忆 | 撤入口、保数据并登记 disabled → `scripts/agm.py remove-memory --project <根>`。 |
-| 整理用户规则 | 逐条计划、一次批准 → 下文“用户规则治理”的模块 API 流程。 |
-| 批量启用记忆 | 扫目录、集中预览批准 → `scripts/agm.py enable-memory-batch --directory <目录>`。 |
+| 给项目停用记忆 | 撤入口、保数据并登记 disabled → `scripts/agm.py remove-memory --project <根>`。 |
+| 给项目启用记忆 | 建立或显式恢复当前项目入口 → `scripts/agm.py enable-memory --project <根> --memory`；默认启用不翻转 disabled，本项用于首次显式接入与恢复已停用项目。 |
 
 以上脚本均以 `python3 -B` 从已核验产品代码目录执行。详细安装、批准与恢复只在需要时读 [INSTALL.md](INSTALL.md)，批量边界与详细操作读[操作手册](docs/operations.md)。
 
-停用记忆下的进阶指引：仅禁止自动项目经历记录与初始化而保留入口，使用 `enable-memory --project <根> --no-memory`；它不执行 remove。两者均登记 disabled，默认启用与批量均不翻转；解除需显式 `--memory` 并批准精确计划。
+停用之外的进阶选项：仅禁止自动项目经历记录与初始化而保留入口，使用 `enable-memory --project <根> --no-memory`；它不执行 remove。两者均登记 disabled，默认启用与批量均不翻转；解除走菜单“给项目启用记忆”的显式 `--memory` 并批准精确计划。
 
 后装 Agent 不自动发现、不自动提示；仅用户主动选“添加新的 Agent”后核验安装事实。名字、残留目录或 hint 不能代替 installed。absent 不创建入口，unknown 只报告不写。机器台账中的事实记录不驱动自动接入。
 
 ## 安装与项目默认启用
 
-产品未安装时读 [INSTALL.md](INSTALL.md)，从已核验源调用 `python3 -B scripts/install.py`，补齐来源参数。先检查 Python、Git、已适配执行器，汇总一次确认；正常安装静默，最后简报后征询是否安装 keeper。项目命令不隐式安装或升级机器产品，check 不修复。
+产品未安装时读 [INSTALL.md](INSTALL.md)，从已核验源调用 `python3 -B scripts/install.py`，补齐来源参数。先检查 Python、Git、已适配执行器，汇总一次确认；正常安装静默，最后简报后征询是否安装 Context Keeper。项目命令不隐式安装或升级机器产品，check 不修复。
 
-用户级规则驱动未登记的 Git 主 checkout 默认启用：建立 `AGENTS.md` 骨架与纯协议桥接，已有正文保留，不重复询问是否启用。非 Git 不触发，worktree 明确报告未支持，不自动启用。项目记忆是规则；项目经历的记录库按 keeper 首次 `/context-keeper` 流程初始化，不由默认启用创建。
+用户级规则与公共指南驱动未登记的 Git 主 checkout 默认启用：建立 `AGENTS.md` 骨架与纯协议桥接，已有正文保留，不重复询问是否启用。默认接入由当前实际执行者按指南以 `--agent <当前执行者>` 执行；不带 agent 参数按已安装事实处理，可能顺带补齐其他执行器已存在的原生目录，仅用于用户显式要求全体或批量接入，不改 CLI 语义。非 Git 不触发，worktree 明确报告未支持，不自动启用。项目记忆是规则；项目经历的记录库按 Context Keeper 首次 `/context-keeper` 流程初始化，不由默认启用创建。
 
-项目缺省启用不创建或补写 `CLAUDE.md`，已有文件原样保留；显式 `enable-memory --agent claude` 可接入。项目兜底入口按实际使用驱动：Claude 首次在已启用项目实际使用且缺引用时幂等补 `CLAUDE.md` 引用；仅本机安装 Claude 不足以创建该文件。WorkBuddy 原生目录出现后才补顶部协议块，不预建目录。Codex 使用 `AGENTS.md`，无额外兜底入口。已有用户字节保留，受管单元漂移停写。
+不带 `--agent` 的通用 enable 不创建或补写 `CLAUDE.md`，已有文件原样保留。Claude 自身实际使用时按 `--agent claude` 精确接入，可幂等补 `CLAUDE.md` 引用；兜底规则位于 Claude 自身用户文件；其它执行者默认流程不预建，仅本机安装 Claude 或其原生目录存在不足以创建该文件。WorkBuddy 原生目录出现后才补顶部协议块，不预建目录。`AGENTS.md` 是共享项目规则基座，任何实际使用的已接入执行者都可按政策默认建立，不依赖安装 Codex；只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立，缺失的执行器用户目录不预建。已有用户字节保留，受管单元漂移停写。
 
-## 用户规则治理
+## 用户记忆治理
 
 目前无整理 CLI 子命令。执行 Agent 按 `scripts/agm_core/user_rules_organize.py` 的 `plan_organize(request)` / `run_organize(request)` 或 `run(request)` 调用；request 显式提供 `home/platform_config`，以完整计划加真实 `confirmed_at/reference` 批准。调用细节按需读[操作手册](docs/operations.md)，不自行虚构菜单 CLI。
 
-Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep。公共内容只写 `~/.mem-sharing/memories/` 的指定文件，不写入各家私有用户规则文件；独有内容留各自用户文件。
+Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep。公共内容只写 `~/.mem-sharing/memories/` 的指定文件，不写入各家私有用户文件；独有内容留各自用户文件。
 
 整理向导批准的是完整逐条计划加 `confirmed_at/reference`，一次确认，不使用 `item_confirmations`。每项绑定原文指纹；decisions 在批准前允许逐项改判，改判后的完整计划须重新匹配批准。删除、修改冗余或过时项只能提议，不能自动执行；独有/未知归属锁定 keep。旧整文件记录入口进入 `blocked_entries`，不扩大所有权，不先改后问。
 
 ## 三种记忆与 Context Keeper
 
-用户记忆是跨项目习惯，位于 `~/.mem-sharing/memories/`；项目记忆是 `AGENTS.md` 规则；项目经历是 keeper 的进度、决策、日志与积累，记录库默认位于项目 `docs/context-keeper/`，具体由 keeper 定义。
+用户记忆是跨项目习惯，位于 `~/.mem-sharing/memories/`；项目记忆是 `AGENTS.md` 规则；项目经历是 Context Keeper 的进度、决策、日志与积累，记录库默认位于项目 `docs/context-keeper/`，具体由 Context Keeper 定义。
 
-装机尾步按安装页的固定正向问句征询 keeper 用户级安装，回车同意，n 跳过。同意后走 `scripts/install.py --context-keeper` 独立路由与 `install-context-keeper` 封皮，由 keeper 自有安装器为全部已接入执行器安装；其 Skill 落位由 keeper 负责。EOF、非交互或空格不视为同意；keeper 缺源或失败独立报告，不回滚主产品。来源与批准细节按需读 INSTALL。未装 keeper 不报产品错误，用户记忆和项目记忆照常工作。
+装机尾步按安装页的固定正向问句征询 Context Keeper 用户级安装，回车同意，n 跳过。同意后走 `scripts/install.py --context-keeper` 独立路由与 `install-context-keeper` 封皮，由 Context Keeper 自有安装器为全部已接入执行器安装；其 Skill 落位由 Context Keeper 负责。EOF、非交互或空格不视为同意；缺源或失败独立报告，不回滚主产品。来源与批准细节按需读 INSTALL。未装 Context Keeper 不报产品错误，用户记忆和项目记忆照常工作。
 
-项目 enable 不再调用 keeper 安装器，不安装项目级 keeper Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 keeper 首次命令，memSharing 不接管保存或查找流程。disabled 优先禁止自动经历，已有 keeper 自动规则不得覆盖；keeper 脚本本身不读取该政策，不能宣称硬拒写。手动 keeper 操作仍按明确请求与 keeper 自身门禁处理。
+项目 enable 不再调用 Context Keeper 安装器，不安装项目级其 Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 Context Keeper 首次命令，memSharing 不接管保存或查找流程。disabled 优先禁止自动经历，已有 Context Keeper 自动规则不得覆盖；其脚本本身不读取该政策，不能宣称硬拒写。手动 Context Keeper 操作仍按明确请求与其自身门禁处理。
 
 ## 检索与分层读取
 
 检索只用索引精确查找（find），不使用 search 或语义搜索。
 
-- L0 恒读：`memories/MEMORY.md` 每行包含主题名、一句话当前结论、链接，上限 200 行／25KB。
+- L0 恒读：`memories/MEMORY.md` 只保留短读取契约、200 行／25KB 预算、公共治理要点、按需指南指针与真实主题索引；每主题一行，含主题名、一句话当前结论、链接。
 - 需要时读 L1：主题文件开头几行概要，包含当前有效结论与待办。
-- 仍不足读 L2：主题全文与 `references/` 手册。
+- 仍不足读 L2：主题全文、`topics/使用约定.md` 详细维护规则与 `references/` 手册。
 
-沿用索引与主题文件，不新增文件类型，不自动生成摘要；Agent 整理时手写概要，固定预算不变成配置项。
+六项菜单与详细 L0/L1/L2 维护规则集中在 `memories/topics/使用约定.md`，索引不重复全文，也不回圈指向菜单。触发 `/mem-sharing` 及同义操作、默认项目接入前，先按指针读公共指南；索引中的相对链接以 `MEMORY.md` 所在目录解析，指南内链接以指南所在目录解析；指南缺失时停止相关操作。沿用索引与主题文件，不新增文件类型，不自动生成摘要；Agent 整理时手写概要，固定预算不变成配置项。该分层为本轮实现目标，运行验证以验收总览为准。
 
 ## 执行与报告边界
 

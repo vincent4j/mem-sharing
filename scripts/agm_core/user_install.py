@@ -377,29 +377,18 @@ def plan_install(request):
         index=('# 公共记忆\n\n'
                '- 使用约定：中枢已初始化，主题结论由 Agent 经确认后手写维护。'
                '[概要与全文](topics/使用约定.md)\n').encode()
-        topic=('# 使用约定\n\n## L1 概要\n\n'
-               '当前有效结论：公共记忆采用索引与主题文件，摘要由 Agent 手写，不自动生成。\n'
-               '用户规则治理条款、兜底接入条款与 /mem-sharing 菜单全文见索引头部。\n'
-               '待办：有新事实且获准记录时，更新对应主题结论与索引行。\n\n'
-               '## L2 正文\n\n'
-               '主题文件全文及 references/ 手册仅在概要不足时读取。\n'
-               + user_entries.GOVERNANCE_RULES_TEXT + '\n'
-               + user_entries.CLAUDE_FALLBACK_TEXT + '\n'
-               + user_entries.agent_group_menu_text(runtime.code) + '\n').encode()
-        output(runtime.root/'memories/topics/使用约定.md',
-               {'kind':'file','sha256':legacy.digest(topic),'mode':0o600},content=topic)
-    contract=('读取契约：L0 恒读 → 需要时读该主题 L1 概要段 → 仍不足才读 L2 全文。\n'
-              'L0 一主题一行：主题名 + 一句话当前结论 + 链接；索引 ≤200 行 / 25KB。\n'
-              'L1 位于主题文件开头，简列当前有效结论与待办；L2 为全文及 references/ 手册。\n'
-              '摘要在记忆整理时手写，不自动生成；增加主题文件，不加长索引。\n'
-              + user_entries.GOVERNANCE_RULES_TEXT + '\n'
-              + user_entries.CLAUDE_FALLBACK_TEXT + '\n'
-              + user_entries.agent_group_menu_text(runtime.code) + '\n\n')
+    # 公共分层(2026-10-31 裁定):新装与 v0 导入都建《使用约定》指南主题,
+    # 索引头部只保留读取契约、预算、公共治理与指南指针。
+    topic=user_entries.usage_convention_topic_text(runtime.code).encode()
+    output(runtime.root/'memories/topics/使用约定.md',
+           {'kind':'file','sha256':legacy.digest(topic),'mode':0o600},content=topic)
+    contract=user_entries.public_memory_contract_text()+'\n'
     if imported:
         # Keep legacy bytes and relative targets intact; only the new index is ours.
         index=index.replace(b'- [v0 ', '- v0 原文：历史字节已保存在只读阅读包，按需深读。 [v0 '.encode(),1)
-        index=index.replace('- [主题目录](topics/)'.encode(),
-                            '- 主题目录：新增主题按需维护，当前请先查看既有原文。[目录](topics/)'.encode())
+        # v0 旧占位主题目录整行删除,索引只保留真实主题行,不留说明性占位行。
+        index=index.replace('- [主题目录](topics/)\n'.encode(), b'')
+        index=index+'- 使用约定：操作指南与维护规则。[概要与全文](topics/使用约定.md)\n'.encode()
     index=index.replace('# 公共记忆\n\n'.encode(),('# 公共记忆\n\n'+contract).encode(),1)
     if imported:
         imported['index_hex']=index.hex()
