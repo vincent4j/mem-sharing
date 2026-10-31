@@ -60,6 +60,8 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 
 两家均仅有默认根的静态支持；DSH 限本次默认 coding `cordis` preset，非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根，检查不回传变量值。自定义配置未验证；`ZCODE_HOME` 不是 ZCode 规则根。Skill 发现及验收边界见[操作手册](docs/operations.md#桌面端默认根与验证边界)。
 
+Claude Code 的 macOS 原生 CLI 通过 Mach-O 文件类型及 Apple 证书链、Anthropic 团队与产品签名共同核验，不启动二进制，也不把目录名作为产品版本。npm 安装仍按包名与入口核验。默认 PATH 中的断链或失败候选仍使结果为 `unknown`；已核清活动安装时，可在精确请求中显式限定 `search_paths` 与 `user_candidates`，保留原有 PATH 和文件。
+
 ## 给执行 Agent 的命令与批准合同
 
 以下参数以当前源码 CLI help 为准；尖括号内容须替换为真实核验值。普通安装来源参数二选一；显式选择执行器的示例如下：

@@ -146,6 +146,64 @@ class PathExecutableTests(DetectFixture):
         self.assertEqual(report["agents"]["codex"]["status"], "unknown")
 
 
+class ClaudeNativeTests(DetectFixture):
+    def native(self):
+        exe = self.area / 'native' / '2.1.295'
+        exe.parent.mkdir()
+        exe.write_bytes(bytes.fromhex('cffaedfe') + b'fixture-not-an-executable')
+        exe.chmod(0o755)
+        (self.bin_dir / 'claude').symlink_to(exe)
+        return exe
+
+    def test_native_identity_is_verified_without_launch_or_filename_version(self):
+        exe = self.native()
+        calls = []
+
+        def runner(command):
+            calls.append(command)
+            self.assertEqual(command[:5], ['codesign', '--verify', '--strict', '-R',
+                                          detect._CLAUDE_NATIVE_REQUIREMENT])
+            self.assertEqual(command[-1], str(exe))
+            return SimpleNamespace(returncode=0)
+
+        report = self.detect(['claude'], runner=runner)['agents']['claude']
+        self.assertEqual(report['status'], 'installed')
+        self.assertEqual(len(calls), 1)
+        native = next(x for x in report['evidence'] if x['result'] == 'verified')
+        self.assertEqual(native['type'], 'macos_native_executable')
+        self.assertNotIn('version', native)
+        self.assertIn('anchor apple generic', calls[0][4])
+        self.assertIn('Q6L2SF6YDW', calls[0][4])
+        self.assertIn('com.anthropic.claude-code', calls[0][4])
+
+    def test_invalid_identity_and_unavailable_backend_remain_unknown(self):
+        self.native()
+        for result in (None, SimpleNamespace(returncode=1)):
+            with self.subTest(result=result):
+                r = self.detect(['claude'], runner=lambda command: result)
+                self.assertEqual(r['agents']['claude']['status'], 'unknown')
+
+    def test_native_verification_does_not_mask_other_broken_candidates(self):
+        self.native()
+        extra = self.area / 'other-bin'
+        extra.mkdir()
+        (extra / 'claude').symlink_to(self.area / 'missing')
+        r = self.detect(['claude'], search_paths=[str(self.bin_dir), str(extra)],
+                        runner=lambda command: SimpleNamespace(returncode=0))
+        self.assertEqual(r['agents']['claude']['status'], 'unknown')
+
+    def test_claude_wrapper_cannot_be_promoted_by_codesign_stub(self):
+        exe = self.bin_dir / 'claude'
+        exe.write_text('#!/bin/sh\n')
+        exe.chmod(0o755)
+
+        def runner(command):
+            self.fail('a wrapper must never reach native signature verification')
+
+        r = self.detect(['claude'], runner=runner)
+        self.assertEqual(r['agents']['claude']['status'], 'unknown')
+
+
 class AppBundleTests(DetectFixture):
     def test_valid_codex_bundle_is_installed_without_identifier_match(self):
         self.app_bundle(self.apps, "Codex.app", product="Codex")

@@ -47,6 +47,13 @@ _RECEIPT_SCHEMA_VERSION = 1
 # Walking up from a resolved CLI entry to the nearest package.json is bounded by
 # the filesystem root; this cap keeps pathological deep trees from long loops.
 _MAX_PACKAGE_WALK = 64
+_CLAUDE_NATIVE_REQUIREMENT = (
+    '=identifier "com.anthropic.claude-code" and anchor apple generic '
+    'and certificate leaf[subject.OU] = "Q6L2SF6YDW"'
+)
+_MACHO_MAGIC = {bytes.fromhex(value) for value in (
+    'feedface', 'cefaedfe', 'feedfacf', 'cffaedfe',
+    'cafebabe', 'bebafeca', 'cafebabf', 'bfbafeca')}
 
 
 class DetectionError(ValueError):
@@ -116,7 +123,33 @@ def _nearest_package_json(start_dir):
     return None
 
 
-def _check_path_executable(signal, path):
+def _check_claude_native(path, real, *, runner):
+    """Verify the native CLI without executing it or trusting its file name.
+
+    The Apple certificate anchor and pinned Anthropic team/identifier reject
+    ad-hoc signatures and signatures from other products. Version is unknown:
+    a directory name is not authenticated product version metadata.
+    """
+    try:
+        with open(real, 'rb') as handle:
+            if handle.read(4) not in _MACHO_MAGIC:
+                return None
+    except OSError:
+        return _record('path_executable', path, 'failed',
+                       'Claude 原生入口不可读', path=real)
+    result = runner(['codesign', '--verify', '--strict', '-R',
+                     _CLAUDE_NATIVE_REQUIREMENT, real])
+    if result is None or result.returncode != 0:
+        return _record('path_executable', path, 'failed',
+                       'Claude 原生二进制签名/Anthropic 身份未通过核验', path=real,
+                       type='macos_native_executable')
+    return _record('path_executable', path, 'verified',
+                   'Claude Code 原生 Mach-O 入口与 Anthropic 签名身份一致',
+                   path=real, type='macos_native_executable', name='Claude Code',
+                   executable_path=real, sha256=_sha256_file(real))
+
+
+def _check_path_executable(signal, path, *, runner=None):
     real, problem = _resolve_active_entry(path)
     if real is None:
         if problem == "not_found":
@@ -124,6 +157,10 @@ def _check_path_executable(signal, path):
         return _record("path_executable", path, "failed", problem)
     package_json = _nearest_package_json(os.path.dirname(real))
     if package_json is None:
+        if signal['package_name'] == '@anthropic-ai/claude-code':
+            native = _check_claude_native(path, real, runner=runner or _default_runner)
+            if native is not None:
+                return native
         return _record(
             "path_executable", path, "failed",
             "无可识别的最近 package.json(自编译/裸二进制,来源不明)",
@@ -354,7 +391,7 @@ def _detect_one(agent, entry, *, home, search_paths, user_candidates, runner, ap
                 records.append(_record(kind, signal["executable"], "not_found", "PATH 中无该命令且未提供显式路径"))
             else:
                 for candidate in candidates:
-                    records.append(_check_path_executable(signal, candidate))
+                    records.append(_check_path_executable(signal, candidate, runner=runner))
         elif kind == "macos_app_bundle":
             locations = [os.path.join(directory, signal["bundle_name"])
                          for directory in app_directories]
