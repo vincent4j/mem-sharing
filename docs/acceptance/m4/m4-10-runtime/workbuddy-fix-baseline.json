@@ -1,0 +1,31 @@
+{
+  "checked_at": "2026-10-31T01:32:57.807837+00:00",
+  "head": "51ecf55ea3847ef71866892ca45b46fed1b0f154",
+  "uncommitted": true,
+  "tests": {
+    "unit": {
+      "command": "python3 -m unittest discover -s tests/unit",
+      "count": 467,
+      "seconds": 96.769,
+      "exit_code": 0,
+      "log": "workbuddy-fix-unit.log"
+    },
+    "integration": {
+      "command": "python3 -m unittest discover -s tests/integration",
+      "count": 74,
+      "seconds": 106.529,
+      "exit_code": 0,
+      "log": "workbuddy-fix-integration.log"
+    }
+  },
+  "exit_code_source": "implementation agent process results; log contents independently checked",
+  "frozen_during_tests": "implementation agent confirms no source/test mutations after either final run started",
+  "files": {
+    "scripts/agm_core/user_entries.py": "eda73b02e99d8092f6f587d786d163efd4d8bbc72340e79de0ad1ffabd25c85a",
+    "scripts/agm_core/ck_install.py": "a1e67cc504796e2ffd144c8ea5579935266a8180bff3112bff5841db2bf73d7d",
+    "scripts/install.py": "91281509b4bf647d5ce4bf52bb401556c65f0209730338d0795327b56a1c1ee7",
+    "tests/unit/test_ck_install.py": "ab32a439e533d22294c17e613c7331f9501dd348e4d23aa1271668143d3190d6",
+    "tests/unit/test_m405_user_entries.py": "fd73c54fe487f5f258d943b75344c940e7c4abbdbc696a9afa11430d36746765",
+    "tests/unit/test_m408_installer.py": "8f067b2885d725d25e6da3aa064bc6a05a3c5ca25bb914fc1ff7579951cf4fc8"
+  }
+}

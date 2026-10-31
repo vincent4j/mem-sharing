@@ -1,0 +1,45 @@
+{
+  "utc": "2026-10-31T00:27:13.839502+00:00",
+  "versions": {
+    "codex": "0.162.0",
+    "claude": "2.1.295"
+  },
+  "entry_pointers": {
+    "codex": {
+      "exists": true,
+      "public_pointer_lines": [
+        "开始任务前读取并遵守 /Users/vincent4j/.mem-sharing/memories/MEMORY.md;读不到就说明。"
+      ],
+      "sha256": "fe1cf4b894652b64491a3c2b1ca103a674a3ff916f665712bec772a84da4753a"
+    },
+    "claude": {
+      "exists": true,
+      "public_pointer_lines": [
+        "@/Users/vincent4j/.mem-sharing/memories/MEMORY.md"
+      ],
+      "sha256": "1a191dea0f1c325e3722e7b882bf48935185d08c5159e47d735a54b15051a8fb"
+    },
+    "workbuddy": {
+      "exists": true,
+      "public_pointer_lines": [],
+      "sha256": "eea8c118937a73af6414e2a71f8f2e95734f522dca854d86f72fa2cf5263e8a0"
+    }
+  },
+  "blind_input_checks": {
+    "codex": {
+      "public_answer_not_in_prompt": true,
+      "project_answer_not_in_prompt": true,
+      "public_answer_not_in_project": true
+    },
+    "claude": {
+      "public_answer_not_in_prompt": true,
+      "project_answer_not_in_prompt": true,
+      "public_answer_not_in_project": true
+    },
+    "workbuddy": {
+      "public_answer_not_in_prompt": true,
+      "project_answer_not_in_prompt": true,
+      "public_answer_not_in_project": true
+    }
+  }
+}

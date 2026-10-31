@@ -172,7 +172,10 @@ class CKInstallTests(InstallFixture):
 
     def test_approval_evidence_and_unrelated_main_approval_rejected(self):
         plan=self.plan_ck(); before=self.snapshot()
-        for evidence in ({},dict(plan),dict(approved(plan),reference=''),dict(approved(plan),scope='project'),dict(approved(plan),confirmed_at='<UTC>')):
+        for evidence in ({},dict(plan),dict(approved(plan),reference=''),dict(approved(plan),scope='project'),dict(approved(plan),confirmed_at='<UTC>'),
+                         dict(approved(plan),confirmed_at='2026-10-30T00:00:00+00:00'),
+                         dict(approved(plan),confirmed_at='2026-10-30T00:00:00+08:00'),
+                         dict(approved(plan),confirmed_at='2026-10-30T00:00:00')):
             with self.subTest(evidence=evidence):
                 with self.assertRaises(ck.CKError):ck.execute_context_keeper(plan,evidence,request=self.request)
         self.assertEqual(before,self.snapshot())

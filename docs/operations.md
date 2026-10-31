@@ -1,4 +1,4 @@
-状态：文档版本 1.0；基线 ae0775a；2026-10-31。
+状态：文档版本 1.1；2026-10-31 收尾。命令形状以当前源码帮助为准，真实运行限制见验收总览。
 
 # memSharing 操作手册
 
@@ -47,7 +47,7 @@ v0 仅复制获准的 memories/references，旧目录 `~/.agents-group` 原地�
 
 无批准时返回 `approval_plan`，不会安装。
 Agent 展示完整计划并绑定真实确认，将计划连同 `confirmed_at/reference` 写入批准 JSON。
-批准必须对应当前计划，不填写虚构确认，不将一次确认扩大成任意修改授权。
+`confirmed_at` 使用真实 UTC 时间并以 `Z` 结尾，例如 `2026-10-31T02:23:47Z`（示例不得当作本次确认时间）；`reference` 指向真实确认。批准必须对应当前计划，不填写虚构确认，不将一次确认扩大成任意修改授权。
 
 ```bash
 python3 scripts/install.py --approval-file /absolute/path/install-approval.json
@@ -212,7 +212,10 @@ python3 /absolute/verified-source/scripts/install.py --recover /absolute/journal
 下面是外部 request 清单的生成方式。`<干净来源>` 必须是修复已提交后的干净 checkout；`<完整SHA>` 为该提交，不能用未提交工作树配旧SHA。清单写到独立暂存目录，不修改用户规则或安装态。生成过程中只有读取与输出JSON；仍需随后预览、核对并批准完整安装计划。
 
 ```sh
-python3 -B - '<干净来源>' '<完整SHA>' > /tmp/mem-sharing-wb-release-0.1.1-request.json <<'PY'
+umask 077
+WB_RELEASE_DIR=$(mktemp -d)
+WB_RELEASE_OP="wb-public-index-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+python3 -B - '<干净来源>' '<完整SHA>' "$WB_RELEASE_OP" > "$WB_RELEASE_DIR/request.json" <<'PY'
 import copy, importlib.util, json, sys
 from pathlib import Path
 source_root = Path(sys.argv[1]).resolve()
@@ -238,12 +241,12 @@ conversion = {
 # Reject wrong predecessors/targets before emitting a purported supported request.
 request = {'home': str(runtime.home), 'platform_config': config, 'source': source,
            'agents': ['workbuddy'], 'conversions': [conversion],
-           'operation_id': 'wb-public-index-011'}
+           'operation_id': sys.argv[3]}
 installer.plan_machine(request)
 print(json.dumps({'source': source, 'conversions': [conversion]}, ensure_ascii=False, indent=2))
 PY
 
-python3 -B <干净来源>/scripts/install.py --request-file /tmp/mem-sharing-wb-release-0.1.1-request.json --agent workbuddy --operation-id wb-public-index-011
+python3 -B <干净来源>/scripts/install.py --request-file "$WB_RELEASE_DIR/request.json" --agent workbuddy --operation-id "$WB_RELEASE_OP"
 # 上一步 approval_plan 加真实 confirmed_at/reference，保存到精确批准JSON；不要用 request 代替批准
 python3 -B <干净来源>/scripts/install.py --approval-file <精确批准JSON绝对路径>
 ```

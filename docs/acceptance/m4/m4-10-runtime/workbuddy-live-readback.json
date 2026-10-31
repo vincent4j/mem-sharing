@@ -1,0 +1,70 @@
+{
+  "checked_at": "2026-10-31T02:23:47.212564+00:00",
+  "operation_id": "wb-public-index-011b",
+  "installed_files": 27,
+  "code_27_and_product_identity_match": true,
+  "workbuddy": {
+    "before_bytes": 5788,
+    "after_bytes": 8174,
+    "original_prefix_unchanged": true,
+    "existing_ck_block_preserved_by_entire_prefix": true,
+    "sha256": "02adac0d139218402235cbb7a1860231e5bedc148895f8cd1078314ce948c272",
+    "mode": "0o644"
+  },
+  "protected_unchanged": [
+    "codex-AGENTS.md",
+    "claude-CLAUDE.md",
+    "public-MEMORY.md"
+  ],
+  "registry_original_objects_agents_projects_preserved": true,
+  "journal_status": "committed",
+  "activation_receipts": {
+    "before": {
+      "sha256": "579982f622455a75c85661bdff70658978fd100533008c597ee8c0c354086373",
+      "keys": [
+        "journal",
+        "operation_id",
+        "phase",
+        "proof",
+        "registry_sha256",
+        "release",
+        "schema_version"
+      ]
+    },
+    "after": {
+      "sha256": "2e04a9f8a6007b5169aeda32300fee18d994a90be64be9545844cbd0c76f8be7",
+      "keys": [
+        "journal",
+        "operation_id",
+        "phase",
+        "proof",
+        "registry_sha256",
+        "release",
+        "schema_version"
+      ]
+    }
+  },
+  "guard_locks_cleared": true,
+  "ck_readonly_scene": {
+    "passed": true,
+    "agents": [
+      "codex",
+      "workbuddy"
+    ],
+    "installed_or_modified_ck": false
+  },
+  "static_status": {
+    "codex": {
+      "status": "connected",
+      "reason": null,
+      "runtime_acceptance": "pending"
+    },
+    "workbuddy": {
+      "status": "connected",
+      "reason": null,
+      "runtime_acceptance": "pending"
+    }
+  },
+  "activation_receipts_identity_and_code_stage_hash_checked": true,
+  "receipt_comparison_note": "Receipt release is the complete inventory descriptor, not its nested release field; comparison corrected and both match."
+}

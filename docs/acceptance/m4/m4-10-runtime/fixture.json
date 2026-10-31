@@ -1,0 +1,25 @@
+{
+  "utc": "2026-10-31T00:25:20.083920+00:00",
+  "trigger": "纸卡核验-e4198600674e",
+  "public_marker": "PUBLIC-d897ead68c9d4f85a8ce1ea957abc9f1",
+  "topic": "/Users/vincent4j/.mem-sharing/memories/topics/m4-runtime-9720f0109a73.md",
+  "index_before_sha256": "b86fbc67104aedec142c66c8d421204e2c5190ea7f19524377a5b777303d135b",
+  "index_test_sha256": "803a169dd480f47cc118f52fb8edefd0d55ede1f4643a24d2aa9cbe00949d0dc",
+  "projects": {
+    "codex": {
+      "path": "/tmp/mem-sharing-m4-runtime-20261031/codex",
+      "marker": "PROJECT-79d2cacebaae4bda8ccc95bfa7f9d3aa",
+      "agents_sha256": "1d0c19d66c549ef65225ba7289d606cd6dad4db2f73726c8457b3bc23904d327"
+    },
+    "claude": {
+      "path": "/tmp/mem-sharing-m4-runtime-20261031/claude",
+      "marker": "PROJECT-03a65bc9ed3a4138a3e991d079ac2d2d",
+      "agents_sha256": "a5626bd309c6fb1ace3b1aad1222295c4fe69e03a6a96ab8043ec0dce7485e7b"
+    },
+    "workbuddy": {
+      "path": "/tmp/mem-sharing-m4-runtime-20261031/workbuddy",
+      "marker": "PROJECT-7ab251dc98144931a43314cd0bc616f3",
+      "agents_sha256": "b2aa8ef117481f826e73a67eb43c21a0989804fe4713889ac6da81aa4bd99c28"
+    }
+  }
+}

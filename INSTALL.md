@@ -6,7 +6,7 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 请从 https://github.com/vincent4j/mem-sharing 安装 memSharing（多 Agent 记忆共享与融合）。
 ```
 
-本页供未安装产品的 Agent 直接使用，无须先有产品 Skill、v0 工具、Context Keeper 或项目配置。依据 [DESIGN v2.0](DESIGN.md) 与[系统架构](docs/architecture.md)。本页描述目标流程，执行状态以实际结果为准；M4-09 已通过(见[验收总览](docs/acceptance/index.md)),真机项归 M4-10。
+本页供未安装产品的 Agent 直接使用，无须先有产品 Skill、v0 工具、Context Keeper 或项目配置。依据 [DESIGN](DESIGN.md) 与[系统架构](docs/architecture.md)。本页描述目标流程，执行状态以实际结果为准；M4-09 的本地范围与阻断项见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)，真机项归 M4-10。
 
 ## 用户看到的安装对话（五拍）
 
@@ -54,14 +54,14 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 
 ## 给执行 Agent 的命令与批准合同
 
-以下参数已对照 `de9cc4f`；尖括号内容须替换为真实核验值。普通安装预览二选一：
+以下参数以当前源码 CLI help 为准；尖括号内容须替换为真实核验值。普通安装预览二选一：
 
 ```text
 python3 -B scripts/install.py --source /absolute/path/clean-checkout --commit <完整SHA> --version <SemVer>
 python3 -B scripts/install.py --source-manifest /absolute/path/source.json --agent codex --agent claude
 ```
 
-`source.json` 含 `root/url/commit/version/files`，不与 source/commit/version 混用。无批准输出 `approval_plan`，批准文件为完整计划加真实 `confirmed_at/reference`，一次用户确认由执行编排绑定到精确计划，不额外制造逐项确认，也不伪造确认。锁内重核，计划外变化停止。
+`source.json` 含 `root/url/commit/version/files`，不与 source/commit/version 混用。无批准输出 `approval_plan`，批准文件为完整计划加真实 `confirmed_at/reference`，`confirmed_at` 须使用真实 UTC 的 `YYYY-MM-DDTHH:MM:SS[.小数]Z` 格式；不使用 `+00:00` 或本地时区。一次用户确认由执行编排绑定到精确计划，不额外制造逐项确认，也不伪造确认。锁内重核，计划外变化停止。
 
 ```bash
 python3 -B scripts/install.py --approval-file /absolute/path/install-approval.json
@@ -86,7 +86,7 @@ python3 -B scripts/install.py --context-keeper --approval-file /absolute/ck-appr
 
 完整底层报告保留给执行 Agent 和验收使用，不在成功对话中逐项倾倒。至少保留：状态与通道，R/C/V，代码/结构/schema 三版本及升级前后值，URL/commit/清单哈希，op 与恢复位置，已接入/absent/unknown/未选事实，复制/排除/冲突项，实际项目下一步，以及运行时验证状态。
 
-既有字段包括 `status/layout/versions/source/operation_id/recovery/agents/copies/exclusions/project_commands/runtime_acceptance/connection_pending`，预览带 `approval_plan`。下载成功而入口失败必须 partial；无 installed 不得说各家已启用。静态入口读回与新会话表现分开记录，用户简报不添加自检要求。
+既有字段包括 `status/layout/versions/source/operation_id/recovery/agents/copies/exclusions/project_commands/entry_status/connection_pending`（运行状态位于 `entry_status.<agent>.runtime_acceptance`），预览带 `approval_plan`。下载成功而入口失败必须 partial；无 installed 不得说各家已启用。静态入口读回与新会话表现分开记录，用户简报不添加自检要求。
 
 主产品与 keeper 分层报告：主产品完成后，keeper 可为跳过、unavailable、失败或 configured；keeper 失败不回滚主产品，也不能合报全成功。configured 仅证明安装与字节读回，不证明执行器新会话已加载。
 
@@ -129,11 +129,7 @@ python3 -B /absolute/path/verified-source/scripts/install.py --recover /absolute
 
 ### WorkBuddy 用户入口的接入边界
 
-用户级 `~/.workbuddy/MEMORY.md` 的私人原文字节保留；精确批准计划后追加受管块，块内明确读取本机公共索引绝对路径及项目 `AGENTS.md`。已登记旧块仅在指纹匹配时，经精确批准更新；漂移、未登记旧块或不满足公共读取语义的共享用户块停止自动接入，交回原有治理路径。与当前模板完全相同的未登记块可保真登记为 reused，不取得删除权。安装器只拥有其新增受管块，不拥有私人全文；本次不提供机器卸载。
-
-报告中的 installed 是安装探测，connected 是登记与实际入口语义的静态核验；缺口列于 `entry_status`，接入未全完成报告 partial。每项 `runtime_acceptance: pending` 仍需真实新会话证据。已有/noop 安装也重新核验静态入口，不凭应用存在宣称接入。需要更新 WorkBuddy 已登记约定时使用显式 `--agent workbuddy` 的精确预览/批准流程；不因同版无参数重跑而自动接入新 Agent。Keeper 尾步继续检查主操作、登记对象与指纹，不绕过缺口。本修复不修改私人规则、不预建 WorkBuddy 原生项目目录，不扩大旧版本迁移承诺。
-
-历史共享 user scope 入口即使含正确公共指针，也不由机器安装器复制或接管；缺少机器级对象时静态接入保持 pending（`machine_entry_not_registered_shared_reference`），需另行治理。这与文件语义缺失、运行时尚未验收分别报告。
+完整合同见[操作手册](docs/operations.md#workbuddy-用户入口的接入边界)：保留私人正文，按受管块/精确指纹批准接入；installed、静态 connected 与 runtime 分开报告。共享 user scope 入口不由机器安装器接管。
 
 ### 已审定 WorkBuddy 修复发行转换
 

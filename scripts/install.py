@@ -27,6 +27,16 @@ from agm_core import upgrade, user_entries, user_install, ck_install
 
 OFFICIAL = 'https://github.com/vincent4j/mem-sharing'
 LEGACY_OFFICIAL = 'https://github.com/vincent4j/agent-group-memory'  # 远程改名前的旧 URL,仍视作官方来源
+# Closed release manifest: the seven docs a C-side install can click through,
+# plus scripts/. Acceptance records, CK worklogs and local state stay source-only.
+SHIPPED_DOCS = ('SKILL.md', 'README.md', 'INSTALL.md', 'llms.txt', 'DESIGN.md',
+                'docs/architecture.md', 'docs/operations.md')
+
+
+def _managed_source(name):
+    if name in SHIPPED_DOCS or name.startswith('scripts/'):
+        return name != 'scripts/registry.json' and not name.startswith(('scripts/backups/', 'scripts/.agm.lock/'))
+    return False
 INPUT_KEYS = {'source', 'conversions', 'legacy_registries', 'legacy_source_commits',
               'evidence_files', 'legacy_identity',
               # Explicit detection inputs: keep cold-CLI tests and M4-09/M4-10-A
@@ -86,10 +96,7 @@ def checkout_source(root, commit, version):
     names = _git(root, 'ls-files', '-z').split('\0')
     files = {}
     for name in names:
-        if not name:
-            continue
-        managed = name in ('SKILL.md', 'README.md', 'INSTALL.md', 'llms.txt') or name.startswith('scripts/')
-        if not managed or name == 'scripts/registry.json' or name.startswith(('scripts/backups/', 'scripts/.agm.lock/')):
+        if not name or not _managed_source(name):
             continue
         path = root / name
         if path.is_symlink() or not path.is_file():
@@ -111,11 +118,10 @@ def _evidence(approval):
         if not isinstance(value, str) or not value.strip() or value.startswith('<'):
             raise InstallError('Real confirmation evidence required: ' + key, 'approval_invalid')
     try:
-        timestamp = datetime.fromisoformat(approval['confirmed_at'].replace('Z', '+00:00'))
-        if timestamp.utcoffset() is None:
-            raise ValueError('timezone missing')
-    except ValueError:
-        raise InstallError('confirmed_at must be a timezone-qualified timestamp', 'approval_invalid')
+        registry._evidence({key: approval[key] for key in ('confirmed_at', 'reference')})
+    except registry.RegistryError as exc:
+        # One strict ledger-compatible format: UTC 'Z' suffix, never '+00:00'.
+        raise InstallError(str(exc) + '; use UTC Z, e.g. 2026-10-31T08:00:00Z', 'approval_invalid') from None
     return {key: approval[key] for key in ('confirmed_at', 'reference')}
 
 

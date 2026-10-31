@@ -252,11 +252,12 @@ def _verify_rule(before, after, agent):
 def execute_context_keeper(plan, approval, *, request=None, runner=None):
     # Same exact-evidence contract as the CLI, without importing its entrypoint.
     evidence = {k: approval.get(k) for k in ('confirmed_at', 'reference')}
-    try:
-        valid = all(isinstance(v, str) and v.strip() and not v.startswith('<') for v in evidence.values())
-        valid = valid and datetime.fromisoformat(evidence['confirmed_at'].replace('Z', '+00:00')).utcoffset() is not None
-    except (ValueError, TypeError):
-        valid = False
+    valid = all(isinstance(v, str) and v.strip() and not v.startswith('<') for v in evidence.values())
+    if valid:
+        try:
+            registry._evidence(evidence)  # Strict ledger format: UTC 'Z' suffix only.
+        except ValueError:
+            valid = False
     if not valid or approval != dict(plan, **evidence):
         _fail('Exact CK plan and real confirmation evidence required', 'approval_mismatch')
     request = request or {'home': plan['home'], 'platform_config': plan['platform_config']}
@@ -365,7 +366,7 @@ def tail(report, request, *, stdin=None, stderr=None):
             return report
         if failure is not None:
             raise failure
-        evidence = {'confirmed_at': datetime.now(timezone.utc).isoformat(),
+        evidence = {'confirmed_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                     'reference': 'TTY newline consenting to displayed CK user-install purpose and exact connected-agent scope'}
         report['context_keeper'] = execute_context_keeper(plan, dict(plan, **evidence), request=request)
         if report['context_keeper']['status'] == 'configured':

@@ -1,0 +1,1097 @@
+{
+  "baseline_head": "04c32e24b9ab9504514908f2368cddca4356e478",
+  "baseline_files": 110,
+  "counts": {
+    "保留": 82,
+    "修改保留": 25,
+    "归并后删除": 3,
+    "新增": 5
+  },
+  "hash_note": "本轮起点为仓库外备份；after为交付字节。清单自身不作自引用hash。",
+  "files": [
+    {
+      "path": ".gitignore",
+      "decision": "保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "58015277086c5b15b3d073579c6776070501c8d423e70cb0d39d2ce3d8018dbf",
+      "after_sha256": "58015277086c5b15b3d073579c6776070501c8d423e70cb0d39d2ce3d8018dbf"
+    },
+    {
+      "path": "AGENTS.md",
+      "decision": "保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "3441ef0a0d6f77c56e73dae4cf3830d70ab0d272db6e8f34208a16f1a4c760f6",
+      "after_sha256": "3441ef0a0d6f77c56e73dae4cf3830d70ab0d272db6e8f34208a16f1a4c760f6"
+    },
+    {
+      "path": "DESIGN.md",
+      "decision": "修改保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "280c8108248e70c4f7245ac3f2a1d2ea653325a948cbe1134eb6fd3cf15db48e",
+      "after_sha256": "bd9510532299f743f0eb1c77d0a967ac009050aa580118e0854c8a46d3f9b8f4"
+    },
+    {
+      "path": "INSTALL.md",
+      "decision": "修改保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "26d428b7ad42f8637978e8c3828aa68c98761e25435b7f1ec4356725a2a8a04b",
+      "after_sha256": "449c94d25d3665a41793a9e6e00a4bfdc86f7edf2a6b5d2b7a6c50677b3bd11b"
+    },
+    {
+      "path": "README.md",
+      "decision": "修改保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "d23231942e03190164629215bc75134d6f3b42ab4541a718255a806ed258485a",
+      "after_sha256": "b1b47a1d0c8f6239e27d2c02a8e9b238f48a19043ab4ec9f8852b9c0efc185f1"
+    },
+    {
+      "path": "SKILL.md",
+      "decision": "修改保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "2a9170d8f08e276cd1d3468963ec50ee156b1f1d7897aa0684e2182132c1d4b6",
+      "after_sha256": "f77435df016e6eb18256a6c276716fa7527bfa138e72f23c1c860fc0add9fbbe"
+    },
+    {
+      "path": "docs/acceptance/index.md",
+      "decision": "修改保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "04bf97e35a9134c476cdb47252154f1cbde1307e240c57efc56adab50aceafc7",
+      "after_sha256": "893c57d42f69f2e34c6e2aa5a90ef12e492e41bc7092bc43c347118928bef337"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-prep/isolated-install-checklist.md",
+      "decision": "归并后删除",
+      "reason": "内容归并至m4-10-prep/release-checklist.md；旧重复规格与过时状态删除，仓库外备份保留",
+      "before_sha256": "d6fe2d617ce2bf039e7db0a6818f68bdb87d798e58ac90e4b1700294d65b036f",
+      "after_sha256": null
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-prep/new-session-verification.md",
+      "decision": "归并后删除",
+      "reason": "内容归并至m4-10-prep/release-checklist.md；旧重复规格与过时状态删除，仓库外备份保留",
+      "before_sha256": "a76c3fdbd0d528ef833a0d66315abaefb80be21606a103a9d62e847365dcf9a2",
+      "after_sha256": null
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-prep/release-checklist.md",
+      "decision": "修改保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "1a8429809940c1d5c607c25fe659d3b768995d173e30cc7233d39de337d917fd",
+      "after_sha256": "af661c730478285d02ab2425bedeae6f6d7f8bcbfea32975930647238cff636e"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-prep/synthetic-projects.md",
+      "decision": "归并后删除",
+      "reason": "内容归并至m4-10-prep/release-checklist.md；旧重复规格与过时状态删除，仓库外备份保留",
+      "before_sha256": "a14825cc8b6eb663f638c7a66d795de9c611c36167cfa7bd193d759fa898cfed",
+      "after_sha256": null
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/checks.json",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "2418e8e881739d5771c1eeedf71321d792b942b824d51bdcda13229c16c25413",
+      "after_sha256": "2418e8e881739d5771c1eeedf71321d792b942b824d51bdcda13229c16c25413"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/claude-AGENTS.txt",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "a5626bd309c6fb1ace3b1aad1222295c4fe69e03a6a96ab8043ec0dce7485e7b",
+      "after_sha256": "a5626bd309c6fb1ace3b1aad1222295c4fe69e03a6a96ab8043ec0dce7485e7b"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/claude.json",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "e37e35969663678bea0630ecb5438e72cf7a22df069944b604b2cd8da47eb8aa",
+      "after_sha256": "e37e35969663678bea0630ecb5438e72cf7a22df069944b604b2cd8da47eb8aa"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/cleanup.json",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "17df59e5885ea62d38a3bc86ad1cb823a1563e6bb06693d987e1ce5b1ade90ae",
+      "after_sha256": "17df59e5885ea62d38a3bc86ad1cb823a1563e6bb06693d987e1ce5b1ade90ae"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/codex-AGENTS.txt",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "1d0c19d66c549ef65225ba7289d606cd6dad4db2f73726c8457b3bc23904d327",
+      "after_sha256": "1d0c19d66c549ef65225ba7289d606cd6dad4db2f73726c8457b3bc23904d327"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/codex.json",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "32555cfc167ac3a16bcb3781aa5f15f634dd1e2b392d9df7a05668c06d4fa5ac",
+      "after_sha256": "32555cfc167ac3a16bcb3781aa5f15f634dd1e2b392d9df7a05668c06d4fa5ac"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/fixture.json",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "60b980f47df0caf33f94f63bf9218f71f9fdf96af65f41613228fc042c9897b2",
+      "after_sha256": "60b980f47df0caf33f94f63bf9218f71f9fdf96af65f41613228fc042c9897b2"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/integrity.json",
+      "decision": "修改保留",
+      "reason": "运行证据与来源链保留；当前摘要/阶段说明/完整性按本轮裁定更新",
+      "before_sha256": "4ca5c16f5ab42013bad986df1566cf5f2b833498ec710d1bda581e2cb85e790e",
+      "after_sha256": "272a6837c233241d2797772a8389ca7ce2d6137c7906f0ad8d55ed02cf0762bf"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/manual-cleanup.json",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "44539e33cc3207d83aad968c876e78851bfaf203505fb374af8137e210d82a95",
+      "after_sha256": "44539e33cc3207d83aad968c876e78851bfaf203505fb374af8137e210d82a95"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/manual-fixture.json",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "7ed01babb3c22f3021ab64b900e1e007cbf59167a8ccfdf488e17dba9202c126",
+      "after_sha256": "7ed01babb3c22f3021ab64b900e1e007cbf59167a8ccfdf488e17dba9202c126"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/manual-public-topic.txt",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "dd8cbea106c36e8241335a2131a35b4c0d387ee175f7818cee44530715d617ab",
+      "after_sha256": "dd8cbea106c36e8241335a2131a35b4c0d387ee175f7818cee44530715d617ab"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/prompt.txt",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "0fd7f4f50b5ba2ce4bcf85264b2553fce75ef475a6b0cca4fa5b64176aa98ea4",
+      "after_sha256": "0fd7f4f50b5ba2ce4bcf85264b2553fce75ef475a6b0cca4fa5b64176aa98ea4"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/public-topic.txt",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "2e84ca9c691c31e1e9781d6c5ff692ebedf761998520c110ed5b557573ad32d1",
+      "after_sha256": "2e84ca9c691c31e1e9781d6c5ff692ebedf761998520c110ed5b557573ad32d1"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/verdict.md",
+      "decision": "修改保留",
+      "reason": "运行证据与来源链保留；当前摘要/阶段说明/完整性按本轮裁定更新",
+      "before_sha256": "c6372fc2a97d43caf6922391aa325346a0c3ed976b5f6969208d7a2f5b98f408",
+      "after_sha256": "9fe7f58fba9ad33c17474db480738a128569981b1546844a9b62b5b0fbaec383"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-continuation-cleanup.json",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "62b47b224f8fd09f89d047ac592c6ca26e7746f864a6b2dbb1440b4a1d022957",
+      "after_sha256": "62b47b224f8fd09f89d047ac592c6ca26e7746f864a6b2dbb1440b4a1d022957"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-continuation.md",
+      "decision": "修改保留",
+      "reason": "运行证据与来源链保留；当前摘要/阶段说明/完整性按本轮裁定更新",
+      "before_sha256": "be51b92dede98f8446e4703795cefaee454ac2692f16d798eb19eeb296f6c988",
+      "after_sha256": "69a76fd0fff4a919712812ab0d20369790fed42a4d08b972b70e23112589fa0a"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-contract-integration.log",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "4c4d025555286c0d0ddbf123396bef2e2a540eb30788e2b641b90d13de162a78",
+      "after_sha256": "4c4d025555286c0d0ddbf123396bef2e2a540eb30788e2b641b90d13de162a78"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-contract-unit.log",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "bf633a47a49156cc77233181e068323b4b5f26520c18c10c514be2e11243fe84",
+      "after_sha256": "bf633a47a49156cc77233181e068323b4b5f26520c18c10c514be2e11243fe84"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-diagnosis.md",
+      "decision": "修改保留",
+      "reason": "运行证据与来源链保留；当前摘要/阶段说明/完整性按本轮裁定更新",
+      "before_sha256": "24da4719e45e5d27b9212aca163eb619b55fc2affa7b41ba1710ca95861ba753",
+      "after_sha256": "e60342c7493abe8e97b904f7b60df372b17e9c5efebb26d79a5a1dee8b322774"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-fix-baseline.json",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "46e5d92e0457a44002f3ffb375b4f34050a4725039e8865d3dce0082833ad525",
+      "after_sha256": "46e5d92e0457a44002f3ffb375b4f34050a4725039e8865d3dce0082833ad525"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-fix-integration.log",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "1be0b5d3658e8a9708be37cd9bd71ed37ba4476cf6efe28e6a179c18deeb3d4f",
+      "after_sha256": "1be0b5d3658e8a9708be37cd9bd71ed37ba4476cf6efe28e6a179c18deeb3d4f"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-fix-unit.log",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "5509485204e433767c3bc1631aaa1f647ccaac3ef227e4c4a1ca910feb53df4f",
+      "after_sha256": "5509485204e433767c3bc1631aaa1f647ccaac3ef227e4c4a1ca910feb53df4f"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-fix-verification.md",
+      "decision": "修改保留",
+      "reason": "运行证据与来源链保留；当前摘要/阶段说明/完整性按本轮裁定更新",
+      "before_sha256": "a8c5888584db948821f148677ca088de06208c05bfa7e5791e08380f2a81f7a9",
+      "after_sha256": "6dce3bef3319d3ee8ca735d3af134a10ba839d392010c62975cabae7320bef5a"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-live-deployment.md",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "c94f9d024ec5ee686684fe767a2aceaada6acc59834139df79b2d0a2d83bdd9c",
+      "after_sha256": "c94f9d024ec5ee686684fe767a2aceaada6acc59834139df79b2d0a2d83bdd9c"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-live-plan.md",
+      "decision": "修改保留",
+      "reason": "运行证据与来源链保留；当前摘要/阶段说明/完整性按本轮裁定更新",
+      "before_sha256": "da34c0a8368da40c93288edefebcb71b9e252bfb98271c4f59285e4ffe77ecd4",
+      "after_sha256": "21ca3dc92868309a5b04c2d242a992dd036f11a48f157f7e67ae25284b034d26"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-live-readback.json",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "a7ea0a945c2e4d54430411999621e5bc13b389d6ca1fb99605b5437823388e33",
+      "after_sha256": "a7ea0a945c2e4d54430411999621e5bc13b389d6ca1fb99605b5437823388e33"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy-manual-result.md",
+      "decision": "保留",
+      "reason": "原始合成运行、失败、恢复或部署证据；用于来源与结论追溯",
+      "before_sha256": "21baa2fd3f93342784f3eb604570445a553d2b2bd121e34f60c182cc56af923f",
+      "after_sha256": "21baa2fd3f93342784f3eb604570445a553d2b2bd121e34f60c182cc56af923f"
+    },
+    {
+      "path": "docs/acceptance/m4/m4-10-runtime/workbuddy.md",
+      "decision": "修改保留",
+      "reason": "运行证据与来源链保留；当前摘要/阶段说明/完整性按本轮裁定更新",
+      "before_sha256": "dc384e67e412f271091c93d9d60767bbb8d69f3a181a01ba2f860f5d71b80670",
+      "after_sha256": "4256510bc0aa18a71cc6e262dda117c4ca3fee5c239522990ff8ceb6a933a238"
+    },
+    {
+      "path": "docs/architecture.md",
+      "decision": "修改保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "91d786f1fe7a93045e48169903a3862f52b9761584b46abc57adc0691a6d3e76",
+      "after_sha256": "106c01b90bbeac45186f905ecd6ae20fcab7f0390340cca4520853461580ec9e"
+    },
+    {
+      "path": "docs/context-keeper/evolution/index.md",
+      "decision": "保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "275017ec2cbb13403e3799d4f616bc2c224c4de2fbb3dc3f0dba515e4c44f564",
+      "after_sha256": "275017ec2cbb13403e3799d4f616bc2c224c4de2fbb3dc3f0dba515e4c44f564"
+    },
+    {
+      "path": "docs/context-keeper/memory-keeper.md",
+      "decision": "修改保留",
+      "reason": "更新当前主题、待办及来源，历史日志不改写",
+      "before_sha256": "f4fed73e34962b6b7fa2c64f86bc35c032386e22dfd5ce36d7e7408c29ea20ee",
+      "after_sha256": "faa08094dddee5ebda1afa3d5c010d15469938acde7d6a9abd347844a1d02c02"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-29-M1负向验证与收口.md",
+      "decision": "保留",
+      "reason": "既有追加式历史记录，字节完整保留",
+      "before_sha256": "0be06ca5381ec84127e3e58dbf387b3d0df722a9691eb628f74c031912a34383",
+      "after_sha256": "0be06ca5381ec84127e3e58dbf387b3d0df722a9691eb628f74c031912a34383"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-29-M2-08两项目盘点与装配阻断.md",
+      "decision": "保留",
+      "reason": "既有追加式历史记录，字节完整保留",
+      "before_sha256": "49a6ec25d053fcb9810c87e71cd5d0f088cae33ed30a9f32ec613be15a88468b",
+      "after_sha256": "49a6ec25d053fcb9810c87e71cd5d0f088cae33ed30a9f32ec613be15a88468b"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-29-M2-08重跑装配与新会话验收.md",
+      "decision": "保留",
+      "reason": "既有追加式历史记录，字节完整保留",
+      "before_sha256": "4fdd6a98306b460faedad5f22a0822d4d7d7461975a235df9f8ce3c7f67ccb6f",
+      "after_sha256": "4fdd6a98306b460faedad5f22a0822d4d7d7461975a235df9f8ce3c7f67ccb6f"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-29-M2-09平台矩阵与发布前文档.md",
+      "decision": "保留",
+      "reason": "既有追加式历史记录，字节完整保留",
+      "before_sha256": "7f82dbd4570266042497b89ae5ce576b8378382bc1f180c51d3be186a0b680f1",
+      "after_sha256": "7f82dbd4570266042497b89ae5ce576b8378382bc1f180c51d3be186a0b680f1"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-29-三执行器记忆接力测试-WorkBuddy第三环.md",
+      "decision": "保留",
+      "reason": "既有追加式历史记录，字节完整保留",
+      "before_sha256": "a3f1f5f50545e57f7493f4e803726e0cef82cecfbf98a717e57029c35ec3d1f9",
+      "after_sha256": "a3f1f5f50545e57f7493f4e803726e0cef82cecfbf98a717e57029c35ec3d1f9"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-29-三执行器记忆接力测试.md",
+      "decision": "保留",
+      "reason": "既有追加式历史记录，字节完整保留",
+      "before_sha256": "8a72191cdb4647e0010179e835d5116f43063ee75f421b0b5e4f60683a6172ca",
+      "after_sha256": "8a72191cdb4647e0010179e835d5116f43063ee75f421b0b5e4f60683a6172ca"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-29-仓库创建与设计演进.md",
+      "decision": "保留",
+      "reason": "既有追加式历史记录，字节完整保留",
+      "before_sha256": "0361cbe9c9e0b0b420c8002b6e618aba6e34e3b7a485a6c3f55711cf19be7b6e",
+      "after_sha256": "0361cbe9c9e0b0b420c8002b6e618aba6e34e3b7a485a6c3f55711cf19be7b6e"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-30-M4-02统一运行态与产品台账.md",
+      "decision": "保留",
+      "reason": "既有追加式历史记录，字节完整保留",
+      "before_sha256": "e37cffa2334aa7f5575a7f34a3658d4482eb2440d57c7311d98d02ba9495b8ae",
+      "after_sha256": "e37cffa2334aa7f5575a7f34a3658d4482eb2440d57c7311d98d02ba9495b8ae"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-31-M4-10真机安装与仓库整理.md",
+      "decision": "保留",
+      "reason": "既有追加式历史记录，字节完整保留",
+      "before_sha256": "f5f5e10560dd86abe1ccec76979054f9ebb358c3f5f1163d7ddf031847bfeda9",
+      "after_sha256": "f5f5e10560dd86abe1ccec76979054f9ebb358c3f5f1163d7ddf031847bfeda9"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-31-M4新会话取证与最终判定.md",
+      "decision": "保留",
+      "reason": "既有追加式历史记录，字节完整保留",
+      "before_sha256": "9c77acffc70a38e5fc2e6b8685ee003b03f62636dda6fb9f46f023810b7771f1",
+      "after_sha256": "9c77acffc70a38e5fc2e6b8685ee003b03f62636dda6fb9f46f023810b7771f1"
+    },
+    {
+      "path": "docs/operations.md",
+      "decision": "修改保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "c55535a8a308ffa567f9d848a8b82bf6990c51c22891119652bafa975db3ebb0",
+      "after_sha256": "e3735853e5b393d37829c88e209188898548b815395479ee3c8fe7460495c895"
+    },
+    {
+      "path": "llms.txt",
+      "decision": "修改保留",
+      "reason": "现行规则/设计/安装/操作/验收入口；消除过期表述或重复引用，保留唯一职责",
+      "before_sha256": "5ca18d925818017201dbb723a721f13ad1b39ec488cdfdea80b138f43b281a3a",
+      "after_sha256": "0095f22b0805ecf0648daeeccc4c16a7e968511745a4a03be7e1ab3ab02f5315"
+    },
+    {
+      "path": "scripts/agents.json",
+      "decision": "保留",
+      "reason": "执行器路径合同，固定升级依赖，哈希保留",
+      "before_sha256": "9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab",
+      "after_sha256": "9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab"
+    },
+    {
+      "path": "scripts/agm.py",
+      "decision": "修改保留",
+      "reason": "CLI命令入口及参数错误指引",
+      "before_sha256": "9ffcc2bf09294dca1ac62e2b1c5d5e15fcfce455844055d5046051ec03ad2dbf",
+      "after_sha256": "9a55ccc6a4633f56804b80038287edb4f8cc7df396754f4acea6a02051f1998d"
+    },
+    {
+      "path": "scripts/agm_core/__init__.py",
+      "decision": "保留",
+      "reason": "Python包入口，零字节也保留",
+      "before_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "after_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/agm_core/batch_enable.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "78369ad55edf8d7f3cec42bb8dc707cd8602dbff1e7a2b09be4587f4b7b4f099",
+      "after_sha256": "78369ad55edf8d7f3cec42bb8dc707cd8602dbff1e7a2b09be4587f4b7b4f099"
+    },
+    {
+      "path": "scripts/agm_core/check.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "407870efb31dba4f4c2764367bb485871902a20a99b69fde448722bc7cebe7da",
+      "after_sha256": "407870efb31dba4f4c2764367bb485871902a20a99b69fde448722bc7cebe7da"
+    },
+    {
+      "path": "scripts/agm_core/ck_install.py",
+      "decision": "修改保留",
+      "reason": "独立CK安装授权/严格UTC时间",
+      "before_sha256": "a1e67cc504796e2ffd144c8ea5579935266a8180bff3112bff5841db2bf73d7d",
+      "after_sha256": "cf38c4b131141e4d00dc83aa1142895f3fbabfadb1e839df1909f9ed376cee4c"
+    },
+    {
+      "path": "scripts/agm_core/detect.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "97119e4d2b63b0539d45f674a8a7301c2d7ac65a7d73b664d3616ac6ac8932c1",
+      "after_sha256": "97119e4d2b63b0539d45f674a8a7301c2d7ac65a7d73b664d3616ac6ac8932c1"
+    },
+    {
+      "path": "scripts/agm_core/enable.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "8918808b8c0df60032249d512cecdbe9906aee26a87c9135111977a4f01db978",
+      "after_sha256": "8918808b8c0df60032249d512cecdbe9906aee26a87c9135111977a4f01db978"
+    },
+    {
+      "path": "scripts/agm_core/entries.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd",
+      "after_sha256": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd"
+    },
+    {
+      "path": "scripts/agm_core/layout.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "254f28dca67b0277480eb2001ec98f52102989cdaa4ee97a0d7e2540333ecb44",
+      "after_sha256": "254f28dca67b0277480eb2001ec98f52102989cdaa4ee97a0d7e2540333ecb44"
+    },
+    {
+      "path": "scripts/agm_core/legacy_import.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "cf77248dbe8c2fd844a29a8c95c99dfaa772e31408d32b68f0ae9ff3adaad73c",
+      "after_sha256": "cf77248dbe8c2fd844a29a8c95c99dfaa772e31408d32b68f0ae9ff3adaad73c"
+    },
+    {
+      "path": "scripts/agm_core/migrate.py",
+      "decision": "保留",
+      "reason": "旧版拒绝入口及恢复共享内核，非可删除兼容",
+      "before_sha256": "e8d6685897bf47603666ef31fea0d1fd0593a0845362efc8b32722aa0af7c46b",
+      "after_sha256": "e8d6685897bf47603666ef31fea0d1fd0593a0845362efc8b32722aa0af7c46b"
+    },
+    {
+      "path": "scripts/agm_core/paths.py",
+      "decision": "修改保留",
+      "reason": "路径白名单/当前合同引用",
+      "before_sha256": "fbf958ddf6608d8c284c96f29263f67614831ff04b6c709c499a57f2ace0dcb0",
+      "after_sha256": "663196f97b7fe2567f79d7a5a08e12ea8f074d01e1e41c4796befebe0cd040c4"
+    },
+    {
+      "path": "scripts/agm_core/project.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705",
+      "after_sha256": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705"
+    },
+    {
+      "path": "scripts/agm_core/registry.py",
+      "decision": "修改保留",
+      "reason": "台账验证/所有权/坏账类型门禁",
+      "before_sha256": "128e828b2f44c54efb39cfb844e01da1238f86789decd7f562bfc5f4cfe534f6",
+      "after_sha256": "6771162b262b4c9bbcb0b6c5acedbdc5893a57af79bf95d61c58a5f7f80a4800"
+    },
+    {
+      "path": "scripts/agm_core/remove.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "f67fa93aa24dfbbca3183714a6facbf89a479e79eacd6271a82e0a3ba3867283",
+      "after_sha256": "f67fa93aa24dfbbca3183714a6facbf89a479e79eacd6271a82e0a3ba3867283"
+    },
+    {
+      "path": "scripts/agm_core/transaction.py",
+      "decision": "保留",
+      "reason": "快照/原子替换/第三态保护/恢复",
+      "before_sha256": "78eca6cc3e43c47e531a4f734cb4b94d306b0738c4a3a0a8b6ccf0c4a184c40a",
+      "after_sha256": "78eca6cc3e43c47e531a4f734cb4b94d306b0738c4a3a0a8b6ccf0c4a184c40a"
+    },
+    {
+      "path": "scripts/agm_core/upgrade.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "bd4a774207f0cfc69d37be359364f15ec020b1a808c3d6f1f9a6909025e0d909",
+      "after_sha256": "bd4a774207f0cfc69d37be359364f15ec020b1a808c3d6f1f9a6909025e0d909"
+    },
+    {
+      "path": "scripts/agm_core/user_entries.py",
+      "decision": "保留",
+      "reason": "私人字节与固定升级合同，哈希保留",
+      "before_sha256": "eda73b02e99d8092f6f587d786d163efd4d8bbc72340e79de0ad1ffabd25c85a",
+      "after_sha256": "eda73b02e99d8092f6f587d786d163efd4d8bbc72340e79de0ad1ffabd25c85a"
+    },
+    {
+      "path": "scripts/agm_core/user_install.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "ee436b098180db9c54b7b9640fa16d8397bbc3424f5298b0f2880ad49e2c6214",
+      "after_sha256": "ee436b098180db9c54b7b9640fa16d8397bbc3424f5298b0f2880ad49e2c6214"
+    },
+    {
+      "path": "scripts/agm_core/user_rules_organize.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "b752974c662a715efe96da40929ad2219e997f4d8986094534c0b88166e43d4f",
+      "after_sha256": "b752974c662a715efe96da40929ad2219e997f4d8986094534c0b88166e43d4f"
+    },
+    {
+      "path": "scripts/agm_core/versions.py",
+      "decision": "保留",
+      "reason": "有效产品模块：已核对职责与关键授权/写入/恢复路径，保留",
+      "before_sha256": "74b611283e393450dd77a10afeab76b415144d0ba49d296b4e0a92a637bcbe7b",
+      "after_sha256": "74b611283e393450dd77a10afeab76b415144d0ba49d296b4e0a92a637bcbe7b"
+    },
+    {
+      "path": "scripts/install.py",
+      "decision": "修改保留",
+      "reason": "安装来源/批准/打包文档闭合修复",
+      "before_sha256": "91281509b4bf647d5ce4bf52bb401556c65f0209730338d0795327b56a1c1ee7",
+      "after_sha256": "0f92cd50dba93f62a24590228624ef3650dc6de224b90999928d5bd3fdfcb356"
+    },
+    {
+      "path": "tests/integration/test_batch_enable_cli.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "c6008fe9c39758cf15f560b76ba14c420df03c3cb081e5d5d3b39333cd23e4c2",
+      "after_sha256": "c6008fe9c39758cf15f560b76ba14c420df03c3cb081e5d5d3b39333cd23e4c2"
+    },
+    {
+      "path": "tests/integration/test_m202_transactions.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "fbdab360db58a8ceccac166ae3baed78e20978560c7691d0265a206716664a63",
+      "after_sha256": "fbdab360db58a8ceccac166ae3baed78e20978560c7691d0265a206716664a63"
+    },
+    {
+      "path": "tests/integration/test_m204_subprocess.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "cc5d1c349d3ad9cdd85c258390a774a0aa40b4bdcec28bc2398a65ec67c6835a",
+      "after_sha256": "cc5d1c349d3ad9cdd85c258390a774a0aa40b4bdcec28bc2398a65ec67c6835a"
+    },
+    {
+      "path": "tests/integration/test_m206_remove_integration.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "6831562e038f69a60aaffd27812fc69b1da72f598d0ed46b85cb6bb24456f613",
+      "after_sha256": "6831562e038f69a60aaffd27812fc69b1da72f598d0ed46b85cb6bb24456f613"
+    },
+    {
+      "path": "tests/integration/test_m207_cli_cycle.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "efc3f5a4c82e68c7420889368ce412fea8f4187e03a083882cbf09ac18b34346",
+      "after_sha256": "efc3f5a4c82e68c7420889368ce412fea8f4187e03a083882cbf09ac18b34346"
+    },
+    {
+      "path": "tests/integration/test_m403_migration.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "7ce9a1c15fc5c7612d936d5649359d0619e019f3a77b35c43dc7d9adf76e2ea0",
+      "after_sha256": "7ce9a1c15fc5c7612d936d5649359d0619e019f3a77b35c43dc7d9adf76e2ea0"
+    },
+    {
+      "path": "tests/integration/test_m404_install_process.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "58cd5bcb0e8ec51270e139099c3bd9a274cf9ccc119020e2ece4b95b4af9f678",
+      "after_sha256": "58cd5bcb0e8ec51270e139099c3bd9a274cf9ccc119020e2ece4b95b4af9f678"
+    },
+    {
+      "path": "tests/integration/test_m406_cli_lifecycle.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "84beda64f660448c40627fa3a11295601c5d1e3b2a5a931e137533ed5b7ddf3c",
+      "after_sha256": "84beda64f660448c40627fa3a11295601c5d1e3b2a5a931e137533ed5b7ddf3c"
+    },
+    {
+      "path": "tests/integration/test_m407_real_upgrade.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "fc036ed0f0e4fb36bbb95f2f0d4ca07ae36facc90661752202a09ee148a59e38",
+      "after_sha256": "fc036ed0f0e4fb36bbb95f2f0d4ca07ae36facc90661752202a09ee148a59e38"
+    },
+    {
+      "path": "tests/integration/test_m408_installer_cli.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "df6e35d6e8b1651421951afaf95ad345c8a03492b6730cad23b9b9f61dddf00f",
+      "after_sha256": "df6e35d6e8b1651421951afaf95ad345c8a03492b6730cad23b9b9f61dddf00f"
+    },
+    {
+      "path": "tests/unit/runtime_fixture.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "50afadbbe85b9eaefb2c25581edd1b4718a41994bd74da51cefae732f520f5d3",
+      "after_sha256": "50afadbbe85b9eaefb2c25581edd1b4718a41994bd74da51cefae732f520f5d3"
+    },
+    {
+      "path": "tests/unit/test_batch_enable.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "15e9262fb8c3d01cfa9174c5d921efa40d4e2bac207d587afabf3d380ea2fb7e",
+      "after_sha256": "15e9262fb8c3d01cfa9174c5d921efa40d4e2bac207d587afabf3d380ea2fb7e"
+    },
+    {
+      "path": "tests/unit/test_ck_install.py",
+      "decision": "修改保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "ab32a439e533d22294c17e613c7331f9501dd348e4d23aa1271668143d3190d6",
+      "after_sha256": "823543a67d3723bd392cf59ac58c0f110e00d8d84cdd5e7e1938035a35f616b4"
+    },
+    {
+      "path": "tests/unit/test_cli.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "4c8fe1087ed279d5649febc02e925965a63c5a7e835d06ea49569887c87daf32",
+      "after_sha256": "4c8fe1087ed279d5649febc02e925965a63c5a7e835d06ea49569887c87daf32"
+    },
+    {
+      "path": "tests/unit/test_m202_entries_project_registry.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "2a18f64b92b1bfc26d5383e9b7659966dd4e4bc526979237d35eb53feb94b41f",
+      "after_sha256": "2a18f64b92b1bfc26d5383e9b7659966dd4e4bc526979237d35eb53feb94b41f"
+    },
+    {
+      "path": "tests/unit/test_m204_enable.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "34c345a04c6e9a60866bf406fc117714bf5f6b5c97253424a84992abb0d8439c",
+      "after_sha256": "34c345a04c6e9a60866bf406fc117714bf5f6b5c97253424a84992abb0d8439c"
+    },
+    {
+      "path": "tests/unit/test_m205_check.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "0d116efad615242c3dad3c37b9dd4e595747f3737237e561a45b55670aee591c",
+      "after_sha256": "0d116efad615242c3dad3c37b9dd4e595747f3737237e561a45b55670aee591c"
+    },
+    {
+      "path": "tests/unit/test_m206_remove.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "734b739bb5a5055dcad57826001260fe6a68e9515269a6400626175d15869adc",
+      "after_sha256": "734b739bb5a5055dcad57826001260fe6a68e9515269a6400626175d15869adc"
+    },
+    {
+      "path": "tests/unit/test_m207_faults.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "73a42cf4feeea6a1682e37f892ad766d8da16c33dfe15a055a3dc06d0496b685",
+      "after_sha256": "73a42cf4feeea6a1682e37f892ad766d8da16c33dfe15a055a3dc06d0496b685"
+    },
+    {
+      "path": "tests/unit/test_m3_workbuddy.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "62d5c8ea4b96073a5a13ecf8489ca9a5f96fea32ec5a610b0fac3d010eb164fd",
+      "after_sha256": "62d5c8ea4b96073a5a13ecf8489ca9a5f96fea32ec5a610b0fac3d010eb164fd"
+    },
+    {
+      "path": "tests/unit/test_m402_layout_registry.py",
+      "decision": "修改保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "82884f7dcc88b4f5e988e9f204a78c4cd387a516bd96ac314342c4e636982669",
+      "after_sha256": "c8c60ed33200192b693c06479c6225eda1ca8a8c28e612081fb29310be794515"
+    },
+    {
+      "path": "tests/unit/test_m403_migrate.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "64732611f050ce4638d89de351e8c597abed4f68f85b1a8930e842a5b990facb",
+      "after_sha256": "64732611f050ce4638d89de351e8c597abed4f68f85b1a8930e842a5b990facb"
+    },
+    {
+      "path": "tests/unit/test_m404_install.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "3b57e249637106ceb29a706fc90da1bc0ebc957beeb366719391c2a51aff80ee",
+      "after_sha256": "3b57e249637106ceb29a706fc90da1bc0ebc957beeb366719391c2a51aff80ee"
+    },
+    {
+      "path": "tests/unit/test_m405_detect.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "8a88955abe0305d62c401499a8c0356c5643aa910b68c52e52c0e686b087fc9e",
+      "after_sha256": "8a88955abe0305d62c401499a8c0356c5643aa910b68c52e52c0e686b087fc9e"
+    },
+    {
+      "path": "tests/unit/test_m405_user_entries.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "fd73c54fe487f5f258d943b75344c940e7c4abbdbc696a9afa11430d36746765",
+      "after_sha256": "fd73c54fe487f5f258d943b75344c940e7c4abbdbc696a9afa11430d36746765"
+    },
+    {
+      "path": "tests/unit/test_m406_cli.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "7b3d132f6ab34a445aa05529e3e30ed3e616d07fec556c218cea89e39a372524",
+      "after_sha256": "7b3d132f6ab34a445aa05529e3e30ed3e616d07fec556c218cea89e39a372524"
+    },
+    {
+      "path": "tests/unit/test_m406_lifecycle.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "66a9cfaa40314caf6f32ca8067a4d18ee5b7e7557a5ec5d10e566aca76245a58",
+      "after_sha256": "66a9cfaa40314caf6f32ca8067a4d18ee5b7e7557a5ec5d10e566aca76245a58"
+    },
+    {
+      "path": "tests/unit/test_m407_legacy_upgrade.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "19d6311d90fda42e3a6adada0c1769a593d0bf9d79fd68fbc3a3e49b971a8bf2",
+      "after_sha256": "19d6311d90fda42e3a6adada0c1769a593d0bf9d79fd68fbc3a3e49b971a8bf2"
+    },
+    {
+      "path": "tests/unit/test_m407_upgrade.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "214d8b4726356e208c5c3aa0b332732c6db2c3fabb3329c3bc3c2a36e721d1cd",
+      "after_sha256": "214d8b4726356e208c5c3aa0b332732c6db2c3fabb3329c3bc3c2a36e721d1cd"
+    },
+    {
+      "path": "tests/unit/test_m408_installer.py",
+      "decision": "修改保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "8f067b2885d725d25e6da3aa064bc6a05a3c5ca25bb914fc1ff7579951cf4fc8",
+      "after_sha256": "6fa26a0b4186728f9d9f25a60633c152590c005784df6588649e0bfa29c5b906"
+    },
+    {
+      "path": "tests/unit/test_m408_organize.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "4fd1318ee9e93802824659dbc665570ba934794e81560c5844aae1ea058db55d",
+      "after_sha256": "4fd1318ee9e93802824659dbc665570ba934794e81560c5844aae1ea058db55d"
+    },
+    {
+      "path": "tests/unit/test_review_r2_r3.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "c9b61c481308529c5c87e83822cefd6f85b0e57224c8544bbed7114e352076d5",
+      "after_sha256": "c9b61c481308529c5c87e83822cefd6f85b0e57224c8544bbed7114e352076d5"
+    },
+    {
+      "path": "tests/unit/test_workbuddy_contract_upgrade.py",
+      "decision": "保留",
+      "reason": "本地隔离回归/共享夹具；保留对批准、状态、字节保全或故障恢复的验证",
+      "before_sha256": "4a570993eebf8aefeff3c54780a0d421103f50796079182fa162c141f1e1686c",
+      "after_sha256": "4a570993eebf8aefeff3c54780a0d421103f50796079182fa162c141f1e1686c"
+    },
+    {
+      "path": "tests/unit/test_release_closure.py",
+      "decision": "新增",
+      "reason": "本轮验证、质量报告、逐文件裁定或新会话日志；不打包项目证据",
+      "before_sha256": null,
+      "after_sha256": "ff70a88448a9c51c9d00dc44ade2dd076223c7270c68fd75400056ea2a10d6d8"
+    },
+    {
+      "path": "docs/acceptance/release-review.md",
+      "decision": "新增",
+      "reason": "本轮验证、质量报告、逐文件裁定或新会话日志；不打包项目证据",
+      "before_sha256": null,
+      "after_sha256": "2c5a2aa71f5636da9694ada1667684b48a594dc4b1e5d142c03bfb3f8481a903"
+    },
+    {
+      "path": "docs/context-keeper/worklogs/2026-10-31-发布前收尾质检.md",
+      "decision": "新增",
+      "reason": "本轮验证、质量报告、逐文件裁定或新会话日志；不打包项目证据",
+      "before_sha256": null,
+      "after_sha256": "8e05174461b7dd54910a867140555897d48072e24c4baaac971a19f42fb7a467"
+    },
+    {
+      "path": "docs/acceptance/release-review-files.json",
+      "decision": "新增",
+      "reason": "本轮验证、质量报告、逐文件裁定或新会话日志；不打包项目证据",
+      "before_sha256": null,
+      "after_sha256": null
+    },
+    {
+      "path": "tests/unit/test_release_012_upgrade.py",
+      "decision": "新增",
+      "reason": "0.1.1实际前身payload到0.1.2候选的隔离升级/批准拒绝/私人保全/恢复回归；不打包",
+      "before_sha256": null,
+      "after_sha256": "155913127e85363f7957395884a2f25677f1c83ac59ec777c4a64757e1286dee"
+    }
+  ],
+  "verification_evidence": {
+    "/tmp/memsharing-qa-eeChep/unit.log": "2f9ad3c6f61e60f955016c9d52e835081166d5f7cac123bffeac06568bf5f256",
+    "/tmp/memsharing-qa-eeChep/integration.log": "37e6c54adb2ad1dd821e4ad09719a4035d2167fdb7453439eda5a781c4247149",
+    "/tmp/memsharing-qa-eeChep/targeted.log": "7af0208e49e1b88fad9b5e87cf4a365fe3c159404301b3a9c30e7247e8299be8",
+    "/tmp/memsharing-qa-eeChep/unit-r2.log": "15864ee9099e9d711c140b1a0fb18bb91c7e017ee26e4f1fffe407c07e7b06a8",
+    "/tmp/memsharing-qa-eeChep/integration-r2.log": "4e2f07446e0b2a8520cc97a15f13dd293ede8799d1dc753a6026388cdecad1e6",
+    "/tmp/memsharing-qa-eeChep/manifest30.txt": "cd6a432d9a7a73d4dbe95bfcae73cdcfc8666c97c8f4eeea23305ca3a151fbc2",
+    "/tmp/memsharing-qa-eeChep/release012-targeted.log": "2ff8d6c31bb42dd491c6e78ccc539876e70cb315a1028bcab7474ef853e323f3",
+    "/tmp/memsharing-qa-eeChep/release012-targeted-r2.log": "a2830f346fca0cd25fd387d4389d70fb3fa86db17463c74aae1a8d340c1cfe04",
+    "/tmp/memsharing-qa-eeChep/target30-snapshot.txt": "f10fc3ea35f6ac1fabfb8e6f61c42382ecd5cc7b0acaa51ba95c4208b0a2822e"
+  },
+  "candidate": {
+    "version": "0.1.2",
+    "url": "https://github.com/vincent4j/mem-sharing",
+    "commit": null,
+    "status": "payload_reviewed_pending_authorized_local_commit",
+    "tree_sha256": "1fb1e199c992e07747bbf031fcb83cd74d2b85b5c9c491cda7d2836fca1dd353",
+    "file_count": 30,
+    "release_files": [
+      {
+        "path": "DESIGN.md",
+        "sha256": "bd9510532299f743f0eb1c77d0a967ac009050aa580118e0854c8a46d3f9b8f4",
+        "mode": 420
+      },
+      {
+        "path": "INSTALL.md",
+        "sha256": "449c94d25d3665a41793a9e6e00a4bfdc86f7edf2a6b5d2b7a6c50677b3bd11b",
+        "mode": 420
+      },
+      {
+        "path": "README.md",
+        "sha256": "b1b47a1d0c8f6239e27d2c02a8e9b238f48a19043ab4ec9f8852b9c0efc185f1",
+        "mode": 420
+      },
+      {
+        "path": "SKILL.md",
+        "sha256": "f77435df016e6eb18256a6c276716fa7527bfa138e72f23c1c860fc0add9fbbe",
+        "mode": 420
+      },
+      {
+        "path": "docs/architecture.md",
+        "sha256": "106c01b90bbeac45186f905ecd6ae20fcab7f0390340cca4520853461580ec9e",
+        "mode": 420
+      },
+      {
+        "path": "docs/operations.md",
+        "sha256": "e3735853e5b393d37829c88e209188898548b815395479ee3c8fe7460495c895",
+        "mode": 420
+      },
+      {
+        "path": "llms.txt",
+        "sha256": "0095f22b0805ecf0648daeeccc4c16a7e968511745a4a03be7e1ab3ab02f5315",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agents.json",
+        "sha256": "9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm.py",
+        "sha256": "9a55ccc6a4633f56804b80038287edb4f8cc7df396754f4acea6a02051f1998d",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/batch_enable.py",
+        "sha256": "78369ad55edf8d7f3cec42bb8dc707cd8602dbff1e7a2b09be4587f4b7b4f099",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/check.py",
+        "sha256": "407870efb31dba4f4c2764367bb485871902a20a99b69fde448722bc7cebe7da",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/ck_install.py",
+        "sha256": "cf38c4b131141e4d00dc83aa1142895f3fbabfadb1e839df1909f9ed376cee4c",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/detect.py",
+        "sha256": "97119e4d2b63b0539d45f674a8a7301c2d7ac65a7d73b664d3616ac6ac8932c1",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/enable.py",
+        "sha256": "8918808b8c0df60032249d512cecdbe9906aee26a87c9135111977a4f01db978",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/entries.py",
+        "sha256": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/layout.py",
+        "sha256": "254f28dca67b0277480eb2001ec98f52102989cdaa4ee97a0d7e2540333ecb44",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/legacy_import.py",
+        "sha256": "cf77248dbe8c2fd844a29a8c95c99dfaa772e31408d32b68f0ae9ff3adaad73c",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/migrate.py",
+        "sha256": "e8d6685897bf47603666ef31fea0d1fd0593a0845362efc8b32722aa0af7c46b",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/paths.py",
+        "sha256": "663196f97b7fe2567f79d7a5a08e12ea8f074d01e1e41c4796befebe0cd040c4",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/project.py",
+        "sha256": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/registry.py",
+        "sha256": "6771162b262b4c9bbcb0b6c5acedbdc5893a57af79bf95d61c58a5f7f80a4800",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/remove.py",
+        "sha256": "f67fa93aa24dfbbca3183714a6facbf89a479e79eacd6271a82e0a3ba3867283",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/transaction.py",
+        "sha256": "78eca6cc3e43c47e531a4f734cb4b94d306b0738c4a3a0a8b6ccf0c4a184c40a",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/upgrade.py",
+        "sha256": "bd4a774207f0cfc69d37be359364f15ec020b1a808c3d6f1f9a6909025e0d909",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/user_entries.py",
+        "sha256": "eda73b02e99d8092f6f587d786d163efd4d8bbc72340e79de0ad1ffabd25c85a",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/user_install.py",
+        "sha256": "ee436b098180db9c54b7b9640fa16d8397bbc3424f5298b0f2880ad49e2c6214",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/user_rules_organize.py",
+        "sha256": "b752974c662a715efe96da40929ad2219e997f4d8986094534c0b88166e43d4f",
+        "mode": 420
+      },
+      {
+        "path": "scripts/agm_core/versions.py",
+        "sha256": "74b611283e393450dd77a10afeab76b415144d0ba49d296b4e0a92a637bcbe7b",
+        "mode": 420
+      },
+      {
+        "path": "scripts/install.py",
+        "sha256": "0f92cd50dba93f62a24590228624ef3650dc6de224b90999928d5bd3fdfcb356",
+        "mode": 420
+      }
+    ],
+    "exact_conversion_draft": {
+      "before": {
+        "schema_version": 3,
+        "product_structure_version": 1,
+        "product_code_version": "0.1.1",
+        "source": {
+          "url": "https://github.com/vincent4j/mem-sharing",
+          "commit": "04c32e24b9ab9504514908f2368cddca4356e478",
+          "tree_sha256": "15cd779745ab6ef80f3d966ef8c9850ee1e87abc48c314158a6502434127e179"
+        }
+      },
+      "after": {
+        "schema_version": 3,
+        "product_structure_version": 1,
+        "product_code_version": "0.1.2",
+        "source": {
+          "url": "https://github.com/vincent4j/mem-sharing",
+          "commit": null,
+          "tree_sha256": "1fb1e199c992e07747bbf031fcb83cd74d2b85b5c9c491cda7d2836fca1dd353"
+        }
+      },
+      "direction": "upgrade",
+      "entries": "preserve"
+    },
+    "executable_request_ready": false,
+    "identity_note": "Final commit is intentionally null. Generate external request from an authorized clean commit; synthetic test SHA is not a release identity.",
+    "entry_contract": {
+      "scripts/agents.json": "9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab",
+      "scripts/agm_core/user_entries.py": "eda73b02e99d8092f6f587d786d163efd4d8bbc72340e79de0ad1ffabd25c85a"
+    }
+  },
+  "proposed_commit": {
+    "base_head": "04c32e24b9ab9504514908f2368cddca4356e478",
+    "authorization": "pending_explicit_local_commit_only",
+    "message": "fix: prepare 0.1.2 candidate and close release QA gaps",
+    "path_count": 55,
+    "paths": [
+      "DESIGN.md",
+      "INSTALL.md",
+      "README.md",
+      "SKILL.md",
+      "docs/acceptance/index.md",
+      "docs/acceptance/m4/m4-10-prep/isolated-install-checklist.md",
+      "docs/acceptance/m4/m4-10-prep/new-session-verification.md",
+      "docs/acceptance/m4/m4-10-prep/release-checklist.md",
+      "docs/acceptance/m4/m4-10-prep/synthetic-projects.md",
+      "docs/acceptance/m4/m4-10-runtime/checks.json",
+      "docs/acceptance/m4/m4-10-runtime/claude-AGENTS.txt",
+      "docs/acceptance/m4/m4-10-runtime/claude.json",
+      "docs/acceptance/m4/m4-10-runtime/cleanup.json",
+      "docs/acceptance/m4/m4-10-runtime/codex-AGENTS.txt",
+      "docs/acceptance/m4/m4-10-runtime/codex.json",
+      "docs/acceptance/m4/m4-10-runtime/fixture.json",
+      "docs/acceptance/m4/m4-10-runtime/integrity.json",
+      "docs/acceptance/m4/m4-10-runtime/manual-cleanup.json",
+      "docs/acceptance/m4/m4-10-runtime/manual-fixture.json",
+      "docs/acceptance/m4/m4-10-runtime/manual-public-topic.txt",
+      "docs/acceptance/m4/m4-10-runtime/prompt.txt",
+      "docs/acceptance/m4/m4-10-runtime/public-topic.txt",
+      "docs/acceptance/m4/m4-10-runtime/verdict.md",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-continuation-cleanup.json",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-continuation.md",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-contract-integration.log",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-contract-unit.log",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-diagnosis.md",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-fix-baseline.json",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-fix-integration.log",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-fix-unit.log",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-fix-verification.md",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-live-deployment.md",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-live-plan.md",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-live-readback.json",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy-manual-result.md",
+      "docs/acceptance/m4/m4-10-runtime/workbuddy.md",
+      "docs/acceptance/release-review-files.json",
+      "docs/acceptance/release-review.md",
+      "docs/architecture.md",
+      "docs/context-keeper/memory-keeper.md",
+      "docs/context-keeper/worklogs/2026-10-31-M4新会话取证与最终判定.md",
+      "docs/context-keeper/worklogs/2026-10-31-发布前收尾质检.md",
+      "docs/operations.md",
+      "llms.txt",
+      "scripts/agm.py",
+      "scripts/agm_core/ck_install.py",
+      "scripts/agm_core/paths.py",
+      "scripts/agm_core/registry.py",
+      "scripts/install.py",
+      "tests/unit/test_ck_install.py",
+      "tests/unit/test_m402_layout_registry.py",
+      "tests/unit/test_m408_installer.py",
+      "tests/unit/test_release_012_upgrade.py",
+      "tests/unit/test_release_closure.py"
+    ],
+    "deleted_paths": [
+      "docs/acceptance/m4/m4-10-prep/isolated-install-checklist.md",
+      "docs/acceptance/m4/m4-10-prep/new-session-verification.md",
+      "docs/acceptance/m4/m4-10-prep/synthetic-projects.md"
+    ],
+    "excluded_actions": [
+      "push",
+      "tag",
+      "publish",
+      "real installation",
+      "user configuration changes",
+      "upstream CK changes"
+    ],
+    "staged_paths": []
+  },
+  "candidate_phase_backup": "/var/folders/r6/qgw1rpbj2q51tgk942d0vz4w0000gn/T/mem-sharing-candidate-before-q2h13w44"
+}

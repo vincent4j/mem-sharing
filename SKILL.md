@@ -5,7 +5,7 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 # memSharing 操作说明
 
-唯一设计依据：[DESIGN.md](DESIGN.md) v2.0 与[系统架构](docs/architecture.md)。本文是仓库内操作说明，菜单由用户级规则文本承载，不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 keeper 集成已通过；M4-09 已通过(见[验收总览](docs/acceptance/index.md))。
+唯一设计依据：[DESIGN.md](DESIGN.md) 与[系统架构](docs/architecture.md)。本文是仓库内操作说明，菜单由用户级规则文本承载，不创建产品 Skill 投影。旧版验收不自动证明本轮新命名、默认启用及 keeper 集成已通过；M4-09 的本地范围与阻断项见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)。
 
 ## 会话入口与六项菜单
 

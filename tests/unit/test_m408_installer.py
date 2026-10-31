@@ -199,6 +199,23 @@ class InstallerTests(InstallFixture):
             with self.assertRaises(cli.InstallError):cli.execute_machine(p,dict(p,**evidence),request=self.request)
         self.assertEqual(list(self.home.iterdir()),[])
 
+    def test_evidence_strict_utc_z_offsets_rejected_before_any_write(self):
+        p=cli.plan_machine(self.request)
+        for bad in ('2026-10-30T00:00:00+00:00','2026-10-30T00:00:00+08:00',
+                    '2026-10-30T00:00:00','2026-02-30T00:00:00Z'):
+            with self.subTest(confirmed_at=bad),patch.object(user_install,'execute_install') as upstream:
+                with self.assertRaises(cli.InstallError) as ctx:
+                    cli.execute_machine(p,dict(p,confirmed_at=bad,reference='user'),request=self.request)
+                self.assertIn('UTC',str(ctx.exception))
+                upstream.assert_not_called()
+        self.assertEqual(list(self.home.iterdir()),[])
+
+    def test_evidence_fractional_utc_z_accepted(self):
+        p=cli.plan_machine(self.request)
+        out=cli.execute_machine(p,dict(p,confirmed_at='2026-10-30T00:00:00.123Z',
+                                       reference='fractional seconds confirm'),request=self.request)
+        self.assertEqual(out['status'],'completed',out)
+
     def test_missing_git_diagnostic_no_installation(self):
         with patch.object(cli.shutil,'which',return_value=None):
             code,out=self.invoke('--source-manifest',str(self.manifest))

@@ -195,6 +195,14 @@ class LayoutRegistryTests(unittest.TestCase):
         with self.assertRaises(registry.RegistryError):
             registry.validate_registry(data)
 
+    def test_non_dict_product_type_is_registry_error_not_attribute_error(self):
+        for bad in ([], "damaged", 7):
+            with self.subTest(product=bad):
+                data = registry.empty_registry()
+                data["product"] = bad
+                with self.assertRaises(registry.RegistryError):
+                    registry.validate_registry(data)
+
     def test_all_required_nullable_fields_and_nested_unknown_fields_are_strict(self):
         base = installed_registry()
         for name in base:

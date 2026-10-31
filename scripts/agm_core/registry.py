@@ -485,6 +485,8 @@ def validate_registry(data, *, allowed_user_paths=None, _pending_manifest=None):
         _fail("unsupported registry schema")
     if not isinstance(data["projects"], dict):
         _fail("invalid project map")
+    if data["product"] is not None and not isinstance(data["product"], dict):
+        _fail("invalid product record")
     if data["product"] is not None and data["product"].get("product_id") != "mem-sharing":
         _fail("product identity mismatch")
     view = copy.deepcopy(data)

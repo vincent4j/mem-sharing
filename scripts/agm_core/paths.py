@@ -11,8 +11,8 @@
   macos_app_bundle(Info.plist 产品名 + 可执行 + 静态签名)、user_receipt(用户显式
   提供的收据清单)。强信号由 agm_core.detect 核验为三态安装事实;本模块只定义/校验
   声明,不做探测。
-合同:docs/plan/architecture.md v2 §3、docs/plan/decisions-m4.md §7;错误码供 CLI 的
-errors.code 序列化(§4)。
+合同:docs/architecture.md;历史裁定见 Git f06db31:docs/plan/decisions-m4.md;错误码供 CLI
+的 errors.code 序列化。
 """
 
 from __future__ import annotations

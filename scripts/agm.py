@@ -144,7 +144,7 @@ def _prescan_single_use(argv):
 def build_parser():
     parser = _StrictParser(
         prog="agm",
-        description="memSharing CLI(合同: docs/plan/architecture.md v2)",
+        description="memSharing CLI(合同: docs/architecture.md)",
     )
     sub = parser.add_subparsers(dest="command", metavar="command", required=True)
 
@@ -697,7 +697,7 @@ def main(
     except CliError as exc:
         recovery = exc.recovery
         if recovery is None and exc.code == "invalid_arguments":
-            recovery = "核对参数后重试;参数合同见 docs/plan/architecture.md §4"
+            recovery = "核对参数后重试;核对当前命令 --help 与 docs/operations.md"
         envelope = make_envelope(
             exc.command,
             STATUS_FAILED,
