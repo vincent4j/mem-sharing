@@ -1,0 +1,59 @@
+{
+  "installed_version": "0.1.3",
+  "installed_source": {
+    "url": "https://github.com/vincent4j/mem-sharing",
+    "commit": "ea553738f37a5cc5befb34bf241d12da33f07b21",
+    "tree_sha256": "445ca1962546d18fedd97c930f81bf1cc4a622ab531696cb4a7161f477b80a9a"
+  },
+  "registered_agents": [
+    "codex",
+    "workbuddy",
+    "claude",
+    "dsh",
+    "zcode"
+  ],
+  "connections": {
+    "codex": {
+      "status": "connected",
+      "reason": null,
+      "runtime_acceptance": "pending"
+    },
+    "claude": {
+      "status": "connected",
+      "reason": null,
+      "runtime_acceptance": "pending"
+    },
+    "workbuddy": {
+      "status": "connected",
+      "reason": null,
+      "runtime_acceptance": "pending"
+    },
+    "dsh": {
+      "status": "connected",
+      "reason": null,
+      "runtime_acceptance": "pending"
+    },
+    "zcode": {
+      "status": "connected",
+      "reason": null,
+      "runtime_acceptance": "pending"
+    }
+  },
+  "preservation_checks": {
+    ".codex/AGENTS.md_outside_managed_block_preserved": true,
+    ".workbuddy/MEMORY.md_outside_managed_block_preserved": true,
+    ".claude/CLAUDE.md_original_bytes_preserved": true,
+    ".dsh/AGENTS.md_original_bytes_preserved": true,
+    ".zcode/AGENTS.md_original_bytes_preserved": true
+  },
+  "unregistered_public_readers": [],
+  "idempotence": {
+    "status": "approval_required",
+    "changes": [],
+    "observed_bytes_and_mtimes_unchanged": true
+  },
+  "project_count": 0,
+  "code_marker_matches_registry": true,
+  "native_new_sessions": "blocked_cua_timeout",
+  "skill_loading": "pending"
+}
