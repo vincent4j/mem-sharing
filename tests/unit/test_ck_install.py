@@ -126,6 +126,10 @@ class CKInstallTests(InstallFixture):
     def test_all_ledger_consumers_selected_even_when_request_names_only_new_agents(self):
         # Installation detection is synthetic; the resulting registered entry
         # transactions and CK subprocesses are real isolated file operations.
+        entry = self.home/".workbuddy/MEMORY.md"
+        entry.parent.mkdir()
+        private = b"my private rules\r\n"
+        entry.write_bytes(private)
         facts=detect.detect_agents(self.config,None,home=str(self.home),
             search_paths=self.request['search_paths'],app_directories=[])
         for agent in ('claude','workbuddy'):
@@ -137,12 +141,33 @@ class CKInstallTests(InstallFixture):
             plan=json.loads(preview['next_action'])
             result=user_entries.run_user_entries(dict(request,approval=approved({k:v for k,v in plan.items() if k not in ('confirmed_at','reference')})))
             self.assertEqual(result['status'],'completed',result)
+        installed = entry.read_bytes()
+        self.assertTrue(installed.startswith(private))
+        self.assertIn(str(self.runtime.root/'memories/MEMORY.md').encode(), installed)
+        for damaged in (b'', installed.replace(b'AGENTS.md', b'CHANGED.md')):
+            entry.write_bytes(damaged)
+            with self.assertRaises(ValueError):
+                ck.plan_context_keeper(request,self.op,str(self.cksource))
+        entry.write_bytes(installed)
+        saved_ledger = self.runtime.registry.read_bytes()
+        old = installed.replace((user_entries.public_read_text(self.runtime.root/'memories/MEMORY.md') + "\n").encode(), b'')
+        entry.write_bytes(old)
+        ledger = json.loads(saved_ledger)
+        obj = ledger['machine']['objects'][str(entry)+'#convention']
+        obj['fingerprint']['value'] = user_entries.block_fingerprint(old, **obj['marker'])
+        self.runtime.registry.write_text(json.dumps(ledger))
+        with self.assertRaises(ck.CKError) as missing_semantics:
+            ck.plan_context_keeper(request,self.op,str(self.cksource))
+        self.assertEqual(missing_semantics.exception.code, 'ck_main_incomplete')
+        self.runtime.registry.write_bytes(saved_ledger)
+        entry.write_bytes(installed)
         plan=ck.plan_context_keeper(request,self.op,str(self.cksource))
         self.assertEqual(plan['agents'],['codex','claude','workbuddy'])
         self.assertEqual(plan['argv'][-4:],['--codex','--claude','--workbuddy','--approved'])
         result=ck.execute_context_keeper(plan,approved(plan),request=request)
         self.assertEqual(result['status'],'configured',result)
         self.assertEqual(len(plan['skill_entries']),4)
+        self.assertIn(installed, entry.read_bytes())
         self.assertTrue((self.home/'.workbuddy/MEMORY.md').read_bytes().startswith(b'<!-- context-keeper:workbuddy:start -->'))
 
     def test_approval_evidence_and_unrelated_main_approval_rejected(self):

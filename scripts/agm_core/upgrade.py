@@ -30,6 +30,36 @@ PHASES = ('prepare', 'archive', 'inventory', 'code', 'verify', 'commit')
 
 _ENTRY_CONTRACT_NAMES = ('scripts/agents.json', 'scripts/agm_core/user_entries.py')
 
+# A single reviewed contract transition, not a general "preserve" escape hatch.
+# Target commit/tree live in the external exact conversion to avoid a source
+# commit hashing itself. Contract bytes and the predecessor are fixed here.
+WORKBUDDY_PREDECESSOR = {
+    'url': 'https://github.com/vincent4j/mem-sharing',
+    'commit': '4cfe7bedfde695b0bd4085ccc453afd3ef161711',
+    'tree_sha256': '5af4e9208884560741ce05081d157cfa57d42789b3d87cd6554491cb951e875b',
+}
+WORKBUDDY_ENTRY_CONVERSION = {
+    'type': 'workbuddy-public-index-v1',
+    'before_contract': {
+        'scripts/agents.json': '9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab',
+        'scripts/agm_core/user_entries.py': '155eba8df9b14ccb96e017bc19e3975930be544019fdb1d3aaa17f3aa563be44',
+    },
+    'after_contract': {
+        'scripts/agents.json': '9a4f127be6582956544ec10b605f33635fecb63a4c0e315246fb7bf4a7a508ab',
+        'scripts/agm_core/user_entries.py': 'eda73b02e99d8092f6f587d786d163efd4d8bbc72340e79de0ad1ffabd25c85a',
+    },
+}
+
+
+def _workbuddy_conversion(before, after, direction, entry_conversion):
+    return (entry_conversion == WORKBUDDY_ENTRY_CONVERSION
+            and direction == 'upgrade'
+            and before == dict(schema_version=3, product_structure_version=1,
+                               product_code_version='0.1.0', source=WORKBUDDY_PREDECESSOR)
+            and after['schema_version'] == 3 and after['product_structure_version'] == 1
+            and after['product_code_version'] == '0.1.1')
+
+
 
 LAUNCHER = b'''import json, sys
 from pathlib import Path
@@ -92,7 +122,12 @@ def _conversion(request, data, target, direction):
     matches = []
     for item in request.get('conversions', []):
         registry._keys(item, 'before after direction entries', 'release conversion')
-        if item == dict(before=before, after=after, direction=direction, entries='preserve'):
+        if any(item.get(k) != v for k, v in dict(before=before, after=after, direction=direction).items()):
+            continue
+        if item['entries'] == 'preserve':
+            matches.append(item)
+        elif (_workbuddy_conversion(before, after, direction, item['entries'])
+              and request.get('agents') == ['workbuddy']):
             matches.append(item)
     if len(matches) != 1:
         _fail('Future/unknown release or no exact supported conversion', 'upgrade_unsupported')
@@ -165,9 +200,15 @@ def _plan(request, *, allow_marker=False):
         if direction == 'rollback' and not versions.installed_before(runtime, target):
             _fail('Rollback target has no verified successful installation receipt')
         conversion = None if noop else _conversion(request, data, target, direction)
-        # Entry-contract conversion is deferred; formal releases preserve it exactly.
         if contract_before != contract_after:
-            _fail('Conversion has no handler for changed entry contract')
+            entry_conversion = (conversion or {}).get('entries')
+            if (entry_conversion != WORKBUDDY_ENTRY_CONVERSION
+                    or contract_before != WORKBUDDY_ENTRY_CONVERSION['before_contract']
+                    or contract_after != WORKBUDDY_ENTRY_CONVERSION['after_contract']
+                    or legacy.digest(Path(user_entries.__file__).read_bytes()) != contract_after['scripts/agm_core/user_entries.py']):
+                _fail('Conversion has no handler for changed entry contract')
+        elif conversion and conversion['entries'] != 'preserve':
+            _fail('WorkBuddy conversion requires its exact changed contract')
         if not noop:
             data['product'] = _product(source, op, old_product)
     if not noop and os.path.lexists(bootstrap): _fail('Operation exists; use recovery')
@@ -456,8 +497,13 @@ def _finalize(journal,hook):
         _apply(path,Snapshot('absent'),expected=expected)
     journal['status']='committed';_save(journal)
     if hook:hook('after_phase:commit',runtime.registry)
-    return {'status':'completed','operation_id':plan['operation_id'],'journal':plan['journal'],
-            'version':plan['source']['version'],'direction':plan['direction']}
+    result = {'status':'completed','operation_id':plan['operation_id'],'journal':plan['journal'],
+              'version':plan['source']['version'],'direction':plan['direction']}
+    entry_conversion = (plan.get('conversion') or {}).get('entries')
+    if isinstance(entry_conversion, dict) and entry_conversion.get('type') == 'workbuddy-public-index-v1':
+        result.update(scope='product_code', entry_phase='not_run_by_upgrade_core',
+                      entry_next_action='Preview and approve same-release install.py --agent workbuddy; code recovery does not assemble user entries')
+    return result
 
 
 def _finish(journal,hook):

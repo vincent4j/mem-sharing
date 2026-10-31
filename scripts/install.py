@@ -205,12 +205,26 @@ def _report(plan, status, *, result=None, entries=None, project=None):
         command += ['--project', str(_absolute(project)), '--memory']
     else:
         command += ['--project', '/absolute/path/to/your/project', '--memory']
+    static = {}
+    if status in ('completed', 'partial'):
+        try:
+            runtime = user_install._runtime(plan['request'])
+            allowed = paths.allowed_user_paths(plan['request']['platform_config'], None, home=str(runtime.home))
+            ledger = registry.require_installed(registry.load_registry(
+                runtime.registry, allowed_user_paths=allowed))
+            static = user_entries.connection_status(runtime, plan['request']['platform_config'], ledger, plan['effective_agents'])
+        except (ValueError, OSError):
+            static = {a: {'status': 'pending', 'reason': 'registry_unavailable', 'runtime_acceptance': 'pending'}
+                      for a in plan['effective_agents']}
+    connected = [a for a, fact in static.items() if fact['status'] == 'connected']
+    if status == 'completed' and any(f['status'] != 'connected' for f in static.values()):
+        status = 'partial'
     return {'schema_version': 1, 'command': 'install-machine', 'status': status,
         'layout': plan['layout'], 'versions': plan['versions'], 'source': plan['source'],
         'operation_id': plan['operation_id'],
         'recovery': None if plan['plan'].get('noop') else plan['plan']['journal'],
         'metadata_scopes': plan['metadata_scopes'],
-        'agents': {'connected': plan['effective_agents'] if status == 'completed' else [],
+        'agents': {'connected': connected,
                    'absent': [a for a, f in facts.items() if f['status'] == 'absent'],
                    'unknown': [a for a, f in facts.items() if f['status'] == 'unknown'],
                    'unselected': [a for a in facts if a not in requested],
@@ -221,7 +235,8 @@ def _report(plan, status, *, result=None, entries=None, project=None):
                        '~/.agents/skills remains in place; not migrated or adopted'],
         'project_commands': [shlex.join(command)],
         'project_root_required': project is None,
-        'connection_pending': not plan['effective_agents'] or status != 'completed',
+        'connection_pending': not connected or len(connected) != len(plan['effective_agents']) or status != 'completed',
+        'entry_status': static,
         'changes': plan['changes'], 'result': result, 'entries': entries}
 
 

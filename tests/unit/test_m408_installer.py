@@ -68,6 +68,31 @@ class InstallerTests(InstallFixture):
         self.assertIn('actual project',done['project_commands'][0]);self.assertEqual(done['layout']['code'],str(self.runtime.code))
         data=json.loads(self.runtime.registry.read_bytes());self.assertEqual(data['projects'],{})
 
+    def test_report_uses_entry_proof_on_completed_and_noop_paths(self):
+        self.codex()
+        plan = cli.plan_machine(self.request)
+        done = cli.execute_machine(plan, approved(plan), request=self.request)
+        self.assertEqual(done['agents']['connected'], ['codex'])
+        self.assertEqual(done['entry_status']['codex']['runtime_acceptance'], 'pending')
+        entry = self.home/'.codex/AGENTS.md'
+        raw = entry.read_bytes()
+        for damaged in (b'', raw.replace(b'MEMORY.md', b'OTHER.md')):
+            entry.write_bytes(damaged)
+            report = cli._report(plan, 'completed')
+            self.assertEqual(report['status'], 'partial')
+            self.assertEqual(report['agents']['connected'], [])
+            self.assertTrue(report['connection_pending'])
+        entry.write_bytes(raw)
+        ledger = json.loads(self.runtime.registry.read_bytes())
+        ledger['machine']['objects'] = {}
+        self.runtime.registry.write_text(json.dumps(ledger))
+        same = cli.plan_machine(self.request)
+        self.assertTrue(same['plan']['noop'])
+        done = cli.execute_machine(same, approved(same), request=self.request)
+        self.assertEqual(done['status'], 'partial')
+        self.assertEqual(done['agents']['connected'], [])
+        self.assertEqual(done['entry_status']['codex']['reason'], 'entry_not_registered')
+
     def test_exact_approval_unknown_field_and_scene_drift_stop(self):
         plan=cli.plan_machine(self.request);before=self.snapshot()
         approval=approved(plan);approval['surprise']=True

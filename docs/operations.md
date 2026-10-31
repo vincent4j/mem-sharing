@@ -198,3 +198,58 @@ python3 /absolute/verified-source/scripts/install.py --recover /absolute/journal
 项目事务失败则按报告中的 manifest 与 recovery 指引处理，不套用机器 journal。
 第三种字节、缺失材料或工具漂移一律停止，不覆盖未知修改。
 为什么这样设计：恢复只能依据完整证据执行，重试不能把不确定结果放大。
+
+### WorkBuddy 用户入口的接入边界
+
+用户级 `~/.workbuddy/MEMORY.md` 的私人原文字节保留；精确批准计划后追加受管块，块内明确读取本机公共索引绝对路径及项目 `AGENTS.md`。已登记旧块仅在指纹匹配时，经精确批准更新；漂移、未登记旧块或不满足公共读取语义的共享用户块停止自动接入，交回原有治理路径。与当前模板完全相同的未登记块可保真登记为 reused，不取得删除权。安装器只拥有其新增受管块，不拥有私人全文；本次不提供机器卸载。
+
+报告中的 installed 是安装探测，connected 是登记与实际入口语义的静态核验；缺口列于 `entry_status`，接入未全完成报告 partial。每项 `runtime_acceptance: pending` 仍需真实新会话证据。已有/noop 安装也重新核验静态入口，不凭应用存在宣称接入。需要更新 WorkBuddy 已登记约定时使用显式 `--agent workbuddy` 的精确预览/批准流程；不因同版无参数重跑而自动接入新 Agent。Keeper 尾步继续检查主操作、登记对象与指纹，不绕过缺口。本修复不修改私人规则、不预建 WorkBuddy 原生项目目录，不扩大旧版本迁移承诺。
+
+### 0.1.0 → 0.1.1 的 WorkBuddy 入口合同转换
+
+此专用通道只接受 `workbuddy-public-index-v1`，旧版本必须为 0.1.0、结构版本1/schema3，旧来源必须与代码中的 `WORKBUDDY_PREDECESSOR` 完全一致；新版本固定0.1.1。`agents.json` 固定不变，`user_entries.py` 仅允许审定的前后 SHA256。调用必须显式 `--agent workbuddy`，目标 commit/tree 通过外部精确 conversion 与完整批准绑定。不允许把任意合同变更写成 `entries=preserve` 放行，也不支持该转换的成功发行降级。
+
+下面是外部 request 清单的生成方式。`<干净来源>` 必须是修复已提交后的干净 checkout；`<完整SHA>` 为该提交，不能用未提交工作树配旧SHA。清单写到独立暂存目录，不修改用户规则或安装态。生成过程中只有读取与输出JSON；仍需随后预览、核对并批准完整安装计划。
+
+```sh
+python3 -B - '<干净来源>' '<完整SHA>' > /tmp/mem-sharing-wb-release-0.1.1-request.json <<'PY'
+import copy, importlib.util, json, sys
+from pathlib import Path
+source_root = Path(sys.argv[1]).resolve()
+spec = importlib.util.spec_from_file_location('release_installer', source_root/'scripts/install.py')
+installer = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(installer)
+from agm_core import layout, paths, registry, upgrade, user_install
+source = installer.checkout_source(str(source_root), sys.argv[2], '0.1.1')
+canonical, _ = user_install._source({'source': source})
+runtime = layout.resolve_layout(Path.home())
+config = paths.select_platform(paths.load_agents_table(), sys.platform)
+allowed = paths.allowed_user_paths(config, None, home=str(runtime.home))
+data = registry.require_installed(registry.load_registry(runtime.registry, allowed_user_paths=allowed))
+product = data['product']
+conversion = {
+    'before': {'schema_version': data['schema_version'],
+               'product_structure_version': product['product_structure_version'],
+               'product_code_version': product['product_code_version'], 'source': product['source']},
+    'after': {'schema_version': 3, 'product_structure_version': 1, 'product_code_version': '0.1.1',
+              'source': {k: canonical[k] for k in ('url', 'commit', 'tree_sha256')}},
+    'direction': 'upgrade', 'entries': copy.deepcopy(upgrade.WORKBUDDY_ENTRY_CONVERSION),
+}
+# Reject wrong predecessors/targets before emitting a purported supported request.
+request = {'home': str(runtime.home), 'platform_config': config, 'source': source,
+           'agents': ['workbuddy'], 'conversions': [conversion],
+           'operation_id': 'wb-public-index-011'}
+installer.plan_machine(request)
+print(json.dumps({'source': source, 'conversions': [conversion]}, ensure_ascii=False, indent=2))
+PY
+
+python3 -B <干净来源>/scripts/install.py --request-file /tmp/mem-sharing-wb-release-0.1.1-request.json --agent workbuddy --operation-id wb-public-index-011
+# 上一步 approval_plan 加真实 confirmed_at/reference，保存到精确批准JSON；不要用 request 代替批准
+python3 -B <干净来源>/scripts/install.py --approval-file <精确批准JSON绝对路径>
+```
+
+外层批准含完整代码计划与精确入口 `entry_plan`，包括原文件/新文件指纹、受管对象变化、安装探测指纹。执行前重建并核对整单；代码阶段不修改用户入口，代码提交后再调用已有入口事务，原始私人字节与旧CK块保留。入口失败或期间外部文件变化时报告 partial，保留已成功升级的代码，不自动回退或覆写外部修改。此时用同一固定0.1.1来源、显式 `--agent workbuddy` **重新预览并批准**；代码为noop，入口独立补齐。旧外层批准不能重放。
+
+代码阶段中断继续使用升级操作中固定的 `recover.py` 与 toolkit 做只读恢复预览，再批准 continue 或 rollback。未提交代码台账时可按既有原子恢复回退；台账已提交则只能完成代码收尾。专用转换的代码恢复结果明确 `scope=product_code`、`entry_phase=not_run_by_upgrade_core`，**不代表 WorkBuddy 接入完成**；恢复后仍要进行同版显式入口预览/批准。外部台账、已登记入口、代码出现第三态时仍拒绝覆盖。
+
+成功完成代码与入口之后，不承诺通过该专用转换自动降级为0.1.0；保留旧代码版本、台账/入口事务备份及恢复材料。撤回已成功新增的用户块必须另行精确计划，不能以恢复旧整文件覆盖后续私人内容。本通道不创建项目原生目录、不新增机器卸载、不更新上游CK。

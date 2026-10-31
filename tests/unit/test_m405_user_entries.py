@@ -316,14 +316,9 @@ class UserEntryFixture(unittest.TestCase):
         before = entry.read_bytes()
         request = self.request(detect_runner=self.workbuddy_runner())
         result = user_entries.run_user_entries(request)
-        approval = self.approval_for(result)
-        outcome = user_entries.run_user_entries(dict(request, approval=approval))
-        self.assertEqual(outcome["status"], "completed", outcome)
+        self.assertEqual(result["status"], "failed", result)
+        self.assertEqual(result["errors"][0]["code"], "entry_semantics_missing")
         self.assertEqual(entry.read_bytes(), before)
-        ledger = self.load_ledger()
-        self.assertNotIn(str(entry) + "#convention", ledger["machine"]["objects"])
-        self.assertEqual(ledger["machine"]["agents"]["workbuddy"]["installation"]["status"], "installed")
-        self.assertFalse((self.home / ".workbuddy" / "skills").exists())
 
     def test_workbuddy_machine_convention_carries_governance_and_menu(self):
         self.seed_workbuddy_bundle()
@@ -348,9 +343,85 @@ class UserEntryFixture(unittest.TestCase):
         approval = self.approval_for(result)
         outcome = user_entries.run_user_entries(dict(request, approval=approval))
         self.assertEqual(outcome["status"], "completed", outcome)
-        self.assertEqual(entry.read_bytes(), before)
+        self.assertTrue(entry.read_bytes().startswith(before))
+        self.assertIn(str(self.memory_index).encode(), entry.read_bytes())
         ledger = self.load_ledger()
-        self.assertFalse(any(obj["path"] == str(entry) for obj in ledger["machine"]["objects"].values()))
+        obj = ledger["machine"]["objects"][str(entry) + "#convention"]
+        from agm_core.entries import remove_block
+        self.assertEqual(remove_block(entry.read_bytes(), **BASE_MARKER,
+                         expected_fingerprint=obj["fingerprint"]["value"]), before)
+        self.assertEqual(self.preview(detect_runner=self.workbuddy_runner())["changes"], [])
+
+    def test_workbuddy_old_registered_block_update_is_approved_and_preserves_private_bytes(self):
+        self.seed_workbuddy_bundle()
+        self.assertEqual(self.execute(detect_runner=self.workbuddy_runner())["status"], "completed")
+        entry = self.home / ".workbuddy/MEMORY.md"
+        new = entry.read_bytes()
+        old = new.replace((user_entries.public_read_text(self.memory_index) + "\n").encode(), b"")
+        entry.write_bytes(b"private\r\n" + old + b"\r\ntail")
+        ledger = self.load_ledger()
+        ledger["machine"]["objects"][str(entry)+"#convention"]["fingerprint"]["value"] = sha256(old)
+        self.runtime.registry.write_text(json.dumps(ledger))
+        before = entry.read_bytes()
+        preview = self.preview(detect_runner=self.workbuddy_runner())
+        self.assertEqual(preview["status"], "approval_required", preview)
+        self.assertEqual(before, entry.read_bytes())
+        result = self.execute(preview, detect_runner=self.workbuddy_runner())
+        self.assertEqual(result["status"], "completed", result)
+        self.assertEqual(entry.read_bytes(), b"private\r\n" + new + b"\r\ntail")
+        self.assertEqual(self.preview(detect_runner=self.workbuddy_runner())["changes"], [])
+        entry.write_bytes(entry.read_bytes().replace(b"AGENTS.md", b"CHANGED.md"))
+        result = self.preview(detect_runner=self.workbuddy_runner())
+        self.assertEqual(result["errors"][0]["code"], "drift")
+
+    def test_shared_reference_does_not_claim_machine_connection(self):
+        self.seed_workbuddy_bundle()
+        self.execute(detect_runner=self.workbuddy_runner())
+        ledger = self.load_ledger()
+        oid = str(self.home / ".workbuddy/MEMORY.md") + "#convention"
+        obj = ledger["machine"]["objects"].pop(oid)
+        obj.update(scope="user", ownership="reused", original_existed=True, backup_manifest=None)
+        ledger["shared_objects"][oid] = obj
+        self.runtime.registry.write_text(json.dumps(ledger))
+        before = self.tree()
+        result = self.preview(detect_runner=self.workbuddy_runner())
+        self.assertEqual(result["changes"], [])
+        self.assertEqual(before, self.tree())
+        status = user_entries.connection_status(self.runtime, self.config, ledger, ["workbuddy"])
+        self.assertEqual(status["workbuddy"]["status"], "pending")
+        self.assertEqual(status["workbuddy"]["reason"], "machine_entry_not_registered_shared_reference")
+        for agent in ("codex", "claude"):
+            ledger["machine"]["agents"][agent] = copy.deepcopy(ledger["machine"]["agents"]["workbuddy"])
+            obj = copy.deepcopy(obj)
+            obj["path"] = paths.expand_path(self.config[agent]["user_entry"], home=str(self.home))
+            obj["agents"] = [agent]
+            ledger["shared_objects"][agent] = obj
+            status = user_entries.connection_status(self.runtime, self.config, ledger, [agent])
+            self.assertEqual(status[agent]["reason"], "machine_entry_not_registered_shared_reference")
+
+
+    def test_workbuddy_unregistered_old_block_is_not_claimed(self):
+        self.seed_workbuddy_bundle()
+        entry = self.home / ".workbuddy/MEMORY.md"
+        entry.parent.mkdir(parents=True)
+        entry.write_bytes(user_entries._wrap_block(BASE_MARKER, user_entries.WORKBUDDY_CONVENTION_TEXT))
+        before = self.tree()
+        result = self.preview(detect_runner=self.workbuddy_runner())
+        self.assertEqual(result["errors"][0]["code"], "entry_semantics_missing")
+        self.assertEqual(before, self.tree())
+
+    def test_workbuddy_unregistered_current_block_is_reused_without_ownership(self):
+        self.seed_workbuddy_bundle()
+        self.execute(detect_runner=self.workbuddy_runner())
+        entry = self.home / ".workbuddy/MEMORY.md"
+        raw = entry.read_bytes()
+        ledger = self.load_ledger()
+        ledger["machine"]["objects"] = {}
+        self.runtime.registry.write_text(json.dumps(ledger))
+        result = self.execute(detect_runner=self.workbuddy_runner())
+        self.assertEqual(result["status"], "completed", result)
+        self.assertEqual(raw, entry.read_bytes())
+        self.assertEqual(self.load_ledger()["machine"]["objects"][str(entry)+"#convention"]["ownership"], "reused")
 
     def test_claude_receipt_import_line_references_common_source(self):
         exe = self.area / "native" / "claude"

@@ -17,7 +17,10 @@ Managed-block semantics for registered machine units: on-disk bytes differing
 from the registered fingerprint is drift and stops the whole order (no template
 "repair" over registered content); a vanished block is recreated only when the
 registered content is the template itself; unregistered existing blocks are
-registered byte-preserving (reused) without rewriting.
+registered byte-preserving (reused) without rewriting only when they satisfy
+the current WorkBuddy template. Fingerprint-intact machine WorkBuddy blocks
+may be updated by an exact approved plan; shared user-scope blocks are never
+rewritten by this machine operation.
 
 Planning is pure read-only (no mkdir, no locks, no detection side effects).
 Execution requires an approval envelope matching the exact plan (same semantics
@@ -41,7 +44,7 @@ from . import layout as layout_module
 from . import paths as agm_paths
 from . import registry as registry_module
 from .enable import BASE_MARKER
-from .entries import EntryConflict, block_fingerprint, sha256
+from .entries import EntryConflict, block_fingerprint, sha256, managed_span, render_block
 from .transaction import (Change, Snapshot, Transaction, TransactionError,
                           read_snapshot, write_lock)
 
@@ -237,11 +240,13 @@ class _Planner:
 
     # ---- per-mode entry planning ------------------------------------------
 
-    def marker_block(self, agent, path, block, oid_suffix, *, append_to_unblocked, note_label):
+    def marker_block(self, agent, path, block, oid_suffix, *, append_to_unblocked, note_label, update_registered=False):
         """Plan one BASE_MARKER managed block (codex public-source / workbuddy convention)."""
         existing = self.units.get((str(path), BASE_MARKER["start"]))
         if existing is not None and existing["scope"] == "user":
             self._verify_shared_unit(existing, path)
+            if update_registered and not _public_block_intact(self.snapshot(path).data, existing, self.memory_index, agent):
+                raise UserEntryError("entry_semantics_missing", "共享用户约定缺少公共读取入口，需所属项目精确治理，不由机器接入改写: " + str(path))
             self.notes.append("referenced shared %s: %s" % (note_label, path))
             return
         snap = self.snapshot(path)
@@ -266,12 +271,23 @@ class _Planner:
                 self._adopt_existing(oid, existing, agent=agent,
                                      fingerprint={"algorithm": "sha256", "basis": "block_bytes", "value": desired})
                 return
+            if update_registered and actual != desired:
+                if trusted is None:
+                    raise UserEntryError("entry_semantics_missing", "旧受管块无可信指纹，不自动更新: " + str(path))
+                self.after[Path(path)] = Snapshot("file", render_block(
+                    snap.data, block, **_marker_args(BASE_MARKER), expected_fingerprint=trusted), snap.mode)
+                self._adopt_existing(oid, existing, agent=agent,
+                                     fingerprint={"algorithm": "sha256", "basis": "block_bytes", "value": desired})
+                self.notes.append("approved managed block update: %s %s -> %s" % (path, trusted, desired))
+                return
             self._adopt_existing(oid, existing, agent=agent,
                                  fingerprint=None if trusted is not None else
                                  {"algorithm": "sha256", "basis": "block_bytes", "value": actual})
             return
         if actual is not None:
-            # Unregistered existing block: register its actual bytes, zero write.
+            if update_registered and actual != desired:
+                raise UserEntryError("entry_semantics_missing", "未登记旧约定块不自动收编或覆盖，需先精确治理: " + str(path))
+            # Unregistered current block: register its actual bytes, zero write.
             self.objects[oid] = self._new_object(oid, "user_convention", path, agent, "reused",
                                                  marker=BASE_MARKER, value=actual)
             return
@@ -372,6 +388,58 @@ class _Planner:
                       or self.ledger["machine"]["objects"][oid] != obj)
 
 
+def public_read_text(memory_index):
+    return "开始任务前读取并遵守 %s;读不到就说明。" % memory_index
+
+
+def _public_block_intact(raw, obj, memory_index, agent):
+    span = managed_span(raw, **_marker_args(obj["marker"]))
+    if span is None:
+        return False
+    block = raw[span[0]:span[1]]
+    trusted = (obj.get("fingerprint") or {}).get("value")
+    return (trusted == sha256(block) and public_read_text(memory_index).encode() in block.splitlines()
+            and (agent != "workbuddy" or WORKBUDDY_CONVENTION_TEXT.encode() in block.splitlines()))
+
+
+def connection_status(runtime, config, ledger, agents):
+    """Read-only entry proof; detection and runtime acceptance are separate facts."""
+    result = {}
+    objects = list(ledger["machine"]["objects"].values())
+    for agent in agents:
+        path = Path(agm_paths.expand_path(config[agent]["user_entry"], home=str(runtime.home)))
+        record = ledger["machine"]["agents"].get(agent)
+        if record is None or record["installation"]["status"] != "installed":
+            result[agent] = {"status": "pending", "reason": "agent_not_registered_installed", "runtime_acceptance": "pending"}
+            continue
+        candidates = [o for o in objects if o["path"] == str(path) and agent in o["agents"]]
+        shared = any(o["path"] == str(path) and agent in o["agents"] for o in ledger["shared_objects"].values())
+        reason = "machine_entry_not_registered_shared_reference" if shared and not candidates else "entry_not_registered"
+        for obj in candidates:
+            try:
+                _require_real_parents(path, runtime.home)
+                snap = read_snapshot(path)
+                if snap.kind != "file":
+                    reason = "entry_missing_or_not_file"
+                    continue
+                if obj["kind"] == "import" and config[agent]["rule_mode"] == "import_agents":
+                    line = ("@" + str(runtime.root / "memories/MEMORY.md")).encode()
+                    intact = sum(p.strip() == line for p in snap.data.splitlines()) == 1
+                elif obj["kind"] in ("block", "user_convention") and config[agent]["rule_mode"] != "import_agents":
+                    intact = _public_block_intact(snap.data, obj, runtime.root / "memories/MEMORY.md", agent)
+                else:
+                    intact = False
+                if intact:
+                    reason = None
+                    break
+                reason = "entry_drift_or_semantics_missing"
+            except (ValueError, OSError):
+                reason = "entry_unreadable_or_conflict"
+        result[agent] = {"status": "connected" if reason is None else "pending", "reason": reason,
+                         "runtime_acceptance": "pending"}
+    return result
+
+
 def render_append(data, block):
     return data + (b"\n" if data and not data.endswith(b"\n") else b"") + block
 
@@ -418,9 +486,9 @@ def _plan(request, runtime, detection, effective, *, transaction):
         if entry["rule_mode"] == "user_convention":
             planner.marker_block(agent, user_path,
                                  _wrap_block(BASE_MARKER, "\n".join(
-                                     [WORKBUDDY_CONVENTION_TEXT, governance,
+                                     [public_read_text(planner.memory_index), WORKBUDDY_CONVENTION_TEXT, governance,
                                       WORKBUDDY_FALLBACK_TEXT, menu])),
-                                 "#convention", append_to_unblocked=False, note_label="user convention")
+                                 "#convention", append_to_unblocked=True, note_label="user convention", update_registered=True)
         elif entry["rule_mode"] == "native":
             body = "\n".join([
                 "开始任务前读取并遵守 %s;读不到就说明。" % planner.memory_index,
@@ -532,7 +600,7 @@ def _run(request, runtime, *, locked):
             and not plan["approval_plan"]["machine_agents"]:
         return _result(status="completed", agents=agents, detection=detection,
                        changes=[], warnings=list(plan["notes"]) + [
-                           "无待启用差异:请求的 installed 执行器均已接入,零写入"])
+                           "无待装配差异，零写入；接入状态须另查机器登记及入口，运行时仍待新会话验收"])
     elif _confirm(request, plan["approval_plan"]):
         evidence = {"confirmed_at": _now(), "reference": "interactive exact user-entry plan confirmation"}
     else:

@@ -246,7 +246,11 @@ mem-sharing/
 - **落点**:项目 `.workbuddy/memory/MEMORY.md` 顶部——由 WorkBuddy 实际使用产生原生目录后兜底补写(不预建目录,原文字节下移);
 - **内容**:mem-sharing 自有指针块,只说两件事——读项目根 `AGENTS.md`;项目经历经 `/context-keeper` 入口由 keeper 管理。不复制 keeper 行为规则;
 - **keeper 自有块**(`context-keeper:workbuddy` 标记)归 keeper 自己写入与维护,memSharing 不接管;旧全文块按 §4.4 显式迁移;
-- **用户级配合**:`~/.workbuddy/MEMORY.md` 顶部约定块(公共源指针+读 AGENTS.md)由装机写入;真机新会话验收归 M4-10。
+- **用户级配合**:`~/.workbuddy/MEMORY.md` 受管约定块(实际公共索引绝对路径读取要求+读 AGENTS.md)由装机经精确批准追加;真机新会话验收归 M4-10。
+- **用户级已有正文**：保留私人原文字节；无受管块时，精确批准后追加最小入口并仅取得该块所有权。已登记机器块仅在实际字节匹配登记指纹时允许批准更新，计划绑定改前/改后指纹；漂移停止。未登记块只有与当前模板完全一致时可保真登记为 reused；旧块不自动覆盖或收编。共享 user scope 块归原有治理路径，机器接入不得改写，缺少公共读取语义时报缺口。
+- **报告边界**：installed 仅表示探测到应用。connected 要求入口登记、实际字节/受管指纹及公共索引读取语义均核验；缺口为 pending，主操作完成但接入不完整报告 partial。静态 connected 的新会话验收仍为 pending。Keeper 尾步保留主操作、对象、指纹核验，并要求公共读取语义；不以跳过检查掩盖缺口。
+- 本修复不扩展旧 schema 迁移、机器卸载或自动升级承诺；不预建 WorkBuddy 原生项目目录。真机部署与新会话仍须另行验收。
+
 
 ## 6. 验收协议(三执行器接力闭环)
 
@@ -293,3 +297,9 @@ mem-sharing/
 M1~M4-09 已全部收口并通过验收(判定结论见[验收总览](docs/acceptance/index.md),原始证据在 Git 历史);剩余:M4-10 真机首装(含本机 v0 迁移,裁定不用隔离环境)→ 版本定稿与 tag。后续方向:项目级 Skills/MCP 管理不在产品范围;其余执行器(如 ZCode、DSH)按路径表同模式接入。
 
 
+
+## WorkBuddy 公共入口修复发行合同（0.1.0 → 0.1.1）
+
+仅允许显式 `workbuddy-public-index-v1` 转换：schema3/structure1、旧0.1.0固定来源、目标0.1.1，外部发行conversion精确绑定目标commit/tree，前后user_entries.py固定SHA256且agents.json不变。必须显式选择workbuddy；任意旧来源、其他版本、合同变更或`entries=preserve`不得借此放行。目标SHA不嵌入源码，避免自引用。
+
+复用代码升级与用户入口两个既有事务，外层精确批准同时绑定代码及入口子计划。代码阶段保持用户对象与正文，入口事务保留私人字节；入口失败partial，重新预览并批准同版入口补齐。固定toolkit只恢复代码事务，返回product_code范围，仍需显式入口步骤。禁止把代码恢复完成当作接入/运行时通过，不新增成功发行后的自动降级或卸载。本转换不改变任何上游CK源码和项目原生目录边界。

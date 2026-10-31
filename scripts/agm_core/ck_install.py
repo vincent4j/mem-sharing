@@ -137,6 +137,9 @@ def _scene(request, main_operation_id):
               and data['machine']['agents'][a]['installation']['status'] == 'installed']
     if set(agents) != set(data['machine']['agents']):
         _fail('Machine agent entries are incomplete', 'ck_main_incomplete')
+    static = user_entries.connection_status(runtime, request['platform_config'], data, agents)
+    if any(fact['status'] != 'connected' for fact in static.values()):
+        _fail('Connected agent lacks a verified public-memory entry', 'ck_main_incomplete')
     for agent in agents:
         objects = [obj for obj in data['machine']['objects'].values() if agent in obj['agents']]
         if not objects:

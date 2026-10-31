@@ -126,3 +126,17 @@ python3 -B /absolute/path/verified-source/scripts/install.py --recover /absolute
 选择回滚须改为 `--action rollback`，重新预览并批准。before/after 之外第三种字节、材料缺损或工具漂移即停；V 已提交且输出全 after 时只收尾。活动 C 混版时使用报告所指固定恢复工具，不依赖半替换的安装器。
 
 固定升级工具包沿用 `recover.py preview <journal> continue` 与 `recover.py apply <批准计划JSON>`；其他场景入口待集成核对。日常主动版本回退是版本库存的新计划，不等同于故障 rollback，本安装 CLI 不增加未冻结降级参数。
+
+### WorkBuddy 用户入口的接入边界
+
+用户级 `~/.workbuddy/MEMORY.md` 的私人原文字节保留；精确批准计划后追加受管块，块内明确读取本机公共索引绝对路径及项目 `AGENTS.md`。已登记旧块仅在指纹匹配时，经精确批准更新；漂移、未登记旧块或不满足公共读取语义的共享用户块停止自动接入，交回原有治理路径。与当前模板完全相同的未登记块可保真登记为 reused，不取得删除权。安装器只拥有其新增受管块，不拥有私人全文；本次不提供机器卸载。
+
+报告中的 installed 是安装探测，connected 是登记与实际入口语义的静态核验；缺口列于 `entry_status`，接入未全完成报告 partial。每项 `runtime_acceptance: pending` 仍需真实新会话证据。已有/noop 安装也重新核验静态入口，不凭应用存在宣称接入。需要更新 WorkBuddy 已登记约定时使用显式 `--agent workbuddy` 的精确预览/批准流程；不因同版无参数重跑而自动接入新 Agent。Keeper 尾步继续检查主操作、登记对象与指纹，不绕过缺口。本修复不修改私人规则、不预建 WorkBuddy 原生项目目录，不扩大旧版本迁移承诺。
+
+历史共享 user scope 入口即使含正确公共指针，也不由机器安装器复制或接管；缺少机器级对象时静态接入保持 pending（`machine_entry_not_registered_shared_reference`），需另行治理。这与文件语义缺失、运行时尚未验收分别报告。
+
+### 已审定 WorkBuddy 修复发行转换
+
+0.1.0 → 0.1.1 支持一次窄范围 `workbuddy-public-index-v1` 合同转换：旧发行来源、前后 `user_entries.py` 指纹固定，`agents.json` 不变；目标来源由外部精确清单绑定，必须显式 `--agent workbuddy`。它不是通用合同升级许可。来源须先提交并固定为干净 checkout，入口子计划纳入整单批准，不能把未提交文件标成旧commit。
+
+代码升级完成后才执行入口事务；入口失败报告partial，使用相同0.1.1来源重新预览、批准同版入口补齐，不重放旧批准。代码中断的固定toolkit恢复只证明代码恢复，结果明确入口尚未运行；不承诺成功发行后自动降回0.1.0。完整外部清单生成、预览/批准及恢复边界见[操作手册](docs/operations.md#010--011-的-workbuddy-入口合同转换)。
