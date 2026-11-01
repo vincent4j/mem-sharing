@@ -1,0 +1,10 @@
+{
+  "scripts/agm_core/plugin_release.py": "4bb5b2453c9fa84dee1d80e968703268282f242b14dd12b9db807af92edbcf70",
+  "scripts/agm_core/user_install.py": "5605cd92d4ed3de660e05f3e6cfb0b1a90d56847a0350826d35a9623353bb11f",
+  "scripts/agm_core/upgrade.py": "dc3be9d1c73a94a113e92853d276249e52e1c896bf88bae085268636e7555e32",
+  "scripts/install.py": "c12412295680b1890c2ccbe1cbed8d57996b198b381f4bcedc031a4009120fec",
+  "tools/plugin-release/release.py": "5d31a861f639e336c742f25db1e1f7bb995f1d1615252271889ec059536ce287",
+  "tests/unit/test_plugin_release.py": "454e857a0bdd02f38be6f7a3f98cbb3cc6a7eb9a1676d1976394ac2b37c2d7b1",
+  "tests/unit/test_release_closure.py": "d9fb4b955f8c204be748d689f4e33ee5f7f4345dfa8d05a01bf908dcf2210876",
+  "tests/integration/test_plugin_release_cli.py": "002f8ea681279ad6c1198273a715d514132b49429e725ee8e4f0e04a31f2cb06"
+}

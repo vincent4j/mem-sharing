@@ -1,0 +1,14 @@
+{
+  "name": "@memsharing/plugin-shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "memSharing host-plugin common Node thin layer: subprocess, CLI JSON, evidence digests, dependency supply verification. True source; copied into each plugin's server bundle by sync-to-plugins.mjs.",
+  "scripts": {
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "sync": "node sync-to-plugins.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

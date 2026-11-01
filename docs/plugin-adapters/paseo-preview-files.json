@@ -1,0 +1,5 @@
+{
+  "scripts/agm.py": "b2cce0c1806cea4a302096e99dcf28780de7f02b80ffccf4829e7aa24d8a612b",
+  "scripts/agm_core/enable.py": "722d99e7c0fbf13e53326ff8235334e5c9af395c5eb2095e4d69b613ebd93892",
+  "tests/unit/test_cli_preview.py": "7b206270ec4eece74df6fe8e82c81c8edcd5deeec6691c0d4db60fa6c273ac94"
+}

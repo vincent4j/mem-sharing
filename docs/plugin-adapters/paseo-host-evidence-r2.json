@@ -1,0 +1,53 @@
+{
+  "manifest": "/tmp/ms-host-reviewfix-freeze-v1.sha256",
+  "manifest_sha256": "467de242608ac2ef3b50f170e4749d90601eb0bd76a227b927c951b41c1c50fe",
+  "files": 20,
+  "main_before_hashes": "/tmp/ms-host-reviewfix-freeze-v1.json",
+  "modified_since_host19": [
+    "plugins/paseo/client/flow.tsx",
+    "plugins/paseo/server/ck-source.ts",
+    "plugins/paseo/server/orchestrator.ts",
+    "plugins/paseo/test/bridge-real.test.ts",
+    "plugins/paseo/test/ck-source.test.ts",
+    "plugins/paseo/test/orchestrator.test.ts"
+  ],
+  "added_since_host19": [
+    "plugins/paseo/server/owned-paths.ts"
+  ],
+  "test": {
+    "command": "npm --prefix plugins/paseo test",
+    "exit": 0,
+    "tests": 26,
+    "duration_ms": 85556.547917,
+    "fail": 0,
+    "skip": 0,
+    "log": "/tmp/ms-host-r2-final-test.log",
+    "sha256": "aed3fc7abfafd176d853f77f19016ae262b82107c927466ceae027e0c607474f",
+    "tool_receipt": "631dde / session 8941"
+  },
+  "typecheck": {
+    "command": "npm --prefix plugins/paseo run typecheck",
+    "exit": 0,
+    "log": "/tmp/ms-host-r2-typecheck.log",
+    "sha256": "46b74c2af9a56eb352176cad94e0d044263365a5289730ba76c4b6d7c7c78cf2",
+    "tool_receipt": "3a0fc2 / session 81428"
+  },
+  "checks": {
+    "shared31_unchanged": true,
+    "main_core11_unchanged": true,
+    "no_native_host_acceptance": true
+  },
+  "review_fixes": {
+    "P1": "Every normal bootstrap/machine preview invokes bundled original release resolver with server-owned fixed package digest. Original resolver verifies current payload and acquisition receipt. Absent current export needs separate export approval. Old inventory discovery cannot pick normal target. Real A installed + B0.2 + C sameversion/differenttree + multiinventory + corrupted A receipt tests preserve original registry and conversion gate. No successful A-to-B upgrade claimed.",
+    "P2": "UI explicit preserve/enable/disable radio values forwarded as undefined/enable/disable. Original --memory and --no-memory retained; original no-memory policy is disabled. Summary shows original memory_transition or ledger before-state; real CLI verifies disabled preserved, explicitly lifted and disabled again with shared rules retained.",
+    "P3": "New host-only ensureRealDirectory preflights complete existing prefix then validates/creates each directory without recursive mkdir. Staging and CK source parents both use it. operate prepares record inside structured-error boundary. Four staging/three CK ancestor symlink cases preserve foreign bytes/modes/dirs/mtime and run no CLI/Git."
+  },
+  "remaining": [
+    "Independent rereview pending",
+    "Real host/workspace/provider callbacks/UI/disconnect/new-session acceptance pending",
+    "CK network acquisition remains local fixed-pin Git fixture only",
+    "Python/Git fixed supply assets/hash/license still unavailable; missing runtime fail-closed",
+    "Unknown CK acquisition lock is not auto-removed; same-user noncooperative check-to-syscall window remains",
+    "No real HOME/daemon/Orca/version/commit/push/tag/release/CK upstream/log writes"
+  ]
+}

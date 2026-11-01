@@ -1,0 +1,146 @@
+
+> memsharing-paseo-plugin@0.1.0 test
+> node --experimental-strip-types --import ./test/register-loader.mjs --test test/*.test.ts
+
+TAP version 13
+# Subtest: real bridge: payload -> bootstrap -> machine install -> project cycle -> CK -> recovery
+ok 1 - real bridge: payload -> bootstrap -> machine install -> project cycle -> CK -> recovery
+  ---
+  duration_ms: 45225.518083
+  type: 'test'
+  ...
+# Subtest: real bridge negative: dev sentinel blocks bootstrap on a real machine
+ok 2 - real bridge negative: dev sentinel blocks bootstrap on a real machine
+  ---
+  duration_ms: 1523.63625
+  type: 'test'
+  ...
+# Subtest: fixed CK Git acquisition uses a local pin fixture without network, reuses clean source and preserves foreign destination
+ok 3 - fixed CK Git acquisition uses a local pin fixture without network, reuses clean source and preserves foreign destination
+  ---
+  duration_ms: 710.305375
+  type: 'test'
+  ...
+# Subtest: bootstrap preview writes a server-owned delivery JSON and stores the export plan
+ok 4 - bootstrap preview writes a server-owned delivery JSON and stores the export plan
+  ---
+  duration_ms: 18.857625
+  type: 'test'
+  ...
+# Subtest: bootstrap confirm executes alone with --approval-file and maps acquired
+ok 5 - bootstrap confirm executes alone with --approval-file and maps acquired
+  ---
+  duration_ms: 24.423292
+  type: 'test'
+  ...
+# Subtest: wrong digest never executes the plan
+ok 6 - wrong digest never executes the plan
+  ---
+  duration_ms: 21.035875
+  type: 'test'
+  ...
+# Subtest: reject clears the pending plan
+ok 7 - reject clears the pending plan
+  ---
+  duration_ms: 30.750875
+  type: 'test'
+  ...
+# Subtest: dev sentinel release identity blocks bootstrap (fail-closed, no fake hash)
+ok 8 - dev sentinel release identity blocks bootstrap (fail-closed, no fake hash)
+  ---
+  duration_ms: 10.600667
+  type: 'test'
+  ...
+# Subtest: machine preview uses the durable export with repeated --agent flags
+ok 9 - machine preview uses the durable export with repeated --agent flags
+  ---
+  duration_ms: 21.870542
+  type: 'test'
+  ...
+# Subtest: enable preview passes --preview last and confirm drops it for --approval-file
+ok 10 - enable preview passes --preview last and confirm drops it for --approval-file
+  ---
+  duration_ms: 22.818084
+  type: 'test'
+  ...
+# Subtest: enable plan containing rebuild is blocked structurally
+ok 11 - enable plan containing rebuild is blocked structurally
+  ---
+  duration_ms: 19.197875
+  type: 'test'
+  ...
+# Subtest: remove preview uses the frozen --preview contract and validates the template shape
+ok 12 - remove preview uses the frozen --preview contract and validates the template shape
+  ---
+  duration_ms: 22.299833
+  type: 'test'
+  ...
+# Subtest: ck preview/confirm keeps the independent CK approval shape
+ok 13 - ck preview/confirm keeps the independent CK approval shape
+  ---
+  duration_ms: 21.875792
+  type: 'test'
+  ...
+# Subtest: recover preview/confirm forwards the journal and action
+ok 14 - recover preview/confirm forwards the journal and action
+  ---
+  duration_ms: 26.273209
+  type: 'test'
+  ...
+# Subtest: digest helper sanity for this suite
+ok 15 - digest helper sanity for this suite
+  ---
+  duration_ms: 0.119917
+  type: 'test'
+  ...
+# Subtest: same-plan previews have equal plan digests and distinct single-use confirmation tokens
+ok 16 - same-plan previews have equal plan digests and distinct single-use confirmation tokens
+  ---
+  duration_ms: 48.482
+  type: 'test'
+  ...
+# Subtest: two workers never share request/approval files; kernel drift invalidates the confirmation envelope
+ok 17 - two workers never share request/approval files; kernel drift invalidates the confirmation envelope
+  ---
+  duration_ms: 42.374708
+  type: 'test'
+  ...
+# Subtest: running cancel reaches the owned AbortSignal; concurrent flow calls are refused and restart reports unknown
+ok 18 - running cancel reaches the owned AbortSignal; concurrent flow calls are refused and restart reports unknown
+  ---
+  duration_ms: 24.7335
+  type: 'test'
+  ...
+# Subtest: CK acquisition is separately approved; rejection starts no Git fetch and RPC inputs cannot supply source trust
+ok 19 - CK acquisition is separately approved; rejection starts no Git fetch and RPC inputs cannot supply source trust
+  ---
+  duration_ms: 19.724917
+  type: 'test'
+  ...
+# Subtest: every generated common module matches the true source deterministically
+ok 20 - every generated common module matches the true source deterministically
+  ---
+  duration_ms: 5.45625
+  type: 'test'
+  ...
+# Subtest: the generated copy contains no extra modules
+ok 21 - the generated copy contains no extra modules
+  ---
+  duration_ms: 0.299125
+  type: 'test'
+  ...
+# Subtest: the committed release identity is fail-closed: no fake hash in dev source
+ok 22 - the committed release identity is fail-closed: no fake hash in dev source
+  ---
+  duration_ms: 0.259042
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 46986.40975

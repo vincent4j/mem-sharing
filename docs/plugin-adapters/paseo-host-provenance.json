@@ -1,0 +1,17 @@
+{
+  "baseline": "/tmp/ms-host-glm-baseline/files.json",
+  "modified": [
+    "plugins/paseo/OVERVIEW.md",
+    "plugins/paseo/client/flow.tsx",
+    "plugins/paseo/index.server.ts",
+    "plugins/paseo/server/orchestrator.ts",
+    "plugins/paseo/shared/contracts.ts",
+    "plugins/paseo/test/bridge-real.test.ts",
+    "plugins/paseo/test/orchestrator.test.ts"
+  ],
+  "added": [
+    "plugins/paseo/server/ck-source.ts",
+    "plugins/paseo/test/ck-source.test.ts"
+  ],
+  "removed": []
+}

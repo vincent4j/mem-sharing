@@ -1,0 +1,170 @@
+
+> memsharing-paseo-plugin@0.1.0 test
+> node --experimental-strip-types --import ./test/register-loader.mjs --test test/*.test.ts
+
+TAP version 13
+# Subtest: real bridge: payload -> bootstrap -> machine install -> project cycle -> CK -> recovery
+ok 1 - real bridge: payload -> bootstrap -> machine install -> project cycle -> CK -> recovery
+  ---
+  duration_ms: 56787.84625
+  type: 'test'
+  ...
+# Subtest: real bridge negative: dev sentinel blocks bootstrap on a real machine
+ok 2 - real bridge negative: dev sentinel blocks bootstrap on a real machine
+  ---
+  duration_ms: 2169.532917
+  type: 'test'
+  ...
+# Subtest: current package release wins over old/multiple inventories; same-version trees and missing conversion remain gated
+ok 3 - current package release wins over old/multiple inventories; same-version trees and missing conversion remain gated
+  ---
+  duration_ms: 26348.792583
+  type: 'test'
+  ...
+# Subtest: fixed CK Git acquisition uses a local pin fixture without network, reuses clean source and preserves foreign destination
+ok 4 - fixed CK Git acquisition uses a local pin fixture without network, reuses clean source and preserves foreign destination
+  ---
+  duration_ms: 722.443416
+  type: 'test'
+  ...
+# Subtest: CK source parent symlink is rejected before foreign writes or Git execution
+ok 5 - CK source parent symlink is rejected before foreign writes or Git execution
+  ---
+  duration_ms: 4.477
+  type: 'test'
+  ...
+# Subtest: bootstrap preview writes a server-owned delivery JSON and stores the export plan
+ok 6 - bootstrap preview writes a server-owned delivery JSON and stores the export plan
+  ---
+  duration_ms: 20.70325
+  type: 'test'
+  ...
+# Subtest: bootstrap confirm executes alone with --approval-file and maps acquired
+ok 7 - bootstrap confirm executes alone with --approval-file and maps acquired
+  ---
+  duration_ms: 23.397
+  type: 'test'
+  ...
+# Subtest: wrong digest never executes the plan
+ok 8 - wrong digest never executes the plan
+  ---
+  duration_ms: 22.108666
+  type: 'test'
+  ...
+# Subtest: reject clears the pending plan
+ok 9 - reject clears the pending plan
+  ---
+  duration_ms: 35.77875
+  type: 'test'
+  ...
+# Subtest: dev sentinel release identity blocks bootstrap (fail-closed, no fake hash)
+ok 10 - dev sentinel release identity blocks bootstrap (fail-closed, no fake hash)
+  ---
+  duration_ms: 11.005125
+  type: 'test'
+  ...
+# Subtest: machine preview uses the durable export with repeated --agent flags
+ok 11 - machine preview uses the durable export with repeated --agent flags
+  ---
+  duration_ms: 26.533584
+  type: 'test'
+  ...
+# Subtest: enable preview passes --preview last and confirm drops it for --approval-file
+ok 12 - enable preview passes --preview last and confirm drops it for --approval-file
+  ---
+  duration_ms: 21.586666
+  type: 'test'
+  ...
+# Subtest: enable plan containing rebuild is blocked structurally
+ok 13 - enable plan containing rebuild is blocked structurally
+  ---
+  duration_ms: 18.766334
+  type: 'test'
+  ...
+# Subtest: remove preview uses the frozen --preview contract and validates the template shape
+ok 14 - remove preview uses the frozen --preview contract and validates the template shape
+  ---
+  duration_ms: 21.233125
+  type: 'test'
+  ...
+# Subtest: ck preview/confirm keeps the independent CK approval shape
+ok 15 - ck preview/confirm keeps the independent CK approval shape
+  ---
+  duration_ms: 22.457459
+  type: 'test'
+  ...
+# Subtest: recover preview/confirm forwards the journal and action
+ok 16 - recover preview/confirm forwards the journal and action
+  ---
+  duration_ms: 23.492833
+  type: 'test'
+  ...
+# Subtest: digest helper sanity for this suite
+ok 17 - digest helper sanity for this suite
+  ---
+  duration_ms: 0.093917
+  type: 'test'
+  ...
+# Subtest: same-plan previews have equal plan digests and distinct single-use confirmation tokens
+ok 18 - same-plan previews have equal plan digests and distinct single-use confirmation tokens
+  ---
+  duration_ms: 46.736583
+  type: 'test'
+  ...
+# Subtest: two workers never share request/approval files; kernel drift invalidates the confirmation envelope
+ok 19 - two workers never share request/approval files; kernel drift invalidates the confirmation envelope
+  ---
+  duration_ms: 38.835708
+  type: 'test'
+  ...
+# Subtest: running cancel reaches the owned AbortSignal; concurrent flow calls are refused and restart reports unknown
+ok 20 - running cancel reaches the owned AbortSignal; concurrent flow calls are refused and restart reports unknown
+  ---
+  duration_ms: 24.248708
+  type: 'test'
+  ...
+# Subtest: CK acquisition is separately approved; rejection starts no Git fetch and RPC inputs cannot supply source trust
+ok 21 - CK acquisition is separately approved; rejection starts no Git fetch and RPC inputs cannot supply source trust
+  ---
+  duration_ms: 19.166083
+  type: 'test'
+  ...
+# Subtest: every staging ancestor symlink fails structurally before any foreign write
+ok 22 - every staging ancestor symlink fails structurally before any foreign write
+  ---
+  duration_ms: 13.389584
+  type: 'test'
+  ...
+# Subtest: explicit memory choices forward CLI flags and preserve original transition evidence
+ok 23 - explicit memory choices forward CLI flags and preserve original transition evidence
+  ---
+  duration_ms: 62.718958
+  type: 'test'
+  ...
+# Subtest: every generated common module matches the true source deterministically
+ok 24 - every generated common module matches the true source deterministically
+  ---
+  duration_ms: 5.687291
+  type: 'test'
+  ...
+# Subtest: the generated copy contains no extra modules
+ok 25 - the generated copy contains no extra modules
+  ---
+  duration_ms: 0.27125
+  type: 'test'
+  ...
+# Subtest: the committed release identity is fail-closed: no fake hash in dev source
+ok 26 - the committed release identity is fail-closed: no fake hash in dev source
+  ---
+  duration_ms: 0.446709
+  type: 'test'
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 85556.547917

@@ -1,0 +1,356 @@
+
+> @memsharing/plugin-shared@0.1.0 test
+> node --experimental-strip-types --test test/*.test.ts
+
+TAP version 13
+# Subtest: canonicalJson sorts keys recursively and preserves array order
+ok 1 - canonicalJson sorts keys recursively and preserves array order
+  ---
+  duration_ms: 0.753042
+  type: 'test'
+  ...
+# Subtest: planDigest is stable across key order and matches direct sha256
+ok 2 - planDigest is stable across key order and matches direct sha256
+  ---
+  duration_ms: 0.528375
+  type: 'test'
+  ...
+# Subtest: planDigest changes when any value changes
+ok 3 - planDigest changes when any value changes
+  ---
+  duration_ms: 0.168625
+  type: 'test'
+  ...
+# Subtest: utcConfirmedAt matches the kernel UTC-Z timestamp pattern
+ok 4 - utcConfirmedAt matches the kernel UTC-Z timestamp pattern
+  ---
+  duration_ms: 1.122917
+  type: 'test'
+  ...
+# Subtest: buildEvidence rejects empty and oversized references
+ok 5 - buildEvidence rejects empty and oversized references
+  ---
+  duration_ms: 0.419042
+  type: 'test'
+  ...
+# Subtest: buildApproval merges plan plus evidence keys without mutating the plan
+ok 6 - buildApproval merges plan plus evidence keys without mutating the plan
+  ---
+  duration_ms: 0.6375
+  type: 'test'
+  ...
+# Subtest: isSha256Hex accepts only 64 lowercase hex
+ok 7 - isSha256Hex accepts only 64 lowercase hex
+  ---
+  duration_ms: 0.2995
+  type: 'test'
+  ...
+# Subtest: downloads, verifies hash, and renames into place
+ok 8 - downloads, verifies hash, and renames into place
+  ---
+  duration_ms: 20.799209
+  type: 'test'
+  ...
+# Subtest: hash mismatch fails and removes this call's partial file
+ok 9 - hash mismatch fails and removes this call's partial file
+  ---
+  duration_ms: 5.97375
+  type: 'test'
+  ...
+# Subtest: byte cap aborts the transfer
+ok 10 - byte cap aborts the transfer
+  ---
+  duration_ms: 3.804667
+  type: 'test'
+  ...
+# Subtest: non-200 responses fail with http_status
+ok 11 - non-200 responses fail with http_status
+  ---
+  duration_ms: 2.294042
+  type: 'test'
+  ...
+# Subtest: cancellation cleans up the partial download
+ok 12 - cancellation cleans up the partial download
+  ---
+  duration_ms: 204.475083
+  type: 'test'
+  ...
+# Subtest: non-https URLs are refused outright
+ok 13 - non-https URLs are refused outright
+  ---
+  duration_ms: 0.812042
+  type: 'test'
+  ...
+# Subtest: missing git in the scanned directories reports missing, never installs
+ok 14 - missing git in the scanned directories reports missing, never installs
+  ---
+  duration_ms: 2.392375
+  type: 'test'
+  ...
+# Subtest: a broken git executable reports unknown rather than ready
+ok 15 - a broken git executable reports unknown rather than ready
+  ---
+  duration_ms: 282.6405
+  type: 'test'
+  ...
+# Subtest: real machine self-check: this host locates and executes git
+ok 16 - real machine self-check: this host locates and executes git
+  ---
+  duration_ms: 17.248333
+  type: 'test'
+  ...
+# Subtest: parses a single-line sorted-keys JSON document
+ok 17 - parses a single-line sorted-keys JSON document
+  ---
+  duration_ms: 1.198
+  type: 'test'
+  ...
+# Subtest: parses an indented envelope
+ok 18 - parses an indented envelope
+  ---
+  duration_ms: 0.168666
+  type: 'test'
+  ...
+# Subtest: rejects empty stdout
+ok 19 - rejects empty stdout
+  ---
+  duration_ms: 0.091083
+  type: 'test'
+  ...
+# Subtest: rejects non-JSON stdout
+ok 20 - rejects non-JSON stdout
+  ---
+  duration_ms: 0.337875
+  type: 'test'
+  ...
+# Subtest: rejects two concatenated JSON documents
+ok 21 - rejects two concatenated JSON documents
+  ---
+  duration_ms: 0.205291
+  type: 'test'
+  ...
+# Subtest: exit code mapping mirrors the Python CLI contract
+ok 22 - exit code mapping mirrors the Python CLI contract
+  ---
+  duration_ms: 0.212625
+  type: 'test'
+  ...
+# Subtest: completed: echo argv reaches stdout literally without a shell
+ok 23 - completed: echo argv reaches stdout literally without a shell
+  ---
+  duration_ms: 11.535083
+  type: 'test'
+  ...
+# Subtest: completed: non-zero exit codes are reported, not thrown
+ok 24 - completed: non-zero exit codes are reported, not thrown
+  ---
+  duration_ms: 35.497834
+  type: 'test'
+  ...
+# Subtest: stdout cap truncates and flags
+ok 25 - stdout cap truncates and flags
+  ---
+  duration_ms: 27.704667
+  type: 'test'
+  ...
+# Subtest: timeout kills the child and reports kind timeout
+ok 26 - timeout kills the child and reports kind timeout
+  ---
+  duration_ms: 406.810791
+  type: 'test'
+  ...
+# Subtest: abort signal cancels the child
+ok 27 - abort signal cancels the child
+  ---
+  duration_ms: 205.385125
+  type: 'test'
+  ...
+# Subtest: missing executable reports spawn_error
+ok 28 - missing executable reports spawn_error
+  ---
+  duration_ms: 1.647916
+  type: 'test'
+  ...
+# Subtest: invalid argv is rejected before spawning
+ok 29 - invalid argv is rejected before spawning
+  ---
+  duration_ms: 0.916291
+  type: 'test'
+  ...
+# Subtest: cwd override is honored
+ok 30 - cwd override is honored
+  ---
+  duration_ms: 5.361375
+  type: 'test'
+  ...
+# Subtest: private runtime is preferred over system candidates
+ok 31 - private runtime is preferred over system candidates
+  ---
+  duration_ms: 621.456125
+  type: 'test'
+  ...
+# Subtest: version below the 3.9 floor is blocked
+ok 32 - version below the 3.9 floor is blocked
+  ---
+  duration_ms: 369.56375
+  type: 'test'
+  ...
+# Subtest: missing stdlib modules are blocked
+ok 33 - missing stdlib modules are blocked
+  ---
+  duration_ms: 392.035041
+  type: 'test'
+  ...
+# Subtest: no candidates at all is missing, with evidence recorded
+ok 34 - no candidates at all is missing, with evidence recorded
+  ---
+  duration_ms: 0.539
+  type: 'test'
+  ...
+# Subtest: probe failure (non-JSON stdout) is unknown and does not select
+ok 35 - probe failure (non-JSON stdout) is unknown and does not select
+  ---
+  duration_ms: 135.852666
+  type: 'test'
+  ...
+# Subtest: system candidates fall back after an absent private runtime
+ok 36 - system candidates fall back after an absent private runtime
+  ---
+  duration_ms: 135.631792
+  type: 'test'
+  ...
+# Subtest: privatePythonCandidates scans <runtime-id>/<arch>/bin/python3 in sorted order
+ok 37 - privatePythonCandidates scans <runtime-id>/<arch>/bin/python3 in sorted order
+  ---
+  duration_ms: 4.208667
+  type: 'test'
+  ...
+# Subtest: productPaths mirrors the fixed product layout
+ok 38 - productPaths mirrors the fixed product layout
+  ---
+  duration_ms: 0.127584
+  type: 'test'
+  ...
+# Subtest: real machine self-check: this host has a usable interpreter via private-or-system scan
+ok 39 - real machine self-check: this host has a usable interpreter via private-or-system scan
+  ---
+  duration_ms: 112.006542
+  type: 'test'
+  ...
+# Subtest: a complete manifest validates
+ok 40 - a complete manifest validates
+  ---
+  duration_ms: 1.499375
+  type: 'test'
+  ...
+# Subtest: http URLs are rejected — https only
+ok 41 - http URLs are rejected — https only
+  ---
+  duration_ms: 0.4175
+  type: 'test'
+  ...
+# Subtest: non-64-hex sha256 is rejected
+ok 42 - non-64-hex sha256 is rejected
+  ---
+  duration_ms: 0.169333
+  type: 'test'
+  ...
+# Subtest: entry paths with traversal or absolute components are rejected
+ok 43 - entry paths with traversal or absolute components are rejected
+  ---
+  duration_ms: 0.379042
+  type: 'test'
+  ...
+# Subtest: duplicate or out-of-range archives are rejected
+ok 44 - duplicate or out-of-range archives are rejected
+  ---
+  duration_ms: 0.160583
+  type: 'test'
+  ...
+# Subtest: byte and unpack caps are enforced
+ok 45 - byte and unpack caps are enforced
+  ---
+  duration_ms: 0.13375
+  type: 'test'
+  ...
+# Subtest: missing required text fields are rejected
+ok 46 - missing required text fields are rejected
+  ---
+  duration_ms: 0.28225
+  type: 'test'
+  ...
+# Subtest: allowed_symlinks entries must be safe relative paths
+ok 47 - allowed_symlinks entries must be safe relative paths
+  ---
+  duration_ms: 0.087833
+  type: 'test'
+  ...
+# Subtest: loadSupplyManifest is fail-closed on missing and invalid files
+ok 48 - loadSupplyManifest is fail-closed on missing and invalid files
+  ---
+  duration_ms: 9.530375
+  type: 'test'
+  ...
+# Subtest: extracts a regular tree with nested directories
+ok 49 - extracts a regular tree with nested directories
+  ---
+  duration_ms: 13.635958
+  type: 'test'
+  ...
+# Subtest: rejects '../' path escape
+ok 50 - rejects '../' path escape
+  ---
+  duration_ms: 2.7885
+  type: 'test'
+  ...
+# Subtest: rejects absolute paths
+ok 51 - rejects absolute paths
+  ---
+  duration_ms: 2.560542
+  type: 'test'
+  ...
+# Subtest: rejects unlisted symlinks and escaping link targets
+ok 52 - rejects unlisted symlinks and escaping link targets
+  ---
+  duration_ms: 8.43575
+  type: 'test'
+  ...
+# Subtest: allowlisted internal symlink extracts
+ok 53 - allowlisted internal symlink extracts
+  ---
+  duration_ms: 4.86175
+  type: 'test'
+  ...
+# Subtest: rejects special file types
+ok 54 - rejects special file types
+  ---
+  duration_ms: 2.780917
+  type: 'test'
+  ...
+# Subtest: enforces the unpacked byte cap
+ok 55 - enforces the unpacked byte cap
+  ---
+  duration_ms: 2.003916
+  type: 'test'
+  ...
+# Subtest: truncated archive fails without leaving the destination
+ok 56 - truncated archive fails without leaving the destination
+  ---
+  duration_ms: 3.359166
+  type: 'test'
+  ...
+# Subtest: handles pax path override records
+ok 57 - handles pax path override records
+  ---
+  duration_ms: 8.96275
+  type: 'test'
+  ...
+1..57
+# tests 57
+# suites 0
+# pass 57
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1929.7645

@@ -1,0 +1,142 @@
+TAP version 13
+# Subtest: downloads, verifies hash, and renames into place
+ok 1 - downloads, verifies hash, and renames into place
+  ---
+  duration_ms: 29.951875
+  type: 'test'
+  ...
+# Subtest: hash mismatch fails and removes this call's partial file
+ok 2 - hash mismatch fails and removes this call's partial file
+  ---
+  duration_ms: 5.010334
+  type: 'test'
+  ...
+# Subtest: byte cap aborts the transfer
+ok 3 - byte cap aborts the transfer
+  ---
+  duration_ms: 3.927125
+  type: 'test'
+  ...
+# Subtest: non-200 responses fail with http_status
+ok 4 - non-200 responses fail with http_status
+  ---
+  duration_ms: 2.447042
+  type: 'test'
+  ...
+# Subtest: cancellation cleans up the partial download
+ok 5 - cancellation cleans up the partial download
+  ---
+  duration_ms: 204.741666
+  type: 'test'
+  ...
+# Subtest: non-https URLs are refused outright
+ok 6 - non-https URLs are refused outright
+  ---
+  duration_ms: 0.711541
+  type: 'test'
+  ...
+# Subtest: a malformed redirect Location fails structurally
+ok 7 - a malformed redirect Location fails structurally
+  ---
+  duration_ms: 2.7795
+  type: 'test'
+  ...
+# Subtest: a staging path that cannot be written fails without crashing
+ok 8 - a staging path that cannot be written fails without crashing
+  ---
+  duration_ms: 3.683125
+  type: 'test'
+  ...
+# Subtest: a predictable part-file name cannot make us delete a foreign file
+ok 9 - a predictable part-file name cannot make us delete a foreign file
+  ---
+  duration_ms: 5.86275
+  type: 'test'
+  ...
+# Subtest: a part file swapped mid-transfer never becomes the final artifact
+ok 10 - a part file swapped mid-transfer never becomes the final artifact
+  ---
+  duration_ms: 6.62175
+  type: 'test'
+  ...
+# Subtest: a part file swapped mid-transfer is preserved on the hash-failure path too
+ok 11 - a part file swapped mid-transfer is preserved on the hash-failure path too
+  ---
+  duration_ms: 3.00975
+  type: 'test'
+  ...
+# Subtest: a target created during transfer is never overwritten
+ok 12 - a target created during transfer is never overwritten
+  ---
+  duration_ms: 3.012458
+  type: 'test'
+  ...
+# Subtest: chunked transfer with backpressure completes byte-exact without listener warnings
+ok 13 - chunked transfer with backpressure completes byte-exact without listener warnings
+  ---
+  duration_ms: 38.724166
+  type: 'test'
+  ...
+# Subtest: private runtime is preferred over system candidates
+ok 14 - private runtime is preferred over system candidates
+  ---
+  duration_ms: 459.865458
+  type: 'test'
+  ...
+# Subtest: version below the 3.9 floor is blocked
+ok 15 - version below the 3.9 floor is blocked
+  ---
+  duration_ms: 442.384791
+  type: 'test'
+  ...
+# Subtest: missing stdlib modules are blocked
+ok 16 - missing stdlib modules are blocked
+  ---
+  duration_ms: 513.048
+  type: 'test'
+  ...
+# Subtest: no candidates at all is missing, with evidence recorded
+ok 17 - no candidates at all is missing, with evidence recorded
+  ---
+  duration_ms: 0.550417
+  type: 'test'
+  ...
+# Subtest: probe failure (non-JSON stdout) is unknown and does not select
+ok 18 - probe failure (non-JSON stdout) is unknown and does not select
+  ---
+  duration_ms: 531.372959
+  type: 'test'
+  ...
+# Subtest: system candidates fall back after an absent private runtime
+ok 19 - system candidates fall back after an absent private runtime
+  ---
+  duration_ms: 221.817709
+  type: 'test'
+  ...
+# Subtest: privatePythonCandidates scans <runtime-id>/<arch>/bin/python3 in sorted order
+ok 20 - privatePythonCandidates scans <runtime-id>/<arch>/bin/python3 in sorted order
+  ---
+  duration_ms: 6.187041
+  type: 'test'
+  ...
+# Subtest: productPaths mirrors the fixed product layout
+ok 21 - productPaths mirrors the fixed product layout
+  ---
+  duration_ms: 0.2145
+  type: 'test'
+  ...
+# Subtest: real machine self-check: this host has a usable interpreter via private-or-system scan
+ok 22 - real machine self-check: this host has a usable interpreter via private-or-system scan
+  ---
+  duration_ms: 192.965541
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2524.781958

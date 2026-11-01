@@ -124,7 +124,7 @@ class _StrictParser(argparse.ArgumentParser):
         raise CliError("invalid_arguments", message)
 
 
-_SINGLE_USE_FLAGS = ("--project", "--directory", "--agent", "--memory", "--no-memory", "--all", "--approval-file")
+_SINGLE_USE_FLAGS = ("--project", "--directory", "--agent", "--memory", "--no-memory", "--all", "--approval-file", "--preview")
 
 
 def _prescan_single_use(argv):
@@ -163,9 +163,11 @@ def build_parser():
     memory_group.add_argument(
         "--no-memory", dest="memory_choice", action="store_const", const="disabled", help="禁止自动项目经历记录与初始化，保留 CK 与数据"
     )
-    enable.add_argument(
+    enable_action = enable.add_mutually_exclusive_group()
+    enable_action.add_argument(
         "--approval-file", metavar="JSON", help="非交互批准文件(裁定 D-M2-04;仅写命令)"
     )
+    enable_action.add_argument("--preview", action="store_true", help="只读生成精确批准模板；不确认、不修补、不获取写锁")
 
     batch = sub.add_parser("enable-memory-batch", help="扫描 Git 主 checkout，集中批准后批量启用记忆")
     batch.add_argument("--directory", required=True, metavar="DIR", help="只读递归扫描的目录(含自身)")
@@ -174,9 +176,11 @@ def build_parser():
 
     remove = sub.add_parser("remove-memory", help="仅撤销本工具所有权对象")
     remove.add_argument("--project", metavar="GIT_ROOT", help="显式项目 Git 根;缺省从 cwd 定位")
-    remove.add_argument(
+    remove_action = remove.add_mutually_exclusive_group()
+    remove_action.add_argument(
         "--approval-file", metavar="JSON", help="非交互批准文件(裁定 D-M2-04;仅写命令)"
     )
+    remove_action.add_argument("--preview", action="store_true", help="只读生成精确批准模板；不确认、不获取写锁")
 
     check = sub.add_parser("check-memory", help="只读报告现场状态与缺口")
     check_group = check.add_mutually_exclusive_group()
@@ -580,7 +584,8 @@ def build_request(
         "memory_choice": getattr(namespace, "memory_choice", None),
         "all": bool(getattr(namespace, "all", False)),
         "approval": approval,
-        "interactive": interactive,
+        "interactive": False if getattr(namespace, "preview", False) else interactive,
+        "preview": bool(getattr(namespace, "preview", False)),
         "platform": platform_key,
         "agents_table": table,
         "platform_config": platform_config,
@@ -627,7 +632,7 @@ def _execute(argv, *, platform, interactive, table_path, home):
     # 写命令批准门(裁定 D-M2-04 方案 A):remove 保守前置门保留(非交互且未绑定批准 → 5);
     # enable 的免批准判定(幂等补装)由内核在写锁内依 registry 现场裁决(M2-04 已实现),
     # 本外壳不前置截断,内核返回 approval_required 时同样映射为 5。TTY 只影响能否提问。
-    if command == "remove-memory" and approval is None and not interactive:
+    if command == "remove-memory" and approval is None and not interactive and not getattr(namespace, "preview", False):
         return make_envelope(
             command,
             STATUS_APPROVAL_REQUIRED,

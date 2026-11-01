@@ -1,0 +1,4 @@
+
+> memsharing-paseo-plugin@0.1.0 typecheck
+> tsc --noEmit
+

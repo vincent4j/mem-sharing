@@ -1,0 +1,428 @@
+
+> @memsharing/plugin-shared@0.1.0 test
+> node --experimental-strip-types --test test/*.test.ts
+
+TAP version 13
+# Subtest: canonicalJson sorts keys recursively and preserves array order
+ok 1 - canonicalJson sorts keys recursively and preserves array order
+  ---
+  duration_ms: 0.834709
+  type: 'test'
+  ...
+# Subtest: planDigest is stable across key order and matches direct sha256
+ok 2 - planDigest is stable across key order and matches direct sha256
+  ---
+  duration_ms: 0.560167
+  type: 'test'
+  ...
+# Subtest: planDigest changes when any value changes
+ok 3 - planDigest changes when any value changes
+  ---
+  duration_ms: 0.143375
+  type: 'test'
+  ...
+# Subtest: utcConfirmedAt matches the kernel UTC-Z timestamp pattern
+ok 4 - utcConfirmedAt matches the kernel UTC-Z timestamp pattern
+  ---
+  duration_ms: 7.291625
+  type: 'test'
+  ...
+# Subtest: buildEvidence rejects empty and oversized references
+ok 5 - buildEvidence rejects empty and oversized references
+  ---
+  duration_ms: 0.421708
+  type: 'test'
+  ...
+# Subtest: buildApproval merges plan plus evidence keys without mutating the plan
+ok 6 - buildApproval merges plan plus evidence keys without mutating the plan
+  ---
+  duration_ms: 0.603708
+  type: 'test'
+  ...
+# Subtest: isSha256Hex accepts only 64 lowercase hex
+ok 7 - isSha256Hex accepts only 64 lowercase hex
+  ---
+  duration_ms: 0.326708
+  type: 'test'
+  ...
+# Subtest: downloads, verifies hash, and renames into place
+ok 8 - downloads, verifies hash, and renames into place
+  ---
+  duration_ms: 26.832958
+  type: 'test'
+  ...
+# Subtest: hash mismatch fails and removes this call's partial file
+ok 9 - hash mismatch fails and removes this call's partial file
+  ---
+  duration_ms: 5.49525
+  type: 'test'
+  ...
+# Subtest: byte cap aborts the transfer
+ok 10 - byte cap aborts the transfer
+  ---
+  duration_ms: 3.300708
+  type: 'test'
+  ...
+# Subtest: non-200 responses fail with http_status
+ok 11 - non-200 responses fail with http_status
+  ---
+  duration_ms: 3.81825
+  type: 'test'
+  ...
+# Subtest: cancellation cleans up the partial download
+ok 12 - cancellation cleans up the partial download
+  ---
+  duration_ms: 204.476458
+  type: 'test'
+  ...
+# Subtest: non-https URLs are refused outright
+ok 13 - non-https URLs are refused outright
+  ---
+  duration_ms: 1.390542
+  type: 'test'
+  ...
+# Subtest: a malformed redirect Location fails structurally
+ok 14 - a malformed redirect Location fails structurally
+  ---
+  duration_ms: 2.64975
+  type: 'test'
+  ...
+# Subtest: a staging path that cannot be written fails without crashing
+ok 15 - a staging path that cannot be written fails without crashing
+  ---
+  duration_ms: 1.34375
+  type: 'test'
+  ...
+# Subtest: missing git in the scanned directories reports missing, never installs
+ok 16 - missing git in the scanned directories reports missing, never installs
+  ---
+  duration_ms: 2.833292
+  type: 'test'
+  ...
+# Subtest: a broken git executable reports unknown rather than ready
+ok 17 - a broken git executable reports unknown rather than ready
+  ---
+  duration_ms: 166.537166
+  type: 'test'
+  ...
+# Subtest: exit 0 with unexpected --version output is unknown, not ready
+ok 18 - exit 0 with unexpected --version output is unknown, not ready
+  ---
+  duration_ms: 264.848625
+  type: 'test'
+  ...
+# Subtest: an invalid first candidate falls back to a later valid one
+ok 19 - an invalid first candidate falls back to a later valid one
+  ---
+  duration_ms: 514.924416
+  type: 'test'
+  ...
+# Subtest: the macOS CommandLineTools stub is blocked before execution
+ok 20 - the macOS CommandLineTools stub is blocked before execution
+  ---
+  duration_ms: 0.5055
+  type: 'test'
+  ...
+# Subtest: with CommandLineTools present the stub proceeds to a real probe
+ok 21 - with CommandLineTools present the stub proceeds to a real probe
+  ---
+  duration_ms: 16.077917
+  type: 'test'
+  ...
+# Subtest: real machine self-check: this host locates, executes, and verifies git
+ok 22 - real machine self-check: this host locates, executes, and verifies git
+  ---
+  duration_ms: 15.026917
+  type: 'test'
+  ...
+# Subtest: parses a single-line sorted-keys JSON document
+ok 23 - parses a single-line sorted-keys JSON document
+  ---
+  duration_ms: 1.3535
+  type: 'test'
+  ...
+# Subtest: parses an indented envelope
+ok 24 - parses an indented envelope
+  ---
+  duration_ms: 0.115791
+  type: 'test'
+  ...
+# Subtest: rejects empty stdout
+ok 25 - rejects empty stdout
+  ---
+  duration_ms: 0.076583
+  type: 'test'
+  ...
+# Subtest: rejects non-JSON stdout
+ok 26 - rejects non-JSON stdout
+  ---
+  duration_ms: 0.195792
+  type: 'test'
+  ...
+# Subtest: rejects two concatenated JSON documents
+ok 27 - rejects two concatenated JSON documents
+  ---
+  duration_ms: 0.154083
+  type: 'test'
+  ...
+# Subtest: exit code mapping mirrors the Python CLI contract
+ok 28 - exit code mapping mirrors the Python CLI contract
+  ---
+  duration_ms: 0.329042
+  type: 'test'
+  ...
+# Subtest: completed: echo argv reaches stdout literally without a shell
+ok 29 - completed: echo argv reaches stdout literally without a shell
+  ---
+  duration_ms: 12.214084
+  type: 'test'
+  ...
+# Subtest: completed: non-zero exit codes are reported, not thrown
+ok 30 - completed: non-zero exit codes are reported, not thrown
+  ---
+  duration_ms: 50.835583
+  type: 'test'
+  ...
+# Subtest: stdout cap truncates and flags
+ok 31 - stdout cap truncates and flags
+  ---
+  duration_ms: 29.015791
+  type: 'test'
+  ...
+# Subtest: timeout kills the child and reports kind timeout
+ok 32 - timeout kills the child and reports kind timeout
+  ---
+  duration_ms: 404.725625
+  type: 'test'
+  ...
+# Subtest: abort signal cancels the child
+ok 33 - abort signal cancels the child
+  ---
+  duration_ms: 202.8485
+  type: 'test'
+  ...
+# Subtest: missing executable reports spawn_error
+ok 34 - missing executable reports spawn_error
+  ---
+  duration_ms: 1.750459
+  type: 'test'
+  ...
+# Subtest: invalid argv is rejected before spawning
+ok 35 - invalid argv is rejected before spawning
+  ---
+  duration_ms: 0.7585
+  type: 'test'
+  ...
+# Subtest: cwd override is honored
+ok 36 - cwd override is honored
+  ---
+  duration_ms: 4.773041
+  type: 'test'
+  ...
+# Subtest: timeout terminates the whole process group, not just the child
+ok 37 - timeout terminates the whole process group, not just the child
+  ---
+  duration_ms: 305.025292
+  type: 'test'
+  ...
+# Subtest: private runtime is preferred over system candidates
+ok 38 - private runtime is preferred over system candidates
+  ---
+  duration_ms: 274.145958
+  type: 'test'
+  ...
+# Subtest: version below the 3.9 floor is blocked
+ok 39 - version below the 3.9 floor is blocked
+  ---
+  duration_ms: 259.711209
+  type: 'test'
+  ...
+# Subtest: missing stdlib modules are blocked
+ok 40 - missing stdlib modules are blocked
+  ---
+  duration_ms: 255.806625
+  type: 'test'
+  ...
+# Subtest: no candidates at all is missing, with evidence recorded
+ok 41 - no candidates at all is missing, with evidence recorded
+  ---
+  duration_ms: 0.465625
+  type: 'test'
+  ...
+# Subtest: probe failure (non-JSON stdout) is unknown and does not select
+ok 42 - probe failure (non-JSON stdout) is unknown and does not select
+  ---
+  duration_ms: 258.460916
+  type: 'test'
+  ...
+# Subtest: system candidates fall back after an absent private runtime
+ok 43 - system candidates fall back after an absent private runtime
+  ---
+  duration_ms: 140.956042
+  type: 'test'
+  ...
+# Subtest: privatePythonCandidates scans <runtime-id>/<arch>/bin/python3 in sorted order
+ok 44 - privatePythonCandidates scans <runtime-id>/<arch>/bin/python3 in sorted order
+  ---
+  duration_ms: 5.167333
+  type: 'test'
+  ...
+# Subtest: productPaths mirrors the fixed product layout
+ok 45 - productPaths mirrors the fixed product layout
+  ---
+  duration_ms: 0.176583
+  type: 'test'
+  ...
+# Subtest: real machine self-check: this host has a usable interpreter via private-or-system scan
+ok 46 - real machine self-check: this host has a usable interpreter via private-or-system scan
+  ---
+  duration_ms: 87.582375
+  type: 'test'
+  ...
+# Subtest: a complete manifest validates
+ok 47 - a complete manifest validates
+  ---
+  duration_ms: 2.23175
+  type: 'test'
+  ...
+# Subtest: http URLs are rejected — https only
+ok 48 - http URLs are rejected — https only
+  ---
+  duration_ms: 0.32725
+  type: 'test'
+  ...
+# Subtest: non-64-hex sha256 is rejected
+ok 49 - non-64-hex sha256 is rejected
+  ---
+  duration_ms: 0.100167
+  type: 'test'
+  ...
+# Subtest: entry paths with traversal or absolute components are rejected
+ok 50 - entry paths with traversal or absolute components are rejected
+  ---
+  duration_ms: 0.259792
+  type: 'test'
+  ...
+# Subtest: duplicate or out-of-range archives are rejected
+ok 51 - duplicate or out-of-range archives are rejected
+  ---
+  duration_ms: 0.131458
+  type: 'test'
+  ...
+# Subtest: byte and unpack caps are enforced
+ok 52 - byte and unpack caps are enforced
+  ---
+  duration_ms: 0.110625
+  type: 'test'
+  ...
+# Subtest: missing required text fields are rejected
+ok 53 - missing required text fields are rejected
+  ---
+  duration_ms: 0.449667
+  type: 'test'
+  ...
+# Subtest: allowed_symlinks entries must be safe relative paths
+ok 54 - allowed_symlinks entries must be safe relative paths
+  ---
+  duration_ms: 0.14375
+  type: 'test'
+  ...
+# Subtest: loadSupplyManifest is fail-closed on missing and invalid files
+ok 55 - loadSupplyManifest is fail-closed on missing and invalid files
+  ---
+  duration_ms: 24.685875
+  type: 'test'
+  ...
+# Subtest: extracts a regular tree with nested directories
+ok 56 - extracts a regular tree with nested directories
+  ---
+  duration_ms: 20.8175
+  type: 'test'
+  ...
+# Subtest: preserves the archive execute bit and verifies X_OK
+ok 57 - preserves the archive execute bit and verifies X_OK
+  ---
+  duration_ms: 5.704708
+  type: 'test'
+  ...
+# Subtest: refuses an existing destination and never removes it
+ok 58 - refuses an existing destination and never removes it
+  ---
+  duration_ms: 1.231166
+  type: 'test'
+  ...
+# Subtest: a failing extraction leaves a pre-existing foreign destination intact
+ok 59 - a failing extraction leaves a pre-existing foreign destination intact
+  ---
+  duration_ms: 2.140042
+  type: 'test'
+  ...
+# Subtest: rejects '../' path escape
+ok 60 - rejects '../' path escape
+  ---
+  duration_ms: 2.881125
+  type: 'test'
+  ...
+# Subtest: rejects absolute paths
+ok 61 - rejects absolute paths
+  ---
+  duration_ms: 2.15775
+  type: 'test'
+  ...
+# Subtest: rejects unlisted symlinks and escaping link targets
+ok 62 - rejects unlisted symlinks and escaping link targets
+  ---
+  duration_ms: 4.749416
+  type: 'test'
+  ...
+# Subtest: allowlisted internal symlink extracts
+ok 63 - allowlisted internal symlink extracts
+  ---
+  duration_ms: 3.668708
+  type: 'test'
+  ...
+# Subtest: hardlink copies count against the byte cap
+ok 64 - hardlink copies count against the byte cap
+  ---
+  duration_ms: 4.3695
+  type: 'test'
+  ...
+# Subtest: rejects special file types
+ok 65 - rejects special file types
+  ---
+  duration_ms: 2.968459
+  type: 'test'
+  ...
+# Subtest: enforces the unpacked byte cap including headers
+ok 66 - enforces the unpacked byte cap including headers
+  ---
+  duration_ms: 1.632958
+  type: 'test'
+  ...
+# Subtest: oversized pax extended headers are refused before allocation
+ok 67 - oversized pax extended headers are refused before allocation
+  ---
+  duration_ms: 1.832375
+  type: 'test'
+  ...
+# Subtest: truncated archive fails without leaving the destination
+ok 68 - truncated archive fails without leaving the destination
+  ---
+  duration_ms: 1.657083
+  type: 'test'
+  ...
+# Subtest: handles pax path override records
+ok 69 - handles pax path override records
+  ---
+  duration_ms: 7.28725
+  type: 'test'
+  ...
+1..69
+# tests 69
+# suites 0
+# pass 69
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1442.825791
