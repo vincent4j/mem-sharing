@@ -1,10 +1,12 @@
 # memSharing 设计总纲
 
-文档版本 v2.2，2026-10-31。这里只保留现行产品合同；历史裁定与旧 § 编号见 Git `f06db31:docs/plan/decisions-m4.md`。机制详见[系统架构](docs/architecture.md)，操作详见[操作手册](docs/operations.md)，实际完成状态以[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)为准。
+文档版本 v2.2，2026-11-01。这里只保留现行产品合同；历史裁定与旧 § 编号见 Git `f06db31:docs/plan/decisions-m4.md`。机制详见[系统架构](docs/architecture.md)，操作详见[操作手册](docs/operations.md)，实际完成状态以[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)为准。
 
 ## 定位与边界
 
-memSharing（多 Agent 记忆共享与融合，Multi-Agent Memory Sharing & Fusion）是跨执行器的规则共享与经历编排层，覆盖 Codex、Claude Code、WorkBuddy、DeepSeek Harness 与 ZCode 桌面端。缺省选择仍为前三家，新增两家须显式指定 `dsh`、`zcode`。纯文件、零服务，使用 Python 标准库；当前实证平台为 macOS，Windows/Linux 未验证。
+OpenCode 桌面 App 与 CLI 分面核验，CLI-only 不证明桌面存在；官方原生 CLI 与 App 并装采用受限身份校验，详见[操作手册](docs/operations.md#桌面端默认根与验证边界)。真实新会话验收由用户延后统一进行。
+
+memSharing（多 Agent 记忆共享与融合，Multi-Agent Memory Sharing & Fusion）是跨执行器的规则共享与经历编排层，覆盖 Codex、Claude Code、WorkBuddy、DeepSeek Harness（`dsh`）、ZCode（`zcode`）与 OpenCode v2（`opencode`）六家。机器全新安装（fresh）、同来源再次安装及符合来源与转换门禁的合法升级（upgrade）缺省接入全部已核验为 `installed` 的支持对象；显式 `--agent` 限定新增接入范围。项目命令缺省仍为 Codex、Claude Code、WorkBuddy 三家，专属项目入口由实际使用驱动，disabled 项目不自动恢复。纯文件、零服务，使用 Python 标准库；当前实证平台为 macOS，Windows/Linux 未验证。
 
 不增加向量库、界面、模型配置、数据库或通用 provider 框架。不管理共享 Skills/MCP，不投影 memSharing 自身 Skill，不写各执行器的自动私有记忆库。其他记忆工具可独立共存，本产品不集成或管理其服务端。
 
@@ -16,7 +18,7 @@ memSharing（多 Agent 记忆共享与融合，Multi-Agent Memory Sharing & Fusi
 | 项目记忆 | 项目根 `AGENTS.md` | 项目构建、约束与工作规则，随 Git 走 |
 | 项目经历 | Context Keeper 管理的项目记录库，默认 `docs/context-keeper/` | 进度、事实、日志与经验，随 Git 走 |
 
-固定 pin 的 Context Keeper 安装器仅支持 Codex、Claude Code、WorkBuddy 的 flags；`dsh`、`zcode` 明确跳过用户级 CK 安装（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响 memSharing 接入。
+固定 pin 的 Context Keeper 安装器仅支持 Codex、Claude Code、WorkBuddy 的 flags；`dsh`、`zcode`、`opencode` 明确跳过用户级 CK 安装（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响 memSharing 接入。
 
 Context Keeper 是可选的项目经历引擎；不装它仍可共享用户记忆和项目规则。其记录格式、保存、续接、查找、迁移与首次建库授权归 Context Keeper 自身，本产品不复制其逻辑、不修改上游。
 
@@ -30,13 +32,13 @@ R 为 `~/.mem-sharing`，仅包含 memories/references/backups/var；C 为 `~/.l
 
 活动台账 schema=3，产品结构版本=1，代码版本由精确发行清单绑定，三者分开。旧 schema1/2 只作诊断与保全，不提供开发版迁移或逆 schema 转换。支持的正式升级必须匹配明确的前后发行、来源和转换，不按版本大小推测兼容。
 
-用户安装对话、依赖检查、一次确认、静默执行与 Context Keeper 独立尾步以 [INSTALL](INSTALL.md) 为唯一操作合同。Python ≥3.9；缺 Python/Git 的准备由外层 Agent 编排，Python CLI 不自行装依赖。后装执行器仅由用户主动请求接入，不自动发现或提示。
+用户安装对话、依赖检查、一次确认、静默执行与 Context Keeper 独立尾步以 [INSTALL](INSTALL.md) 为唯一操作合同。Python ≥3.9；缺 Python/Git 的准备由外层 Agent 编排，Python CLI 不自行装依赖。后装执行器可显式限定接入；再次运行安装器时，也会自动探测支持对象，将已核验 installed 者的接入差异纳入精确预览与批准。这是用户调用安装器时的行为，不是后台发现。
 
-`installed` 只证明探测到应用；`connected` 证明入口登记、指纹与读取语义静态成立；真实会话读取另行验证。不能把主安装成功或静态接入当作所有执行器运行成功。新增两家本轮未真实安装，桌面新会话验收仍为 pending。
+`installed` 是安装事实核验；`connected` 证明入口登记、指纹与读取语义静态成立；真实会话读取另行验证。本机只读安装检测、临时 HOME 静态与合成测试分别只证明其证据层，不能把主安装成功或静态接入当作所有执行器运行成功。OpenCode 的真实 memSharing 安装、新会话规则加载与模型调用仍为 pending；其他执行器的运行状态按各自验收记录判断。
 
 ## 项目入口与生命周期
 
-进入未登记的 Git 主 checkout 时，规则与公共指南驱动默认启用；不是后台监听。默认接入由当前实际执行者按指南以 `--agent <当前执行者>` 执行；不带 agent 参数按已安装事实处理，可能顺带补齐其他执行器已存在的原生目录，仅用于用户显式要求全体或批量接入，不改 CLI 语义。机器探测到执行器安装或原生目录存在，不等于该执行者当前实际使用。建立缺失的 AGENTS 骨架与项目经历短协议，已有正文完整保留。非 Git 目录及 linked worktree 不触发；路径复用必须重新核对 Git common-dir。
+进入未登记的 Git 主 checkout 时，规则与公共指南驱动默认启用；不是后台监听。默认接入由当前实际执行者按指南以 `--agent <当前执行者>` 执行；项目命令不带 agent 参数仍只在默认旧三家中按已安装事实处理，可能补齐其已存在的原生目录，仅用于用户显式要求该默认范围或批量接入；机器安装的六家缺省范围不扩大项目默认范围。机器探测到执行器安装或原生目录存在，不等于该执行者当前实际使用。建立缺失的 AGENTS 骨架与项目经历短协议，已有正文完整保留。非 Git 目录及 linked worktree 不触发；路径复用必须重新核对 Git common-dir。
 
 `AGENTS.md` 是共享项目规则基座，不依赖安装 Codex；只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立，缺失的执行器用户目录不预建。各执行器自身专属项目入口由其实际使用维护；显式 `--agent` 接入的原有支持不撤销。
 
@@ -47,8 +49,11 @@ R 为 `~/.mem-sharing`，仅包含 memories/references/backups/var；C 为 `~/.l
 | WorkBuddy | `.workbuddy/memory/MEMORY.md` 顶部指针 | 原生目录由实际使用产生后补指针，不预建；原生正文原字节保留，运行时未验限制单列 |
 | DeepSeek Harness（`dsh`） | `AGENTS.md`（原生读取） | 用户入口 `~/.dsh/AGENTS.md`，无额外项目桥接；本次限默认 coding `cordis` preset 与默认根 |
 | ZCode（`zcode`） | `AGENTS.md`（原生读取） | 用户入口 `~/.zcode/AGENTS.md`，无额外项目桥接；`ZCODE_HOME` 不是规则根 |
+| OpenCode v2（`opencode`） | `AGENTS.md`（原生读取） | 用户入口 `~/.config/opencode/AGENTS.md`，无额外项目桥接；第一版 default-root-only |
 
-两款桌面端共用公共记忆索引，各自私文保留，不创建 Skill 投影。静态支持 `~/.agents/skills` 与各自用户 Skill 根，不代表实际加载通过。非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根；检查不回传值，自定义配置未验证。详细边界见[操作手册](docs/operations.md#桌面端默认根与验证边界)。
+六家共用公共记忆索引，各自私文保留，不创建 Skill 投影。DeepSeek Harness 与 ZCode 静态支持 `~/.agents/skills` 与各自用户 Skill 根，不代表实际加载通过。非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根；检查不回传值，自定义配置未验证。详细边界见[操作手册](docs/operations.md#桌面端默认根与验证边界)。
+
+OpenCode 第一版仅支持默认用户配置根 `~/.config/opencode`（default-root-only）。`XDG_CONFIG_HOME`、`OPENCODE_CONFIG_DIR` 仅未设、空白或指向各自默认绝对位置时放行；相对值、字面 `~`、非默认根，以及非空 `OPENCODE_CONFIG` 覆盖均整单拒绝，不回显原值。具体允许值及运行证据边界见[操作手册](docs/operations.md#桌面端默认根与验证边界)，不把静态支持视为真实新会话加载通过。
 
 短协议只说明经历库位置、`/context-keeper` 入口与职责。默认启用不调用 Context Keeper 安装、不装项目级 Skill、不创建记录库；首次 `/context-keeper` 按 Context Keeper 流程处理。旧桥接 created/reused/漂移必须按精确计划和所有权分别处理，不能拿旧标记当任意替换授权。
 
@@ -68,7 +73,7 @@ R 为 `~/.mem-sharing`，仅包含 memories/references/backups/var；C 为 `~/.l
 
 公共记忆分层已在 0.1.3 候选实现：六项菜单与详细维护规则集中到 `memories/topics/使用约定.md`，`MEMORY.md` 瘦身为读取契约与真实主题索引，各执行器用户文件只保留公共指针与自身规则；专用迁移模块为 `scripts/agm_core/public_layout.py`。当前证据为静态与合成验证，真实 HOME 未被改动；最终验收结论与发行版本 hash 以验收权威记录收口。
 
-转换合同冻结在 `scripts/agm_core/upgrade.py` 常量：固定 `entries` 为 `{"type": "public-memory-layout-v1"}`，仅认 0.1.1 与 0.1.2 候选两个精确前身；目标合同为冻结字面量，目标来源 SHA 由外部清单绑定，目标版本 0.1.3 由 CLI／来源承载，无版本文件。正常流程一份外层批准绑定代码升级与迁移事务两阶段，且不得带 `--agent`；同版 0.1.3 旧布局继续生成迁移，其他版本 noop 不派。预览即触发未登记读者门禁，未登记的真实读者（含 Claude）在代码升级前阻断、不暗中接入；只有已登记公共依赖的入口迁移，无依赖私文仅观察保全。共享用户入口保持原 scope/ownership/consumers，只更新已知旧模板与受管指纹；未知或手改拒绝，私人正文与主题尾部保全。不提供通用合同转换，不新增整理 CLI。
+转换合同冻结在 `scripts/agm_core/upgrade.py` 常量：固定 `entries` 为 `{"type": "public-memory-layout-v1"}`，仅认 0.1.1 与 0.1.2 候选两个精确前身；SOURCE 历史前身身份与合同保持冻结；TARGET 的 `agents.json`、`user_entries.py`、`public_layout.py` 按当前六家字节冻结为精确 SHA256 字面量，目标来源 SHA 由外部清单绑定，目标版本 0.1.3 由 CLI／来源承载，无版本文件。正常流程一份外层批准绑定代码升级、公共布局迁移及新增入口装配；新增入口基于预测 V2 台账与快照预览，迁移后在真实现场严格重算比较原批准。显式 `--agent` 仅限定新增接入，既有公共依赖仍完整迁移；同版本不同来源仍不属于升级，不借目标重冻结绕过门禁。同版 0.1.3 旧布局继续生成迁移，其他版本 noop 不派。预览即触发未登记读者门禁，未登记的真实读者（含 Claude）在代码升级前阻断、不暗中接入；只有已登记公共依赖的入口迁移，无依赖私文仅观察保全。共享用户入口保持原 scope/ownership/consumers，只更新已知旧模板与受管指纹；未知或手改拒绝，私人正文与主题尾部保全。不提供通用合同转换，不新增整理 CLI。
 
 迁移恢复将标准动作映射为 `continue`=`finish`（仅 V2 已提交侧）、`rollback` 仅限 V1 侧，重做迁移须新预览批准；等值 V 以完整可信事务 manifest `committed` 为分界，非等值以 V2 判定，`last_operation_id` 不变，第三态保全停止，准备阶段无 attempt 且全 before 可仅清场。旧 0.1.2 的 `entries=preserve` 只对旧固定合同成立，`user_entries.py` 指纹变化后不能沿用；命令与外部 conversion 格式见 [INSTALL](INSTALL.md) 对应章节，不覆盖既有 0.1.2 验收证据。
 

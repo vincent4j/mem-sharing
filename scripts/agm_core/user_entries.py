@@ -55,6 +55,28 @@ from .transaction import (Change, Snapshot, Transaction, TransactionError,
 
 COMMAND = "assemble-user-entries"
 _INSTALLER_SOURCE = ContextVar("agm_installer_verified_source", default=None)
+_PREVIEW_STATE = ContextVar("agm_user_entry_preview_state", default=None)
+
+
+@contextmanager
+def _preview_state(runtime, ledger, snapshots):
+    """Installer-only in-memory post-migration view; never a request field.
+
+    The migration planner has already validated this ledger, including its
+    pending manifest. No writer may run while this view is active.
+    """
+    token = _PREVIEW_STATE.set((str(runtime.registry), copy.deepcopy(ledger), dict(snapshots)))
+    try:
+        yield
+    finally:
+        _PREVIEW_STATE.reset(token)
+
+
+def _entry_snapshot(path):
+    state = _PREVIEW_STATE.get()
+    if state is not None and Path(path) in state[2]:
+        return state[2][Path(path)]
+    return read_snapshot(path)
 
 
 @contextmanager
@@ -95,7 +117,15 @@ DSH_FALLBACK_TEXT = ("DeepSeek Harness 原生读取共享项目规则基座 AGEN
                      "用户入口仅支持默认根 ~/.dsh/AGENTS.md，DSH_HOME 重定向时不接入。")
 ZCODE_FALLBACK_TEXT = ("ZCode 原生读取共享项目规则基座 AGENTS.md 与用户级 ~/.zcode/AGENTS.md，自身无额外专属项目入口；"
                        "该基座默认建立遵公共治理条款，已 disabled 项目不自动恢复。")
-NATIVE_FALLBACK_TEXTS = {"codex": CODEX_FALLBACK_TEXT, "dsh": DSH_FALLBACK_TEXT, "zcode": ZCODE_FALLBACK_TEXT}
+# OpenCode v2(2026-11-01 接入):v2 只识别 AGENTS.md(不再回退 CLAUDE.md),默认
+# 配置根 ~/.config/opencode。规则加载受 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/
+# OPENCODE_CONFIG 影响的完整语义未获源码证实,第一版 default-root-only:配置根
+# 被重定向或覆盖时不接入(见 opencode_config_redirected)。
+OPENCODE_FALLBACK_TEXT = ("OpenCode 原生读取共享项目规则基座 AGENTS.md 与用户级 ~/.config/opencode/AGENTS.md，自身无额外专属项目入口；"
+                          "该基座默认建立遵公共治理条款，已 disabled 项目不自动恢复。"
+                          "仅支持默认配置根，配置被 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/OPENCODE_CONFIG 重定向或覆盖时不接入。")
+NATIVE_FALLBACK_TEXTS = {"codex": CODEX_FALLBACK_TEXT, "dsh": DSH_FALLBACK_TEXT,
+                         "zcode": ZCODE_FALLBACK_TEXT, "opencode": OPENCODE_FALLBACK_TEXT}
 
 # Claude 自身 fallback 的独立受管块标记:与公共指针 import 并存于 CLAUDE.md,
 # 迁移/连接校验按此标记精确识别,不与 BASE_MARKER 公共源块混用。
@@ -236,7 +266,7 @@ def _preflight_machine_units(ledger):
     for obj in ledger["machine"]["objects"].values():
         if obj["kind"] not in ("block", "user_convention"):
             continue
-        snap = read_snapshot(obj["path"])
+        snap = _entry_snapshot(obj["path"])
         if snap.kind == "absent":
             continue
         if snap.kind != "file":
@@ -272,7 +302,7 @@ class _Planner:
     def snapshot(self, path):
         path = Path(path)
         if path not in self.before:
-            self.before[path] = read_snapshot(path)
+            self.before[path] = _entry_snapshot(path)
             self.after[path] = self.before[path]
         return self.after[path]
 
@@ -611,6 +641,34 @@ def dsh_home_redirected(home):
     return os.path.abspath(root) != os.path.abspath(os.path.join(str(home), ".dsh"))
 
 
+def opencode_config_redirected(home):
+    """OpenCode 配置根是否被环境变量重定向/覆盖到非默认位置(纯布尔)。
+
+    第一版 default-root-only:默认配置根是 <home>/.config/opencode。官方文档已
+    证实 XDG_CONFIG_HOME 改变 config 目录位置;OPENCODE_CONFIG_DIR 与
+    OPENCODE_CONFIG 是否影响 AGENTS.md 入口加载未获 v2.2.5 源码/实验证实
+    (指定额外 config 并非必然入口重定向,不臆断;XDG 通用标准不能当应用已
+    实现证据)。无证据即拒绝:对每个非空变量,仅当取值是明确等于默认落点的
+    绝对路径(或变量未设置/空白)才放行;相对路径、字面 ~ 前缀及其他一切
+    未确认写法(应用是否忽略/如何解析均未知)一律视为重定向,fail closed:
+    - XDG_CONFIG_HOME:绝对且规范化后 == <home>/.config 才放行;
+    - OPENCODE_CONFIG_DIR:绝对且规范化后 == <home>/.config/opencode 才放行;
+    - OPENCODE_CONFIG:值域与语义均未证实,任何非空取值即视为重定向。
+    只返回布尔,原始环境值不得进入错误信息或报告(可能含用户私有路径)。
+    """
+    for name, default in (("XDG_CONFIG_HOME", ".config"),
+                          ("OPENCODE_CONFIG_DIR", os.path.join(".config", "opencode"))):
+        value = os.environ.get(name)
+        if value is None or not value.strip():
+            continue
+        if not os.path.isabs(value) or os.path.abspath(value) != os.path.abspath(os.path.join(str(home), default)):
+            return True
+    override = os.environ.get("OPENCODE_CONFIG")
+    if override is not None and override.strip():
+        return True
+    return False
+
+
 def _public_block_intact(raw, obj, memory_index, agent):
     span = managed_span(raw, **_marker_args(obj["marker"]))
     if span is None:
@@ -703,6 +761,11 @@ def render_append(data, block):
 
 def _load_ledger(runtime, allowed):
     """Read-only ledger load; absent registry is fine for preview (installer owns creation)."""
+    state = _PREVIEW_STATE.get()
+    if state is not None:
+        if state[0] != str(runtime.registry):
+            raise UserEntryError("installer_context_required", "Preview runtime differs from migration")
+        return copy.deepcopy(state[1]), _entry_snapshot(runtime.registry)
     snap = read_snapshot(runtime.registry)
     if snap.kind == "absent":
         return None, snap
@@ -714,6 +777,9 @@ def _load_ledger(runtime, allowed):
 def _plan(request, runtime, detection, effective, *, transaction):
     config = request["platform_config"]
     home = request["home"]
+    # 与 _run 同源的机器安装器缺省:未显式指定时目标=全量支持清单(AGENT_ORDER),
+    # 仅 installed 者生效;request["agents"] 保持 None,不转为显式列表。
+    requested = agm_paths.resolve_agents(request.get("agents"), default=agm_paths.AGENT_ORDER)
     allowed = agm_paths.allowed_user_paths(config, None, home=home)
     context = _INSTALLER_SOURCE.get()
     verified = request.get("verified_product_source")
@@ -742,6 +808,16 @@ def _plan(request, runtime, detection, effective, *, transaction):
             "DSH_HOME 已把 DeepSeek Harness 用户根重定向到非默认位置,默认入口不会被该应用读取;"
             "本产品仅支持默认根 ~/.dsh(即 <home>/.dsh),请清除该重定向后重试;"
             "整单停止,零写入。")
+    if "opencode" in effective and opencode_config_redirected(home):
+        # 第一版 default-root-only:配置根受环境变量影响时默认入口是否被读取
+        # 无法确定;fail closed,不写无效文件。只说明变量名与默认根支持范围,
+        # 不回传任何原始环境值(隐私)。
+        raise UserEntryError(
+            "opencode_config_redirected",
+            "OpenCode 配置根被环境变量重定向或覆盖(XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/OPENCODE_CONFIG),"
+            "默认入口 <home>/.config/opencode/AGENTS.md 是否被读取无法确定;"
+            "本产品仅支持默认配置根(清除相关变量或使其指向默认值后重试);"
+            "整单停止,零写入。")
     for agent in effective:
         entry = config[agent]
         user_path = Path(agm_paths.expand_path(entry["user_entry"], home=home))
@@ -769,7 +845,6 @@ def _plan(request, runtime, detection, effective, *, transaction):
         planner.rebind_import_fingerprints()
         # 终局保护:shared 整文件单元承载的入口不允许被普通接入改写(零写拒绝)。
         planner.protect_shared_whole_files()
-    requested = agm_paths.resolve_agents(request.get("agents"))
     agent_records = planner.machine_agent_records()
     machine_agents = sorted(a for a, record in agent_records.items() if record is not None)
     approval_plan = {
@@ -831,8 +906,14 @@ def _agent_report(requested, effective, detection):
 
 
 def _run(request, runtime, *, locked):
+    if _PREVIEW_STATE.get() is not None and (locked or request.get("approval") is not None
+                                           or request.get("interactive")):
+        raise UserEntryError("installer_context_required", "Predicted entry state is preview-only")
     config, home = request["platform_config"], request["home"]
-    requested = agm_paths.resolve_agents(request.get("agents"))
+    # 机器安装器缺省(2026-11-01 裁定):未显式指定 --agent 时目标=全量支持清单,
+    # 仅检测 installed 者自动装配;request["agents"] 保持 None,显式判定不变。
+    # 显式指定且未核验 installed 仍整单拒绝(下方 agent_not_installed)。
+    requested = agm_paths.resolve_agents(request.get("agents"), default=agm_paths.AGENT_ORDER)
     detection = detect_module.detect_agents(
         config, requested, home=home, search_paths=request.get("search_paths"),
         user_candidates=request.get("user_candidates"), runner=request.get("detect_runner"),

@@ -180,9 +180,9 @@ class Release012UpgradeTests(InstallFixture):
     def test_preserve_upgrade_assembles_docs_and_preserves_user_bytes(self):
         preview_before = self.snapshot()
         plan = cli.plan_machine(self.req12)
-        # agents=None upgrades code only: no entry subplan, no new executor onboarding.
+        # Existing connected agents have no entry difference; default still scans all installed agents.
         self.assertIsNone(plan['entry_plan'])
-        self.assertFalse(plan['entry_requested'])
+        self.assertTrue(plan['entry_requested'])
         self.assertEqual(plan['channel'], 'upgrade')
         self.assertEqual(plan['effective_agents'], ['codex', 'workbuddy'])
         self.assertEqual(preview_before, self.snapshot())  # preview is read-only

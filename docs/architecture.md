@@ -103,7 +103,7 @@ linked worktree 不作为可启用项目，移动或重新 clone 后须重新核
 
 为什么这样设计：命令外壳与文件操作内核分离，项目操作不会顺手扩大到装机。
 
-## 4. 五家执行器接入
+## 4. 六家执行器接入
 
 ### 用户级入口
 
@@ -111,7 +111,9 @@ Codex 使用 `~/.codex/AGENTS.md`。
 Claude Code 使用 `~/.claude/CLAUDE.md`。
 WorkBuddy 使用 `~/.workbuddy/MEMORY.md`。
 DeepSeek Harness（`dsh`）使用 `~/.dsh/AGENTS.md`，ZCode（`zcode`）使用 `~/.zcode/AGENTS.md`。
-缺省目标仍为 `codex/claude/workbuddy`，两家新增桌面端须显式选择；机器安装重复 `--agent dsh --agent zcode`，项目启用用 `--agent dsh zcode`。两家共用公共索引，私文独有内容保留。
+OpenCode v2（`opencode`）使用 `~/.config/opencode/AGENTS.md`。机器安装、再次安装与升级默认发现全部支持对象，只为核验为 installed 的 Agent 装配用户入口；显式重复 `--agent` 限定新接入范围。项目命令缺省仍为 `codex/claude/workbuddy`，其他执行者实际使用时显式选择；项目启用一次多值，例如 `--agent dsh zcode opencode`。各家共用公共索引，保留独有私文。
+
+历史公共布局迁移先在内存重算 V2 入口快照与台账，再预览新增入口计划；两个子计划都进入外层 `plan_sha256`。预测上下文不能从请求恢复，也不能携批准进入执行。迁移后回到真实现场重算并严格比较原批准，拒绝漂移。显式范围只限定新增装配，既有公共读取依赖仍完整迁移。历史前身身份与合同冻结不变，同版不同来源不能靠重冻目标合同绕过升级门禁。
 安装为验证为 installed 的目标写入用户级公共指针与自身规则；菜单与详细使用约定在公共指南，不整段驻留用户文件。缺失的执行器用户目录不预建。
 既有专属内容保留，用户规则整理是另一个显式流程。
 产品不建立公共 Skills/MCP 目录，也不投影 memSharing Skill。
@@ -128,7 +130,7 @@ WorkBuddy 桥接已配置也不能直接宣布运行时加载成功。
 
 ### 项目级实际使用驱动
 
-`AGENTS.md` 是共享项目规则基座，不依赖安装 Codex；Codex、DeepSeek Harness 与 ZCode 均原生读取，无需额外引用文件或隐藏项目桥接。
+`AGENTS.md` 是共享项目规则基座，不依赖安装 Codex；Codex、DeepSeek Harness、ZCode 与 OpenCode 均原生读取，无需额外引用文件或隐藏项目桥接。
 只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立。
 默认接入由当前实际执行者按指南以 `--agent <当前执行者>` 执行；不带 agent 参数按已安装事实处理，可能顺带补齐其他执行器已存在的原生目录，仅用于用户显式要求全体或批量接入，不改 CLI 语义。
 机器探测到执行器安装或原生目录存在，不等于当前执行者实际使用。
@@ -141,6 +143,10 @@ WorkBuddy 仅在 `.workbuddy/memory/` 原生目录已存在时补规则指针。
 原生目录缺失时报告待实际使用，不提前创建目录。
 
 DeepSeek Harness 本次合同限默认 coding `cordis` preset 与默认根；非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根，检查不回传变量值，自定义配置未验证。`ZCODE_HOME` 不是 ZCode 规则根。两家静态支持 `~/.agents/skills` 及各自用户 Skill 根，不创建投影，不代表实际加载。详见[操作手册](operations.md#桌面端默认根与验证边界)。
+
+OpenCode 检测分别报告 CLI 与桌面 App 安装面。桌面核验 `OpenCode.app` 的固定产品名、`ai.opencode.desktop` 标识、`OpenCode` 可执行入口、非空且一致的 bundle 版本，以及 Apple 证书链与团队 `5NZ4Q7NXJ4` 签名。CLI-only 不表示桌面已安装；只有一个官方原生 CLI 与一个官方桌面 App 均通过、且无失败候选时允许并装，额外来源仍为 unknown。CLI 没有静态版本证据时保持版本 unknown。
+
+OpenCode 原生 Mach-O 入口优先以 Apple 签名要求核验标识 `opencode` 与团队 `5NZ4Q7NXJ4`，父级无 name 的 package.json 不阻断识别；原生签名失败不会回落 npm 包名放行。非 Mach-O 包装入口核验 `@opencode/cli` 包身份，文件名或目录 hint 不构成 installed。版本没有静态证据时保持 unknown。规则根仅支持默认绝对路径；`XDG_CONFIG_HOME`、`OPENCODE_CONFIG_DIR` 的相对值、字面 `~` 或非默认值及非空 `OPENCODE_CONFIG` 均拒绝，不回显原值。
 
 为什么这样设计：机器安装清单不代表每个项目都使用每个执行器。
 
@@ -215,7 +221,7 @@ Python/Git 缺失时，系统包管理器准备属于外层 Agent 职责。
 当前 Python CLI 不自行安装运行时依赖。
 主安装完成后才生成 `install-context-keeper` 独立封皮。
 对 Context Keeper 的安装同意仅以真实交互回车为准，EOF、非交互或空格不算。
-Context Keeper 封皮仍绑定固定源码与全部实际接入执行器；其固定 pin 安装器只支持 Codex、Claude Code、WorkBuddy 的 flags，由其负责用户级 Skill。`dsh`、`zcode` 明确跳过（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响新两家的 memSharing 接入。
+Context Keeper 封皮仍绑定固定源码与全部实际接入执行器；其固定 pin 安装器只支持 Codex、Claude Code、WorkBuddy 的 flags，由其负责用户级 Skill。`dsh`、`zcode`、`opencode` 明确跳过（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响它们的 memSharing 接入。
 Context Keeper 失败不回滚主产品，也不合报为全部成功；结果不明不自动重放。
 
 为什么这样设计：主产品与可选引擎有独立授权、失败边界和交付证据。

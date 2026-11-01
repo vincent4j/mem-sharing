@@ -70,11 +70,11 @@ class DesktopInstallTests(InstallFixture):
         patch.object(detect, 'detect_agents', return_value=self.facts).start()
         patch.dict(os.environ, {'DSH_HOME': ''}).start()
 
-    def test_default_does_not_connect_or_create_new_agents(self):
-        self.assertEqual(self.plan()['effective_agents'], [])
+    def test_default_connects_all_installed_desktop_agents(self):
+        self.assertEqual(self.plan()['effective_agents'], list(DESKTOP))
         self.execute()
         for agent in DESKTOP:
-            self.assertFalse((self.home / ('.'+agent)).exists())
+            self.assertTrue((self.home / ('.'+agent) / 'AGENTS.md').is_file())
 
     def test_explicit_install_preserves_private_bytes_and_is_idempotent(self):
         self.request['agents'] = list(DESKTOP)

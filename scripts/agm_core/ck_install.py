@@ -17,14 +17,14 @@ from .transaction import Snapshot, _atomic_file, read_snapshot, write_lock
 PIN = '695074ee4b6ddb9999be858093f833d6377bd641'
 PROMPT = '最后：为了让你的所有项目都能记住并续接工作经历，我们将为已接入且受支持的 Agent（Codex、Claude Code、WorkBuddy）安装项目经历引擎 Context Keeper（用户级）——它与本产品出自同一作者。同意吗？（回车=同意，n=跳过）'
 # 上游安装器(pinned PIN)仅认这三家(LABELS/ROOTS/RULES 的键集即上游 --agent
-# flags)。dsh/zcode 已接入时:不冒支持、不传上游未知 flags、不改上游——在计划
-# 里明确列为 skipped 并照常为旧三家安装;三家均不在场才显式拒绝,该拒绝不回滚
-# 也不影响主产品安装结果。
+# flags)。dsh/zcode/opencode 已接入时:不冒支持、不传上游未知 flags、不改上游
+# ——在计划里明确列为 skipped(upstream_unsupported)并照常为旧三家安装;三家均
+# 不在场才显式拒绝,该拒绝不回滚也不影响主产品安装结果。
 LABELS = {'codex': 'Codex', 'claude': 'Claude Code', 'workbuddy': 'WorkBuddy'}
-# 主产品接入名单(五家)独立于上游 LABELS:tail 的"已装上入口"描述本产品接入
+# 主产品接入名单(六家)独立于上游 LABELS:tail 的"已装上入口"描述本产品接入
 # 范围,不得用上游支持集过滤后冒称全部接入;CK 上游不支持者另行单独说明。
 PRODUCT_LABELS = {'codex': 'Codex', 'claude': 'Claude Code', 'workbuddy': 'WorkBuddy',
-                  'dsh': 'DeepSeek Harness', 'zcode': 'ZCode'}
+                  'dsh': 'DeepSeek Harness', 'zcode': 'ZCode', 'opencode': 'OpenCode'}
 ROOTS = {'codex': ['.agents/skills', '.codex/skills'],
          'claude': ['.claude/skills'], 'workbuddy': ['.workbuddy/skills']}
 RULES = {'codex': '.codex/AGENTS.md', 'claude': '.claude/CLAUDE.md',
@@ -366,7 +366,7 @@ def tail(report, request, *, stdin=None, stderr=None):
         data = registry.load_registry(runtime.registry, allowed_user_paths=paths.allowed_user_paths(
             request['platform_config'], None, home=request['home']))
         connected_all = [a for a in paths.AGENT_ORDER if a in data['machine']['agents']]
-        # 主产品接入名单按五家 PRODUCT_LABELS 全量报告;CK 上游不支持者单独说明。
+        # 主产品接入名单按六家 PRODUCT_LABELS 全量报告;CK 上游不支持者单独说明。
         connected = [PRODUCT_LABELS[a] for a in connected_all if a in PRODUCT_LABELS]
         ck_skipped = [a for a in connected_all if a not in LABELS]
         message = '已创建用户记忆中枢'+('，已为'+ '、'.join(connected)+'装上入口。' if connected else '。')

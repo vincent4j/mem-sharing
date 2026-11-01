@@ -71,15 +71,19 @@ PUBLIC_LAYOUT_PREDECESSORS = (
 )
 PUBLIC_MEMORY_LAYOUT_CONVERSION = {'type': public_layout.HANDLER_TYPE}
 
-# 目标合同冻结字面量(2026-10-31 定稿冻结;2026-10-31 桌面双端适配按裁定显式
+# 目标合同冻结字面量(2026-11-01 增OpenCode桌面安装信号按授权重冻结;
+# test_opencode_desktop与既有投影/冻结完整性定向验证,历史SOURCE不变;
+# 六家接入与V2入口预测按授权重冻结;
+# test_upgrade_entry_projection 验证历史内核单次批准和真实执行比较;
+# 2026-10-31 桌面双端适配按裁定显式
 # 重冻结——agents.json 增 dsh/zcode 五家、user_entries.py 增专属兜底/DSH_HOME
 # 守卫、public_layout.py native 模板按执行器分派。SOURCE 前身合同
 # (WORKBUDDY_ENTRY_CONVERSION / PUBLIC_LAYOUT_BEFORE_CONTRACT / PREDECESSORS)
 # 保持原值不动;版本仍 0.1.3;冻结完整性由 test_public_layout 的 freeze-integrity
 # 用例守护)。
 PUBLIC_LAYOUT_TARGET_CONTRACT = {
-    'scripts/agents.json': '5aff7ec53cfddea2dca86e844a85903411c017488dd66f5f8ea7cb3e2a07f038',
-    'scripts/agm_core/user_entries.py': '48e5677857b2aaece1cf2e711db4bb90ec2b9d6447b3baf682b76959c422346f',
+    'scripts/agents.json': 'aa9a28a27f3c9bea6ca603dfa2cc24560a9feda3e5085a65d26960790fea9b24',
+    'scripts/agm_core/user_entries.py': 'e5421b9147c15c5075ceae011fc17f951e556502d1765575c4d2df78f9e8529d',
     'scripts/agm_core/public_layout.py': 'b1ab0123bcea50884a37bb6890e0e23938c73a470577d65ae654b1936016d96f',
 }
 
@@ -102,7 +106,8 @@ def _public_layout_before(before):
 def _public_layout_conversion(before, after, direction, entry_conversion, request):
     return (entry_conversion == PUBLIC_MEMORY_LAYOUT_CONVERSION
             and direction == 'upgrade'
-            and request.get('agents') is None
+            # Explicit agents limit onboarding only; existing public readers
+            # still migrate as one complete, precisely approved dependency set.
             and _public_layout_before(before)
             and after['schema_version'] == 3 and after['product_structure_version'] == 1
             and after['product_code_version'] == PUBLIC_LAYOUT_TARGET_VERSION)

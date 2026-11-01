@@ -24,9 +24,9 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 停用之外的进阶选项：仅禁止自动项目经历记录与初始化而保留入口，使用 `enable-memory --project <根> --no-memory`；它不执行 remove。两者均登记 disabled，默认启用与批量均不翻转；解除走菜单“给项目启用记忆”的显式 `--memory` 并批准精确计划。
 
-支持 `codex`、`claude`、`workbuddy`、`dsh`、`zcode` 五家；缺省仍选择前三家，新增两家须显式指定。机器安装重复 `--agent dsh --agent zcode`，项目启用用 `--agent dsh zcode` 一次多值；来源与预览批准沿用 INSTALL。DeepSeek Harness 与 ZCode 的用户入口分别为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`，共享公共索引，保留各自私文；项目均原生读取 `AGENTS.md`，无需额外桥接。默认根、Skill 静态支持与运行限制见[操作手册](docs/operations.md#桌面端默认根与验证边界)。
+支持 `codex`、`claude`、`workbuddy`、`dsh`、`zcode`、`opencode` 六家。机器安装、再次安装与升级缺省接入全部已核验 `installed` 的支持对象，`unknown/absent` 只报告；显式重复 `--agent` 限定机器目标，指定对象未核验为 installed 时整单拒绝。升级中的公共布局迁移与新增接入在同一外层精确计划内预览并一次批准，不推迟到执行后再确认。项目命令缺省仍为前三家，当前执行者使用时显式选择自身；项目启用 `--agent dsh zcode opencode` 为一次多值。后三家用户入口为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，均保留私文且原生读取项目 `AGENTS.md`。OpenCode 支持独立核验桌面 App 与 CLI 安装面，CLI-only 不证明桌面存在；官方原生 CLI 与 App 并装采用受限身份校验。OpenCode v2 第一版 default-root-only，环境重定向整单停写，错误不回显原值；详见[操作手册](docs/operations.md#桌面端默认根与验证边界)。真实新会话加载仍待验收。
 
-后装 Agent 不自动发现、不自动提示；仅用户主动选“添加新的 Agent”后核验安装事实。名字、残留目录或 hint 不能代替 installed。absent 不创建入口，unknown 只报告不写。机器台账中的事实记录不驱动自动接入。
+后装 Agent 可通过“添加新的 Agent”限定接入；重新运行机器安装器也会按当前安装事实发现并预览全部支持对象。名字、残留目录、hint 或历史台账不能代替当前 installed；absent 不创建入口，unknown 只报告不写。
 
 ## 安装与项目默认启用
 
@@ -48,7 +48,7 @@ Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep
 
 用户记忆是跨项目习惯，位于 `~/.mem-sharing/memories/`；项目记忆是 `AGENTS.md` 规则；项目经历是 Context Keeper 的进度、决策、日志与积累，记录库默认位于项目 `docs/context-keeper/`，具体由 Context Keeper 定义。
 
-装机尾步按安装页的固定正向问句征询 Context Keeper 用户级安装，回车同意，n 跳过。同意后走 `scripts/install.py --context-keeper` 独立路由与 `install-context-keeper` 封皮，由 Context Keeper 自有安装器为已接入的 Codex、Claude Code、WorkBuddy 安装；固定 pin 的安装器仅支持这三家的 flags，`dsh`、`zcode` 明确跳过（`reason=upstream_unsupported`），混合接入时旧三家仍可安装，不影响新两家的 memSharing 接入。其 Skill 落位由 Context Keeper 负责。EOF、非交互或空格不视为同意；缺源或失败独立报告，不回滚主产品。来源与批准细节按需读 INSTALL。未装 Context Keeper 不报产品错误，用户记忆和项目记忆照常工作。
+装机尾步按安装页的固定正向问句征询 Context Keeper 用户级安装，回车同意，n 跳过。同意后走 `scripts/install.py --context-keeper` 独立路由与 `install-context-keeper` 封皮，由 Context Keeper 自有安装器为已接入的 Codex、Claude Code、WorkBuddy 安装；固定 pin 的安装器仅支持这三家的 flags，`dsh`、`zcode`、`opencode` 明确跳过（`reason=upstream_unsupported`），混合接入时旧三家仍可安装，不影响它们的 memSharing 接入。其 Skill 落位由 Context Keeper 负责。EOF、非交互或空格不视为同意；缺源或失败独立报告，不回滚主产品。来源与批准细节按需读 INSTALL。未装 Context Keeper 不报产品错误，用户记忆和项目记忆照常工作。
 
 项目 enable 不再调用 Context Keeper 安装器，不安装项目级其 Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 Context Keeper 首次命令，memSharing 不接管保存或查找流程。disabled 优先禁止自动经历，已有 Context Keeper 自动规则不得覆盖；其脚本本身不读取该政策，不能宣称硬拒写。手动 Context Keeper 操作仍按明确请求与其自身门禁处理。
 
