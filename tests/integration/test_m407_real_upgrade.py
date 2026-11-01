@@ -153,7 +153,7 @@ print(json.dumps(result))
             'T0_self_installed':True,'T0_command_ran':True,'T1_command_ran':True,'same_version_zero_mtime':True}))
         # Register a project after upgrading. A release rollback must retain it.
         project=self.area/'project';project.mkdir();git('init','--quiet',cwd=project)
-        request=dict(home=str(self.home),project=str(project),platform_config=self.config,agents=['codex'],memory_choice='disabled',
+        request=dict(home=str(self.home),project=str(project),platform_config=self.config,agents=['codex'],
                      **seed_project_executors(self.home))
         preview=enable.run(request);self.assertEqual(preview['status'],'approval_required',preview)
         request['approval']=approved(json.loads(preview['next_action']))

@@ -54,7 +54,7 @@ def validate_approval(data, *, agents=None):
             if not isinstance(plan, dict) or plan.get('main_checkout') != str(root) or plan.get('memory_policy') != 'follow_ck' or 'rebuild' in plan:
                 raise ValueError('批量启用子计划非法')
             validate_enable(dict(plan, confirmed_at=data['confirmed_at'], reference=data['reference']),
-                            command='enable-memory', agents=paths.resolve_agents(data['agents']), memory_choice=None)
+                            command='enable-memory', agents=paths.resolve_agents(data['agents']))
         elif plan is not None:
             raise ValueError('跳过项目不得附带执行计划')
     return data
@@ -66,7 +66,7 @@ def _empty():
 
 
 def _child(request, root, approval=None):
-    return dict(request, command='enable-memory', project=str(root), memory_choice=None,
+    return dict(request, command='enable-memory', project=str(root),
                 approval=approval, interactive=False)
 
 
@@ -110,7 +110,9 @@ def _preview(request, runtime, *, locked=False):
                 errors.append(dict(code='project_identity_mismatch', path=str(root), message='Git identity changed; do not inherit registration', recovery=None))
                 continue
             row['state'] = 'disabled' if prior['memory_policy'] == 'disabled' else 'enabled'
-            row['action'] = '跳过：需显式单独重新启用' if row['state'] == 'disabled' else 'noop：已启用，不重跑'
+            row['action'] = '跳过：历史停用登记，不重建（重新接入需明确的重新接入计划）' if row['state'] == 'disabled' else 'noop：已启用，不重跑'
+            if row['state'] == 'disabled':
+                row['notes'].append('历史停用登记不代表 Context Keeper 停用；入口是否存在以登记与现场为准，不由本批宣称')
             continue
         child = _child(request, root)
         preview = enable._run_locked(child, runtime, _empty(), locked=True) if locked else enable.run(child)

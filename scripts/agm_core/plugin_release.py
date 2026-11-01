@@ -17,7 +17,7 @@ from . import legacy_import as legacy, migrate, registry, user_install
 
 OFFICIAL = 'https://github.com/vincent4j/mem-sharing'
 SHIPPED_DOCS = ('SKILL.md', 'README.md', 'INSTALL.md', 'llms.txt', 'DESIGN.md',
-                'docs/architecture.md', 'docs/operations.md')
+                'docs/architecture.md', 'docs/operations.md', 'docs/uninstall-design.md')
 ROOT_MANIFEST = 'release/core-release.json'
 PAYLOAD = 'plugins/paseo/payload'
 IDENTITY = 'plugins/paseo/server/shared/release-identity.ts'

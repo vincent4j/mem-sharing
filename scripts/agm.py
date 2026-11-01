@@ -2,13 +2,22 @@
 """memSharing project CLI: strict parsing and exact-policy approval envelopes.
 
 Exit codes: 0 completed, 1 check gaps, 2 failed/recovery, 3 migration gate,
-5 approval required. Project rules use schema3 follow_ck/disabled policy;
-CK user installation is an independent installer operation.
+5 approval required. Project rules use schema3 follow_ck policy plus read-only
+compatibility for historical disabled tombstones (entries of a tombstone are
+never rebuilt by default and the state never vetoes Context Keeper); CK user
+installation is an independent installer operation.
+
+Core-owned commands are routed before project parsing with the full argv
+(including the command token) and return a process exit code; they print their
+own JSON envelope and handle their own approval contract:
+- uninstall-machine / recover-uninstall -> agm_core.uninstall.cli(argv, home=...)
+- migrate-policy -> agm_core.policy_migration.cli(argv, home=...)
 """
 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import importlib
 import json
 import os
@@ -31,8 +40,16 @@ from agm_core import paths as agm_paths
 from agm_core import layout as agm_layout
 
 SCHEMA_VERSION = 1
-KNOWN_COMMANDS = ("enable-memory", "enable-memory-batch", "remove-memory", "check-memory")
-WRITE_COMMANDS = ("enable-memory", "enable-memory-batch", "remove-memory")
+KNOWN_COMMANDS = ("enable-memory", "enable-memory-batch", "check-memory")
+WRITE_COMMANDS = ("enable-memory", "enable-memory-batch")
+# Core-owned commands routed before project parsing (2026-11-01 retirement):
+# the new core modules implement their own JSON/approval handling; this shell
+# only forwards the complete argv (command included) and propagates the int.
+CORE_COMMAND_ROUTES = {
+    "uninstall-machine": "agm_core.uninstall",
+    "recover-uninstall": "agm_core.uninstall",
+    "migrate-policy": "agm_core.policy_migration",
+}
 INSTALL_NEXT_ACTION = "先阅读 INSTALL.md，运行 python3 -B <已核验源>/scripts/install.py 预览机器安装；确认后用 --approval-file 执行。"
 
 STATUS_COMPLETED = "completed"
@@ -124,7 +141,7 @@ class _StrictParser(argparse.ArgumentParser):
         raise CliError("invalid_arguments", message)
 
 
-_SINGLE_USE_FLAGS = ("--project", "--directory", "--agent", "--memory", "--no-memory", "--all", "--approval-file", "--preview")
+_SINGLE_USE_FLAGS = ("--project", "--directory", "--agent", "--all", "--approval-file", "--preview")
 
 
 def _prescan_single_use(argv):
@@ -148,20 +165,13 @@ def build_parser():
     )
     sub = parser.add_subparsers(dest="command", metavar="command", required=True)
 
-    enable = sub.add_parser("enable-memory", help="经授权装配规则基座与可选记忆档")
+    enable = sub.add_parser("enable-memory", help="经授权装配规则基座与项目经历短协议")
     enable.add_argument("--project", metavar="GIT_ROOT", help="显式项目 Git 根;缺省从 cwd 定位")
     enable.add_argument(
         "--agent",
         nargs="+",
         metavar="AGENT",
         help="目标执行器,一次多个唯一值(codex/claude/workbuddy/dsh/zcode/opencode);项目命令缺省 codex/claude/workbuddy 三家,其余需显式指定",
-    )
-    memory_group = enable.add_mutually_exclusive_group()
-    memory_group.add_argument(
-        "--memory", dest="memory_choice", action="store_const", const="follow_ck", help="显式解除项目经历停用政策"
-    )
-    memory_group.add_argument(
-        "--no-memory", dest="memory_choice", action="store_const", const="disabled", help="禁止自动项目经历记录与初始化，保留 CK 与数据"
     )
     enable_action = enable.add_mutually_exclusive_group()
     enable_action.add_argument(
@@ -174,18 +184,34 @@ def build_parser():
     batch.add_argument("--agent", nargs="+", metavar="AGENT", help="透传单项目启用的执行器选择；缺省按安装事实")
     batch.add_argument("--approval-file", metavar="JSON", help="绑定完整批量计划的一次批准文件")
 
-    remove = sub.add_parser("remove-memory", help="仅撤销本工具所有权对象")
-    remove.add_argument("--project", metavar="GIT_ROOT", help="显式项目 Git 根;缺省从 cwd 定位")
-    remove_action = remove.add_mutually_exclusive_group()
-    remove_action.add_argument(
-        "--approval-file", metavar="JSON", help="非交互批准文件(裁定 D-M2-04;仅写命令)"
-    )
-    remove_action.add_argument("--preview", action="store_true", help="只读生成精确批准模板；不确认、不获取写锁")
-
     check = sub.add_parser("check-memory", help="只读报告现场状态与缺口")
     check_group = check.add_mutually_exclusive_group()
     check_group.add_argument("--project", metavar="GIT_ROOT", help="显式项目 Git 根;缺省仅当前目标")
     check_group.add_argument("--all", action="store_true", help="巡检全部已登记项目")
+
+    # 核心命令帮助条目(2026-11-01 卸载核心接线):main() 在项目命令解析之前把
+    # 这三个命令连同完整 argv 前置路由到 agm_core.uninstall/policy_migration,
+    # 它们自行输出 JSON 并处理批准;这里的子命令定义仅为 --help 展示,运行时
+    # 不会进入本 parser 的执行路径。
+    uninstall_cmd = sub.add_parser(
+        "uninstall-machine",
+        help="整机卸载(核心前置路由):默认只读JSON预览;--backup-dir 外置备份,--approval-file 批准后执行",
+    )
+    uninstall_cmd.add_argument("--backup-dir", metavar="ABS", required=True, help="外置备份目录绝对路径(核心参数)")
+    uninstall_cmd.add_argument("--approval-file", metavar="JSON", help="绑定完整卸载计划的批准文件(核心参数)")
+    recover_cmd = sub.add_parser(
+        "recover-uninstall",
+        help="恢复中断的整机卸载(核心前置路由):--manifest 指定备份清单",
+    )
+    recover_cmd.add_argument("--manifest", metavar="ABS", required=True, help="外置备份清单绝对路径(核心参数)")
+    recover_cmd.add_argument("--action", choices=("restore", "resume"), help="恢复动作(核心参数,默认 restore)")
+    recover_cmd.add_argument("--approval-file", metavar="JSON", help="绑定恢复计划的批准文件(核心参数)")
+    migrate_cmd = sub.add_parser(
+        "migrate-policy",
+        help="清理历史停用控制(核心前置路由):仅移除产品自有且指纹吻合的 denied/control,不新增用户限制、不恢复接入",
+    )
+    migrate_cmd.add_argument("--project", metavar="ABS", help="限定项目的绝对路径;缺省为全部登记项目(核心参数)")
+    migrate_cmd.add_argument("--approval-file", metavar="JSON", help="绑定迁移计划的批准文件(核心参数)")
     return parser
 
 
@@ -213,7 +239,7 @@ _APPROVAL_FIELDS = (
     "confirmed_at",
     "reference",
 )
-_ENABLE_APPROVAL_FIELDS = frozenset(("installation", "native_pending", "memory_transition", "legacy_bridge_transition", "rebuild", "rebuild_confirmation"))
+_ENABLE_APPROVAL_FIELDS = frozenset(("installation", "native_pending", "legacy_bridge_transition", "rebuild", "rebuild_confirmation"))
 _APPROVAL_OPERATIONS = frozenset(("create", "update", "remove"))
 _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 _UTC_ISO_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$")
@@ -271,10 +297,6 @@ def _validate_enable_extensions(data, requested, path):
     def digest(value, label):
         if not isinstance(value, str) or not _HEX64_RE.fullmatch(value):
             _approval_fail(label + " 必须是 sha256", path)
-    def agent_list(value, label):
-        if (not isinstance(value, list) or any(a not in agm_paths.AGENT_ORDER for a in value)
-                or len(set(value)) != len(value)):
-            _approval_fail(label + " 必须是无重复执行器数组", path)
     installation = data.get("installation")
     if "installation" in data:
         if not isinstance(installation, dict) or set(installation) != set(requested):
@@ -291,15 +313,6 @@ def _validate_enable_extensions(data, requested, path):
         pending = data["native_pending"]
         if pending not in ([], ["workbuddy"]) or any(a not in data["agents"] for a in pending):
             _approval_fail("native_pending 仅接受已选 WorkBuddy", path)
-    if "memory_transition" in data:
-        transition = data["memory_transition"]
-        fields(transition, "before after scope affected_agents", "memory_transition")
-        if (transition["before"] not in ("follow_ck", "disabled")
-                or transition["after"] not in ("follow_ck", "disabled")
-                or transition["after"] != data["memory_policy"]
-                or transition["scope"] != "all registered project agents"):
-            _approval_fail("memory_transition 政策范围不符", path)
-        agent_list(transition["affected_agents"], "affected_agents")
     if "legacy_bridge_transition" in data:
         items = data["legacy_bridge_transition"]
         if not isinstance(items, list) or not items:
@@ -357,10 +370,10 @@ def _validate_enable_extensions(data, requested, path):
             evidence.pop(name, None)
         evidence.update(confirmed_at=confirmation["confirmed_at"], reference=confirmation["reference"])
         evidence["agents"] = list(requested)
-        validate_approval(evidence, command="enable-memory", agents=requested, memory_choice=None, path=path)
+        validate_approval(evidence, command="enable-memory", agents=requested, path=path)
 
 
-def validate_approval(data, *, command, agents, memory_choice, path=None):
+def validate_approval(data, *, command, agents, path=None):
     """批准 envelope 的命令级结构校验(含内核版本化计划字段)。
 
     仅校验结构与本命令已知目标的匹配;与锁内现场(主键/指纹/库位置/源码身份)的一致性
@@ -372,12 +385,11 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
             return validate_batch(data, agents=agents)
         except ValueError as exc:
             _approval_fail(str(exc), path)
-    if command not in ("enable-memory", "remove-memory"):
+    if command != "enable-memory":
         _approval_fail("该命令不接受批准", path)
     keys = set(data)
     expected = set(_APPROVAL_FIELDS)
-    expected = expected | ({"registry_sha256"} if command == "remove-memory" else set())
-    allowed = expected | (_ENABLE_APPROVAL_FIELDS if command == "enable-memory" else set())
+    allowed = expected | _ENABLE_APPROVAL_FIELDS
     missing = sorted(expected - keys)
     unknown = sorted(keys - allowed)
     if missing:
@@ -395,31 +407,23 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
     for field in ("main_checkout", "checkout", "git_common_dir"):
         _check_abs_path(data[field], "批准文件 %s" % field, path)
     file_agents = data["agents"]
-    revocation = data.get("memory_transition", {})
-    empty_revocation = (isinstance(revocation, dict) and revocation.get("before") == "follow_ck"
-                        and revocation.get("after") == "disabled" and "installation" in data)
-    if not isinstance(file_agents, list) or (not file_agents and not empty_revocation):
+    if not isinstance(file_agents, list) or not file_agents:
         _approval_fail("批准文件 agents 必须是非空数组", path)
     try:
-        canonical = agm_paths.resolve_agents(file_agents) if file_agents else []
+        canonical = agm_paths.resolve_agents(file_agents)
     except agm_paths.PathsError as exc:
         raise CliError("approval_file_invalid", "批准文件 agents 非法: %s" % exc, path=path) from None
-    if command != "remove-memory" and "installation" not in data and canonical != list(agents or []):
+    if "installation" not in data and canonical != list(agents or []):
         raise CliError(
             "approval_mismatch",
             "批准范围(agents=%s)与命令目标(%s)不一致,须重新预览确认" % (canonical, list(agents or [])),
             path=path,
         )
     memory = data["memory_policy"]
-    if memory not in ("follow_ck", "disabled"):
-        _approval_fail("memory_policy only accepts follow_ck/disabled", path)
-    if command == "remove-memory":
-        _check_fingerprint(data["registry_sha256"], "registry_sha256", path)
-        if data["registry_sha256"] is None: _approval_fail("registry_sha256 required", path)
-    if command == "remove-memory" and memory != "disabled":
-        _approval_fail("remove-memory must set disabled", path)
-    if command == "enable-memory" and memory_choice is not None and memory != memory_choice:
-        raise CliError("approval_mismatch", "Approved policy differs from explicit choice", path=path)
+    # 经历开关已退役:新计划只产生 follow_ck;disabled 是仅可读的历史接入
+    # tombstone,不再出现在新批准中,也不得被批准文件重新引入。
+    if memory != "follow_ck":
+        _approval_fail("memory_policy only accepts follow_ck", path)
     changes = data["changes"]
     if not isinstance(changes, list):
         _approval_fail("批准文件 changes 必须是数组", path)
@@ -460,7 +464,6 @@ def validate_approval(data, *, command, agents, memory_choice, path=None):
 _COMMAND_MODULES = {
     "enable-memory": ("agm_core.enable", "run"),
     "enable-memory-batch": ("agm_core.batch_enable", "run"),
-    "remove-memory": ("agm_core.remove", "run"),
     "check-memory": ("agm_core.check", "run"),
 }
 
@@ -517,6 +520,18 @@ def _envelope_from_result(command, result):
 
 def dispatch(command, request):
     """路由到命令模块;模块未交付时返回 kernel_unavailable(合同桩,见模块 docstring 清单)。"""
+    if command in CORE_COMMAND_ROUTES:
+        # 防御直连:核心命令只在 main() 前置路由,不走本表;直连时零写入拒绝。
+        return make_envelope(
+            command,
+            STATUS_FAILED,
+            errors=[error_item(
+                "kernel_unavailable",
+                "核心命令由 main() 前置路由到 %s;dispatch 直连不支持,本次未执行任何写入"
+                % CORE_COMMAND_ROUTES[command],
+                recovery="经 agm.main(argv) 调用即可前置路由",
+            )],
+        )
     module_name, entry_name = _COMMAND_MODULES[command]
     try:
         module = importlib.import_module(module_name)
@@ -553,6 +568,73 @@ def dispatch(command, request):
     return _envelope_from_result(command, entry(request))
 
 
+def _print_envelope(envelope, out_stream, err_stream):
+    print(json.dumps(envelope, ensure_ascii=False, indent=2), file=out_stream)
+    if envelope["errors"]:
+        first = envelope["errors"][0]
+        print("[agm] %s: %s" % (first.get("code"), first.get("message")), file=err_stream)
+
+
+def _route_core_command(argv, *, home, out_stream, err_stream):
+    """核心命令前置路由(项目命令解析之前;2026-11-01 卸载核心接线合同)。
+
+    转发完整 argv(command 在内)到 agm_core.uninstall.cli / agm_core.policy_
+    migration.cli,返回其 int 退出码;核心自行输出 JSON envelope 并处理自身
+    批准合同(--approval-file/--backup-dir/--manifest 等参数由核心解析)。
+    本外壳仅兜底:模块未交付/入口缺失/未预期异常时输出统一 envelope 并保守
+    归 2,不替代核心的常规错误报告。
+    """
+    head = argv[0] if argv and isinstance(argv[0], str) else None
+    if head not in CORE_COMMAND_ROUTES:
+        return None
+    module_name = CORE_COMMAND_ROUTES[head]
+    try:
+        module = importlib.import_module(module_name)
+    except ImportError:
+        envelope = make_envelope(
+            head,
+            STATUS_FAILED,
+            errors=[error_item(
+                "kernel_unavailable",
+                "命令体尚未实现: 未找到 %s;本次未执行任何写入" % module_name,
+                recovery="等待卸载/迁移核心模块交付后重试;核心稳定后随联调同步",
+            )],
+            next_action="等待 %s 命令模块交付后重试" % head,
+        )
+        _print_envelope(envelope, out_stream, err_stream)
+        return exit_for(envelope["status"], envelope["errors"])
+    cli = getattr(module, "cli", None)
+    if not callable(cli):
+        envelope = make_envelope(
+            head,
+            STATUS_FAILED,
+            errors=[error_item(
+                "kernel_unavailable",
+                "命令体 %s 缺少入口 cli;本次未执行任何写入" % module_name,
+                recovery="等待卸载/迁移核心模块交付后重试",
+            )],
+        )
+        _print_envelope(envelope, out_stream, err_stream)
+        return exit_for(envelope["status"], envelope["errors"])
+    try:
+        # 核心自行输出 JSON envelope(直接 print);重定向到调用方注入的流,保持
+        # main() 的 stdout/stderr 注入语义与测试隔离。
+        with contextlib.redirect_stdout(out_stream), contextlib.redirect_stderr(err_stream):
+            return cli(argv, home=home)
+    except Exception as exc:  # 核心应自行报告常规失败;此处仅兜底未预期异常
+        envelope = make_envelope(
+            head,
+            STATUS_FAILED,
+            errors=[error_item(
+                "internal_error",
+                "未预期的内部错误: %s" % exc,
+                recovery="请把上述信息交给维护者;核心命令的常规失败由其自身 envelope 报告",
+            )],
+        )
+        _print_envelope(envelope, out_stream, err_stream)
+        return exit_for(envelope["status"], envelope["errors"])
+
+
 def build_request(
     command,
     namespace,
@@ -568,7 +650,7 @@ def build_request(
 ):
     """构造传给命令模块的 request(dict);接线合同见模块 docstring。
 
-    allowed_user_paths 仅 enable-memory 提供(--agent 目标已知,经路径表展开);remove/check
+    allowed_user_paths 仅 enable-memory 提供(--agent 目标已知,经路径表展开);check
     的目标由内核依登记与路径表现场推导,CLI 不放宽用户级路径校验(M2-02 合同)。
     """
     allowed = (
@@ -581,7 +663,6 @@ def build_request(
         "project": getattr(namespace, "project", None),
         "directory": getattr(namespace, "directory", None),
         "agents": None if command in ("enable-memory", "enable-memory-batch") and getattr(namespace, "agent", None) is None else agents,
-        "memory_choice": getattr(namespace, "memory_choice", None),
         "all": bool(getattr(namespace, "all", False)),
         "approval": approval,
         "interactive": False if getattr(namespace, "preview", False) else interactive,
@@ -619,7 +700,6 @@ def _execute(argv, *, platform, interactive, table_path, home):
                 approval,
                 command=command,
                 agents=agents,
-                memory_choice=getattr(namespace, "memory_choice", None),
                 path=namespace.approval_file,
             )
     except CliError as exc:
@@ -628,22 +708,6 @@ def _execute(argv, *, platform, interactive, table_path, home):
         raise
     except agm_paths.PathsError as exc:
         raise CliError(exc.code, str(exc), command=command) from None
-
-    # 写命令批准门(裁定 D-M2-04 方案 A):remove 保守前置门保留(非交互且未绑定批准 → 5);
-    # enable 的免批准判定(幂等补装)由内核在写锁内依 registry 现场裁决(M2-04 已实现),
-    # 本外壳不前置截断,内核返回 approval_required 时同样映射为 5。TTY 只影响能否提问。
-    if command == "remove-memory" and approval is None and not interactive and not getattr(namespace, "preview", False):
-        return make_envelope(
-            command,
-            STATUS_APPROVAL_REQUIRED,
-            approval_required=True,
-            runtime_layout=agm_layout.resolve_layout(home).describe(),
-            warnings=["非交互环境(非 TTY)无法提问;不从 stdin 猜测 yes,不因环境变量自动批准"],
-            next_action=INSTALL_NEXT_ACTION if not os.path.lexists(agm_layout.resolve_layout(home).registry) else (
-                "非交互写命令需 --approval-file <JSON> 绑定用户已确认的执行计划"
-                "(裁定 D-M2-04),或在交互终端运行"
-            ),
-        )
 
     request = build_request(
         command,
@@ -691,9 +755,13 @@ def main(
     err_stream = stderr if stderr is not None else sys.stderr
     if interactive is None:
         interactive = _detect_interactive(in_stream, out_stream)
+    argv_list = argv if argv is not None else sys.argv[1:]
+    routed = _route_core_command(argv_list, home=home, out_stream=out_stream, err_stream=err_stream)
+    if routed is not None:
+        return routed
     try:
         envelope = _execute(
-            argv if argv is not None else sys.argv[1:],
+            argv_list,
             platform=platform,
             interactive=interactive,
             table_path=table_path,

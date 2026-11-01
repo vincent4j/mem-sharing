@@ -15,7 +15,7 @@ class PreviewCLITests(EnableFixture):
     def invoke(self, command, *extra, interactive=False, readonly=False):
         argv = [command, '--project', str(self.root)]
         if command == 'enable-memory':
-            argv += ['--agent','codex','claude','workbuddy','--no-memory']
+            argv += ['--agent','codex','claude','workbuddy']
         argv += list(extra)
         output, errors = io.StringIO(), io.StringIO()
         original = detect.detect_agents
@@ -27,7 +27,7 @@ class PreviewCLITests(EnableFixture):
             stack.enter_context(patch.object(detect,'detect_agents',side_effect=isolated))
             stack.enter_context(patch('builtins.input',side_effect=AssertionError('preview must never read stdin')))
             if readonly:
-                for target in ('agm_core.enable.write_lock','agm_core.remove.write_lock','agm_core.transaction.write_lock'):
+                for target in ('agm_core.enable.write_lock','agm_core.transaction.write_lock'):
                     stack.enter_context(patch(target,side_effect=AssertionError('preview must never take a write lock')))
             code = agm.main(argv, stdout=output, stderr=errors, home=str(self.home), platform='darwin', interactive=interactive)
         return code, json.loads(output.getvalue())
@@ -57,7 +57,7 @@ class PreviewCLITests(EnableFixture):
             self.assertEqual(before,self.snapshot())
 
     def test_enable_consistent_repair_preview_returns_plan_and_old_implicit_repair_survives(self):
-        self.apply('disabled',True)
+        self.apply(None,True)
         target = self.root/'.workbuddy/memory/MEMORY.md'; raw = target.read_bytes(); target.unlink()
         before = self.snapshot()
         code, report = self.invoke('enable-memory','--preview',readonly=True)
@@ -84,36 +84,26 @@ class PreviewCLITests(EnableFixture):
         code, applied = self.invoke('enable-memory','--approval-file',self.approval_file(current))
         self.assertEqual(code,0,applied); self.assertIn(b'user bytes after preview',path.read_bytes())
 
-    def test_remove_preview_json_without_locks_and_old_non_tty_gate_unchanged(self):
-        self.apply('disabled',True)
-        for interactive in (False,True):
+    def test_retired_remove_preview_rejected_zero_write(self):
+        # remove-memory 已退役:预览/非交互一律 invalid_arguments(2),零写入,不再有旧非交互门。
+        self.apply(None,True)
+        for extra in (('--preview',), ()):
             before = self.snapshot()
-            code, report = self.invoke('remove-memory','--preview',interactive=interactive,readonly=True)
-            self.assertEqual(code,5,report)
-            plan = json.loads(report['next_action'])
-            self.assertEqual(set(plan),{'schema_version','command','main_checkout','checkout','git_common_dir',
-                'agents','memory_policy','registry_sha256','changes','confirmed_at','reference'})
-            self.assertEqual(plan['memory_policy'],'disabled'); self.assertEqual(before,self.snapshot())
-        code, old = self.invoke('remove-memory',readonly=True)
-        self.assertEqual(code,5,old)
-        with self.assertRaises(json.JSONDecodeError): json.loads(old['next_action'])
+            code, report = self.invoke('remove-memory',*extra,readonly=True)
+            self.assertEqual(code,2,report)
+            self.assertEqual(report['errors'][0]['code'],'invalid_arguments')
+            self.assertEqual(before,self.snapshot())
 
-    def test_remove_preview_approved_execution_and_drift_refusal(self):
-        self.apply('disabled',True)
-        code, report = self.invoke('remove-memory','--preview',readonly=True)
-        self.assertEqual(code,5,report); approval = self.approval_file(report)
+    def test_tombstone_skip_preserves_foreign_text_and_entries(self):
+        # 历史停用登记保全断言(承接旧 remove 语义):默认跳过不重建,用户自由字节原样。
+        self.apply(None,True); self.apply_tombstone()
         target = self.root/'CLAUDE.md'; target.write_bytes(target.read_bytes()+b'foreign free text\n')
         before = self.snapshot()
-        code, rejected = self.invoke('remove-memory','--approval-file',approval)
-        self.assertEqual(code,2,rejected); self.assertEqual(rejected['errors'][0]['code'],'approval_mismatch')
-        # Approved execution takes/releases the existing writer lock before its
-        # locked drift check; directory mtimes may change, user bytes may not.
-        self.assertEqual({p:(v[0],v[2]) for p,v in before.items()},
-                         {p:(v[0],v[2]) for p,v in self.snapshot().items()})
-        code, current = self.invoke('remove-memory','--preview',readonly=True)
-        self.assertEqual(code,5,current)
-        code, applied = self.invoke('remove-memory','--approval-file',self.approval_file(current))
-        self.assertEqual(code,0,applied); self.assertEqual(target.read_bytes(),b'foreign free text\n')
+        code, skipped = self.invoke('enable-memory',readonly=True)
+        self.assertEqual(code,1,skipped)
+        self.assertEqual(skipped['status'],'gaps')
+        self.assertEqual(before,self.snapshot())
+        self.assertTrue(target.read_bytes().endswith(b'foreign free text\n'))
 
     def test_preview_rejects_approval_mix_repetition_batch_and_check(self):
         for command in ('enable-memory','remove-memory'):
@@ -134,7 +124,7 @@ class PreviewCLITests(EnableFixture):
         self.assertEqual(report['status'],'approval_required',report); self.assertEqual(before,self.snapshot())
 
     def test_preview_keeps_separate_rebuild_confirmation_unconfirmed(self):
-        self.apply('disabled',True)
+        self.apply(None,True)
         data = json.loads(self.runtime.registry.read_bytes())
         data['projects'][str(self.root)]['memory_policy'] = 'INVALID'
         self.runtime.registry.write_text(json.dumps(data))

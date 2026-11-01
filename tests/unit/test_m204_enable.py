@@ -12,6 +12,7 @@ sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "unit"))
 from runtime_fixture import seed_runtime, installed_registry, seed_project_executors
 from agm_core import enable, paths, registry
+from agm_core.registry import serialize_registry
 from agm_core.entries import sha256
 
 
@@ -38,7 +39,7 @@ class EnableFixture(unittest.TestCase):
         self.config = paths.select_platform(paths.load_agents_table(), "darwin")
         self.calls = []
         self.request = {"project": str(self.root), "agents": ["codex", "claude", "workbuddy"],
-                        "memory_choice": "disabled", "approval": None, "interactive": False,
+                        "approval": None, "interactive": False,
                         "home": str(self.home), "platform_config": self.config,
                         "runtime_layout": self.runtime, "runner": self.runner}
 
@@ -48,10 +49,10 @@ class EnableFixture(unittest.TestCase):
         self.calls.append(argv)
         raise AssertionError("Project rules must never invoke CK")
 
-    def preview(self, memory="disabled", source=False, store=None):
-        # Historical test callers use yes/no; the production request never does.
-        memory = {"yes":"follow_ck","no":"disabled"}.get(memory,memory)
-        self.request["memory_choice"] = memory
+    def preview(self, memory=None, source=False, store=None):
+        # 2026-11-01 经历开关退役:memory 参数仅为旧调用点签名兼容,忽略取值,
+        # 不再进入 request(显式 memory_choice 由 retired_option 测试另行拒绝)。
+        self.request.pop("memory_choice", None)
         self.request["approval"] = None
         if source and "workbuddy" in self.request["agents"]:
             (self.root/".workbuddy/memory").mkdir(parents=True,exist_ok=True)
@@ -61,11 +62,18 @@ class EnableFixture(unittest.TestCase):
         plan.update(confirmed_at="2026-10-30T00:00:00Z",reference="exact fixture confirmation")
         return plan
 
-    def apply(self, memory="disabled", source=False):
+    def apply(self, memory=None, source=False):
         self.request["approval"]=self.preview(memory,source)
         result=enable.run(self.request)
         self.assertEqual(result["status"],"completed",result)
         return result
+
+    def apply_tombstone(self):
+        """历史 disabled 项目:现场按历史 --no-memory 后的状态保留。"""
+        data=self.load();p=data["projects"][str(self.root)]
+        p["memory_policy"]="disabled"
+        allowed=paths.allowed_user_paths(self.config,None,home=str(self.home))
+        self.runtime.registry.write_bytes(serialize_registry(data,allowed_user_paths=allowed))
 
     def load(self):
         return registry.load_registry(self.runtime.registry,allowed_user_paths=paths.allowed_user_paths(self.config,None,home=str(self.home)))
@@ -95,28 +103,30 @@ class EnableTests(EnableFixture):
         self.apply(None)
         self.assertIn(b'@AGENTS.md',(self.root/'CLAUDE.md').read_bytes())
 
-    def test_disabled_persists_on_default_and_data_install_retained(self):
+    def test_tombstone_data_retained_on_default_skip(self):
+        # 历史停用登记(disabled)默认跳过:经历库与 Skill 链接保全,零写入。
         store=self.root/'docs/context-keeper';store.mkdir(parents=True);(store/'memory-keeper.md').write_bytes(b'private')
         link=self.root/'.agents/skills/context-keeper';link.parent.mkdir(parents=True);link.symlink_to(self.source)
-        self.apply('disabled')
-        self.request.update(approval=None,memory_choice=None)
+        (self.root/'AGENTS.md').write_bytes(b'user rules\r\n'+enable._block(enable.DENIED_MARKER,enable.DENIED_TEXT))
+        self.apply(None)
+        self.apply_tombstone()
+        self.request.update(approval=None)
         result=enable.run(self.request)
-        self.assertEqual(result['status'],'completed',result)
+        self.assertEqual(result['status'],'gaps',result)
         self.assertEqual(self.load()['projects'][str(self.root)]['memory_policy'],'disabled')
         self.assertEqual((store/'memory-keeper.md').read_bytes(),b'private')
         self.assertTrue(link.is_symlink())
-        self.assertIn(enable.DENIED_TEXT.encode(),(self.root/'AGENTS.md').read_bytes())
+        body=(self.root/'AGENTS.md').read_bytes()
+        self.assertIn(enable.DENIED_TEXT.encode(),body)  # 现场原样,不新增不撤销
+        self.assertIn('历史停用登记',result['next_action'])
 
-    def test_lifting_disabled_requires_explicit_exact_approval(self):
-        self.apply('disabled')
-        self.request.update(approval=None,memory_choice='follow_ck')
-        result=enable.run(self.request);self.assertEqual(result['status'],'approval_required',result)
-        plan=json.loads(result['next_action']);plan.update(confirmed_at='2026-10-30T00:00:00Z',reference='lift')
-        self.request.update(approval=plan,memory_choice=None)
-        self.assertEqual(enable.run(self.request)['status'],'approval_required')
-        self.request['memory_choice']='follow_ck'
-        self.assertEqual(enable.run(self.request)['status'],'completed')
-        self.assertNotIn(enable.DENIED_MARKER['start'].encode(),(self.root/'AGENTS.md').read_bytes())
+    def test_retired_memory_choice_is_rejected_not_treated_as_request(self):
+        # 退役开关显式传值=旧合同残留,零写拒绝;不得当作默认请求继续。
+        before={str(p):p.read_bytes() for p in self.area.rglob('*') if p.is_file()}
+        result=enable.run(dict(self.request,memory_choice='follow_ck'))
+        self.assertEqual(result['status'],'failed',result)
+        self.assertEqual(result['errors'][0]['code'],'retired_option',result)
+        self.assertEqual({str(p):p.read_bytes() for p in self.area.rglob('*') if p.is_file()},before)
 
     def test_short_protocol_only_agents_and_claude_import(self):
         self.apply('follow_ck',True)

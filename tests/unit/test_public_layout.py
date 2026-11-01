@@ -646,7 +646,7 @@ class PublicLayoutHardeningTests(PublicLayoutMigrationFixture):
         with patch.object(detect, 'detect_agents', return_value=facts):
             result = enable.run({'home': str(variant.home), 'platform_config': variant.config,
                              'project': str(project), 'agents': ['workbuddy'],
-                             'memory_choice': 'follow_ck', 'interactive': True,
+                             'interactive': True,
                              'confirm': lambda prompt: True, 'app_directories': [], 'search_paths': []})
         self.assertEqual(result['status'], 'completed', result)
         self.assertTrue((project / 'AGENTS.md').is_file())
@@ -676,7 +676,7 @@ class PublicLayoutHardeningTests(PublicLayoutMigrationFixture):
         with patch.object(detect, 'detect_agents', return_value=facts):
             result = enable.run({'home': str(variant.home), 'platform_config': variant.config,
                              'project': str(project), 'agents': ['claude'],
-                             'memory_choice': 'follow_ck', 'interactive': True,
+                             'interactive': True,
                              'confirm': lambda prompt: True, 'app_directories': [], 'search_paths': []})
         self.assertEqual(result['status'], 'completed', result)
         self.assertTrue((project / 'AGENTS.md').is_file())

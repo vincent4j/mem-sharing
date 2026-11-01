@@ -286,8 +286,12 @@ class UserEntryFixture(unittest.TestCase):
 
     def test_generated_governance_separates_default_rules_and_ck_activation(self):
         text=user_entries.GOVERNANCE_RULES_TEXT
-        self.assertIn('默认启用不创建 Context Keeper 记录库',text)
-        self.assertIn('disabled 时，默认流程不得重新启用入口',text)
+        self.assertIn('不创建 Context Keeper 记录库',text)
+        self.assertIn('历史停用登记',text)
+        self.assertIn('项目经历由 Context Keeper 独立管理',text)
+        self.assertIn('不撤销、不禁用也不否决 Context Keeper',text)
+        self.assertIn('历史停用登记（disabled）项目默认流程跳过、不重建',text)
+        self.assertIn('该状态不代表 Context Keeper 停用',text)
         self.assertIn('首次保存按其流程确认位置',text)
         self.assertNotIn('从启用时刻开始记',text)
         self.assertNotIn(' CK ',text)
@@ -304,17 +308,17 @@ class UserEntryFixture(unittest.TestCase):
         self.assertIn('[使用约定](topics/使用约定.md)',contract)
         self.assertIn('同义自然语言操作',contract)
         self.assertIn('不回指其他菜单',contract)
-        self.assertNotIn('批量启用项目记忆',contract)
+        self.assertNotIn('批量接入项目规则',contract)
         self.assertNotIn(user_entries.CLAUDE_FALLBACK_TEXT,contract)
         topic=user_entries.usage_convention_topic_text('/opt/code')
         self.assertLess(topic.index('## L1 概要'),topic.index('## L2 正文'))
         self.assertIn('/mem-sharing 菜单',topic)
-        self.assertIn('批量启用项目记忆',topic)
+        self.assertIn('批量接入项目规则',topic)
         self.assertIn('python3 /opt/code/scripts/agm.py',topic)
         self.assertIn('/opt/code/SKILL.md',topic)
         self.assertIn('enable-memory --project <项目绝对路径> --agent <当前执行器>；',topic)
         self.assertNotIn('--agent <当前执行器> --memory',topic)
-        self.assertIn('已 disabled 的项目跳过',topic)
+        self.assertIn('历史停用登记（disabled）项目跳过',topic)
         self.assertIn('不改变任何命令默认',topic)
         self.assertIn('L0 索引一主题一行',topic)
         self.assertIn('以本文件所在目录（topics/）解析',topic)
@@ -326,34 +330,17 @@ class UserEntryFixture(unittest.TestCase):
         self.assertNotIn('仅 Codex 首次实际使用时，按默认启用条款补缺失 AGENTS.md',user_entries.CODEX_FALLBACK_TEXT)
 
     def test_menu_exact_order_names_and_cli_mapping(self):
-        # 用户裁定:菜单六项精确命名与排序;用户可见只用
-        # 用户记忆/项目记忆/项目经历三类别;CLI/API 内部标识不变。
-        menu = user_entries.agent_group_menu_text('/opt/code')
-        lines = menu.splitlines()
-        self.assertEqual(lines[0], '/mem-sharing 菜单:')
-        names = [line.split('：')[0] for line in lines[1:]]
-        self.assertEqual(names, ['添加新的 Agent', '批量启用项目记忆', '整理用户记忆',
-                                 '健康检查', '给项目停用记忆', '给项目启用记忆'])
-        # 逐项命令映射(渲染后的真实 CLI/路径)。
-        self.assertIn('python3 /opt/code/scripts/install.py --agent <执行器名>', menu)
-        self.assertIn('python3 /opt/code/scripts/agm.py enable-memory-batch --directory <目录绝对路径>', menu)
-        self.assertIn('治理流程见 /opt/code/SKILL.md', menu)
-        self.assertIn('python3 /opt/code/scripts/agm.py check-memory --project <项目绝对路径>', menu)
-        self.assertIn('python3 /opt/code/scripts/agm.py remove-memory --project <项目绝对路径>', menu)
-        self.assertIn('仅禁自动项目经历记录', menu)
-        self.assertIn('python3 /opt/code/scripts/agm.py enable-memory --project <项目绝对路径> --memory', menu)
-        # 末项启用说明:显式恢复/手动启用;默认语义不变。
-        self.assertIn('显式恢复已停用项目或手动启用项目记忆', menu)
-        self.assertIn('disabled 不自动恢复语义不变', menu)
-        # 旧命名与新类别外用语不再出现。
-        self.assertNotIn('整理用户规则', menu)
-        self.assertNotIn('停用记忆：撤入口并保留数据', menu)
-        self.assertNotIn('批量启用记忆：扫描', menu)
-        # 指南派生文字随菜单同步(同源派生,不另造第二份)。
-        topic = user_entries.usage_convention_topic_text('/opt/code')
-        self.assertIn('批量启用项目记忆', topic)
-        self.assertIn('整理用户记忆', topic)
-        self.assertNotIn('整理用户规则', topic)
+        menu=user_entries.agent_group_menu_text('/opt/code')
+        names=[line.split('：')[0] for line in menu.splitlines()[1:]]
+        self.assertEqual(names,['添加新的 Agent','批量接入项目规则','整理用户记忆','健康检查','接入项目规则','整机卸载'])
+        for command in ('install.py --agent <执行器名>','agm.py enable-memory-batch --directory <目录绝对路径>',
+                        'agm.py check-memory --project <项目绝对路径>','agm.py enable-memory --project <项目绝对路径>'):
+            self.assertIn('python3 /opt/code/scripts/'+command,menu)
+        self.assertIn('python3 -B /opt/code/scripts/agm.py uninstall-machine --backup-dir <外置备份绝对路径>',menu)
+        self.assertIn('治理流程见 /opt/code/SKILL.md',menu)
+        for retired in ('remove-memory','--memory','--no-memory','禁自动项目经历记录'):
+            self.assertNotIn(retired,menu)
+        self.assertIn('历史停用登记项目跳过',menu)
 
     def test_workbuddy_convention_uses_enable_template_text(self):
         enable_source = (REPO / "scripts" / "agm_core" / "enable.py").read_text(encoding="utf-8")

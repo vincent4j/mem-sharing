@@ -15,7 +15,7 @@ Python CLI 本身只诊断，不负责自动安装 Python/Git。
 包管理器缺失、权限受阻或依赖安装失败时停止，说明实际阻塞。
 
 用户可直接说“安装 memSharing”，安装后可用 `/mem-sharing` 菜单或自然语言。
-六个菜单入口为：添加新的 Agent、批量启用项目记忆、整理用户记忆、健康检查、给项目停用记忆、给项目启用记忆。
+六个菜单入口为：添加新的 Agent、批量接入项目规则、整理用户记忆、健康检查、接入项目规则、整机卸载。
 菜单由公共指南 `~/.mem-sharing/memories/topics/使用约定.md` 承载，各执行器用户文件只保留公共指针与自身规则，不要求安装 memSharing Skill；触发菜单或默认项目接入前先读指南。链接解析分两个根：索引 `MEMORY.md` 中的指南/主题相对链接以 `MEMORY.md` 所在目录解析；指南内部的链接以指南所在目录解析，或直接使用 C 内绝对路径（例如已安装产品脚本）；两个解析根不能混同。指南缺失时停止相关操作。
 下文项目示例从源码根运行；已安装后可改用 C 中的脚本绝对路径。
 C 为 `~/.local/share/mem-sharing`，R 为 `~/.mem-sharing`。
@@ -113,34 +113,13 @@ python3 scripts/agm.py enable-memory-batch --directory /absolute/projects --appr
 
 为什么这样设计：集中确认降低重复操作，同时保留每个项目的事务与故障边界。
 
-## 5. 停用、禁止自动记录与重新启用
+## 5. 历史政策迁移与整机卸载
 
-菜单“给项目停用记忆”对应撤销项目接入：
+旧 `remove-memory`、`--memory`、`--no-memory` 已退役，新请求零写拒绝。历史 disabled 只作规则接入 tombstone，默认跳过、不重建；它不否决 Context Keeper 的自动规则，不表示 CK 已停用或入口已删除。使用 `migrate-policy [--project ABS]` 精确预览并批准后，仅退役产品自有且指纹匹配的旧控制与已知旧模板，保留私文、CK 设置和历史数据，不替用户启用 CK。
 
-```bash
-python3 scripts/agm.py remove-memory --project /absolute/path/project
-```
+整机卸载使用 `python3 -B scripts/agm.py uninstall-machine --backup-dir <全新外置目录>` 先预览，再以 `--approval-file` 精确批准。归还当前完整公共记忆给每个实际接入者的自身用户目录，再核验、清依赖、最后删除产品；不是恢复安装前。外置 manifest/recover.py 与独立解释器支持删除代码后的精确恢复。未知/漂移阻断，项目 AGENTS、有效 Claude/WB 桥接及 CK 默认保留。完整数据与门槛见[整机卸载方案](uninstall-design.md)。
 
-只撤销有创建证据且允许撤销的入口与桥接，复用内容不获得删除权。
-项目记为 disabled，默认启用条款不再自动触发。
-规则正文、全部项目经历数据、用户级接入、机器产品及 Context Keeper 安装保留。
-非交互执行须使用该计划的 `--approval-file`，不要把 stdin 的 yes 当作批准。
-
-如果只想保留规则接入、禁止自动项目经历记录与初始化，使用进阶操作：
-
-```bash
-python3 scripts/agm.py enable-memory --project /absolute/path/project --no-memory
-```
-
-此政策优先于残留 Context Keeper 自动规则，但不是其脚本的硬拒写接口。
-手动 Context Keeper 操作仍按用户明确请求与其自身流程进行。
-缺省 enable 不会翻转 disabled；重新启用必须显式解除并批准精确计划：
-
-```bash
-python3 scripts/agm.py enable-memory --project /absolute/path/project --memory
-```
-
-为什么这样设计：撤销入口、阻止默认复开和暂停自动记录分别有明确结果，数据不随停用丢失。
+CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调用范围；Paseo 为 `machine_and_paseo`，机器 completed 但插件仍在时 overall=partial。必须在插件移除前经外置入口独立绑定真实安装 ID/来源/CLI/daemon/live serverId，再用户 remove、同目标 full-list check 证实缺席，最后才可另选卸载 CK。disabled、查询错误、能力/版本错误均不算 removed；默认保留 CK，尾步另行精确批准。正式 payload 待干净提交与版本授权后生成，本轮源码/合成验证不等于实际宿主卸载或六家新会话加载验收。
 
 ## 6. 添加新的 Agent 与健康检查
 

@@ -27,10 +27,14 @@ class CheckTests(EnableFixture):
         self.assertFalse((self.root/'docs/context-keeper').exists())
         self.assertEqual(result['changes'],[])
 
-    def test_disabled_is_not_gap(self):
-        self.apply('disabled',True)
+    def test_tombstone_is_not_gap_and_not_ck_disabled(self):
+        # 历史停用登记(disabled)不是健康缺口,也不得显示为 CK 停用。
+        self.apply(None,True)
+        self.apply_tombstone()
         result=self.call();self.assertEqual(result['status'],'completed',result)
         self.assertEqual(result['projects'][0]['memory_policy'],'disabled')
+        self.assertTrue(any('历史停用登记' in w for w in result['warnings']),result)
+        self.assertTrue(any('不代表 Context Keeper 停用' in w for w in result['warnings']),result)
 
     def test_claude_waiting_actual_use_is_not_gap(self):
         self.request['agents']=None

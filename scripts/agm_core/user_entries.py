@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import copy
 import json
+import shlex
 import os
 import sys
 from contextlib import contextmanager
@@ -52,6 +53,10 @@ from .enable import BASE_MARKER
 from .entries import EntryConflict, block_fingerprint, sha256, managed_span, render_block
 from .transaction import (Change, Snapshot, Transaction, TransactionError,
                           read_snapshot, write_lock)
+
+# Frozen pre-natural-language-uninstall templates from the integrated candidate.
+# Exact UTF-8 bytes; never regenerate these by calling the current renderers.
+PRE_UNINSTALL_ROUTE_TEMPLATES = {'pre_route_contract': '读取契约：L0 恒读本索引 → 需要该主题时读其 L1 概要段 → 仍不足才读 L2 全文；相对链接以本文件所在目录解析，指向的内容缺失时停止相关操作。\n预算：L0 一主题一行：主题名 + 一句话当前结论 + 链接；索引 ≤200 行 / 25KB；增加主题文件，不加长索引；摘要在记忆整理时手写，不自动生成。\n用户规则治理：公共内容只写公共指定文件（R/memories），Agent 独有内容保留于各自用户文件，永不并入公共或自动删除。进入 Git 主 checkout 时，未登记项目默认启用项目规则：创建缺失的 AGENTS.md 骨架并追加项目经历短协议，已有全文保留。默认启用不创建 Context Keeper 记录库、不调用 Context Keeper 安装或初始化；首次 /context-keeper 进入 Context Keeper 流程，首次保存按其流程确认位置。项目经历由 Context Keeper 独立管理，本工具不设经历开关，不撤销、不禁用也不否决 Context Keeper。历史停用登记（disabled）项目默认流程跳过、不重建，也不宣称入口已移除；该状态不代表 Context Keeper 停用，重新接入需用户明确的重新接入计划。各 Agent 只维护自身专属项目入口（Claude 的 CLAUDE.md、WorkBuddy 的原生 memory 指针），由各自实际使用时补齐，其他执行器不得预建；AGENTS.md 是共享项目规则基座，不依赖 Codex，无 Codex 的机器同样成立，其默认建立遵本治理条款；非 Git 目录和 linked worktree 不触发。\n按需操作指南：/mem-sharing 菜单、绝对命令与公共记忆维护规则由主题《使用约定》承载（[使用约定](topics/使用约定.md)）；仅在用户明确 /mem-sharing、提出同义自然语言操作或默认项目接入前读取；该指南不回指其他菜单。\n', 'pre_route_topic': '# 使用约定\n\n## L1 概要\n\n当前有效结论：公共记忆采用索引与主题文件，摘要由 Agent 手写，不自动生成。\n本主题即操作指南：/mem-sharing 菜单、绝对命令与公共记忆 L0/L1/L2 维护规则都在本文件正文，不回指其他菜单。\n待办：有新事实且获准记录时，更新对应主题结论与索引行。\n\n## L2 正文\n\n### /mem-sharing 菜单\n\n/mem-sharing 菜单:\n添加新的 Agent：接入已安装的执行器 → python3 __CODE__/scripts/install.py --agent <执行器名>\n批量接入项目规则：扫描给定目录，汇总预览后一次批准 → python3 __CODE__/scripts/agm.py enable-memory-batch --directory <目录绝对路径>\n整理用户记忆：公共与独有分开，逐条计划后一次批准 → 治理流程见 __CODE__/SKILL.md\n健康检查：只读检查已登记入口 → python3 __CODE__/scripts/agm.py check-memory --project <项目绝对路径>\n接入项目规则：为当前项目装配规则基座与桥接 → python3 __CODE__/scripts/agm.py enable-memory --project <项目绝对路径>；新 Git 主 checkout 默认启用，历史停用登记项目跳过、不自动重建\n整机卸载：外置备份并归还公共记忆后卸载本产品 → python3 __CODE__/scripts/agm.py uninstall-machine --backup-dir <外置备份绝对路径>（默认只读预览，批准后执行）\n\n### 公共记忆维护（L0/L1/L2）\n\nL0 索引一主题一行：主题名 + 一句话当前结论 + 链接，≤200 行 / 25KB；增加主题文件，不加长索引。\nL1 位于主题文件开头，简列当前有效结论与待办；L2 为全文及 references/ 手册，仅在概要不足时读取。\n摘要在记忆整理时手写，不自动生成。本指南内相对链接以本文件所在目录（topics/）解析；受管产品命令与 Skill 路径使用安装代码的绝对路径。\n\n### 项目接入约定\n\n规则驱动的默认接入由当前实际执行者发起：python3 __CODE__/scripts/agm.py enable-memory --project <项目绝对路径> --agent <当前执行器>；执行前先检查项目政策，历史停用登记（disabled）项目跳过、不由本路径恢复（历史停用登记不代表 Context Keeper 停用，也不宣称入口已移除；migrate-policy 仅清理产品自有的停用控制，不恢复接入；重新接入需用户明确的重新接入计划）；各 Agent 专属项目入口按当前执行器自身用户文件中的规则维护，公共指南不承载执行器专属细节。\n当前会话不得无参数顺带改动其他执行器的入口。用户显式授权的全体接入或批量启用沿用现有命令语义，本约定不改变任何命令默认。\n'}
 
 COMMAND = "assemble-user-entries"
 _INSTALLER_SOURCE = ContextVar("agm_installer_verified_source", default=None)
@@ -93,36 +98,39 @@ WORKBUDDY_CONVENTION_TEXT = "项目规则读取当前项目根 AGENTS.md。保�
 # v1.11/v1.12/§16(2026-10-30 用户裁定)用户规则治理条款:公共治理留在公共源索引,
 # 各 Agent 入口不复制。术语用“启用/停用”(用户裁定),命令名 enable-memory 等保持不变;
 # 用户可见文案写 Context Keeper 完整名称,不改 API 标识或历史记录。
+# 2026-11-01 经历开关退役:memSharing 只管公共记忆共享与项目规则接入;项目经历由
+# Context Keeper 独立管理。disabled 降级为历史接入tombstone(默认跳过不重建、不否决
+# CK);常量名/签名保持不变,agm_core.policy_migration 以冻结旧模板做精确旧→新迁移。
 GOVERNANCE_RULES_TEXT = (
     "用户规则治理：公共内容只写公共指定文件（R/memories），Agent 独有内容保留于各自用户文件，永不并入公共或自动删除。"
     "进入 Git 主 checkout 时，未登记项目默认启用项目规则：创建缺失的 AGENTS.md 骨架并追加项目经历短协议，已有全文保留。"
     "默认启用不创建 Context Keeper 记录库、不调用 Context Keeper 安装或初始化；首次 /context-keeper 进入 Context Keeper 流程，首次保存按其流程确认位置。"
-    "项目政策已为 disabled 时，默认流程不得重新启用入口、自动记录经历或初始化；已有 Context Keeper 自动规则也不能覆盖此政策。"
-    "重新启用须用户显式执行 enable-memory；解除 disabled 须显式 enable-memory --memory 并批准精确计划。"
+    "项目经历由 Context Keeper 独立管理，本工具不设经历开关，不撤销、不禁用也不否决 Context Keeper。"
+    "历史停用登记（disabled）项目默认流程跳过、不重建，也不宣称入口已移除；该状态不代表 Context Keeper 停用，重新接入需用户明确的重新接入计划。"
     "各 Agent 只维护自身专属项目入口（Claude 的 CLAUDE.md、WorkBuddy 的原生 memory 指针），由各自实际使用时补齐，其他执行器不得预建；"
     "AGENTS.md 是共享项目规则基座，不依赖 Codex，无 Codex 的机器同样成立，其默认建立遵本治理条款；非 Git 目录和 linked worktree 不触发。"
 )
 CLAUDE_FALLBACK_TEXT = (
-    "仅 Claude Code 在本项目实际使用且项目已启用、政策非 disabled 时补引用：CLAUDE.md 不存在才创建仅含 @AGENTS.md 的文件；"
+    "仅 Claude Code 在本项目实际使用且项目已启用（历史停用登记项目跳过）时补引用：CLAUDE.md 不存在才创建仅含 @AGENTS.md 的文件；"
     "已有正文必须完整保留，仅追加缺失的 @AGENTS.md 引用行，重复执行不改字节。"
 )
-WORKBUDDY_FALLBACK_TEXT = "仅 WorkBuddy 在本项目实际使用产生原生 .workbuddy/memory 目录，且项目已启用、政策非 disabled 时，补顶部 AGENTS.md 指针；保留已有正文字节，不预建原生目录。"
-CODEX_FALLBACK_TEXT = "Codex 原生读取共享项目规则基座 AGENTS.md，自身无额外专属项目入口；该基座默认建立遵公共治理条款，已 disabled 项目不自动恢复。"
+WORKBUDDY_FALLBACK_TEXT = "仅 WorkBuddy 在本项目实际使用产生原生 .workbuddy/memory 目录，且项目已启用（历史停用登记项目跳过）时，补顶部 AGENTS.md 指针；保留已有正文字节，不预建原生目录。"
+CODEX_FALLBACK_TEXT = "Codex 原生读取共享项目规则基座 AGENTS.md，自身无额外专属项目入口；该基座默认建立遵公共治理条款，历史停用登记项目不自动重建。"
 # 桌面双端(2026-10-31 冻结合同):dsh=DeepSeek Harness、zcode=ZCode 均原生读取
 # 项目根 AGENTS.md(rule_mode=native),用户入口分别是 ~/.dsh/AGENTS.md 与
 # ~/.zcode/AGENTS.md。兜底文本各写自身执行器称谓,不复用 CODEX_FALLBACK_TEXT,
 # 迁移/连接校验按块内语义精确区分执行器。
 DSH_FALLBACK_TEXT = ("DeepSeek Harness 原生读取共享项目规则基座 AGENTS.md，自身无额外专属项目入口；"
-                     "该基座默认建立遵公共治理条款，已 disabled 项目不自动恢复。"
+                     "该基座默认建立遵公共治理条款，历史停用登记项目不自动重建。"
                      "用户入口仅支持默认根 ~/.dsh/AGENTS.md，DSH_HOME 重定向时不接入。")
 ZCODE_FALLBACK_TEXT = ("ZCode 原生读取共享项目规则基座 AGENTS.md 与用户级 ~/.zcode/AGENTS.md，自身无额外专属项目入口；"
-                       "该基座默认建立遵公共治理条款，已 disabled 项目不自动恢复。")
+                       "该基座默认建立遵公共治理条款，历史停用登记项目不自动重建。")
 # OpenCode v2(2026-11-01 接入):v2 只识别 AGENTS.md(不再回退 CLAUDE.md),默认
 # 配置根 ~/.config/opencode。规则加载受 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/
 # OPENCODE_CONFIG 影响的完整语义未获源码证实,第一版 default-root-only:配置根
 # 被重定向或覆盖时不接入(见 opencode_config_redirected)。
 OPENCODE_FALLBACK_TEXT = ("OpenCode 原生读取共享项目规则基座 AGENTS.md 与用户级 ~/.config/opencode/AGENTS.md，自身无额外专属项目入口；"
-                          "该基座默认建立遵公共治理条款，已 disabled 项目不自动恢复。"
+                          "该基座默认建立遵公共治理条款，历史停用登记项目不自动重建。"
                           "仅支持默认配置根，配置被 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/OPENCODE_CONFIG 重定向或覆盖时不接入。")
 NATIVE_FALLBACK_TEXTS = {"codex": CODEX_FALLBACK_TEXT, "dsh": DSH_FALLBACK_TEXT,
                          "zcode": ZCODE_FALLBACK_TEXT, "opencode": OPENCODE_FALLBACK_TEXT}
@@ -134,19 +142,23 @@ CLAUDE_FALLBACK_MARKER = {"start": "<!-- mem-sharing:claude-fallback:start -->",
 
 
 def agent_group_menu_text(code):
-    """菜单文本;命令基路径为受管产品代码 C(layout.code),逐项映射既有 CLI。"""
+    """菜单文本;命令基路径为受管产品代码 C(layout.code),逐项映射既有 CLI。
+
+    2026-11-01 退役:remove-memory/--memory/--no-memory 不再出现;停用记忆项由
+    整机卸载项(uninstall-machine,默认只读预览)接替机器级退出路径。
+    """
     cli = "python3 %s/scripts/agm.py" % code
     installer = "python3 %s/scripts/install.py" % code
     skill = "%s/SKILL.md" % code
     return (
         "/mem-sharing 菜单:\n"
         "添加新的 Agent：接入已安装的执行器 → %s --agent <执行器名>\n"
-        "批量启用项目记忆：扫描给定目录，汇总预览后一次批准 → %s enable-memory-batch --directory <目录绝对路径>\n"
+        "批量接入项目规则：扫描给定目录，汇总预览后一次批准 → %s enable-memory-batch --directory <目录绝对路径>\n"
         "整理用户记忆：公共与独有分开，逐条计划后一次批准 → 治理流程见 %s\n"
         "健康检查：只读检查已登记入口 → %s check-memory --project <项目绝对路径>\n"
-        "给项目停用记忆：撤项目记忆入口并保留数据 → %s remove-memory --project <项目绝对路径>；仅禁自动项目经历记录、保留入口用 enable-memory --no-memory\n"
-        "给项目启用记忆：显式恢复已停用项目或手动启用项目记忆 → %s enable-memory --project <项目绝对路径> --memory；新 Git 主 checkout 默认启用、disabled 不自动恢复语义不变\n"
-        % (installer, cli, skill, cli, cli, cli)
+        "接入项目规则：为当前项目装配规则基座与桥接 → %s enable-memory --project <项目绝对路径>；新 Git 主 checkout 默认启用，历史停用登记项目跳过、不自动重建\n"
+        "整机卸载：外置备份并归还公共记忆后卸载本产品 → %s uninstall-machine --backup-dir <外置备份绝对路径>（默认只读预览，批准后执行）\n"
+        % (installer, cli, skill, cli, cli, "python3 -B " + shlex.quote(str(Path(code)/"scripts/agm.py")))
     )
 
 
@@ -164,7 +176,33 @@ def public_memory_contract_text():
         + GOVERNANCE_RULES_TEXT + "\n"
         "按需操作指南：/mem-sharing 菜单、绝对命令与公共记忆维护规则由主题《使用约定》承载"
         "（[使用约定](topics/使用约定.md)）；仅在用户明确 /mem-sharing、提出同义自然语言操作"
-        "或默认项目接入前读取；该指南不回指其他菜单。\n"
+        "或默认项目接入前读取；用户明确说“卸载 memSharing / 卸载 mem-sharing”或“不想用这个共享记忆工具了，帮我卸载”时，立即按需读取该主题完整卸载路由，无须斜杠命令或源码目录；目标含糊先澄清；该指南不回指其他菜单。\n"
+    )
+
+
+def natural_language_uninstall_text(code):
+    """Single generated natural-language route; loaded on demand via public L0."""
+    code = Path(code)
+    cli = "python3 -B " + shlex.quote(str(code / "scripts/agm.py"))
+    return (
+        "### 自然语言卸载 memSharing\n\n"
+        "用户明确说“卸载 memSharing”“卸载 mem-sharing”或“不想用这个共享记忆工具了，帮我卸载”等本产品退出意图，直接进入以下只读预览，不重复展示菜单；无须 /mem-sharing，也无须位于源码目录。"
+        "“卸载这个项目”“停用项目记忆”等目标含糊时，仅澄清是否指 memSharing；不得猜测当前 cwd，不得删除项目。自然语言请求不批准尚未展示的精确删除计划。\n\n"
+        "先核验本机台账与安装代码目录 C 的来源/身份，读取已核验的安装操作说明 [%s](<%s>) 及其完整卸载合同 [%s](<%s>)；不是凭路径存在就信任代码。"
+        "安装代码缺失或已卸载时，只报告状态或使用已核验的外置恢复入口，不自动重装，也不执行未知来源脚本。\n\n"
+        "根据台账及已核验安装来源确定机器实际安装形态；不能因从 Codex、Claude 或其它 Agent 发起就省略 Paseo 宿主义务。"
+        "Paseo 形态优先沿现有插件 RPC 预览；若经 CLI 发起，沿完整合同携带 --host-obligation paseo、真实 --host-plugin-id、--host-plugin-source 及已核验 --host-plugin-record-json（编译期清单指纹可用时一并绑定），不得猜安装别名或来源。"
+        "宿主来源/目标不明时先补齐证据，不能默认 standalone、伪造 absent 或扫描全 HOME；明确独立 CLI 范围才使用 standalone_declared，不能据此声称所有宿主均无残留。\n\n"
+        "提议一个全新外置备份绝对路径（在待删产品目录之外）；预览前不 mkdir、不安装、不改真实 HOME。"
+        "使用已核验 C 的绝对命令（若有宿主义务须附以上真实参数）：\n\n"
+        "```sh\n%s uninstall-machine --backup-dir <全新外置备份绝对路径> --json\n```\n\n"
+        "先展示完整归还、保全、删除目标、宿主义务和独立恢复材料的精确计划；用户批准该计划后才以同一参数加 --approval-file <精确批准文件> 执行。"
+        "未知来源、漂移或阻断先停止；不要替用户批准。归还当前完整公共记忆而非回滚安装前。"
+        "结果分列 machine_assets、host_plugin、overall；机器清理成功但插件仍在时 overall=partial。"
+        "Paseo 后续由外置入口按 bind→官方 remove→同一 daemon 的 status/serverId 与 full-list 缺席核验→CK 尾步执行；查询错误、disabled、换 daemon 均不解锁。"
+        "只有声明范围全部成功后才单独征询是否卸载 Context Keeper，默认保留；另行预览、另行精确批准，不能复用主卸载批准，CK 失败不改写主产品结果。\n"
+        % (str(code/"SKILL.md"), str(code/"SKILL.md"),
+           str(code/"docs/uninstall-design.md"), str(code/"docs/uninstall-design.md"), cli)
     )
 
 
@@ -173,8 +211,9 @@ def usage_convention_topic_text(code):
 
     指南不循环回指菜单;本指南内相对链接以指南自身目录(topics/)解析,
     受管产品命令与 Skill 路径用安装代码 C 的绝对路径。规则驱动的默认项目
-    接入由当前实际执行器带 --agent 发起(不带 --memory,先查 disabled 并跳过),
-    不让当前会话无参数顺带改动其他执行器入口;显式菜单启用保留 --memory。
+    接入由当前实际执行器带 --agent 发起(先查历史停用登记并跳过),
+    不让当前会话无参数顺带改动其他执行器入口;经历开关已退役,恢复接入
+    不经由任何迁移命令自动完成。
     """
     cli = "python3 %s/scripts/agm.py" % code
     return (
@@ -192,11 +231,13 @@ def usage_convention_topic_text(code):
         "摘要在记忆整理时手写，不自动生成。本指南内相对链接以本文件所在目录（topics/）解析；"
         "受管产品命令与 Skill 路径使用安装代码的绝对路径。\n\n"
         "### 项目接入约定\n\n"
-        "规则驱动的默认接入由当前实际执行器发起：%s enable-memory --project <项目绝对路径> --agent <当前执行器>；"
-        "执行前先检查项目政策，已 disabled 的项目跳过、不由本路径恢复（解除 disabled 须用户显式 --memory 并批准精确计划）；"
+        "规则驱动的默认接入由当前实际执行者发起：%s enable-memory --project <项目绝对路径> --agent <当前执行器>；"
+        "执行前先检查项目政策，历史停用登记（disabled）项目跳过、不由本路径恢复"
+        "（历史停用登记不代表 Context Keeper 停用，也不宣称入口已移除；migrate-policy 仅清理产品自有的停用控制，不恢复接入；重新接入需用户明确的重新接入计划）；"
         "各 Agent 专属项目入口按当前执行器自身用户文件中的规则维护，公共指南不承载执行器专属细节。\n"
         "当前会话不得无参数顺带改动其他执行器的入口。"
         "用户显式授权的全体接入或批量启用沿用现有命令语义，本约定不改变任何命令默认。\n" % cli
+        + "\n" + natural_language_uninstall_text(code)
     )
 
 

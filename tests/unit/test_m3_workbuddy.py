@@ -31,7 +31,6 @@ class WorkBuddyProtocolTests(EnableFixture):
 
     def test_native_symlink_directory_fails_closed(self):
         target=self.area/'native';target.mkdir();path=self.root/'.workbuddy/memory';path.parent.mkdir();path.symlink_to(target)
-        self.request['memory_choice']='follow_ck'
         self.assertEqual(enable.run(self.request)['errors'][0]['code'],'path_conflict')
         self.assertFalse((self.root/'AGENTS.md').exists())
         self.assertEqual(list(target.iterdir()),[])

@@ -128,10 +128,6 @@ def _approval_data(**overrides):
         "reference": "用户 2026-10-29 会话确认",
     }
     data.update(overrides)
-    if data['command'] == 'remove-memory':
-        data.setdefault('registry_sha256', 'a'*64)
-        if 'memory_policy' not in overrides:
-            data['memory_policy'] = 'disabled'
     return data
 
 
@@ -529,7 +525,7 @@ class CliParseTests(CliTestCase):
             },
         ):
             code, envelope, _ = self.run_cli(
-                "enable-memory", "--project", "/repo", "--agent", "codex", "claude", "--memory"
+                "enable-memory", "--project", "/repo", "--agent", "codex", "claude"
             )
         self.assertEqual(code, 5)
         self.assertEqual(envelope["command"], "enable-memory")
@@ -560,10 +556,11 @@ class CliRoutingTests(CliTestCase):
         self.assertEqual(captured["request"]["command"], "enable-memory")
         self.assertIn("待授权", err)
 
-    def test_noninteractive_remove_returns_5(self):
+    def test_retired_remove_command_rejected(self):
+        # remove-memory 已退役:未知命令一律 invalid_arguments(2),不再有前置批准门。
         code, envelope, _ = self.run_cli("remove-memory", interactive=False)
-        self.assertEqual(code, 5)
-        self.assertEqual(envelope["status"], "approval_required")
+        self.assertEqual(code, 2)
+        self.assertEqual(envelope["errors"][0]["code"], "invalid_arguments")
 
     def test_unknown_platform_beats_approval_gate(self):
         code, envelope, _ = self.run_cli("enable-memory", interactive=False, platform="windows")
@@ -666,7 +663,6 @@ class CliRoutingTests(CliTestCase):
             with unittest.mock.patch("agm_core.enable.run", side_effect=fake_run):
                 code, envelope, _ = self.run_cli(
                     "enable-memory",
-                    "--memory",
                     "--approval-file",
                     path,
                     interactive=False,
@@ -678,32 +674,16 @@ class CliRoutingTests(CliTestCase):
         finally:
             os.unlink(path)
 
-    def test_remove_with_approval_file_reaches_remove_kernel(self):
-        data = _approval_data(
-            command="remove-memory", agents=["codex"]
-        )
+    def test_retired_remove_with_approval_file_rejected(self):
+        # remove-memory 退役后即使携带批准文件也在解析层拒绝,不触达任何内核。
+        data = _approval_data(command="remove-memory", agents=["codex"])
         path = _write_json(data)
-        captured = {}
-
-        def fake_run(request):
-            captured["request"] = request
-            return {
-                "status": "completed",
-                "projects": [],
-                "changes": [],
-                "warnings": [],
-                "errors": [],
-            }
-
         try:
-            with unittest.mock.patch("agm_core.remove.run", side_effect=fake_run):
-                code, envelope, _ = self.run_cli(
-                    "remove-memory", "--approval-file", path, interactive=False
-                )
-            self.assertEqual(code, 0)
-            self.assertEqual(envelope["status"], "completed")
-            self.assertEqual(captured["request"]["command"], "remove-memory")
-            self.assertEqual(captured["request"]["approval"]["command"], "remove-memory")
+            code, envelope, _ = self.run_cli(
+                "remove-memory", "--approval-file", path, interactive=False
+            )
+            self.assertEqual(code, 2)
+            self.assertEqual(envelope["errors"][0]["code"], "invalid_arguments")
         finally:
             os.unlink(path)
 
@@ -745,7 +725,7 @@ class ExitCodeMappingTests(unittest.TestCase):
 
 
 class ApprovalFileTests(unittest.TestCase):
-    def _validate(self, data, *, command="enable-memory", agents=None, memory_choice=None, raw=None):
+    def _validate(self, data, *, command="enable-memory", agents=None, raw=None):
         path = _write_json(data if raw is None else {}, raw=raw)
         try:
             loaded = agm.load_approval(path)
@@ -753,7 +733,6 @@ class ApprovalFileTests(unittest.TestCase):
                 loaded,
                 command=command,
                 agents=agents if agents is not None else ["codex", "claude", "workbuddy"],
-                memory_choice=memory_choice,
                 path=path,
             )
         finally:
@@ -814,27 +793,44 @@ class ApprovalFileTests(unittest.TestCase):
             self._validate(data)
         self.assertEqual(ctx.exception.code, "approval_file_invalid")
 
-    def test_remove_requires_disabled_policy(self):
-        data = _approval_data(command="remove-memory", memory_policy="follow_ck")
+    def test_retired_remove_command_never_accepts_approval(self):
+        data = _approval_data(command="remove-memory", memory_policy="disabled")
         with self.assertRaises(agm.CliError) as ctx:
             self._validate(data, command="remove-memory", agents=None)
         self.assertEqual(ctx.exception.code, "approval_file_invalid")
 
-    def test_memory_choice_conflict_rejected(self):
+    def test_disabled_policy_not_accepted_in_new_approvals(self):
+        # 经历开关退役:新批准只接受 follow_ck;disabled 是仅可读的历史登记。
         data = _approval_data(memory_policy="disabled")
         with self.assertRaises(agm.CliError) as ctx:
-            self._validate(data, memory_choice="follow_ck")
-        self.assertEqual(ctx.exception.code, "approval_mismatch")
+            self._validate(data)
+        self.assertEqual(ctx.exception.code, "approval_file_invalid")
 
     def test_bad_sha256_rejected(self):
-        data = _approval_data(command="remove-memory", registry_sha256="XYZ")
+        data = _approval_data()
+        data["changes"] = [
+            {
+                "path": "/repo/AGENTS.md",
+                "operation": "create",
+                "before_fingerprint": None,
+                "after_fingerprint": "XYZ",
+            }
+        ]
         with self.assertRaises(agm.CliError) as ctx:
-            self._validate(data, command="remove-memory")
+            self._validate(data)
         self.assertEqual(ctx.exception.code, "approval_file_invalid")
 
     def test_valid_fingerprint_accepted(self):
-        data = _approval_data(command="remove-memory", registry_sha256="a"*64)
-        self.assertIsNotNone(self._validate(data, command="remove-memory"))
+        data = _approval_data()
+        data["changes"] = [
+            {
+                "path": "/repo/AGENTS.md",
+                "operation": "create",
+                "before_fingerprint": None,
+                "after_fingerprint": "a" * 64,
+            }
+        ]
+        self.assertIsNotNone(self._validate(data))
 
     def test_bad_operation_rejected(self):
         data = _approval_data()
@@ -939,14 +935,12 @@ class RealEntrySubprocessTests(unittest.TestCase):
             cwd=REPO_ROOT,
         )
 
-    def test_remove_memory_noninteractive_exit_5(self):
-        # 真实子进程冒烟:remove 的 CLI 保守前置门(非交互无批准 → 5,不触内核)。
-        # enable 的非交互路径已交内核判定,不在单测中触碰真实项目(M2-07/08 做真实装配验收)。
+    def test_retired_remove_subprocess_rejected(self):
+        # 真实子进程冒烟:remove-memory 已退役,非交互返回 invalid_arguments(2)。
         proc = self._run("remove-memory")
-        self.assertEqual(proc.returncode, 5)
+        self.assertEqual(proc.returncode, 2)
         envelope = json.loads(proc.stdout)
-        self.assertEqual(envelope["status"], "approval_required")
-        self.assertTrue(envelope["approval_required"])
+        self.assertEqual(envelope["errors"][0]["code"], "invalid_arguments")
 
     def test_check_memory_subprocess_smoke(self):
         # 真实子进程冒烟:check 路由到已交付内核,对真实仓库的结果取决于现场

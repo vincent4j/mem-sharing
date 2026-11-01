@@ -9,7 +9,7 @@ test("missing Python uses Node plan and independent single-use token, then resum
   const f = await assetFixture();
   try {
     let kernelCalls = 0;
-    const orch = new Orchestrator({ home: f.home, pluginDir: null, searchedPluginDirs: [], toolAssets: [f.asset], allowInsecureAssetTransportForTests: true,
+    const orch = new Orchestrator({ home: f.home, pluginDir: null, searchedPluginDirs: [], releaseManifestSha256: "", toolAssets: [f.asset], allowInsecureAssetTransportForTests: true,
       pythonProbe: async () => ({ status: "missing", candidates: [], evidence: "no fixture interpreter" }),
       gitProbe: async () => ({ status: "ready", path: "/fixture/git", detail: "synthetic preexisting Git" }),
       runner: { async run() { kernelCalls++; throw new Error("must not invoke Python for asset preview"); } },
@@ -34,7 +34,7 @@ test("missing Python uses Node plan and independent single-use token, then resum
 test("asset approval rejects changed destination and rejection performs no download", async () => {
   const f = await assetFixture();
   try {
-    const orch = new Orchestrator({ home: f.home, pluginDir: null, searchedPluginDirs: [], toolAssets: [f.asset], allowInsecureAssetTransportForTests: true,
+    const orch = new Orchestrator({ home: f.home, pluginDir: null, searchedPluginDirs: [], releaseManifestSha256: "", toolAssets: [f.asset], allowInsecureAssetTransportForTests: true,
       pythonProbe: async () => ({ status: "missing", candidates: [], evidence: "missing" }),
       gitProbe: async () => ({ status: "ready", detail: "fixture" }), runner: { async run() { throw new Error("no kernel"); } },
     });
@@ -52,7 +52,7 @@ test("asset approval rejects changed destination and rejection performs no downl
 test("unsupported or specifically blocked official supply cannot be RPC-overridden", async () => {
   const f = await assetFixture();
   try {
-    const orch = new Orchestrator({ home: f.home, pluginDir: null, searchedPluginDirs: [], toolAssets: [{ ...f.asset, blockedReason: "fixed upstream notice missing" }],
+    const orch = new Orchestrator({ home: f.home, pluginDir: null, searchedPluginDirs: [], releaseManifestSha256: "", toolAssets: [{ ...f.asset, blockedReason: "fixed upstream notice missing" }],
       pythonProbe: async () => ({ status: "missing", candidates: [], evidence: "missing" }), gitProbe: async () => ({ status: "ready", detail: "fixture" }), runner: { async run() { throw new Error("no kernel"); } },
     });
     const result = await orch.dependencyPreview(); assert.equal(result.status === "failed" && result.code, "supply_evidence_incomplete");

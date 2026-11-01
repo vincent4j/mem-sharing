@@ -81,8 +81,7 @@ class InstallerCLITests(unittest.TestCase):
 
     def test_three_project_commands_missing_product_guide_only_no_implicit_install(self):
         before=self.snapshot()
-        for args in (['check-memory','--all'],['remove-memory','--project',str(self.cwd)],
-                     ['enable-memory','--project',str(self.cwd),'--memory']):
+        for args in (['check-memory','--all'],['enable-memory','--project',str(self.cwd)]):
             proc=subprocess.run([sys.executable,'-B',str(self.source/'scripts/agm.py'),*args],
                                 cwd=self.cwd,env=self.env,capture_output=True,text=True)
             report=json.loads(proc.stdout)

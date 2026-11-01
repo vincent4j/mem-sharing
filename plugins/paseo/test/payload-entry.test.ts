@@ -46,6 +46,6 @@ test("config/source failure cancels existing pending operations through the orig
     const handler = handlers.get("memsharing.operation.status"); assert(handler);
     await handler({}, { paseo: { config: { get: async () => ({ config: { plugins: {} } }) } } });
     await assert.rejects(handler({}, { paseo: { config: { get: async () => { throw new Error("DUMMY_SECRET"); } } } }), /plugin_source_unavailable/);
-    assert.deepEqual(calls.sort(), ["bootstrap", "ck", "dependency", "enable", "machine", "recover", "remove"]);
+    assert.deepEqual(calls.sort(), ["bootstrap", "ck", "ckUninstall", "dependency", "enable", "machine", "recover", "stagingCleanup", "uninstall"]);
   } finally { cleanup(); Orchestrator.prototype.cancel = original; }
 });

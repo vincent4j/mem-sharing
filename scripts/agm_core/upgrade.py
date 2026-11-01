@@ -81,10 +81,16 @@ PUBLIC_MEMORY_LAYOUT_CONVERSION = {'type': public_layout.HANDLER_TYPE}
 # (WORKBUDDY_ENTRY_CONVERSION / PUBLIC_LAYOUT_BEFORE_CONTRACT / PREDECESSORS)
 # 保持原值不动;版本仍 0.1.3;冻结完整性由 test_public_layout 的 freeze-integrity
 # 用例守护)。
+# 2026-11-01 经历开关退役按裁定重冻结——user_entries.py 模板按新职责生成
+# (历史停用登记文案/菜单改接入项目规则/接口名不变),public_layout.py 冻结
+# _OLD_CLAUDE_FALLBACK/_OLD_WORKBUDDY_FALLBACK 历史字面量;agents.json 不变;
+# 版本仍 0.1.3;SOURCE 前身合同(PUBLIC_LAYOUT_BEFORE_CONTRACT/PREDECESSORS/
+# WORKBUDDY_ENTRY_CONVERSION)保持原值;门禁不放宽,固定 handler 仍要求运行
+# 模块哈希与目标合同精确一致。
 PUBLIC_LAYOUT_TARGET_CONTRACT = {
     'scripts/agents.json': 'aa9a28a27f3c9bea6ca603dfa2cc24560a9feda3e5085a65d26960790fea9b24',
-    'scripts/agm_core/user_entries.py': 'e5421b9147c15c5075ceae011fc17f951e556502d1765575c4d2df78f9e8529d',
-    'scripts/agm_core/public_layout.py': 'b1ab0123bcea50884a37bb6890e0e23938c73a470577d65ae654b1936016d96f',
+    'scripts/agm_core/user_entries.py': '81646d141068d76ccc8cb236c1dfd59e9379bbefd6b132fc6c461ff753ff8033',
+    'scripts/agm_core/public_layout.py': '61277d0bb247bdfd1187ade9f19ff9e23d13975365cbf02cf2ce6222c51fadb3',
 }
 
 

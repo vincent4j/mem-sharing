@@ -113,6 +113,9 @@ print(json.dumps(result, ensure_ascii=False))
 '''
 
 # ---- 0.1.1/0.1.2 旧模板(字节精确;测试用 git 导出旧内核交叉核验) ------------
+# 2026-11-01 冻结:经历开关退役后当前 fallback/治理文案改按新职责生成,旧模板
+# 一律固化为历史字面量(不 alias 当前常量),历史字节识别与迁移匹配不受当前
+# 生成器演进影响;未知定制/漂移仍整单拒绝,不做文本模糊替换。
 
 _OLD_GOVERNANCE = (
     "用户规则治理:公共内容只写公共指定文件(R/memories)，Agent 独有内容保留于各自用户文件，永不并入公共或自动删除。"
@@ -122,7 +125,11 @@ _OLD_GOVERNANCE = (
     "重新启用须用户显式执行 enable-memory；解除 disabled 须显式 enable-memory --memory 并批准精确计划。"
     "Claude 和 WorkBuddy 项目入口只由各自实际使用时补齐，其他执行器不得预建；非 Git 目录和 linked worktree 不触发。"
 )
-_OLD_CLAUDE_FALLBACK = user_entries.CLAUDE_FALLBACK_TEXT
+_OLD_CLAUDE_FALLBACK = (
+    "仅 Claude Code 在本项目实际使用且项目已启用、政策非 disabled 时补引用：CLAUDE.md 不存在才创建仅含 @AGENTS.md 的文件；"
+    "已有正文必须完整保留，仅追加缺失的 @AGENTS.md 引用行，重复执行不改字节。"
+)
+_OLD_WORKBUDDY_FALLBACK = "仅 WorkBuddy 在本项目实际使用产生原生 .workbuddy/memory 目录，且项目已启用、政策非 disabled 时，补顶部 AGENTS.md 指针；保留已有正文字节，不预建原生目录。"
 _OLD_CODEX_FALLBACK = "仅 Codex 首次实际使用时，按默认启用条款补缺失 AGENTS.md；已 disabled 项目不自动恢复。"
 _OLD_MENU_ITEM5 = "整理用户规则：公共与独有分开，逐条计划后一次批准 → 按 SKILL.md 治理流程执行\n"
 
@@ -163,7 +170,7 @@ def old_codex_block(memory_index, code):
 
 def old_workbuddy_block(memory_index, code):
     body = "\n".join([_old_read_text(memory_index), user_entries.WORKBUDDY_CONVENTION_TEXT,
-                      _OLD_GOVERNANCE, user_entries.WORKBUDDY_FALLBACK_TEXT, _old_menu_text(code)])
+                      _OLD_GOVERNANCE, _OLD_WORKBUDDY_FALLBACK, _old_menu_text(code)])
     return user_entries._wrap_block(user_entries.BASE_MARKER, body)
 
 
@@ -218,6 +225,10 @@ def migrate_index_bytes(raw, code):
     """
     if not raw.startswith(_INDEX_PREFIX):
         return None, 0
+    pre_route_head = (user_entries.PRE_UNINSTALL_ROUTE_TEMPLATES['pre_route_contract'] + '\n').encode('utf-8')
+    if raw.startswith(_INDEX_PREFIX + pre_route_head):
+        tail = raw[len(_INDEX_PREFIX) + len(pre_route_head):]
+        return _INDEX_PREFIX + new_contract_bytes() + tail, len(_INDEX_PREFIX) + len(pre_route_head)
     old_head = _old_contract_text(code).encode('utf-8')
     if raw.startswith(_INDEX_PREFIX + old_head):
         tail = raw[len(_INDEX_PREFIX) + len(old_head):]
@@ -533,7 +544,7 @@ def plan_migration(request, code_plan=None):
                         'outside_fingerprint': None})
     elif topic_snap.kind != 'file':
         _fail('entry_conflict', '指南主题不是普通文件: ' + str(topic_path))
-    elif topic_snap.data == old_topic(runtime.code):
+    elif topic_snap.data in (old_topic(runtime.code), user_entries.PRE_UNINSTALL_ROUTE_TEMPLATES['pre_route_topic'].replace('__CODE__',str(runtime.code)).encode('utf-8')):
         targets.append({'kind': 'guide_topic', 'path': str(topic_path),
                         'before': _snapshot_meta(topic_snap),
                         'after': {'kind': 'file', 'fingerprint': sha256(new_topic),

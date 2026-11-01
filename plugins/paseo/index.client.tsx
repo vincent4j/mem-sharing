@@ -56,13 +56,13 @@ export default function contribute(client: PluginClientContext) {
   });
 
   client.addCommandCenterItem({
-    id: "ms-project-remove",
-    title: "memSharing：停用当前项目",
+    id: "ms-uninstall",
+    title: "memSharing：整机卸载",
     icon: "BookX",
-    context: "workspace",
-    keywords: ["remove", "disable", "memory"],
-    onSelect({ openScreen, workspace }) {
-      openScreen({ screenId: "ms-flow", params: { flow: "remove", projectRoot: workspace.directory } });
+    context: "global",
+    keywords: ["uninstall", "memory"],
+    onSelect({ openScreen }) {
+      openScreen({ screenId: "ms-flow", params: { flow: "uninstall" } });
     },
   });
 
@@ -88,5 +88,9 @@ export default function contribute(client: PluginClientContext) {
     },
   });
 
+  for (const item of [
+    { id: "ms-staging-cleanup", title: "memSharing：外置清理宿主暂存", flow: "stagingCleanup" },
+    { id: "ms-uninstall-recover", title: "memSharing：恢复整机卸载", flow: "uninstallRecover" },
+  ]) client.addCommandCenterItem({ id: item.id, title: item.title, icon: "Undo2", context: "global", keywords: ["memsharing", "recover"], onSelect({ openScreen }) { openScreen({ screenId: "ms-flow", params: { flow: item.flow } }); } });
   return () => {};
 }

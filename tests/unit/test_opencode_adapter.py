@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_m404_install import InstallFixture, approved
 from test_m204_enable import EnableFixture
 from test_m405_detect import DetectFixture, fake_codesign
-from agm_core import check, detect, enable, paths, public_layout, registry, remove, user_entries, user_install
+from agm_core import check, detect, enable, paths, public_layout, registry, user_entries, user_install
 
 # 64 位 arm64 Mach-O 魔数(小端);测试只写头部字节,从不执行。
 MACHO_ARM64 = bytes.fromhex('cffaedfe')
@@ -328,19 +328,13 @@ class OpenCodeProjectTests(EnableFixture):
         result = check.run(self.request)
         self.assertEqual(result['status'], 'completed', result)
         self.assertEqual(result['projects'][0]['agents'], ['opencode'])
-        result = remove.run(dict(self.request, approval=None))
-        self.assertEqual(result['status'], 'approval_required', result)
-        plan = json.loads(result['next_action'])
-        done = remove.run(dict(self.request, approval=approved({k: v for k, v in plan.items()
-                                                                if k not in ('confirmed_at', 'reference')})))
-        self.assertEqual(done['status'], 'completed', done)
-        self.assertIn(private, entry.read_bytes())
-        self.assertEqual(self.load()['projects'][str(self.root)]['memory_policy'], 'disabled')
-        # disabled 不自动恢复:默认流程零写拒绝。
-        self.request.update(approval=None, memory_choice=None)
-        result = enable.run(self.request)
-        self.assertEqual(result['status'], 'approval_required', result)
-        self.assertEqual(json.loads(result['next_action'])['memory_policy'], 'disabled')
+        before=entry.read_bytes()
+        self.apply_tombstone();self.request.update(approval=None)
+        result=enable.run(self.request)
+        self.assertEqual(result['status'],'gaps',result)
+        self.assertEqual(entry.read_bytes(),before)
+        self.assertIn(private,entry.read_bytes())
+        self.assertEqual(self.load()['projects'][str(self.root)]['memory_policy'],'disabled')
 
     def test_large_native_entry_does_not_inherit_codex_budget_warning(self):
         self.apply('follow_ck')
@@ -355,6 +349,6 @@ class OpenCodeProjectTests(EnableFixture):
     def test_project_default_remains_three_agents_not_six(self):
         # 项目命令缺省仍三家:机器安装全量默认不得改变项目实际使用入口策略。
         self.request['agents'] = None
-        result = enable.run(dict(self.request, memory_choice=None))
+        result = enable.run(dict(self.request))
         self.assertEqual(result['status'], 'gaps', result)  # 合成 HOME 无三家 installed
         self.assertEqual(result['installation']['requested'], ['codex', 'claude', 'workbuddy'])

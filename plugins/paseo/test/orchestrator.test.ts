@@ -219,7 +219,8 @@ test("dev sentinel release identity blocks bootstrap (fail-closed, no fake hash)
       searchedPluginDirs: [],
       pythonProbe: readyPython(),
       gitProbe: readyGit(),
-      // No releaseManifestSha256: the committed dev sentinel ("") applies.
+      // Explicitly exercise the sentinel independent of the checked-in release identity.
+      releaseManifestSha256: "",
       now: () => new Date(),
     });
     const identity = orch.releaseIdentity();
@@ -325,42 +326,26 @@ test("enable plan containing rebuild is blocked structurally", async () => {
   }
 });
 
-test("remove preview uses the frozen --preview contract and validates the template shape", async () => {
-  const { home, cleanup } = tempHome();
-  activeKernelFixture(home);
-  const template = JSON.stringify({
-    schema_version: 1,
-    command: "remove-memory",
-    main_checkout: "/proj",
-    checkout: "/proj",
-    git_common_dir: "/proj/.git",
-    agents: ["codex"],
-    memory_policy: "disabled",
-    registry_sha256: "e".repeat(64),
-    changes: [],
-    confirmed_at: "<UTC timestamp>",
-    reference: "<user confirmation reference>",
-  });
-  const runner = scriptedRunner([
-    completed(5, { status: "approval_required", next_action: template }),
-    completed(0, { status: "completed" }),
-  ]);
+test("uninstall uses core envelope and preserves partial host status, without rebuilding staging", async () => {
+  const { home, cleanup } = tempHome(); activeKernelFixture(home);
+  const plan = { command: "uninstall-machine", plan_sha256: "a".repeat(64), changes: [], agents: ["codex"], host_obligation: { plugin_id: "custom-id" } };
+  const runner = scriptedRunner([completed(5, { status: "approval_required", plan }), completed(0, { status: "completed", machine_assets: "completed", host_plugin: "pending", overall: "partial" })]);
   try {
-    const orch = makeOrchestrator(home, null, runner);
-    const preview = await orch.projectRemovePreview("/proj");
-    assert.equal(preview.status, "approval_required");
-    const previewArgv = runner.calls[0];
-    assert.deepEqual(previewArgv.slice(3), ["remove-memory", "--project", "/proj", "--preview"]);
+    const dir=pluginPayloadFixture(home);
+    const orch = new Orchestrator({runner,home,pluginDir:dir,searchedPluginDirs:[],pluginRecords:[{id:"custom-id",source:"directory",path:dir,enabled:true}],pythonProbe:readyPython(),gitProbe:readyGit()});
+    const preview = await orch.uninstallPreview(path.join(home, "external-backup"));
+    assert.equal(preview.status, "approval_required", JSON.stringify(preview));
+    assert.ok(runner.calls[0].includes("uninstall-machine"));assert.ok(runner.calls[0].includes("--host-obligation"));
+    assert.equal(runner.calls[0][runner.calls[0].indexOf("--host-plugin-id")+1],"custom-id");
+    assert.equal(runner.calls[0][runner.calls[0].indexOf("--host-plugin-source")+1],dir);
+    assert.equal(fs.existsSync(path.join(home,".local/share/mem-sharing-plugin-staging")),false);
     if (preview.status !== "approval_required") return;
-    const confirm = await orch.projectRemoveConfirm({ action: "confirm", confirmationToken: preview.confirmationToken });
-    assert.equal(confirm.status, "completed");
-    const confirmArgv = runner.calls[1];
-    assert.deepEqual(confirmArgv.slice(3, 6), ["remove-memory", "--project", "/proj"]);
-    assert.equal(confirmArgv.includes("--agent"), false);
-    assert.equal(confirmArgv.includes("--preview"), false);
-  } finally {
-    cleanup();
-  }
+    const result = await orch.uninstallConfirm({ action: "confirm", confirmationToken: preview.confirmationToken });
+    assert.equal(result.status,"completed");
+    if(result.status === "completed") assert.equal(result.envelope.overall,"partial");
+    assert.equal(fs.existsSync(path.join(home,".local/share/mem-sharing-plugin-staging")),false);
+    assert.equal((await orch.bootstrapPreview()).status,"failed");
+  } finally { cleanup(); }
 });
 
 test("ck preview/confirm keeps the independent CK approval shape", async () => {
@@ -498,7 +483,8 @@ test("CK acquisition is separately approved; rejection starts no Git fetch and R
     assert.equal((await orch.ckConfirm({ action: "reject" })).status, "rejected");
     assert.equal(runner.calls.length, 1);
     const contracts = fs.readFileSync(new URL("../shared/contracts.ts", import.meta.url), "utf8");
-    assert.equal(contracts.includes("ckSource:"), false);
+    const acquisition=contracts.slice(contracts.indexOf("export const ckPreviewRpc"),contracts.indexOf("export const ckConfirmRpc"));
+    assert.equal(acquisition.includes("ckSource:"), false);
   } finally { cleanup(); }
 });
 
@@ -534,27 +520,15 @@ test("every staging ancestor symlink fails structurally before any foreign write
   }
 });
 
-test("explicit memory choices forward CLI flags and preserve original transition evidence", async () => {
-  const { home, cleanup } = tempHome();
+test("project rules forward no retired experience options", async () => {
+  const { home, cleanup } = tempHome(); activeKernelFixture(home);
   try {
-    activeKernelFixture(home);
-    for (const memory of [undefined, "enable", "disable"] as const) {
-      const template = { command: "enable-memory", memory_policy: memory === "enable" ? "follow_ck" : memory === "disable" ? "disabled" : "disabled", memory_transition: { before: "disabled", after: memory === "enable" ? "follow_ck" : memory === "disable" ? "disabled" : "disabled" }, confirmed_at: "placeholder", reference: "placeholder" };
-      const runner = scriptedRunner([completed(5, { next_action: JSON.stringify(template) }), completed(0, { status: "completed" })]);
-      const orch = makeOrchestrator(home, null, runner);
-      const preview = await orch.projectEnablePreview({ projectRoot: "/project", agents: ["codex"], memory });
-      assert.equal(preview.status, "approval_required", JSON.stringify(preview));
-      if (preview.status !== "approval_required") return;
-      assert.deepEqual(preview.plan.memory_transition, template.memory_transition);
-      assert.ok(preview.summary.some(row => row.label === "memory policy before" && row.value === "disabled"));
-      await orch.projectEnableConfirm({ action: "confirm", confirmationToken: preview.confirmationToken });
-      for (const call of runner.calls) {
-        assert.equal(call.includes("--memory"), memory === "enable");
-        assert.equal(call.includes("--no-memory"), memory === "disable");
-      }
-    }
-    const ui = fs.readFileSync(new URL("../client/flow.tsx", import.meta.url), "utf8");
-    for (const choice of ["保留现状", "启用项目记忆", "禁用自动记忆（保留共享规则）"]) assert.ok(ui.includes(choice));
-    assert.match(ui, /memory: memoryChoice === "preserve" \? undefined : memoryChoice/);
+    const runner = scriptedRunner([completed(5,{next_action:JSON.stringify({command:"enable-memory",memory_policy:"follow_ck"})}),completed(0,{status:"completed"})]);
+    const orch = makeOrchestrator(home,null,runner);
+    const preview=await orch.projectEnablePreview({projectRoot:"/project",agents:["codex"]});
+    assert.equal(preview.status,"approval_required");
+    if(preview.status!=="approval_required")return;
+    await orch.projectEnableConfirm({action:"confirm",confirmationToken:preview.confirmationToken});
+    for(const argv of runner.calls){assert.equal(argv.includes("--memory"),false);assert.equal(argv.includes("--no-memory"),false);}
   } finally { cleanup(); }
 });

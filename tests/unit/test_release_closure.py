@@ -34,16 +34,21 @@ def _manifest_names():
     names = subprocess.run(
         ['git', '-C', str(REPO), 'ls-files', '--cached', '--others', '--exclude-standard', '-z'],
         capture_output=True, text=True, check=True).stdout.split('\0')
-    return {name for name in names if name and cli._managed_source(name)}
+    return {name for name in names if name and (REPO/name).is_file() and cli._managed_source(name)}
 
 
 class ReleaseClosureTests(unittest.TestCase):
-    def test_manifest_is_thirty_two_files_including_release_resolver(self):
+    def test_manifest_contains_live_core_and_documents(self):
         manifest = _manifest_names()
         # Current source payload adds the shared release resolver to the 31 files.
         self.assertIn('scripts/agm_core/public_layout.py', manifest)
         self.assertIn('scripts/agm_core/plugin_release.py', manifest)
-        self.assertEqual(len(manifest), 32, sorted(manifest))
+        for name in ('uninstall','uninstall_recovery','policy_migration'):
+            self.assertIn('scripts/agm_core/'+name+'.py',manifest)
+        self.assertNotIn('scripts/agm_core/remove.py',manifest)
+        self.assertTrue(set(cli.SHIPPED_DOCS)<=manifest)
+        existing={str(p.relative_to(REPO)) for p in (REPO/'scripts').rglob('*') if p.is_file() and p.suffix in ('.py','.json') and cli._managed_source(str(p.relative_to(REPO)))}
+        self.assertEqual(manifest,existing|set(cli.SHIPPED_DOCS))
 
     def test_shipped_doc_links_stay_inside_manifest(self):
         manifest = _manifest_names()

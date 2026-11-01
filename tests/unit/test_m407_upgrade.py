@@ -57,7 +57,7 @@ class UpgradeTests(UpgradeFixture):
         self.assertEqual(before,self.snapshot())
 
     def test_upgrade_holds_writer_locks_and_blocks_competing_entries(self):
-        from agm_core import enable, remove, check, user_entries
+        from agm_core import enable, check, user_entries
         observed=[]
         def hook(event,path):
             if event!='before_phase:code': return
@@ -65,7 +65,7 @@ class UpgradeTests(UpgradeFixture):
             self.assertTrue(all(p.is_dir() for p in expected))
             before=self.snapshot()
             with self.assertRaises(ValueError): upgrade.plan_upgrade(self.req)
-            for entry in (enable.run,remove.run,check.run,user_entries.run_user_entries):
+            for entry in (enable.run,check.run,user_entries.run_user_entries):
                 result=entry(dict(self.request,project=str(self.area)))
                 self.assertEqual(result['errors'][0]['code'],'machine_upgrade_pending',result)
             self.assertEqual(before,self.snapshot());observed.append(True)
@@ -289,11 +289,11 @@ upgrade.execute_upgrade(plan,dict(plan,confirmed_at="2026-10-30T00:00:00Z",refer
         self.assertEqual(before,self.snapshot())
 
     def test_upgrade_guard_blocks_all_project_and_machine_entries_readonly(self):
-        from agm_core import enable,remove,check,user_entries
+        from agm_core import enable,check,user_entries
         guard=upgrade.marker(self.runtime);guard.write_text('upgrade interrupted')
         before=self.snapshot()
         request=dict(self.request,project=str(self.area),agents=None)
-        for entry in (enable.run,remove.run,check.run,user_entries.run_user_entries):
+        for entry in (enable.run,check.run,user_entries.run_user_entries):
             result=entry(request)
             self.assertEqual(result['errors'][0]['code'],'machine_upgrade_pending',result)
         self.assertEqual(before,self.snapshot())

@@ -11,7 +11,7 @@ class LifecycleApprovalTests(unittest.TestCase):
 
     def validate(self, data, command='enable-memory'):
         return agm.validate_approval(data, command=command,
-                                    agents=['codex', 'claude', 'workbuddy'], memory_choice=None)
+                                    agents=['codex', 'claude', 'workbuddy'])
 
     def rebuild(self):
         data = self.plan()
@@ -30,16 +30,15 @@ class LifecycleApprovalTests(unittest.TestCase):
         self.assertEqual(self.validate(data), data)
 
     def test_default_effective_subset_and_empty_revocation(self):
-        data = self.plan(); data['installation']['claude']['status'] = 'absent'
-        data['installation']['workbuddy']['status'] = 'unknown'; data['agents'] = ['codex']
+        data=self.plan();data['installation']['claude']['status']='absent'
+        data['installation']['workbuddy']['status']='unknown';data['agents']=['codex']
         self.validate(data)
-        for fact in data['installation'].values(): fact['status'] = 'absent'
-        data['agents'] = []; data['memory_policy'] = 'disabled'
-        data['memory_transition'] = {'before': 'follow_ck', 'after': 'disabled',
-            'scope': 'all registered project agents', 'affected_agents': ['codex']}
-        self.validate(data)
-        data.pop('memory_transition')
-        with self.assertRaises(agm.CliError): self.validate(data)
+        for fact in data['installation'].values():fact['status']='absent'
+        data['agents']=[]
+        with self.assertRaises(agm.CliError):self.validate(data)
+        data['memory_policy']='disabled'
+        data['memory_transition']={'before':'follow_ck','after':'disabled','scope':'all registered project agents','affected_agents':['codex']}
+        with self.assertRaises(agm.CliError):self.validate(data)
 
     def test_enable_legacy_reused_bridge_requires_exact_bytes_and_fingerprint(self):
         import hashlib
@@ -66,7 +65,7 @@ class LifecycleApprovalTests(unittest.TestCase):
             bad = _approval_data(command='remove-memory', memory_policy='disabled', registry_sha256='a'*64)
             bad[field] = data[field]
             with self.subTest(field=field), self.assertRaises(agm.CliError): self.validate(bad, 'remove-memory')
-        self.validate(_approval_data(command='remove-memory', memory_policy='disabled', registry_sha256='a'*64), 'remove-memory')
+        with self.assertRaises(agm.CliError): self.validate(_approval_data(command='remove-memory', memory_policy='disabled', registry_sha256='a'*64), 'remove-memory')
         with self.assertRaises(agm.CliError): self.validate(_approval_data(command='check-memory'), 'check-memory')
 
     def test_unknown_or_malformed_extension_rejected(self):

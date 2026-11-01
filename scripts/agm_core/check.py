@@ -1,7 +1,10 @@
 """Read-only project-entry inspection with ownership and byte-drift evidence.
 
 CK availability, source code and record-store state belong to CK. A disabled
-policy is an intentional state, never a health gap. No locks, caches or writes.
+memory_policy is a historical access tombstone (schema3 read-compatible): it
+never vetoes CK, is never rendered as "CK disabled", and is not a health gap;
+entries may or may not exist on disk (historical --no-memory kept entries).
+No locks, caches or writes.
 """
 from __future__ import annotations
 
@@ -441,6 +444,12 @@ def _observe_project(
     gaps.extend(obj_gaps)
 
     report["memory_policy"] = project_entry["memory_policy"] if project_entry else None
+    if report["memory_policy"] == 'disabled':
+        # 历史接入tombstone:不代表 CK 停用,也不宣称入口已移除;规则入口是否存在
+        # 依登记与现场逐项观测,不由政策值断言(避免把 tombstone 显示成 CK 停用)。
+        warnings.append(
+            "memory_policy=disabled: 历史停用登记（默认流程不重建）；不代表 Context Keeper 停用，"
+            "CK 状态与数据由 Context Keeper 自身管理；入口是否在场以上方对象观测为准")
     # CK availability and store contents belong to CK, never health gaps here.
     for agent in agents:
         agent_objects = _agent_objects(objects, shared_objects, checkout, agent)
@@ -451,7 +460,7 @@ def _observe_project(
         if agent == 'workbuddy' and not (Path(checkout)/'.workbuddy/memory').exists():
             warnings.append('WorkBuddy pointer pending actual use; native directory is not created by memSharing')
             continue
-        # disabled may be a deliberately removed project; only retained guard objects are checked.
+        # A tombstone's entries may or may not exist; only registered guard objects are checked.
         if report['memory_policy'] != 'disabled':
             kind, raw = _observe_path(rule_path)
             if kind != 'file':

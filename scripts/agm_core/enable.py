@@ -15,6 +15,10 @@ BASE_MARKER = {"start": "<!-- mem-sharing:rules:start -->", "end": "<!-- mem-sha
 LEGACY_WORKBUDDY_MARKER = {"start": "<!-- context-keeper:workbuddy:start -->", "end": "<!-- context-keeper:workbuddy:end -->"}
 WORKBUDDY_MARKER = {"start": "<!-- mem-sharing:project-rules:start -->", "end": "<!-- mem-sharing:project-rules:end -->"}
 DENIED_MARKER = {"start":"<!-- mem-sharing:memory-denied:start -->", "end":"<!-- mem-sharing:memory-denied:end -->"}
+# 历史冻结字面量(migration-only):经历开关(--memory/--no-memory/remove-memory)已于
+# 2026-11-01 退役,enable 不再渲染或撤销 denied 块;现存历史 denied 单元的识别与
+# 精确迁移(仅 created 且指纹吻合的产品自有控制)由 agm_core.policy_migration 负责。
+# 字节不得改动:现存登记指纹与迁移匹配都按本原文核对。
 DENIED_TEXT = "本项目已撤销自动记忆授权。本段优先于本文件中的历史 context-keeper 桥接和 Skill 触发说明：不得自动记录本项目经历、初始化或建库，不得因残留 Skill/桥接恢复旧授权；Context Keeper 安装与已有记录库保留；手动 Context Keeper 操作仍按用户明确请求与 Context Keeper 自身流程执行。只有用户重新明确批准本项目 enable-memory --memory 后才可恢复自动记录。"
 
 EXCEPTION_MARKER = {"start": "<!-- mem-sharing:keeper-exception:start -->", "end": "<!-- mem-sharing:keeper-exception:end -->"}
@@ -183,18 +187,6 @@ class _Plan:
         del self.assembly['objects'][oid]
         self.retired_ids.add(oid)
 
-    def authorization(self, choice, *, transition=False):
-        if choice == 'follow_ck':
-            for oid, obj in list(self.assembly['objects'].items()):
-                if obj.get('marker') == DENIED_MARKER:
-                    if obj['ownership'] != 'created':
-                        raise EnableError('authorization_conflict', 'User-owned denial cannot be lifted')
-                    self.erase(oid)
-        else:
-            self.object(self.root / 'AGENTS.md', '#memory-denied', list(self.assembly['agents']),
-                        'block', marker=DENIED_MARKER, block=_block(DENIED_MARKER, DENIED_TEXT))
-        return []
-
     def legacy_bridges(self, *, claude_active, workbuddy_active):
         """Expose exact old bytes and provenance; changes require a new exact approval."""
         transitions = []
@@ -327,8 +319,8 @@ def run(request):
         recovery = getattr(exc, "manifest", None)
         result["next_action"] = "Inspect preserved evidence; re-preview before retrying. No store assets are deleted."
         if getattr(exc, "code", None) == "registry_invalid" and "created unit drifted" in str(exc):
-            recovery = ("人工核对并还原登记内容，或另行审查 remove 后重新 enable 的恢复方案；"
-                        "精确计划批准不能覆盖 created 对象的漂移保护。")
+            recovery = ("人工核对现场字节与登记指纹，按登记原字节精确还原受管单元后重新预览；"
+                        "或显式制定经精确批准的修复计划。精确计划批准不能覆盖 created 对象的漂移保护。")
             result["next_action"] = recovery
         result["errors"].append({"code": getattr(exc, "code", "enable_failed"), "path": None,
                                 "message": str(exc), "recovery": recovery})
@@ -336,6 +328,15 @@ def run(request):
 
 
 def _run_locked(request, runtime, result, *, locked=True):
+    # 经历开关已退役(2026-11-01):显式传 memory_choice(任意值)是旧调用合同的
+    # 残留,不得静默忽略或当作默认请求继续——那会把历史 --no-memory 语义悄悄
+    # 变成规则装配;None 仅为旧内部夹具兼容。此处零写入直接拒绝。
+    retired_choice = request.get('memory_choice')
+    if retired_choice is not None:
+        raise EnableError('retired_option',
+                          'memory_choice 经历开关已退役(--memory/--no-memory/remove-memory);'
+                          '显式传值一律拒绝,本次零写入;项目经历由 Context Keeper 独立管理,'
+                          '历史停用登记(disabled)项目由默认流程跳过、不重建')
     identity = project.resolve_project(request.get("project"))
     root, key = identity.checkout, str(identity.main_checkout)
     requested_agents = paths.resolve_agents(request.get("agents"))
@@ -356,16 +357,28 @@ def _run_locked(request, runtime, result, *, locked=True):
     detection = detect.detect_agents(config, requested_agents, home=str(home), search_paths=request.get('search_paths'),
         app_directories=request.get('app_directories'), user_candidates=request.get('user_candidates'), runner=request.get('detect_runner'))
     agents = [a for a in requested_agents if detection['agents'][a]['status']=='installed']
-    explicit = request.get('memory_choice')
-    if explicit not in (None, 'follow_ck', 'disabled'):
-        raise EnableError('approval_mismatch','Invalid memory policy')
     prior = previous_registry['projects'].get(key)
-    revoking = explicit == 'disabled' and prior is not None
     result['installation'] = {'requested':requested_agents,'effective':agents,
         'skipped':{a:detection['agents'][a]['status'] for a in requested_agents if a not in agents}}
-    if request.get('agents') is not None and agents != requested_agents and not revoking:
+    if prior is not None and prior.get('memory_policy') == 'disabled':
+        # 历史接入tombstone(schema3 保留可读):默认流程只跳过、不重建。该状态不
+        # 代表 Context Keeper 停用、不否决 CK;也不宣称入口已移除(历史 --no-memory
+        # 可能保留入口)。重新接入需用户明确的重新接入计划(本轮未定义);migrate-policy
+        # 仅清理产品自有停用控制(created+指纹吻合),不恢复接入、不改 follow_ck。
+        kept = prior['checkouts'].get(key) or {}
+        result.update(status='gaps',
+            next_action=('项目为历史停用登记（disabled），登记与现场保持原样：默认流程不重建、不改写；'
+                         '该状态不代表 Context Keeper 停用；重新接入需明确的重新接入计划（本轮未定义），'
+                         'migrate-policy 仅清理产品自有的停用控制、不恢复接入。'))
+        result['projects'] = [{'main_checkout': key, 'checkout': str(root), 'memory_policy': 'disabled',
+                               'agents': list(kept.get('agents', [])),
+                               'runtime_acceptance': kept.get('runtime_acceptance', {'status': 'pending', 'evidence_path': None}),
+                               'evidence': [str(registry_path)]}]
+        result['warnings'].append('历史停用登记跳过：不重建任何对象、不宣称入口已移除；Context Keeper 与全部数据不受影响。')
+        return result
+    if request.get('agents') is not None and agents != requested_agents:
         raise EnableError('agent_not_installed','Explicit agent is not verified installed')
-    if not agents and not revoking:
+    if not agents:
         result.update(status='gaps',next_action='Verify/install an executor before creating project entries')
         return result
     data = copy.deepcopy(previous_registry)
@@ -376,11 +389,8 @@ def _run_locked(request, runtime, result, *, locked=True):
     if assembly['git_common_dir'] != str(identity.git_common_dir):
         raise EnableError('project_identity_mismatch','Git common-dir changed; do not inherit policy')
     assembly['agents'] = [a for a in registry.AGENTS if a in set(assembly['agents']) | set(agents)]
-    choice = explicit or p['memory_policy']
+    choice = 'follow_ck'  # schema3 memory_policy 字段保留;经历开关退役后新装配恒为 follow_ck
     approval = request.get('approval')
-    # An envelope cannot silently lift disabled without an explicit --memory request.
-    if previous and previous['memory_policy']=='disabled' and choice=='follow_ck' and explicit!='follow_ck':
-        raise EnableError('approval_mismatch','Lifting disabled requires explicit --memory')
     _preflight_objects(assembly,data['shared_objects'])
     native = root/'.workbuddy/memory'
     if 'workbuddy' in agents and (native.is_symlink() or native.exists() and not native.is_dir()):
@@ -399,7 +409,6 @@ def _run_locked(request, runtime, result, *, locked=True):
     claude_active = request.get('agents') is not None and 'claude' in agents
     workbuddy_active = 'workbuddy' in agents and not native_pending
     transitions = plan.legacy_bridges(claude_active=claude_active, workbuddy_active=workbuddy_active)
-    plan.authorization(choice)
     plan.object(base,'#experience',assembly['agents'],'block',marker=KEEPER_MARKER,block=_block(KEEPER_MARKER,EXPERIENCE_TEXT))
     if claude_active: plan.reference(root/'CLAUDE.md')
     if workbuddy_active:
@@ -410,9 +419,6 @@ def _run_locked(request, runtime, result, *, locked=True):
         'git_common_dir':str(identity.git_common_dir),'agents':agents,'memory_policy':choice,'changes':plan.description(),
         'installation':{a:{'status':detection['agents'][a]['status'],'fingerprint':detect.detection_fingerprint(detection['agents'][a])} for a in requested_agents},
         'native_pending':['workbuddy'] if native_pending else []}
-    if previous and previous['memory_policy'] != choice:
-        actual_plan['memory_transition']={'before':previous['memory_policy'],'after':choice,'scope':'all registered project agents',
-            'affected_agents':assembly['agents']}
     if transitions: actual_plan['legacy_bridge_transition']=transitions
     if rebuild: actual_plan['rebuild']=rebuild
     def approval_template():

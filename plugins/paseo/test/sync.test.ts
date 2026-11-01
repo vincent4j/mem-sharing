@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import fs from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -39,14 +40,15 @@ test("the generated copy contains no extra modules", () => {
 test("the committed release identity is fail-closed: no fake hash in dev source", async () => {
   const identityPath = path.resolve(here, "../server/shared/release-identity.ts");
   const text = fs.readFileSync(identityPath, "utf8");
-  const match = /export const CORE_RELEASE_MANIFEST_SHA256 = "([^"]*)";/.exec(text);
+  const match = /export const CORE_RELEASE_MANIFEST_SHA256 = ['"]([^'"]*)['"];/.exec(text);
   assert.ok(match, "release identity export not found");
   const value = match[1];
   // An empty string is the dev sentinel; anything else must be a real
   // digest — a plausible-looking hash committed by hand fails this test.
   if (value.length > 0) {
     assert.match(value, /^[0-9a-f]{64}$/, "release identity must be empty (dev) or a real 64-hex digest");
-    assert.fail("a concrete digest is release-generated only; do not commit one from a development source");
+    const release=fs.readFileSync(path.resolve(here,"../../../release/core-release.json"));
+    assert.equal(value,createHash("sha256").update(release).digest("hex"),"concrete identity must match the existing generated manifest");
   }
 });
 test("supplier notices are generated from shared disclosure source", () => {

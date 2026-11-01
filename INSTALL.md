@@ -107,7 +107,7 @@ python3 -B scripts/install.py --context-keeper --approval-file /absolute/ck-appr
 
 ## 项目使用
 
-进入未登记的 Git 主 checkout 时，用户级规则与公共指南默认启用项目记忆，保留原正文，只建立所需骨架与协议；非 Git 与 linked worktree 不触发。默认接入由当前实际执行者按指南以 `--agent <当前执行者>` 执行，避免不带 agent 参数时按安装事实顺带补齐其他执行器已存在的原生目录；用户显式要求全体或批量接入时仍按现行命令默认，不改 CLI 语义。机器探测到某执行器已安装或其原生目录存在，不等于该执行者当前实际使用。人工入口为 `/mem-sharing` 的“给项目启用记忆”，底层示例使用实际项目根：
+进入未登记的 Git 主 checkout 时，用户级规则与公共指南默认接入项目规则，保留原正文，只建立所需骨架与协议；非 Git 与 linked worktree 不触发。默认接入由当前实际执行者按指南以 `--agent <当前执行者>` 执行，避免不带 agent 参数时按安装事实顺带补齐其他执行器已存在的原生目录；用户显式要求全体或批量接入时仍按现行命令默认，不改 CLI 语义。机器探测到某执行器已安装或其原生目录存在，不等于该执行者当前实际使用。人工入口为 `/mem-sharing` 的“接入项目规则”，底层示例使用实际项目根：
 
 ```bash
 python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" enable-memory --project /absolute/path/to/project --agent <当前执行者>
@@ -117,9 +117,7 @@ python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" check-memory --projec
 
 默认启用不初始化 Context Keeper 记录库、不调用其安装器、不安装项目级 Skill。项目经历初始化由首次 `/context-keeper` 流程负责。不带 `--agent` 的通用 enable 不触碰 `CLAUDE.md`，包括已有文件；Claude 自身实际使用时按 `--agent claude` 精确接入，可幂等补 `@AGENTS.md` 引用；其它执行者默认流程不预建，不因机器已装执行器而创建。该兜底规则位于 Claude 自身用户文件、不放公共索引。WorkBuddy 仅在原生目录存在时补桥接，不预建目录。`AGENTS.md` 是共享项目规则基座，不依赖安装 Codex；只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立，缺失的执行器用户目录不预建。
 
-`remove-memory --project ...` 撤销指定项目允许撤销的受管入口与桥接，保留机器安装、用户级接入、规则正文和全部数据；项目登记 disabled，默认流程不会重新启用。重新启用须显式 `enable-memory --project ... --memory` 并批准精确计划。没有完整机器卸载命令，项目命令不隐式安装或升级机器产品。
-
-进阶 `enable-memory --project ... --no-memory` 保留规则入口，登记 disabled，禁止自动项目经历记录与初始化；它与菜单“给项目停用记忆”的撤入口结果不同。已有 Context Keeper 自动规则不能覆盖该政策；这是 Agent 遵守的规则，不是 Context Keeper 脚本的硬拒写接口。
+旧 `remove-memory`、`--memory`、`--no-memory` 已退役，新请求零写拒绝。历史 disabled 只作规则接入 tombstone，默认跳过、不重建；它不否决 Context Keeper 的自动规则，不表示 CK 已停用或入口已删除。使用 `migrate-policy [--project ABS]` 精确预览并批准后，仅退役产品自有且指纹匹配的旧控制与已知旧模板，保留私文、CK 设置和历史数据，不替用户启用 CK。
 
 批量入口先只读预览，待批准退出码为 5；一次批准完整清单后执行：
 
@@ -182,3 +180,15 @@ python3 -B scripts/install.py --approval-file /absolute/path/upgrade-approval.js
 ```
 
 验证边界：本转换为已实现候选，证据为静态与合成测试——单元 557 项（556 过、1 error）、集成 74 项（72 过、2 失败）；修复后定向复测（单元 11 项与原失败的集成 2 项）均通过，全量未重跑，不宣称一次全绿。真实 HOME 未被改动，不覆盖 0.1.2 候选既有升级与验收证据。最终主验收结论与发行版本 hash 以[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)的权威记录收口，本节不另造重复报告。
+
+## 整机卸载
+
+整机卸载使用 `python3 -B scripts/agm.py uninstall-machine --backup-dir <全新外置目录>` 先预览，再以 `--approval-file` 精确批准。归还当前完整公共记忆给每个实际接入者的自身用户目录，再核验、清依赖、最后删除产品；不是恢复安装前。外置 manifest/recover.py 与独立解释器支持删除代码后的精确恢复。未知/漂移阻断，项目 AGENTS、有效 Claude/WB 桥接及 CK 默认保留。完整数据与门槛见[整机卸载方案](docs/uninstall-design.md)。
+
+CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调用范围；Paseo 为 `machine_and_paseo`，机器 completed 但插件仍在时 overall=partial。必须在插件移除前经外置入口独立绑定真实安装 ID/来源/CLI/daemon/live serverId，再用户 remove、同目标 full-list check 证实缺席，最后才可另选卸载 CK。disabled、查询错误、能力/版本错误均不算 removed；默认保留 CK，尾步另行精确批准。正式 payload 待干净提交与版本授权后生成，本轮源码/合成验证不等于实际宿主卸载或六家新会话加载验收。
+
+### 自然语言发起同一卸载流程
+
+用户无需进入源码目录：已接入的 Agent 读到公共 L0 后，明确的“卸载 memSharing / 卸载 mem-sharing / 不想用这个共享记忆工具了，帮我卸载”会按公共《使用约定》读取已核验 C 的 `SKILL.md` 与[完整卸载合同](docs/uninstall-design.md)，直接预览。路径与命令由安装时按 C 生成，使用 `python3 -B`；不凭路径存在信任代码，也不在预览创建备份目录。含糊的“卸载这个项目”先澄清，明确卸载请求也不替代看过精确计划后的批准。
+
+不能因换 Agent 发起而省略 Paseo 宿主义务；沿现有来源与参数合同补齐，未知先停止。已卸载或代码缺失不自动重装。安装代码已具备当前兼容实现时，旧公共指南通过 `migrate-policy` 的精确模板迁移接入新路由；旧 C 不兼容时零写拒绝，须先按现有精确安装/升级流程更新代码（预览、批准、私文保留、未知定制拒绝、重复零写）；生成指南在真正归还时退休，original 原文保全，active 不再指向被删代码。六家真实模型触发仍 pending。

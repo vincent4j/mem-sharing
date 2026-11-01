@@ -119,7 +119,7 @@ export const machinePreviewRpc = defineRpc({
   name: "memsharing.machine.preview",
   input: z
     .object({
-      agents: z.array(z.enum(["codex", "claude", "workbuddy", "dsh", "zcode"])).min(1),
+      agents: z.array(z.enum(["codex", "claude", "workbuddy", "dsh", "zcode", "opencode"])).min(1),
     })
     .strict(),
   output: previewStatus,
@@ -145,8 +145,7 @@ export const projectEnablePreviewRpc = defineRpc({
   input: z
     .object({
       projectRoot: z.string().min(1),
-      agents: z.array(z.enum(["codex", "claude", "workbuddy", "dsh", "zcode"])).min(1),
-      memory: z.enum(["enable", "disable"]).optional(),
+      agents: z.array(z.enum(["codex", "claude", "workbuddy", "dsh", "zcode", "opencode"])).min(1),
     })
     .strict(),
   output: previewStatus,
@@ -167,18 +166,6 @@ export const projectEnableConfirmRpc = defineRpc({
       envelope: jsonObject.optional(),
     }),
   ]),
-});
-
-export const projectRemovePreviewRpc = defineRpc({
-  name: "memsharing.project.remove.preview",
-  input: z.object({ projectRoot: z.string().min(1) }).strict(),
-  output: previewStatus,
-});
-
-export const projectRemoveConfirmRpc = defineRpc({
-  name: "memsharing.project.remove.confirm",
-  input: confirmAction.strict(),
-  output: confirmStatus,
 });
 
 export const ckPreviewRpc = defineRpc({
@@ -212,11 +199,133 @@ export const recoverConfirmRpc = defineRpc({
 
 export const cancelPendingRpc = defineRpc({
   name: "memsharing.pending.cancel",
-  input: z.object({ flow: z.enum(["dependency", "bootstrap", "machine", "enable", "remove", "ck", "recover"]) }).strict(),
+  input: z.object({ flow: z.enum(["dependency", "bootstrap", "machine", "enable", "uninstall", "ck", "recover", "ckUninstall", "stagingCleanup"]) }).strict(),
   output: z.object({ status: z.enum(["cancel_requested", "cleared", "none"]) }),
 });
 
 export const operationStatusRpc = defineRpc({
   name: "memsharing.operation.status", input: z.object({}).strict(),
   output: z.array(jsonObject),
+});
+
+// ---- full-machine uninstall (2026-11-01 retirement) ----------------------
+// The retired project "remove" flow is replaced by the core-routed
+// uninstall-machine / recover-uninstall commands. Exit-code contract for the
+// new flows: approval_required=5, failed=2, completed/restored/retained=0;
+// the envelope's structured status is validated alongside the exit code and
+// rc alone never classifies the outcome.
+
+export const uninstallPreviewRpc = defineRpc({
+  name: "memsharing.uninstall.preview",
+  input: z.object({ backupDir: z.string().min(1) }).strict(),
+  output: previewStatus,
+});
+
+export const uninstallConfirmRpc = defineRpc({
+  name: "memsharing.uninstall.confirm",
+  input: confirmAction.strict(),
+  output: confirmStatus,
+});
+
+export const uninstallRecoverPreviewRpc = defineRpc({
+  name: "memsharing.uninstall.recover.preview",
+  input: z
+    .object({
+      manifest: z.string().min(1),
+      action: z.enum(["restore", "resume"]).optional(),
+    })
+    .strict(),
+  output: previewStatus,
+});
+
+export const uninstallRecoverConfirmRpc = defineRpc({
+  name: "memsharing.uninstall.recover.confirm",
+  input: confirmAction.strict(),
+  output: confirmStatus,
+});
+
+// Host-side staging inventory: no path inputs; entries are derived from
+// product-owned constants and reference cleanup candidates by id only. The
+// RPC never grants deletion rights — cleanup happens inside the core's exact
+// approved plan, never by an RPC-supplied path.
+export const stagingInventoryRpc = defineRpc({
+  name: "memsharing.staging.inventory",
+  input: z.object({}).strict(),
+  output: z.object({
+    schema_version: z.literal(1),
+    home: z.string(),
+    host: z.string(),
+    roots: z.object({
+      plugin_staging: z.string(),
+      durable_sources: z.string(),
+      private_runtimes: z.string(),
+    }),
+    entries: z.array(
+      z.object({
+        id: z.string(),
+        kind: z.enum(["plugin_staging_op", "durable_source_export", "private_runtime"]),
+        path: z.string(),
+        ownership: z.enum(["proven", "unverified"]),
+        activity: z.enum(["running", "terminal", "unknown"]),
+        activity_evidence: jsonObject,
+        disposition: z.enum(["preserve_external_then_clean", "block", "retain"]),
+        reason: z.string(),
+      }),
+    ),
+    notes: z.array(z.string()),
+  }),
+});
+
+// Host-side staging cleanup: an EXPLICIT separate interaction (read-only
+// preview → separate exact approval → byte-preserving externalization →
+// verified per-artifact delete → host-receipt.json as the only remaining
+// staging content). The uninstall preview never cleans or writes receipts.
+export const stagingCleanupPreviewRpc = defineRpc({
+  name: "memsharing.staging.cleanup.preview",
+  input: z.object({ evidenceDir: z.string().min(1) }).strict(),
+  output: previewStatus,
+});
+
+export const stagingCleanupConfirmRpc = defineRpc({
+  name: "memsharing.staging.cleanup.confirm",
+  input: confirmAction.strict(),
+  output: confirmStatus,
+});
+
+// ---- post-uninstall Context Keeper follow-up ------------------------------
+// Independent path, never reusing the uninstall approval. Default is retain;
+// uninstall requires an explicit user-selected CK source and hosts. The
+// external recover.py wrapper converts the upstream CK installer exit codes
+// to the unified contract (5 approval / 2 failed / 0 completed|retained).
+
+export const CK_FOLLOWUP_HOSTS = ["codex", "claude", "cursor", "workbuddy", "hermes", "opencode", "openclaw"] as const;
+
+export const ckChoiceRetainRpc = defineRpc({
+  name: "memsharing.ck.choice.retain",
+  input: z.object({ manifest: z.string().min(1) }).strict(),
+  output: z.object({
+    status: z.enum(["completed", "failed"]),
+    envelope: jsonObject.optional(),
+    code: z.string().optional(),
+    message: z.string().optional(),
+  }),
+});
+
+export const ckUninstallPreviewRpc = defineRpc({
+  name: "memsharing.ck.uninstall.preview",
+  input: z
+    .object({
+      manifest: z.string().min(1),
+      ckSource: z.string().min(1),
+      ckAgents: z.array(z.enum(CK_FOLLOWUP_HOSTS)).min(1),
+      ckProject: z.string().optional(),
+    })
+    .strict(),
+  output: previewStatus,
+});
+
+export const ckUninstallConfirmRpc = defineRpc({
+  name: "memsharing.ck.uninstall.confirm",
+  input: confirmAction.strict(),
+  output: confirmStatus,
 });

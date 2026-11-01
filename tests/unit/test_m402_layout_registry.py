@@ -14,7 +14,7 @@ REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "scripts"))
 sys.path.insert(0, str(Path(__file__).parent))
 import agm
-from agm_core import check, enable, layout, paths, registry, remove
+from agm_core import check, enable, layout, paths, registry
 from agm_core.transaction import Transaction, read_snapshot
 from runtime_fixture import installed_registry, seed_runtime
 
@@ -30,7 +30,7 @@ class LayoutRegistryTests(unittest.TestCase):
         self.config = paths.select_platform(paths.load_agents_table(), "darwin")
         self.request = {"home": str(self.home), "platform_config": self.config,
                         "project": str(self.area / "no-project"), "all": True,
-                        "agents": ["codex"], "memory_choice": "disabled", "approval": None,
+                        "agents": ["codex"], "approval": None,
                         "interactive": False}
 
     def tree(self):
@@ -106,7 +106,7 @@ class LayoutRegistryTests(unittest.TestCase):
         env = dict(os.environ, HOME=str(self.home), PYTHONDONTWRITEBYTECODE="1")
         for argv in (["--help"], ["enable-memory", "--help"], ["remove-memory", "--help"],
                      ["check-memory", "--help"], ["check-memory", "--all"],
-                     ["enable-memory", "--project", str(self.area), "--no-memory"],
+                     ["enable-memory", "--project", str(self.area)],
                      ["remove-memory", "--project", str(self.area)]):
             result = subprocess.run([sys.executable, "-B", str(REPO / "scripts/agm.py"), *argv],
                                     cwd=self.area, env=env, capture_output=True, text=True)
@@ -114,17 +114,16 @@ class LayoutRegistryTests(unittest.TestCase):
             self.assertEqual(before, self.tree(), argv)
         result = subprocess.run([sys.executable, "-B", "-c",
             "import sys; sys.path.insert(0, sys.argv[1]); import agm; "
-            "from agm_core import layout, registry, enable, remove, check",
+            "from agm_core import layout, registry, enable, check",
             str(REPO / "scripts")], cwd=self.area, env=env, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(before, self.tree())
 
     def test_all_commands_report_same_new_layout(self):
         seed_runtime(self.home)
-        for args in (["enable-memory", "--project", str(self.area), "--no-memory"],
-                     ["remove-memory", "--project", str(self.area)], ["check-memory", "--all"]):
-            _, result = self.cli(args)
-            self.assertEqual(result["runtime_layout"], self.runtime.describe(), result)
+        for args in (["enable-memory","--project",str(self.area)],["check-memory","--all"]):
+            _,result=self.cli(args)
+            self.assertEqual(result["runtime_layout"],self.runtime.describe(),result)
 
     def test_agents_table_and_old_install_dir_cannot_relocate_active_registry(self):
         old = self.area / "old-code"
@@ -148,7 +147,7 @@ class LayoutRegistryTests(unittest.TestCase):
                 model["product"]["installation_status"] = "installing"
             self.runtime.registry.write_bytes(registry.serialize_registry(model))
             before = self.tree()
-            for command in (enable.run, remove.run):
+            for command in (enable.run,):
                 result = command(request)
                 self.assertEqual(result["status"], "failed", result)
                 self.assertEqual(before, self.tree())
@@ -167,7 +166,7 @@ class LayoutRegistryTests(unittest.TestCase):
         subprocess.run(["git", "init", "-q", str(repo)], check=True, capture_output=True)
         request = dict(self.request, project=str(repo))
         before = self.tree()
-        for command in (enable.run, remove.run):
+        for command in (enable.run,):
             result = command(request)
             self.assertEqual(result["errors"][0]["code"], "registry_migration_required", result)
             self.assertEqual(before, self.tree())
@@ -279,17 +278,15 @@ from test_m204_enable import EnableFixture
 
 
 class MachinePreservationTests(EnableFixture):
-    def removal_request(self):
-        request = {"project": str(self.root), "home": str(self.home),
-                   "platform_config": self.config, "approval": None}
-        preview = remove.run(request)
-        self.assertEqual(preview["status"], "approval_required", preview)
-        request["approval"] = json.loads(preview["next_action"])
-        request["approval"].update(confirmed_at="2026-10-30T00:00:00Z",
-                                   reference="exact synthetic removal confirmation")
-        return request
+    def additional_entry_request(self):
+        self.request.update(agents=['codex','claude'],approval=None)
+        result=enable.run(self.request)
+        self.assertEqual(result['status'],'approval_required',result)
+        self.request['approval']=json.loads(result['next_action'])
+        self.request['approval'].update(confirmed_at='2026-10-30T00:00:00Z',reference='exact additional rule entry confirmation')
+        return self.request
 
-    def test_machine_metadata_unchanged_through_project_enable_remove(self):
+    def test_machine_metadata_and_shared_private_bytes_unchanged_through_repeated_enable(self):
         metadata = {key: copy.deepcopy(self.load()[key]) for key in
                     ("product", "machine", "migration", "legacy_import")}
         self.apply()
@@ -306,16 +303,17 @@ class MachinePreservationTests(EnableFixture):
         self.runtime.registry.write_bytes(registry.serialize_registry(model,allowed_user_paths=paths.allowed_user_paths(self.config,None,home=str(self.home))))
         shared_before=shared_path.read_bytes()
 
-        result = remove.run(self.removal_request())
+        self.request['approval']=None
+        result = enable.run(self.request)
         self.assertEqual(result["status"], "completed", result)
         current = self.load()
         self.assertEqual({key: current[key] for key in metadata}, metadata)
-        self.assertEqual(current["projects"][str(self.root)]["memory_policy"], "disabled")
+        self.assertEqual(current["projects"][str(self.root)]["memory_policy"], "follow_ck")
         self.assertTrue(current["shared_objects"])
         self.assertEqual(shared_path.read_bytes(),shared_before)
-        self.assertTrue(all(obj["consumers"] == [] for obj in current["shared_objects"].values()))
+        self.assertTrue(all(obj["consumers"] == [str(self.root)] for obj in current["shared_objects"].values()))
 
-    def test_enable_and_remove_hold_the_same_writer_and_transaction_locks(self):
+    def test_additional_enable_holds_writer_and_transaction_locks(self):
         seen = []
         def observe(event, path):
             if event == "before_write":
@@ -323,29 +321,34 @@ class MachinePreservationTests(EnableFixture):
                 self.assertTrue(self.runtime.transaction_lock.is_dir())
                 seen.append(path)
         self.request["transaction_hook"] = observe
+        self.request['agents']=['codex']
         self.apply()
         self.assertTrue(seen)
         seen.clear()
         def transaction_factory(**kwargs):
             self.assertEqual(kwargs["lock_path"], self.runtime.transaction_lock)
             self.assertEqual(kwargs["backup_root"], self.runtime.backups)
-            old_hook = kwargs["hook"]
+            old_hook = kwargs.get("hook")
             def hook(event, path):
                 observe(event, path)
-                old_hook(event, path)
+                if old_hook:old_hook(event, path)
             kwargs["hook"] = hook
             return Transaction(**kwargs)
-        result = remove.run(self.removal_request(), transaction_factory=transaction_factory)
+        request=self.additional_entry_request()
+        from unittest.mock import patch
+        with patch.object(enable,'Transaction',side_effect=transaction_factory):
+            result=enable.run(request)
         self.assertEqual(result["status"], "completed", result)
         self.assertTrue(seen)
         self.assertFalse(self.runtime.lock.exists())
 
-    def test_remove_cannot_bypass_enable_writer_lock(self):
+    def test_additional_enable_cannot_bypass_writer_lock(self):
+        self.request['agents']=['codex']
         self.apply()
-        request = self.removal_request()
+        request = self.additional_entry_request()
         before = self.runtime.registry.read_bytes()
         self.runtime.lock.mkdir()
-        result = remove.run(request)
+        result = enable.run(request)
         self.assertEqual(result["errors"][0]["code"], "lock_conflict", result)
         self.assertEqual(self.runtime.registry.read_bytes(), before)
         self.assertTrue(self.runtime.lock.exists())

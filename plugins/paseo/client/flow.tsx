@@ -22,23 +22,25 @@ import {
   projectCheckRpc,
   projectEnablePreviewRpc,
   projectEnableConfirmRpc,
-  projectRemovePreviewRpc,
-  projectRemoveConfirmRpc,
   ckPreviewRpc,
   ckConfirmRpc,
   recoverPreviewRpc,
   recoverConfirmRpc,
+  uninstallPreviewRpc, uninstallConfirmRpc, stagingCleanupPreviewRpc, stagingCleanupConfirmRpc,
+  uninstallRecoverPreviewRpc, uninstallRecoverConfirmRpc,
 } from "../shared/contracts";
+
+import { uninstallResult, externalSteps, publicPlan } from "./uninstall-result";
 
 type Phase =
   | { kind: "form" }
   | { kind: "loading" }
-  | { kind: "preview"; flow: "dependency" | "onboard" | "machine" | "enable" | "remove" | "ck" | "recover"; planKind: string; digest: string; confirmationToken: string; summary: { label: string; value: string }[]; planText: string }
+  | { kind: "preview"; flow: "dependency" | "onboard" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "uninstallRecover" | "ck" | "recover"; planKind: string; digest: string; confirmationToken: string; summary: { label: string; value: string }[]; planText: string }
   | { kind: "gate"; message: string }
   | { kind: "busy"; message: string }
-  | { kind: "result"; ok: boolean; message: string; detail?: string };
+  | { kind: "result"; ok: boolean; message: string; detail?: string; continuation?: string; rows?: { label: string; value: string }[] };
 
-const AGENT_CHOICES = ["codex", "claude", "workbuddy", "dsh", "zcode"] as const;
+const AGENT_CHOICES = ["codex", "claude", "workbuddy", "dsh", "zcode", "opencode"] as const;
 type AgentName = (typeof AGENT_CHOICES)[number];
 
 function JsonBlock({ theme, text }: { theme: PluginTheme; text: string }) {
@@ -64,9 +66,11 @@ function titleFor(flow: string): string {
   if (flow === "onboard") return "memSharing 接入本机";
   if (flow === "check") return "memSharing 检查当前项目";
   if (flow === "enable") return "memSharing 启用当前项目";
-  if (flow === "remove") return "memSharing 停用当前项目";
   if (flow === "ck") return "memSharing 可选安装 Context Keeper";
   if (flow === "recover") return "memSharing 恢复未完成操作";
+  if (flow === "uninstall") return "memSharing 整机卸载";
+  if (flow === "stagingCleanup") return "memSharing 宿主暂存清理";
+  if (flow === "uninstallRecover") return "memSharing 外置卸载恢复";
   return "memSharing";
 }
 
@@ -81,21 +85,28 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
   const projectCheck = useRpc(projectCheckRpc);
   const enablePreview = useRpc(projectEnablePreviewRpc);
   const enableConfirm = useRpc(projectEnableConfirmRpc);
-  const removePreview = useRpc(projectRemovePreviewRpc);
-  const removeConfirm = useRpc(projectRemoveConfirmRpc);
   const ckPreview = useRpc(ckPreviewRpc);
   const ckConfirm = useRpc(ckConfirmRpc);
   const recoverPreviewRpcCall = useRpc(recoverPreviewRpc);
   const recoverConfirmRpcCall = useRpc(recoverConfirmRpc);
 
+  const uninstallPreview = useRpc(uninstallPreviewRpc);
+  const uninstallConfirm = useRpc(uninstallConfirmRpc);
+  const stagingPreview = useRpc(stagingCleanupPreviewRpc);
+  const stagingConfirm = useRpc(stagingCleanupConfirmRpc);
+  const uninstallRecoverPreview = useRpc(uninstallRecoverPreviewRpc);
+  const uninstallRecoverConfirm = useRpc(uninstallRecoverConfirmRpc);
+  const [backupDir, setBackupDir] = useState("");
+  const [evidenceDir, setEvidenceDir] = useState("");
+  const [manifestPath, setManifestPath] = useState("");
+  const [uninstallAction, setUninstallAction] = useState<"restore" | "resume">("restore");
   const [phase, setPhase] = useState<Phase>({ kind: "form" });
   const [showPlan, setShowPlan] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [memoryChoice, setMemoryChoice] = useState<"preserve" | "enable" | "disable">("preserve");
   const [agents, setAgents] = useState<AgentName[]>(["codex", "claude", "workbuddy"]);
   const cancelPending = useRpc(cancelPendingRpc);
   const operations = useRpc(operationStatusRpc);
-  const currentFlow = useRef<"dependency" | "bootstrap" | "machine" | "enable" | "remove" | "ck" | "recover">("bootstrap");
+  const currentFlow = useRef<"dependency" | "bootstrap" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "ck" | "recover">("bootstrap");
   const [journalPath, setJournalPath] = useState("");
   const [recoverAction, setRecoverAction] = useState<"continue" | "rollback">("continue");
 
@@ -121,9 +132,24 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
   );
 
   async function runPreview(): Promise<void> {
-    currentFlow.current = flow === "onboard" ? "bootstrap" : flow === "check" ? "enable" : flow as "enable" | "remove" | "ck" | "recover";
+    currentFlow.current = flow === "onboard" ? "bootstrap" : flow === "check" ? "enable" : flow === "uninstallRecover" ? "recover" : flow as typeof currentFlow.current;
     setPhase({ kind: "loading" });
     try {
+      if (flow === "uninstall") {
+        const result = await uninstallPreview({ backupDir: backupDir.trim() });
+        adoptPreview("uninstall", "uninstall-machine", result, setPhase, setShowPlan);
+        return;
+      }
+      if (flow === "stagingCleanup") {
+        const result = await stagingPreview({ evidenceDir: evidenceDir.trim() });
+        adoptPreview("stagingCleanup", "host-staging-cleanup", result, setPhase, setShowPlan);
+        return;
+      }
+      if (flow === "uninstallRecover") {
+        const result = await uninstallRecoverPreview({ manifest: manifestPath.trim(), action: uninstallAction });
+        adoptPreview("uninstallRecover", "recover-uninstall", result, setPhase, setShowPlan);
+        return;
+      }
       if (flow === "check") {
         const result = await projectCheck({ projectRoot });
         setPhase({
@@ -135,13 +161,8 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
         return;
       }
       if (flow === "enable") {
-        const result = await enablePreview({ projectRoot, agents, memory: memoryChoice === "preserve" ? undefined : memoryChoice });
+        const result = await enablePreview({ projectRoot, agents });
         adoptPreview("enable", "enable-memory", result, setPhase, setShowPlan);
-        return;
-      }
-      if (flow === "remove") {
-        const result = await removePreview({ projectRoot });
-        adoptPreview("remove", "remove-memory", result, setPhase, setShowPlan);
         return;
       }
       if (flow === "ck") {
@@ -154,6 +175,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
         adoptPreview("recover", "machine-recovery", result, setPhase, setShowPlan);
         return;
       }
+      if (flow !== "onboard") { setPhase({ kind: "gate", message: "未知操作入口；请从 Command Center 重新选择。" }); return; }
       const result = await bootstrapPreview({});
       if (result.status === "already_prepared") {
         currentFlow.current = "machine";
@@ -172,7 +194,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
 
   async function confirmPlan(action: "confirm" | "reject"): Promise<void> {
     if (phase.kind !== "preview") return;
-    currentFlow.current = phase.flow === "onboard" ? "bootstrap" : phase.flow;
+    currentFlow.current = phase.flow === "onboard" ? "bootstrap" : phase.flow === "uninstallRecover" ? "recover" : phase.flow;
     setPhase({ kind: "busy", message: action === "confirm" ? "正在执行已确认计划…" : "已拒绝，清除待批计划…" });
     try {
       const input = { action, confirmationToken: phase.confirmationToken };
@@ -181,7 +203,9 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
       else if (phase.flow === "onboard") outcome = await bootstrapConfirm(input);
       else if (phase.flow === "machine") outcome = await machineConfirm(input);
       else if (phase.flow === "enable") outcome = await enableConfirm(input);
-      else if (phase.flow === "remove") outcome = await removeConfirm(input);
+      else if (phase.flow === "uninstall") outcome = await uninstallConfirm(input);
+      else if (phase.flow === "stagingCleanup") outcome = await stagingConfirm(input);
+      else if (phase.flow === "uninstallRecover") outcome = await uninstallRecoverConfirm(input);
       else if (phase.flow === "ck") outcome = await ckConfirm(input);
       else outcome = await recoverConfirmRpcCall(input);
       if (outcome.status === "rejected") {
@@ -196,7 +220,12 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
           detail: JSON.stringify(outcome.envelope, null, 2),
         });
       } else if (outcome.status === "completed") {
-        if (outcome.envelope.status === "tool_assets_ready") {
+        if (phase.flow === "uninstall" || (phase.flow === "uninstallRecover" && outcome.envelope.status === "completed")) {
+          const shown = uninstallResult(outcome.envelope);
+          setPhase({ kind: "result", ...shown, continuation: externalSteps(outcome.envelope, JSON.parse(phase.planText)), detail: JSON.stringify(outcome.envelope, null, 2) });
+        } else if (phase.flow === "stagingCleanup") {
+          setPhase({ kind: "result", ok: true, message: "宿主暂存已外置并清理；继续整机卸载须另起预览和批准。", detail: JSON.stringify(outcome.envelope, null, 2) });
+        } else if (outcome.envelope.status === "tool_assets_ready") {
           await runPreview();
         } else if (outcome.envelope.status === "source_prepared") {
           const next = await ckPreview({});
@@ -230,6 +259,9 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
 
       {phase.kind === "form" ? (
         <View style={{ gap: 12 }}>
+          {flow === "uninstall" ? <View style={{ gap: 8 }}><Text style={styles.label}>全新外置备份目录（父目录须已存在）</Text><TextInput style={inputStyle} value={backupDir} onChangeText={setBackupDir} placeholder="/absolute/new-backup" /><Text style={styles.label}>归还当前公共记忆后删除机器资产；Paseo 插件本体需随后从独立终端移除。默认保留 Context Keeper。</Text></View> : null}
+          {flow === "stagingCleanup" ? <View style={{ gap: 8 }}><Text style={styles.label}>已存在的独立外置证据父目录</Text><TextInput style={inputStyle} value={evidenceDir} onChangeText={setEvidenceDir} placeholder="/absolute/evidence-directory" /><Text style={styles.label}>单独预览与批准；只处理可证明终态的暂存。中断后保留现场与外置副本，不能把失败当清空。</Text></View> : null}
+          {flow === "uninstallRecover" ? <View style={{ gap: 8 }}><Text style={styles.label}>外置 manifest 绝对路径</Text><TextInput style={inputStyle} value={manifestPath} onChangeText={setManifestPath} /><View style={{ flexDirection: "row", gap: 8 }}>{(["restore", "resume"] as const).map(action => <Pressable key={action} style={styles.chip(uninstallAction === action)} onPress={() => setUninstallAction(action)}><Text style={styles.detail}>{action}</Text></Pressable>)}</View></View> : null}
           {picksAgents ? (
             <View style={{ gap: 8 }}>
               <Text style={styles.label}>拟接入的执行器（实际用户文件以精确预览为准）</Text>
@@ -248,14 +280,6 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
               </View>
             </View>
           ) : null}
-          {flow === "enable" ? <View style={{ gap: 8 }}>
-            <Text style={styles.label}>项目记忆政策（实际变更以原内核完整计划为准）</Text>
-            {([
-              ["preserve", "保留现状"],
-              ["enable", "启用项目记忆"],
-              ["disable", "禁用自动记忆（保留共享规则）"],
-            ] as const).map(([value, label]) => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ checked: memoryChoice === value }} style={styles.chip(memoryChoice === value)} onPress={() => setMemoryChoice(value)}><Text style={styles.chipText(memoryChoice === value)}>{label}</Text></Pressable>)}
-          </View> : null}
           {flow === "ck" ? <Text style={styles.label}>Context Keeper 为可选独立安装，仅支持 Codex、Claude Code、WorkBuddy。需要获取来源时，先确认固定来源与目标目录，再单独确认安装计划。</Text> : null}
           {flow === "recover" ? (
             <View style={{ gap: 8 }}>
@@ -281,6 +305,9 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
             onPress={() => {
               if (picksAgents && agents.length === 0) return;
               if (flow === "recover" && journalPath.trim().length === 0) return;
+              if (flow === "uninstall" && !backupDir.trim()) return;
+              if (flow === "stagingCleanup" && !evidenceDir.trim()) return;
+              if (flow === "uninstallRecover" && !manifestPath.trim()) return;
               void runPreview();
             }}
           >
@@ -297,6 +324,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
       {phase.kind === "gate" ? (
         <View style={{ gap: 8 }}>
           <Text style={styles.detail}>{phase.message}</Text>
+          {flow === "uninstall" ? <View style={{ gap: 8 }}><Text style={styles.label}>若暂存阻断，先独立外置清理（已有证据父目录）</Text><TextInput value={evidenceDir} onChangeText={setEvidenceDir} style={inputStyle} /><Pressable style={styles.button} onPress={() => { if (evidenceDir.trim()) void stagingPreview({ evidenceDir: evidenceDir.trim() }).then(result => adoptPreview("stagingCleanup", "host-staging-cleanup", result, setPhase, setShowPlan)).catch(error => setPhase({ kind: "result", ok: false, message: "RPC 中断，结果未知；请保留暂存与外置证据后核对", detail: String(error) })); }}><Text style={styles.buttonText}>预览宿主暂存清理</Text></Pressable></View> : null}
           <Pressable accessibilityRole="button" style={styles.button} onPress={() => void runPreview()}>
             <Text style={styles.buttonText}>重新预览</Text>
           </Pressable>
@@ -322,10 +350,12 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
         </View>
       ) : null}
 
-      {phase.kind === "result" && flow === "onboard" ? <Pressable style={styles.button} onPress={() => void runPreview()}><Text style={styles.buttonText}>继续接入预览</Text></Pressable> : null}
+      {phase.kind === "result" && (flow === "onboard" || (flow === "uninstall" && !phase.continuation)) ? <Pressable style={styles.button} onPress={() => void runPreview()}><Text style={styles.buttonText}>{flow === "uninstall" ? "继续卸载预览" : "继续接入预览"}</Text></Pressable> : null}
       {phase.kind === "result" ? (
         <View style={{ gap: 8 }}>
           <Text style={{ color: phase.ok ? theme.colors.statusSuccess : theme.colors.statusDanger, fontSize: 15 }}>{phase.message}</Text>
+          {phase.rows?.map(row => <Text key={row.label} style={styles.detail}>{row.label}：{row.value}</Text>)}
+          {phase.continuation ? <JsonBlock theme={theme} text={phase.continuation} /> : null}
           {phase.detail ? <JsonBlock theme={theme} text={phase.detail} /> : null}
         </View>
       ) : null}
@@ -368,10 +398,10 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
   );
 }
 
-type AdoptResult = { status: string; message?: string; detail?: string };
+type AdoptResult = { status: string; message?: string; detail?: string; continuation?: string; rows?: { label: string; value: string }[] };
 
 function adoptPreview(
-  flow: "onboard" | "machine" | "enable" | "remove" | "ck" | "recover",
+  flow: "onboard" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "uninstallRecover" | "ck" | "recover",
   planKind: string,
   result: { status: string; planKind?: string; digest?: string; confirmationToken?: string; summary?: { label: string; value: string }[]; plan?: Record<string, unknown>; message?: string; detail?: string },
   setPhase: (phase: Phase) => void,
@@ -386,7 +416,7 @@ function adoptPreview(
       digest: result.digest,
       confirmationToken: result.confirmationToken,
       summary: result.summary ?? [],
-      planText: JSON.stringify(result.plan, null, 2),
+      planText: JSON.stringify(publicPlan(result.plan), null, 2),
     });
   } else {
     setPhase({ kind: "gate", message: describe(result.status, "message" in result ? result.message : "detail" in result ? result.detail : undefined) });

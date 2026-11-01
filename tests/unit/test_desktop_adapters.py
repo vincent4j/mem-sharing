@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_m404_install import InstallFixture, approved
 from test_m204_enable import EnableFixture
 from test_m405_detect import DetectFixture, fake_codesign
-from agm_core import check, detect, enable, paths, registry, remove, user_entries, user_install
+from agm_core import check, detect, enable, paths, registry, user_entries, user_install
 
 DESKTOP = ('dsh', 'zcode')
 
@@ -164,7 +164,7 @@ class DesktopProjectTests(EnableFixture):
         self.addCleanup(patch.stopall)
         patch.object(detect, 'detect_agents', return_value=facts).start()
 
-    def test_native_check_remove_disabled_and_private_bytes(self):
+    def test_native_check_tombstone_disabled_and_private_bytes(self):
         private = b'\xef\xbb\xbfproject private\xff\r\n'
         entry = self.root / 'AGENTS.md'; entry.write_bytes(private)
         self.apply('follow_ck')
@@ -177,21 +177,21 @@ class DesktopProjectTests(EnableFixture):
         self.assertEqual(result['status'], 'completed', result)
         self.assertEqual(result['projects'][0]['agents'], list(DESKTOP))
         self.assertEqual((snapshot(self.home), snapshot(self.root)), before)
-        result = remove.run(dict(self.request, approval=None))
-        self.assertEqual(result['status'], 'approval_required', result)
-        plan = json.loads(result['next_action'])
-        done = remove.run(dict(self.request, approval=approved({k:v for k,v in plan.items() if k not in ('confirmed_at','reference')})))
-        self.assertEqual(done['status'], 'completed', done)
+        # 历史停用登记(remove 已退役):直接登记 disabled,默认流程跳过、私字节保全。
+        data = self.load()
+        data['projects'][str(self.root)]['memory_policy'] = 'disabled'
+        allowed = paths.allowed_user_paths(self.config, None, home=str(self.home))
+        self.runtime.registry.write_bytes(registry.serialize_registry(data, allowed_user_paths=allowed))
         self.assertIn(private, entry.read_bytes())
-        self.assertEqual(self.load()['projects'][str(self.root)]['memory_policy'], 'disabled')
-        self.request.update(approval=None, memory_choice=None)
+        self.request.update(approval=None)
         before = snapshot(self.home), snapshot(self.root)
         result = enable.run(self.request)
-        self.assertEqual(result['status'], 'approval_required', result)
-        self.assertEqual(json.loads(result['next_action'])['memory_policy'], 'disabled')
+        self.assertEqual(result['status'], 'gaps', result)
+        self.assertIn('历史停用登记', result['next_action'])
         self.assertEqual((snapshot(self.home), snapshot(self.root)), before)
         self.assertEqual(self.load()['projects'][str(self.root)]['memory_policy'], 'disabled')
         self.assertEqual(check.run(self.request)['status'], 'completed')
+        self.assertTrue(any('历史停用登记' in w for w in check.run(self.request)['warnings']))
 
     def test_large_native_entry_does_not_inherit_codex_budget_warning(self):
         self.apply('follow_ck')

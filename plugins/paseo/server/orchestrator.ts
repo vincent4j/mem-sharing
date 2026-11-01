@@ -7,7 +7,7 @@
 
 import fs from "node:fs";
 import { randomUUID, createHash } from "node:crypto";
-import { hostname, release } from "node:os";
+import { hostname, release, tmpdir } from "node:os";
 import path from "node:path";
 import { CORE_RELEASE_MANIFEST_SHA256 } from "./shared/release-identity";
 import { ensureRealDirectory } from "./owned-paths";
@@ -21,9 +21,9 @@ import type { GitEnvironment } from "./shared/common/git";
 import { probePythonEnvironment } from "./shared/common/python";
 import { probeGitEnvironment } from "./shared/common/git";
 import { PRODUCTION_TOOL_ASSETS } from "./shared/common/production-assets";
-import { assetScene, assetDestination, prepareToolAsset, toolEnvironment, type ToolAsset } from "./shared/common/tool-assets";
+import { assetScene, assetDestination, prepareToolAsset, toolEnvironment, toolTreeDigest, type ToolAsset } from "./shared/common/tool-assets";
 
-export type FlowKind = "dependency" | "bootstrap" | "machine" | "enable" | "remove" | "ck" | "recover";
+export type FlowKind = "dependency" | "bootstrap" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "ck" | "recover" | "ckUninstall";
 
 export interface CliRunOutcome {
   kind: "completed" | "timeout" | "canceled" | "spawn_error";
@@ -66,7 +66,7 @@ interface PendingPlan {
   // Exact plan object exactly as the CLI produced it.
   plan: Record<string, unknown>;
   // How to rebuild the approval file for this plan.
-  approvalShape: "plan-plus-evidence" | "next-action-template";
+  approvalShape: "plan-plus-evidence" | "next-action-template" | "core-envelope";
   // Extra argv appended (in order) for the confirm execution.
   confirmArgv: readonly string[];
   createdAt: number;
@@ -79,6 +79,8 @@ export interface OrchestratorDeps {
   readonly home: string;
   readonly pluginDir: string | null;
   readonly searchedPluginDirs: readonly string[];
+  /** config 派生的本插件真实安装 alias 记录(非 RPC 输入);同目录多别名须阻断。 */
+  readonly pluginRecords?: readonly { id: string; source: string; path: string; enabled?: boolean }[];
   readonly now?: () => Date;
   readonly newOperationId?: () => string;
   /** Test seam: override the Python environment probe. */
@@ -133,6 +135,9 @@ export function summarizePlan(plan: Record<string, unknown>): { label: string; v
   };
   push("command", plan.command);
   push("home", plan.home);
+  push("plan sha256", plan.plan_sha256);
+  push("backup dir", plan.backup_dir);
+  push("manifest", plan.manifest);
   push("version", (plan.manifest as Record<string, unknown> | undefined)?.source ?? undefined);
   const source = plan.source as Record<string, unknown> | undefined;
   if (source) {
@@ -149,11 +154,30 @@ export function summarizePlan(plan: Record<string, unknown>): { label: string; v
   const changes = plan.changes as unknown[] | undefined;
   if (Array.isArray(changes)) {
     rows.push({ label: "changes", value: `${changes.length} 项` });
+    const stages: Record<string, number> = {};
+    for (const change of changes) {
+      if (change && typeof change === "object" && "stage" in change) {
+        const stage = String((change as Record<string, unknown>).stage);
+        stages[stage] = (stages[stage] ?? 0) + 1;
+      }
+    }
+    for (const [stage, count] of Object.entries(stages)) {
+      rows.push({ label: `stage ${stage}`, value: `${count} 项` });
+    }
   }
-  push("memory policy after", plan.memory_policy);
-  const transition = jsonRecord(plan.memory_transition);
-  if (transition) { push("memory policy before", transition.before); push("memory policy after transition", transition.after); }
-  else if (plan.memory_policy !== undefined) rows.push({ label: "memory policy before", value: "原计划未报告变更前值（完整计划为准）" });
+  // 统一验收口径:用户摘要仅 paths/hash/stage/证据;经历开关退役后不再展示
+  // memory policy 转置行,内部 hex 正文一律不出摘要。
+  const runtime = jsonRecord(plan.recovery_runtime);
+  if (runtime) {
+    push("recovery interpreter", runtime.interpreter);
+    push("recovery interpreter sha256", runtime.executable_sha256);
+  }
+  const validation = jsonRecord(plan.validation);
+  if (validation) {
+    for (const [key, value] of Object.entries(validation)) rows.push({ label: `validation ${key}`, value: String(value) });
+  }
+  const retained = plan.retained_evidence as unknown[] | undefined;
+  if (Array.isArray(retained)) rows.push({ label: "retained evidence", value: `${retained.length} 项(逐项见计划)` });
   const agents = (plan as Record<string, unknown>).agents;
   if (Array.isArray(agents)) rows.push({ label: "agents", value: agents.join(", ") });
   const projects = (plan as Record<string, unknown>).projects;
@@ -459,6 +483,10 @@ export class Orchestrator {
   }
 
   private stagingFile(name: string): string {
+    if (this.productRemoved) {
+      // 主产品已删除:宿主此后零写任何 mem-sharing-* 路径(含 staging 重建)。
+      throw new Error("product removed: host must not recreate product staging paths");
+    }
     const dir = path.join(this.paths.pluginStagingRoot, "pending");
     ensureRealDirectory(dir);
     // Every request/approval/operation gets an OS-exclusive directory;
@@ -475,7 +503,11 @@ export class Orchestrator {
   }
 
   private storePending(flow: FlowKind, plan: Record<string, unknown>, approvalShape: PendingPlan["approvalShape"], confirmArgv: readonly string[]): { digest: string; confirmationToken: string; summary: { label: string; value: string }[] } {
-    const binding = flow === "dependency" ? this.assetBinding() : this.kernelBinding(confirmArgv);
+    // P1-A: stagingCleanup 是宿主自有实现,无 Python argv;kernelBinding 会以
+    // argv[2] 走 path.dirname 而崩。改用独立 host 绑定,不伪造内核 argv。
+    const binding = flow === "dependency" ? this.assetBinding()
+      : flow === "stagingCleanup" ? createHash("sha256").update(JSON.stringify({ kind: "host-staging-cleanup", home: this.deps.home, host: hostname(), evidence_dir: plan.evidence_dir })).digest("hex")
+      : this.kernelBinding(confirmArgv);
     const digest = planDigest(plan);
     const confirmationToken = planDigest({ digest, binding, nonce: randomUUID() });
     this.pending.set(flow, {
@@ -504,7 +536,11 @@ export class Orchestrator {
       return { ok: false, outcome: { status: "stale_plan", detail: "confirmation token does not match the pending plan; preview again" } };
     }
     let currentBinding: string;
-    try { currentBinding = flow === "dependency" ? this.assetBinding() : this.kernelBinding(pending.confirmArgv); }
+    try {
+      currentBinding = flow === "dependency" ? this.assetBinding()
+        : flow === "stagingCleanup" ? createHash("sha256").update(JSON.stringify({ kind: "host-staging-cleanup", home: this.deps.home, host: hostname(), evidence_dir: (pending.plan as Record<string, unknown>).evidence_dir })).digest("hex")
+        : this.kernelBinding(pending.confirmArgv);
+    }
     catch { currentBinding = "unavailable"; }
     if (pending.binding !== currentBinding) {
       this.pending.delete(flow);
@@ -518,18 +554,40 @@ export class Orchestrator {
     const evidence = buildEvidence(this.reference(pending.flow), this.now());
     let approval: Record<string, unknown>;
     if (pending.approvalShape === "next-action-template") {
-      // enable/remove templates carry placeholder evidence values; replace
+      // enable templates carry placeholder evidence values; replace
       // only those two with real evidence while keeping every plan key
       // verbatim. rebuild_confirmation needs a SEPARATE user confirmation
       // and is never auto-filled from one click — such plans are blocked
       // before confirm ever runs (see projectEnablePreview).
       const { confirmed_at: _c, reference: _r, ...planKeys } = pending.plan;
       approval = buildApproval(planKeys as Record<string, unknown>, evidence);
+    } else if (pending.approvalShape === "core-envelope") {
+      // Uninstall/recovery/CK cores use a nested {plan, reference,
+      // confirmed_at} envelope that must byte-match the previewed summary.
+      approval = { plan: pending.plan, reference: evidence.reference, confirmed_at: evidence.confirmed_at };
     } else {
       approval = buildApproval(pending.plan, evidence);
     }
     const file = this.stagingFile(`${pending.flow}-approval.json`);
     fs.writeFileSync(file, JSON.stringify(approval, null, 2), { encoding: "utf8", mode: 0o600, flag: "wx" });
+    return file;
+  }
+
+  // Approval writer for product-root-free flows (uninstall family): the
+  // to-be-deleted tree must never gain new staging entries from the uninstall
+  // itself. The approval lives in a 0600 tempfile OUTSIDE every product root
+  // and is removed after the core subprocess returns; the core's manifest
+  // durably records the approval, so nothing durable is lost.
+  private buildExternalApprovalFile(pending: PendingPlan): string {
+    const evidence = buildEvidence(this.reference(pending.flow), this.now());
+    if (pending.approvalShape !== "core-envelope") {
+      throw new Error("external approval writer only supports the core envelope shape");
+    }
+    const approval = { plan: pending.plan, reference: evidence.reference, confirmed_at: evidence.confirmed_at };
+    const directory = fs.mkdtempSync(path.join(tmpdir(), "memsharing-uninstall-"));
+    fs.chmodSync(directory, 0o700);
+    const file = path.join(directory, "approval.json");
+    fs.writeFileSync(file, JSON.stringify(approval, null, 2), { encoding: "utf8", mode: 0o600 });
     return file;
   }
 
@@ -650,7 +708,6 @@ export class Orchestrator {
   private async projectEnablePreviewImpl(input: {
     projectRoot: string;
     agents: readonly string[];
-    memory?: "enable" | "disable";
   }, signal?: AbortSignal): Promise<PreviewOutcome> {
     const python = await this.requirePython();
     if (!python.ok) return this.dependencyPreviewImpl();
@@ -664,11 +721,11 @@ export class Orchestrator {
     // consistent registered repair exists, so project previews must pass
     // the kernel's read-only --preview flag (mutually exclusive with
     // --approval-file, placed last per the frozen kernel contract). The
-    // confirm argv never carries --preview.
+    // confirm argv never carries --preview. The retired --memory/--no-memory
+    // switches are never passed; historical disabled projects surface as a
+    // read-only gap (历史停用登记) in the kernel's own envelope.
     const previewArgv: string[] = [python.pythonPath, "-B", agm, "enable-memory", "--project", input.projectRoot];
     if (input.agents.length > 0) previewArgv.push("--agent", ...input.agents);
-    if (input.memory === "enable") previewArgv.push("--memory");
-    if (input.memory === "disable") previewArgv.push("--no-memory");
     previewArgv.push("--preview");
     const result = await this.runJson<PreviewOutcome>(previewArgv, { signal });
     if ("failure" in result) return result.failure;
@@ -697,23 +754,18 @@ export class Orchestrator {
       }
       const confirmArgv: string[] = [python.pythonPath, "-B", agm, "enable-memory", "--project", input.projectRoot];
       if (input.agents.length > 0) confirmArgv.push("--agent", ...input.agents);
-      if (input.memory === "enable") confirmArgv.push("--memory");
-      if (input.memory === "disable") confirmArgv.push("--no-memory");
       const stored = this.storePending("enable", plan, "next-action-template", confirmArgv);
-      if (!jsonRecord(plan.memory_transition)) {
-        // No transition is emitted for unchanged policy or an unregistered
-        // project. Read only the matching original ledger entry for display;
-        // the kernel's exact approval remains the sole write authority.
-        let before = "未登记";
-        try {
-          const ledger = JSON.parse(fs.readFileSync(this.paths.registryFile, "utf8"));
-          const previous = ledger.projects?.[String(plan.main_checkout)];
-          if (typeof previous?.memory_policy === "string") before = previous.memory_policy;
-        } catch { before = "原台账不可读（完整计划为准）"; }
-        stored.summary = stored.summary.filter(row => row.label !== "memory policy before");
-        stored.summary.push({ label: "memory policy before", value: before });
-      }
       return { status: "approval_required", planKind: "enable-memory", ...stored, plan, envelope: parsed };
+    }
+    if (parsed.status === "gaps") {
+      // 历史停用登记等项目:内核只读预览返回 gaps,附明确 next_action;不作为
+      // 可执行计划,交界面按提示展示,不猜测任何重建路径。
+      return {
+        status: "failed",
+        code: "project_skipped",
+        message: String(parsed.next_action ?? "项目预览未产生可执行计划（可能为历史停用登记项目）"),
+        envelope: parsed,
+      };
     }
     if (exitKind === "completed") return { status: "completed", envelope: parsed };
     return {
@@ -745,68 +797,460 @@ export class Orchestrator {
     };
   }
 
-  // ---- project removal via the kernel's read-only --preview ----
+  // ---- whole-machine uninstall family (2026-11-01 retirement) ------------
+  // Unified exit-code contract for the core flows: 5 approval_required,
+  // 2 failed/recovery_required, 0 completed/restored/retained. The exit code
+  // is validated TOGETHER with the structured envelope status; rc alone never
+  // classifies an outcome.
 
-  private async projectRemovePreviewImpl(projectRoot: string, signal?: AbortSignal): Promise<PreviewOutcome> {
+  private productRemoved = false;
+
+  private coreEnvelopeStatusValid(exitKind: string, parsed: Record<string, unknown>): boolean {
+    const status = String(parsed.status ?? "");
+    if (exitKind === "completed") return status === "completed" || status === "restored" || status === "retained";
+    if (exitKind === "approval_required") return status === "approval_required";
+    return status === "failed" || status === "recovery_required";
+  }
+
+  private corePlanFromEnvelope(parsed: Record<string, unknown>): Record<string, unknown> | null {
+    const plan = jsonRecord(parsed.plan);
+    return plan;
+  }
+
+  private async uninstallPreviewImpl(backupDir: string, signal?: AbortSignal): Promise<PreviewOutcome> {
+    const staging = this.stagingInventory();
+    const blockers = staging.entries.filter(e => e.disposition === "block");
+    if (blockers.length || staging.entries.some(e => e.disposition === "preserve_external_then_clean")) {
+      return {
+        status: "failed",
+        code: "staging_cleanup_required",
+        message: "宿主 staging 存在待清理/阻断条目：先完成独立批准的 staging 清理（外置→删→host-receipt），再运行整机卸载预览。逐项原因见 staging inventory。",
+        envelope: { entries: staging.entries.map(e => ({ path: e.path, activity: e.activity, disposition: e.disposition, reason: e.reason })) },
+      };
+    }
     const python = await this.requirePython();
     if (!python.ok) return this.dependencyPreviewImpl();
     const agm = this.activeKernelAgm();
-    if (!agm) {
-      return { status: "failed", code: "kernel_missing", message: "memSharing machine install not found; nothing to remove" };
+    if (!agm) return { status: "failed", code: "kernel_missing", message: "memSharing machine install not found; nothing to uninstall" };
+    // 材料外置:本流程不写产品 staging(无 operate()/stagingFile()),批准文件在
+    // 确认时写 0600 系统 tmpdir 并于子进程返回后删除;核心 manifest 持久化批准。
+    // host obligation(与呱唧定稿):声明 paseo 义务并绑定真实安装 ID+来源目录
+    // +编译期 manifest 摘要(不硬编码 plugin_id);machine 完成=
+    // machine_assets:completed/host_plugin:pending/overall:partial;removed 仅由
+    // 外置 recover --check-host-plugin 同 daemon full-list 实查且 ID 不存在证
+    // 明;disabled 永不解锁;本批无 manual fallback,不删 plugin 目录。
+    const records = this.deps.pluginRecords ?? [];
+    if (records.length > 1) {
+      return {
+        status: "failed",
+        code: "host_plugin_ambiguous",
+        message: "同一物理目录存在多个 config 安装别名(含 disabled 残留)，无法唯一定位本插件；请先在 Paseo 清理重复别名后重试："
+          + records.map(r => `${r.id}(${r.source}:${r.path}${r.enabled === false ? ",disabled" : ""})`).join("; "),
+      };
     }
-    // Frozen kernel contract: remove-memory --project ABS --preview, no
-    // --agent/--memory; the exact 11-key template (including
-    // registry_sha256 and memory_policy=disabled) arrives in next_action.
-    const previewArgv = [python.pythonPath, "-B", agm, "remove-memory", "--project", projectRoot, "--preview"];
+    if (records.length === 0) return { status: "failed", code: "host_plugin_unknown", message: "缺少与当前加载来源匹配的唯一安装记录，不能声明宿主义务；请核对插件安装来源。" };
+    const record = records[0];
+    const previewArgv = [python.pythonPath, "-B", agm, "uninstall-machine", "--backup-dir", backupDir,
+      "--host-obligation", "paseo",
+      "--host-plugin-id", record.id, "--host-plugin-source", record.path,
+      "--host-plugin-record-json", JSON.stringify({ id: record.id, source: record.source, path: record.path, enabled: record.enabled !== false }),
+      ...(isSha256Hex(this.releaseDigest()) ? ["--host-plugin-manifest-sha256", this.releaseDigest()] : [])];
     const result = await this.runJson<PreviewOutcome>(previewArgv, { signal });
     if ("failure" in result) return result.failure;
     const { parsed, exitKind } = result;
-    if (exitKind === "approval_required" || parsed.status === "approval_required") {
-      const template = parsed.next_action;
-      if (typeof template !== "string") {
-        return { status: "failed", code: "plan_unavailable", message: "remove preview did not expose an exact plan", envelope: parsed };
-      }
-      let plan: Record<string, unknown>;
-      try {
-        plan = JSON.parse(template) as Record<string, unknown>;
-      } catch {
-        return { status: "failed", code: "plan_unparseable", message: "next_action is not JSON", envelope: parsed };
-      }
-      if (typeof plan.registry_sha256 !== "string" || plan.memory_policy !== "disabled") {
-        return { status: "failed", code: "plan_shape_invalid", message: "remove template missing registry_sha256 / memory_policy=disabled", envelope: parsed };
-      }
-      const confirmArgv = [python.pythonPath, "-B", agm, "remove-memory", "--project", projectRoot];
-      const stored = this.storePending("remove", plan, "next-action-template", confirmArgv);
-      return { status: "approval_required", planKind: "remove-memory", ...stored, plan, envelope: parsed };
+    if (!this.coreEnvelopeStatusValid(exitKind, parsed)) {
+      return { status: "failed", code: "cli_status_mismatch", message: `退出码与结构化状态不一致: rc=${exitKind} status=${String(parsed.status)}`, envelope: parsed };
+    }
+    if (exitKind === "approval_required") {
+      const plan = this.corePlanFromEnvelope(parsed);
+      if (!plan) return { status: "failed", code: "plan_unavailable", message: "uninstall preview did not expose a summary plan", envelope: parsed };
+      const stored = this.storePending("uninstall", plan, "core-envelope", previewArgv);
+      return { status: "approval_required", planKind: "uninstall-machine", ...stored, plan };
     }
     if (exitKind === "completed") return { status: "completed", envelope: parsed };
+    return { status: "failed", code: String(parsed.errors && Array.isArray(parsed.errors) && parsed.errors[0]?.code ? parsed.errors[0].code : "uninstall_failed"), message: `uninstall preview failed: ${JSON.stringify(parsed.errors ?? parsed.status)}`, envelope: parsed };
+  }
+
+  private async uninstallConfirmImpl(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<ConfirmOutcome> {
+    if (input.action === "reject") { this.pending.delete("uninstall"); return { status: "rejected" }; }
+    const popped = this.popPending("uninstall", input.confirmationToken);
+    if (!popped.ok) return popped.outcome;
+    const approvalFile = this.buildExternalApprovalFile(popped.pending);
+    try {
+      const argv = [...popped.pending.confirmArgv, "--approval-file", approvalFile];
+      const result = await this.runJson<ConfirmOutcome>(argv, { signal });
+      if ("failure" in result) return result.failure;
+      const { parsed, exitKind } = result;
+      if (!this.coreEnvelopeStatusValid(exitKind, parsed)) {
+        return { status: "failed", code: "cli_status_mismatch", message: `退出码与结构化状态不一致: rc=${exitKind} status=${String(parsed.status)}`, envelope: parsed };
+      }
+      if (exitKind === "completed") {
+        // 主产品已删除:宿主此后零写任何 mem-sharing-* 路径(含 staging 重建)。
+        this.productRemoved = true;
+        return { status: "completed", envelope: parsed };
+      }
+      return { status: "failed", code: `exit_${exitKind}`, message: `uninstall confirm failed: ${JSON.stringify(parsed.errors ?? parsed.status)}`, envelope: parsed };
+    } finally {
+      try { fs.rmSync(path.dirname(approvalFile), { recursive: true, force: true }); } catch { /* tempfile cleanup is best-effort */ }
+    }
+  }
+
+  // Read-only staging inventory; no path inputs, entries keyed by id. This
+  // RPC never grants deletion rights — cleanup happens only inside the
+  // separately approved host cleanup flow.
+  stagingInventory() {
+    const root = this.paths.pluginStagingRoot;
+    const entries: {
+      id: string; kind: "plugin_staging_op"; path: string;
+      ownership: "proven" | "unverified"; activity: "running" | "terminal" | "unknown";
+      activity_evidence: Record<string, unknown>;
+      disposition: "preserve_external_then_clean" | "block" | "retain"; reason: string;
+    }[] = [];
+    const notes: string[] = ["内存确认令牌不是文件；运行中操作以 in-memory running 表为准"];
+    let pendingDir: string | null = null;
+    try {
+      const dir = path.join(root, "pending");
+      if (fs.lstatSync(dir).isDirectory() && !fs.lstatSync(dir).isSymbolicLink()) pendingDir = dir;
+    } catch { /* absent staging root is fine */ }
+    if (pendingDir !== null) {
+      const knownArtifacts = /^([a-z]+-approval\.json|release-request\.json)$/;
+      for (const name of fs.readdirSync(pendingDir)) {
+        if (!/^op-[A-Za-z0-9]+$/.test(name)) continue;
+        const dirPath = path.join(pendingDir, name);
+        const id = createHash("sha256").update(`plugin_staging_op:${name}`).digest("hex");
+        let activity: "running" | "terminal" | "unknown" = "unknown";
+        let recordState: string | null = null;
+        let journalStatus: string | null = null;
+        let recordPhase: string | null = null;
+        let recordFlow: string | null = null;
+        let ownership: "proven" | "unverified" = "proven";
+        let reason = "";
+        const artifactHashes: { name: string; sha256: string; mode: number }[] = [];
+        try {
+          const st = fs.lstatSync(dirPath);
+          if (!st.isDirectory() || st.isSymbolicLink()) throw new Error("not a real directory");
+          const runningRecord = [...this.running.values()].some(r => path.dirname(r.record) === dirPath);
+          for (const file of fs.readdirSync(dirPath).sort()) {
+            const filePath = path.join(dirPath, file);
+            if (fs.lstatSync(filePath).isSymbolicLink() || !fs.lstatSync(filePath).isFile()) throw new Error("unknown artifact node: " + file);
+            if (file === "operation.json") {
+              const record = JSON.parse(fs.readFileSync(filePath, "utf8"));
+              const keys = new Set(Object.keys(record));
+              // 历史记录 journal=undefined 时 JSON.stringify 省略该键(7 键);
+              // 兼容已知 7/8 键,其余未知键拒绝(与核心口径一致)。
+              const expected = new Set(["id", "flow", "phase", "journal", "home", "host", "state", "started_at"]);
+              if (!((keys.size === 8) || (keys.size === 7 && !keys.has("journal"))) || [...keys].some(k => !expected.has(k))) throw new Error("operation record schema invalid");
+              if (record.home !== this.deps.home || record.host !== hostname()) throw new Error("operation record home/host mismatch");
+              // flow 白名单=会写 staging 的七个 operate() 流程;核心按固定列表校验,
+              // 新流程(stagingCleanup/ckUninstall)从不写产品 staging。
+              if (!["dependency", "bootstrap", "machine", "enable", "remove", "ck", "recover"].includes(String(record.flow))) throw new Error("operation record flow not recognized: " + String(record.flow));
+              recordState = String(record.state);
+              recordPhase = String(record.phase); recordFlow = String(record.flow);
+              if (!["preview","execute"].includes(recordPhase)) throw new Error("operation phase unknown");
+              // journal 非 null(旧 machine/recover execute 正常可达):宿主按
+              // operationStatus() 同规则实读原 journal 归结——绝对真实路径、
+              // plan.layout.root 匹配本机 R、status∈{committed,rolled_back} 才算
+              // 终态 recovered 并写准确 journal_status;否则 unknown 阻断不删。
+              if (typeof record.journal === "string" && record.journal) {
+                // journal 归属:仅认核心既有固定根 home/.mem-sharing-install-*/journal.json
+                // 或 R/backups/<op>/(journal|manifest).json;任意路径不可认领(与核心一致)。
+                const relJournal = path.relative(this.deps.home, record.journal);
+                const legalJournal = new RegExp("^(\\.mem-sharing-install-[^/]+/journal\\.json|\\.mem-sharing/backups/[^/]+/(journal|manifest)\\.json)$").test(relJournal);
+                let resolved: string | null = null;
+                try {
+                  if (!legalJournal) throw new Error("journal path outside known roots");
+                  if (fs.realpathSync(record.journal) === record.journal && fs.lstatSync(record.journal).isFile()) {
+                    const journal = JSON.parse(fs.readFileSync(record.journal, "utf8")) as { status?: unknown; plan?: { layout?: { root?: unknown } } };
+                    if (journal?.plan?.layout?.root === path.join(this.deps.home, ".mem-sharing")
+                        && (journal.status === "committed" || journal.status === "rolled_back")) resolved = journal.status;
+                  }
+                } catch { /* 原始 journal 仍是唯一权威;不可读即不可归结 */ }
+                if (resolved) { journalStatus = resolved; recordState = "recovered"; }
+                else throw new Error("record journal 不可归结(缺失/非终态/布局不符): " + record.journal);
+              }
+            } else if (!knownArtifacts.test(file)) {
+              throw new Error("unknown artifact: " + file);
+            }
+            artifactHashes.push({ name: file, sha256: createHash("sha256").update(fs.readFileSync(filePath)).digest("hex"), mode: fs.lstatSync(filePath).mode & 0o777 });
+          }
+          if (runningRecord) { activity = "running"; reason = "in-memory operation still running"; }
+          else if (recordState !== null && recordState === "running") { activity = "unknown"; reason = "record says running without in-memory owner; only the original kernel journal can resolve"; }
+          else if (recordState !== null && (["completed", "failed", "rejected", "approval_required", "gaps", "recovered"].includes(recordState) || (recordPhase === "preview" && ["already_prepared","identity_missing","payload_missing"].includes(recordState)) || (recordPhase === "execute" && ["stale_plan","no_pending_plan"].includes(recordState)) || (recordPhase === "execute" && recordFlow === "bootstrap" && recordState === "acquired"))) { activity = "terminal"; reason = "record terminal state: " + recordState; }
+          else if (recordState === null) {
+            const oldest = Math.max(...artifactHashes.map(a => fs.lstatSync(path.join(dirPath, a.name)).mtimeMs));
+            if (this.now().getTime() - oldest > 10 * 60 * 1000) { activity = "terminal"; reason = "no operation record; known artifacts older than pending TTL"; }
+            else { activity = "unknown"; reason = "no operation record and artifacts younger than TTL"; }
+          } else { activity = "unknown"; reason = "unrecognized record state: " + recordState; }
+        } catch (error) {
+          ownership = "unverified";
+          activity = "unknown";
+          reason = String(error);
+        }
+        entries.push({
+          id, kind: "plugin_staging_op", path: dirPath, ownership, activity,
+          activity_evidence: { record_state: recordState ?? "no_operation_record", in_memory_running: activity === "running", journal_status: journalStatus, artifacts: artifactHashes },
+          disposition: ownership === "proven" && activity === "terminal" ? "preserve_external_then_clean" : "block",
+          reason: ownership === "proven" && activity === "terminal" ? reason : `拒绝认领: ${reason}`,
+        });
+      }
+    }
     return {
-      status: "failed",
-      code: "cli_failed",
-      message: `remove preview failed: ${JSON.stringify(parsed.errors ?? parsed.status)}`,
-      envelope: parsed,
+      schema_version: 1 as const,
+      home: this.deps.home,
+      host: hostname(),
+      roots: { plugin_staging: root, durable_sources: this.paths.durableSourceRoot, private_runtimes: this.paths.runtimeRoot },
+      entries,
+      notes,
     };
   }
 
-  private async projectRemoveConfirmImpl(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<PlanConfirmOutcome> {
-    if (input.action === "reject") {
-      this.pending.delete("remove");
-      return { status: "rejected" };
+  // ---- separately approved host staging cleanup (writes host-receipt) -----
+  // 独立交互,不隐藏:只读预览 → 单独精确用户批准 → 逐字节外置(保留 mtime)并
+  // 校验 → 删前复核无新文件 → 删除 op 目录 → staging 根仅余 host-receipt.json。
+  // uninstallPreview 绝不自动清目录或写 receipt(巴克 2026-11-01 裁定)。
+
+  private productRoots(): string[] {
+    const p = this.paths;
+    return [path.join(this.deps.home, ".mem-sharing"), p.codeRoot, p.durableSourceRoot, p.runtimeRoot,
+            p.pluginStagingRoot, path.join(this.deps.home, ".local", "share", "mem-sharing-versions")];
+  }
+
+  private validateExternalEvidenceDir(evidenceDir: string): { ok: true; backupRoot: string } | { ok: false; message: string } {
+    // P1 修复:预览必须零写——只读校验,不 mkdir;evidenceDir 须已存在且整条
+    // 祖先链为真实目录(无符号链接),backupRoot 须尚不存在。
+    if (!path.isAbsolute(evidenceDir) || path.resolve(evidenceDir) !== evidenceDir) return { ok: false, message: "外置证据目录必须是规范绝对路径" };
+    const backupRoot = path.join(evidenceDir, "memsharing-host-staging");
+    for (const root of this.productRoots()) {
+      if (backupRoot === root || backupRoot.startsWith(root + path.sep) || root.startsWith(backupRoot + path.sep)) {
+        return { ok: false, message: "外置证据目录不得与任何产品根重叠: " + root };
+      }
     }
-    const popped = this.popPending("remove", input.confirmationToken);
-    if (!popped.ok) return popped.outcome as PlanConfirmOutcome;
-    const approvalFile = this.buildApprovalFile(popped.pending);
-    const argv = this.confirmArgv(popped.pending, approvalFile);
-    const result = await this.runJson<PlanConfirmOutcome>(argv, { signal });
-    if ("failure" in result) return result.failure;
-    const { parsed, exitKind } = result;
-    if (exitKind === "completed") return { status: "completed", envelope: parsed };
-    return {
-      status: "failed",
-      code: `exit_${exitKind}`,
-      message: `remove confirm failed: ${JSON.stringify(parsed.errors ?? parsed.status)}`,
-      envelope: parsed,
+    const chain: string[] = [];
+    let current = evidenceDir;
+    for (;;) {
+      chain.push(current);
+      const parent = path.dirname(current);
+      if (parent === current) break;
+      current = parent;
+    }
+    for (const dir of chain.reverse()) {
+      let st: fs.Stats;
+      try { st = fs.lstatSync(dir); } catch { return { ok: false, message: "外置证据目录或其祖先不存在(预览零写,不创建): " + dir }; }
+      if (!st.isDirectory() || st.isSymbolicLink()) return { ok: false, message: "外置证据目录祖先不是真实目录: " + dir };
+      if (dir === evidenceDir && fs.existsSync(backupRoot)) return { ok: false, message: "外置证据树已存在，须使用新目录: " + backupRoot };
+    }
+    return { ok: true, backupRoot };
+  }
+
+  private stagingCleanupPreviewImpl(evidenceDir: string): PreviewOutcome {
+    const validated = this.validateExternalEvidenceDir(evidenceDir);
+    if (!validated.ok) return { status: "failed", code: "evidence_dir_invalid", message: validated.message };
+    const inventory = this.stagingInventory();
+    const blockers = inventory.entries.filter(e => e.disposition === "block");
+    if (blockers.length) {
+      return {
+        status: "failed",
+        code: "staging_blocked",
+        message: "存在活跃/未知 staging 条目，清理中止（逐项原因见 envelope）；解决或显式保留后再试。",
+        envelope: { entries: blockers.map(b => ({ path: b.path, activity: b.activity, reason: b.reason })) },
+      };
+    }
+    const claimable = inventory.entries.filter(e => e.disposition === "preserve_external_then_clean");
+    const plan = {
+      command: "host-staging-cleanup",
+      home: this.deps.home,
+      host: hostname(),
+      evidence_dir: evidenceDir,
+      backup_root: validated.backupRoot,
+      entries: claimable.map(e => ({ dir: path.basename(e.path), path: e.path, activity_evidence: e.activity_evidence })),
+      receipt_path: path.join(this.paths.pluginStagingRoot, "host-receipt.json"),
     };
+    const stored = this.storePending("stagingCleanup", plan, "plan-plus-evidence", []);
+    return { status: "approval_required", planKind: "host-staging-cleanup", ...stored, plan };
+  }
+
+  private stagingCleanupConfirmImpl(input: { action: "confirm" | "reject"; confirmationToken?: string }): PlanConfirmOutcome {
+    if (input.action === "reject") { this.pending.delete("stagingCleanup"); return { status: "rejected" }; }
+    const popped = this.popPending("stagingCleanup", input.confirmationToken);
+    if (!popped.ok) return popped.outcome as PlanConfirmOutcome;
+    type Artifact = { name: string; sha256: string; mode: number };
+    type PlanEntry = { dir: string; path: string; activity_evidence: { record_state?: string; in_memory_running?: boolean; journal_status?: string | null; artifacts?: Artifact[] } };
+    const plan = popped.pending.plan as unknown as { evidence_dir: string; backup_root: string; entries: PlanEntry[]; receipt_path: string };
+    const digest = planDigest(popped.pending.plan);
+    // P1-B:重建计划仅作比较,必须与获批计划深度相等(目录/工件 name+sha256+mode/
+    // 状态任何变化、新增目录或阻断条目)——比较失败零外置零删除。
+    const rebuilt = this.stagingCleanupPreviewImpl(plan.evidence_dir);
+    if (rebuilt.status !== "approval_required"
+        || planDigest((rebuilt as { plan?: Record<string, unknown> }).plan as Record<string, unknown>) !== digest) {
+      return { status: "stale_plan", detail: "staging 现场与清理计划不符（文件字节/模式/状态变化或新增），请重新预览" };
+    }
+    const fsyncDir = (directory: string): void => {
+      const fd = fs.openSync(directory, "r");
+      try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+    };
+    let backupRootCreated = false;
+    try {
+      fs.mkdirSync(plan.backup_root, { mode: 0o700, recursive: false });
+      backupRootCreated = true;
+      // 外置:严格迭代获批 entries/artifacts(绝不采纳现场新内容);copy 保留 mode
+      // 与 mtime(供核心核 TTL),逐文件字节校验+fsync。
+      for (const entry of plan.entries) {
+        const target = path.join(plan.backup_root, entry.dir);
+        fs.mkdirSync(target, { mode: 0o700 });
+        for (const artifact of entry.activity_evidence.artifacts ?? []) {
+          const sourceFile = path.join(entry.path, artifact.name);
+          const stat = fs.lstatSync(sourceFile);
+          if (stat.isSymbolicLink() || !stat.isFile() || (stat.mode & 0o777) !== artifact.mode
+              || createHash("sha256").update(fs.readFileSync(sourceFile)).digest("hex") !== artifact.sha256) {
+            throw Object.assign(new Error("外置前复核失败(字节/模式变化): " + sourceFile), { code: "staging_changed_before_externalize" });
+          }
+          const targetFile = path.join(target, artifact.name);
+          fs.copyFileSync(sourceFile, targetFile);
+          fs.chmodSync(targetFile, stat.mode & 0o777);
+          fs.utimesSync(targetFile, stat.atime, stat.mtime);
+          if (createHash("sha256").update(fs.readFileSync(targetFile)).digest("hex") !== artifact.sha256) {
+            throw Object.assign(new Error("外置拷贝字节校验失败: " + targetFile), { code: "externalize_verify_failed" });
+          }
+          const fd = fs.openSync(targetFile, "r+");
+          try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+        }
+        fsyncDir(target);
+      }
+      // P1-C:外置目录层级全部持久化(backup_root 与 evidence_dir),任一 fsync
+      // 失败零源删除;保留外置证据,重试使用新证据目录。
+      fsyncDir(plan.backup_root);
+      fsyncDir(plan.evidence_dir);
+    } catch (error) {
+      // External evidence may now contain unapproved additions. Preserve it
+      // on failure; never recursively reclaim a root after exposing it.
+      const code = (error as { code?: string }).code ?? "externalize_failed";
+      return { status: "failed", code, message: String((error as Error).message ?? error) + (backupRootCreated ? "；外置失败证据已保留，重试须选新证据目录：" + plan.backup_root : ""),
+        envelope: { backup_root: plan.backup_root, partial_evidence_retained: backupRootCreated, source_deletion_started: false } };
+    }
+    // P1-C:删第一源之前核全树 digest(双算一致)。
+    const treeFirst = toolTreeDigest(plan.backup_root);
+    if (treeFirst !== toolTreeDigest(plan.backup_root)) {
+      return { status: "failed", code: "external_tree_unstable", message: "外置树 digest 不稳定，零删除" };
+    }
+    // 删除:逐获批工件先复核 hash+mode 再 unlink;目录 rmdir 收尾,未知新文件令
+    // rmdir 失败并保留现场(已核验工件已外置),绝不递归吞删。
+    for (const entry of plan.entries) {
+      for (const artifact of entry.activity_evidence.artifacts ?? []) {
+        const sourceFile = path.join(entry.path, artifact.name);
+        const stat = fs.lstatSync(sourceFile);
+        if (stat.isSymbolicLink() || !stat.isFile()
+            || (stat.mode & 0o777) !== artifact.mode
+            || createHash("sha256").update(fs.readFileSync(sourceFile)).digest("hex") !== artifact.sha256) {
+          return { status: "failed", code: "staging_changed_before_delete", message: "删除前复核失败(字节/模式变化): " + sourceFile };
+        }
+        fs.unlinkSync(sourceFile);
+      }
+      try { fs.rmdirSync(entry.path); } catch (error) {
+        return { status: "failed", code: "staging_dir_not_empty", message: "目录存在未核验新文件，已保留现场: " + entry.path + " (" + String(error) + ")" };
+      }
+    }
+    const pendingRoot = path.join(this.paths.pluginStagingRoot, "pending");
+    if (fs.existsSync(pendingRoot) && fs.readdirSync(pendingRoot).length === 0) fs.rmdirSync(pendingRoot);
+    // 单一时刻供 generated_at 与 confirmed_at 共用:真实时钟下两次 now() 会令
+    // confirmed_at > generated_at,核心按"receipt 不得早于批准"拒绝(呱唧实读发现)。
+    const confirmedAt = this.now().toISOString();
+    const receipt = {
+      schema_version: 1, product_id: "mem-sharing", kind: "host-staging-retired",
+      home: this.deps.home, host: hostname(), staging_root: this.paths.pluginStagingRoot,
+      backup_root: plan.backup_root, backup_tree_sha256: treeFirst,
+      generated_at: confirmedAt, status: "completed",
+      approval: { digest, confirmed_at: confirmedAt, reference: "paseo-plugin memsharing stagingCleanup confirm-screen user press" },
+      terminal_evidence: plan.entries.map((entry) => ({
+        dir: entry.dir,
+        record_state: entry.activity_evidence.record_state ?? "no_operation_record",
+        in_memory_running: false,
+        journal_status: (entry.activity_evidence as { journal_status?: string | null }).journal_status ?? null,
+        artifacts: (entry.activity_evidence.artifacts ?? []).map(({ name, sha256 }: Artifact) => ({ name, sha256 })),
+      })),
+    };
+    fs.mkdirSync(this.paths.pluginStagingRoot, { mode: 0o700, recursive: true });
+    fs.writeFileSync(plan.receipt_path, JSON.stringify(receipt, null, 2), { encoding: "utf8", mode: 0o600 });
+    const receiptFd = fs.openSync(plan.receipt_path, "r+");
+    try { fs.fsyncSync(receiptFd); } finally { fs.closeSync(receiptFd); }
+    fsyncDir(this.paths.pluginStagingRoot);
+    return {
+      status: "completed",
+      envelope: { status: "completed", command: "host-staging-cleanup", receipt: plan.receipt_path, backup_root: plan.backup_root, backup_tree_sha256: treeFirst, externalized: plan.entries.length },
+    };
+  }
+
+  private ckFollowUpInputs(manifest: string): { interpreter: string; recoverPy: string } | { error: string } {
+    try {
+      if (!path.isAbsolute(manifest) || fs.realpathSync(manifest) !== manifest) return { error: "manifest 必须是绝对真实路径" };
+      const data = JSON.parse(fs.readFileSync(manifest, "utf8"));
+      if (data.status !== "completed") return { error: "主 manifest 必须 completed" };
+      const interpreter = data?.plan?.recovery_runtime?.interpreter;
+      if (typeof interpreter !== "string" || !interpreter) return { error: "主结果未绑定独立解释器" };
+      const recoverPy = path.join(path.dirname(manifest), "recover.py");
+      if (!fs.lstatSync(recoverPy).isFile()) return { error: "外置 recover.py 缺失" };
+      return { interpreter, recoverPy };
+    } catch (error) {
+      return { error: String(error) };
+    }
+  }
+
+  private async runRecoverPy(argv: readonly string[], signal?: AbortSignal): Promise<{ parsed: Record<string, unknown> | null; exitKind: string; raw: CliRunOutcome }> {
+    const outcome = await this.runCli(argv, { signal });
+    if (outcome.kind !== "completed") return { parsed: null, exitKind: `cli_${outcome.kind}`, raw: outcome };
+    const parsed = parseCliJson(outcome.stdout ?? "");
+    const value = parsed.ok ? jsonRecord(parsed.value) : null;
+    const exitKind = classifyExitCode(outcome.exitCode ?? -1);
+    return { parsed: value, exitKind, raw: outcome };
+  }
+
+  async ckChoiceRetain(manifest: string): Promise<{ status: "completed" | "failed"; envelope?: Record<string, unknown>; code?: string; message?: string }> {
+    const inputs = this.ckFollowUpInputs(manifest);
+    if ("error" in inputs) return { status: "failed", code: "ck_followup_binding_missing", message: inputs.error };
+    const { parsed, exitKind } = await this.runRecoverPy([inputs.interpreter, "-I", "-S", "-B", inputs.recoverPy, "--manifest", manifest, "--ck-choice", "retain"]);
+    if (parsed && this.coreEnvelopeStatusValid(exitKind, parsed) && exitKind === "completed") return { status: "completed", envelope: parsed };
+    return { status: "failed", code: "ck_retain_failed", message: `retain: rc=${exitKind} status=${String(parsed?.status ?? "unparseable")}` };
+  }
+
+  private async ckUninstallPreviewImpl(input: { manifest: string; ckSource: string; ckAgents: readonly string[]; ckProject?: string }, signal?: AbortSignal): Promise<PreviewOutcome> {
+    const inputs = this.ckFollowUpInputs(input.manifest);
+    if ("error" in inputs) return { status: "failed", code: "ck_followup_binding_missing", message: inputs.error };
+    // source 必须用户显式选择;不自动定位、不自动执行。
+    if (!path.isAbsolute(input.ckSource) || fs.realpathSync(input.ckSource) !== input.ckSource) {
+      return { status: "failed", code: "ck_source_invalid", message: "CK source 必须是用户显式选择的绝对真实路径" };
+    }
+    const argv = [inputs.interpreter, "-I", "-S", "-B", inputs.recoverPy, "--manifest", input.manifest, "--ck-choice", "uninstall", "--ck-source", input.ckSource];
+    for (const agent of input.ckAgents) argv.push("--ck-agent", agent);
+    if (input.ckProject) argv.push("--ck-project", input.ckProject);
+    const { parsed, exitKind } = await this.runRecoverPy(argv, signal);
+    if (!parsed || !this.coreEnvelopeStatusValid(exitKind, parsed)) {
+      return { status: "failed", code: "cli_status_mismatch", message: `CK 预览: rc=${exitKind} status=${String(parsed?.status ?? "unparseable")}` };
+    }
+    if (exitKind === "approval_required") {
+      const plan = this.corePlanFromEnvelope(parsed);
+      if (!plan) return { status: "failed", code: "plan_unavailable", message: "CK preview did not expose a plan" };
+      const stored = this.storePending("ckUninstall", plan, "core-envelope", argv);
+      return { status: "approval_required", planKind: "uninstall-context-keeper", ...stored, plan };
+    }
+    return { status: "failed", code: String(parsed.status ?? "ck_unavailable"), message: `CK preview: ${JSON.stringify(parsed.errors ?? parsed.status)}`, envelope: parsed };
+  }
+
+  private async ckUninstallConfirmImpl(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<PlanConfirmOutcome> {
+    if (input.action === "reject") { this.pending.delete("ckUninstall"); return { status: "rejected" }; }
+    const popped = this.popPending("ckUninstall", input.confirmationToken);
+    if (!popped.ok) return popped.outcome as PlanConfirmOutcome;
+    // 独立 CK 批准,绝不复用主 uninstall 批准;批准文件仍走外置临时文件。
+    const approvalFile = this.buildExternalApprovalFile(popped.pending);
+    try {
+      const argv = [...popped.pending.confirmArgv, "--ck-approval-file", approvalFile];
+      const { parsed, exitKind } = await this.runRecoverPy(argv, signal);
+      if (!parsed || !this.coreEnvelopeStatusValid(exitKind, parsed)) {
+        return { status: "failed", code: "cli_status_mismatch", message: `CK 执行: rc=${exitKind} status=${String(parsed?.status ?? "unparseable")}`, envelope: parsed ?? undefined };
+      }
+      if (exitKind === "completed") return { status: "completed", envelope: parsed };
+      return { status: "failed", code: `exit_${exitKind}`, message: `CK confirm failed: ${JSON.stringify(parsed.errors ?? parsed.status)}`, envelope: parsed };
+    } finally {
+      try { fs.rmSync(path.dirname(approvalFile), { recursive: true, force: true }); } catch { /* best-effort */ }
+    }
   }
 
   // ---- optional Context Keeper user install (independent approval) ----
@@ -976,7 +1420,7 @@ export class Orchestrator {
     return this.operate("machine", "execute", signal, owned => this.machineConfirmImpl(input, owned));
   }
 
-  async projectEnablePreview(input: { projectRoot: string; agents: readonly string[]; memory?: "enable" | "disable" }, signal?: AbortSignal): Promise<PreviewOutcome> {
+  async projectEnablePreview(input: { projectRoot: string; agents: readonly string[] }, signal?: AbortSignal): Promise<PreviewOutcome> {
     return this.operate("enable", "preview", signal, owned => this.projectEnablePreviewImpl(input, owned));
   }
 
@@ -984,12 +1428,31 @@ export class Orchestrator {
     return this.operate("enable", "execute", signal, owned => this.projectEnableConfirmImpl(input, owned));
   }
 
-  async projectRemovePreview(projectRoot: string, signal?: AbortSignal): Promise<PreviewOutcome> {
-    return this.operate("remove", "preview", signal, owned => this.projectRemovePreviewImpl(projectRoot, owned));
+  // Uninstall family: deliberately NOT wrapped in operate() — the flow must
+  // never create its own operation/approval entries inside the to-be-deleted
+  // staging root (host materials stay external; core manifest persists them).
+  async uninstallPreview(backupDir: string, signal?: AbortSignal): Promise<PreviewOutcome> {
+    return this.uninstallPreviewImpl(backupDir, signal);
   }
 
-  async projectRemoveConfirm(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<PlanConfirmOutcome> {
-    return this.operate("remove", "execute", signal, owned => this.projectRemoveConfirmImpl(input, owned));
+  async uninstallConfirm(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<ConfirmOutcome> {
+    return this.uninstallConfirmImpl(input, signal);
+  }
+
+  async stagingCleanupPreview(evidenceDir: string): Promise<PreviewOutcome> {
+    return this.stagingCleanupPreviewImpl(evidenceDir);
+  }
+
+  async stagingCleanupConfirm(input: { action: "confirm" | "reject"; confirmationToken?: string }): Promise<PlanConfirmOutcome> {
+    return this.stagingCleanupConfirmImpl(input);
+  }
+
+  async ckUninstallPreview(input: { manifest: string; ckSource: string; ckAgents: readonly string[]; ckProject?: string }, signal?: AbortSignal): Promise<PreviewOutcome> {
+    return this.ckUninstallPreviewImpl(input, signal);
+  }
+
+  async ckUninstallConfirm(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<PlanConfirmOutcome> {
+    return this.ckUninstallConfirmImpl(input, signal);
   }
 
   async ckPreview(ckSource?: string, signal?: AbortSignal): Promise<PreviewOutcome> {

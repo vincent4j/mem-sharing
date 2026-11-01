@@ -13,7 +13,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import agm
-from agm_core import batch_enable, enable, paths, registry, remove
+from agm_core import batch_enable, enable, paths, registry
+from agm_core.registry import serialize_registry
 from runtime_fixture import seed_runtime, seed_project_executors
 
 NOW = '2026-10-30T00:00:00Z'
@@ -50,14 +51,21 @@ class BatchTests(unittest.TestCase):
         return root
 
     def single(self, root, *, policy=None, removing=False):
-        request = dict(self.request, project=str(root), agents=None, memory_choice=policy)
-        runner = remove.run if removing else enable.run
-        preview = runner(request)
+        # 2026-11-01 退役:remove-memory/--memory/--no-memory 不复存在;policy/removing
+        # 仅为旧调用点兼容,disabled 现场改为启用后直接登记历史停用(同历史 --no-memory 结果态)。
+        request = dict(self.request, project=str(root), agents=None)
+        preview = enable.run(request)
         self.assertEqual(preview['status'], 'approval_required', preview)
         approval = json.loads(preview['next_action'])
         approval.update(confirmed_at=NOW, reference='synthetic single approval')
-        result = runner(dict(request, approval=approval))
+        result = enable.run(dict(request, approval=approval))
         self.assertEqual(result['status'], 'completed', result)
+        if policy == 'disabled' or removing:
+            data = registry.load_registry(self.runtime.registry,
+                allowed_user_paths=paths.allowed_user_paths(self.config, None, home=str(self.home)))
+            data['projects'][str(root)]['memory_policy'] = 'disabled'
+            allowed = paths.allowed_user_paths(self.config, None, home=str(self.home))
+            self.runtime.registry.write_bytes(serialize_registry(data, allowed_user_paths=allowed))
 
     def preview(self):
         before = snapshot(self.area)
@@ -83,7 +91,6 @@ class BatchTests(unittest.TestCase):
         disabled = self.repo('disabled')
         self.single(disabled, policy='disabled')
         removed = self.repo('removed')
-        self.single(removed)
         self.single(removed, removing=True)
         plain = self.directory / 'plain'
         plain.mkdir()
@@ -95,7 +102,7 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(states['disabled'], 'disabled')
         self.assertEqual(states['removed'], 'disabled')
         self.assertEqual(states['enabled'], 'enabled')
-        self.assertTrue(all('需显式单独重新启用' in r['action'] for r in preview['projects'] if r['state'] == 'disabled'))
+        self.assertTrue(all('历史停用登记' in r['action'] for r in preview['projects'] if r['state'] == 'disabled'))
         with patch('builtins.input', side_effect=AssertionError('no per-project prompt')):
             result = self.execute(approval)
         self.assertEqual(result['status'], 'completed', result)
@@ -322,7 +329,7 @@ class BatchTests(unittest.TestCase):
             bad = copy.deepcopy(approval)
             bad[mutate] = None
             with self.assertRaises(ValueError):
-                agm.validate_approval(bad, command=batch_enable.COMMAND, agents=paths.resolve_agents(None), memory_choice=None)
+                agm.validate_approval(bad, command=batch_enable.COMMAND, agents=paths.resolve_agents(None))
         args = agm.build_parser().parse_args([batch_enable.COMMAND, '--directory', str(root), '--agent', 'claude'])
         self.assertEqual(args.agent, ['claude'])
         for argv in ([batch_enable.COMMAND], [batch_enable.COMMAND, '--directory', str(root), '--no-memory']):

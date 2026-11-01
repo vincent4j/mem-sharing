@@ -5,7 +5,7 @@
 // reason when the integrated core or the pinned CK checkout is absent.
 
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import { Orchestrator, realRunner } from "../server/orchestrator";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const CORE = "/Users/vincent4j/.paseo/worktrees/0p9qz2xa/normal-panda";
+const CORE = path.resolve(here, "../../..");
 const CK_SOURCE = "/Users/vincent4j/Tools/Source/context-keeper";
 const CK_PIN = "695074ee4b6ddb9999be858093f833d6377bd641";
 // CK sources may not live under /tmp or /var/folders (kernel forbids it);
@@ -34,13 +34,13 @@ function haveCore(): boolean {
 function buildReleaseFixture(area: string, version = "0.1.3", marker?: string): { pluginDir: string; digest: string } {
   const source = path.join(area, "S");
   fs.mkdirSync(source, { recursive: true });
-  const managed = ["scripts", "README.md", "DESIGN.md", "INSTALL.md", "SKILL.md", "AGENTS.md", "llms.txt", "docs/architecture.md", "docs/operations.md"];
+  const managed = ["scripts", "README.md", "DESIGN.md", "INSTALL.md", "SKILL.md", "AGENTS.md", "llms.txt", "docs/architecture.md", "docs/operations.md", "docs/uninstall-design.md"];
   for (const item of managed) {
     const from = path.join(CORE, item);
     assert.ok(fs.existsSync(from), `managed source item missing in integrated core: ${item}`);
     const to = path.join(source, item);
     fs.mkdirSync(path.dirname(to), { recursive: true });
-    fs.cpSync(from, to, { recursive: true });
+    fs.cpSync(from, to, { recursive: true, filter: filename => !filename.split(path.sep).includes("__pycache__") && !filename.endsWith(".pyc") });
   }
   if (marker) fs.appendFileSync(path.join(source, "README.md"), "\n" + marker + "\n");
   sh(source, ["git", "init", "-q"]);
@@ -86,6 +86,7 @@ test("real bridge: payload -> bootstrap -> machine install -> project cycle -> C
       pluginDir,
       searchedPluginDirs: [pluginDir],
       releaseManifestSha256: digest,
+      pluginRecords: [{ id: "bridge-custom-alias", source: "directory", path: pluginDir, enabled: true }],
     });
 
     // --- bootstrap: payload -> durable source export
@@ -171,51 +172,18 @@ test("real bridge: payload -> bootstrap -> machine install -> project cycle -> C
     assert.equal(rejected.status, "rejected");
     assert.equal(fs.existsSync(path.join(projectC, "AGENTS.md")), false, "reject executed a write");
 
-    // --- remove via --preview exact template
-    const remove = await orch.projectRemovePreview(project);
-    assert.equal(remove.status, "approval_required", JSON.stringify(remove));
-    if (remove.status !== "approval_required") return;
-    assert.equal(remove.plan.command, "remove-memory");
-    assert.equal(remove.plan.memory_policy, "disabled");
-    assert.match(String(remove.plan.registry_sha256), /^[0-9a-f]{64}$/);
-    // Registry drift must be rejected by the original kernel, preserving
-    // the bytes written after preview. Whitespace changes the fingerprint
-    // without making the ledger invalid JSON.
-    const registryPath = path.join(home, ".mem-sharing/var/registry.json");
-    const driftedRegistry = fs.readFileSync(registryPath, "utf8") + "\n";
-    fs.writeFileSync(registryPath, driftedRegistry);
-    const registryRefused = await orch.projectRemoveConfirm({ action: "confirm", confirmationToken: remove.confirmationToken });
-    assert.equal(registryRefused.status, "failed", JSON.stringify(registryRefused));
-    assert.equal(fs.readFileSync(registryPath, "utf8"), driftedRegistry);
-    assert.ok(fs.existsSync(path.join(project, "AGENTS.md")), "refused remove changed project entry");
-    const freshRemove = await orch.projectRemovePreview(project);
-    assert.equal(freshRemove.status, "approval_required", JSON.stringify(freshRemove));
-    if (freshRemove.status !== "approval_required") return;
-    const removed = await orch.projectRemoveConfirm({ action: "confirm", confirmationToken: freshRemove.confirmationToken });
-    assert.equal(removed.status, "completed", JSON.stringify(removed));
-    // Explicit three-way policy: preserving disabled must not silently revive
-    // memory; --memory lifts it only through the original exact approval.
-    const preserved = await orch.projectEnablePreview({ projectRoot: project, agents: ["codex"] });
-    assert.equal(preserved.status, "approval_required", JSON.stringify(preserved));
-    if (preserved.status !== "approval_required") return;
-    assert.equal(preserved.plan.memory_policy, "disabled");
-    const preserveDone = await orch.projectEnableConfirm({ action: "confirm", confirmationToken: preserved.confirmationToken });
-    assert.equal(preserveDone.status, "completed", JSON.stringify(preserveDone));
-    const revive = await orch.projectEnablePreview({ projectRoot: project, agents: ["codex"], memory: "enable" });
-    assert.equal(revive.status, "approval_required", JSON.stringify(revive));
-    if (revive.status !== "approval_required") return;
-    assert.equal(revive.plan.memory_policy, "follow_ck");
-    assert.equal((revive.plan.memory_transition as Record<string, unknown>).before, "disabled");
-    const revived = await orch.projectEnableConfirm({ action: "confirm", confirmationToken: revive.confirmationToken });
-    assert.equal(revived.status, "completed", JSON.stringify(revived));
-    const rulesOnly = await orch.projectEnablePreview({ projectRoot: project, agents: ["codex"], memory: "disable" });
-    assert.equal(rulesOnly.status, "approval_required", JSON.stringify(rulesOnly));
-    if (rulesOnly.status !== "approval_required") return;
-    assert.equal(rulesOnly.plan.memory_policy, "disabled");
-    const rulesDone = await orch.projectEnableConfirm({ action: "confirm", confirmationToken: rulesOnly.confirmationToken });
-    assert.equal(rulesDone.status, "completed", JSON.stringify(rulesDone));
-    assert.ok(fs.existsSync(path.join(project, "AGENTS.md")), "rules-only selection removed shared rules");
-
+    // A separate project plan still binds the registry fingerprint. A drifted
+    // approved plan must refuse and retain every private project byte.
+    const extra=path.join(area2,"registry-drift-project");fs.mkdirSync(extra);sh(extra,["git","init","-q"]);
+    const pending=await orch.projectEnablePreview({projectRoot:extra,agents:["codex"]});
+    assert.equal(pending.status,"approval_required",JSON.stringify(pending));
+    if(pending.status!=="approval_required")return;
+    const ledger=path.join(home,".mem-sharing/var/registry.json"),saved=fs.readFileSync(ledger);
+    const changedLedger=JSON.parse(saved.toString());changedLedger.product.version="99.0.0";fs.writeFileSync(ledger,JSON.stringify(changedLedger));
+    const refused=await orch.projectEnableConfirm({action:"confirm",confirmationToken:pending.confirmationToken});
+    assert.notEqual(refused.status,"completed");assert.equal(fs.existsSync(path.join(extra,"AGENTS.md")),false);
+    fs.writeFileSync(ledger,saved);
+    assert.ok(fs.existsSync(path.join(project,"AGENTS.md")));
 
     // --- CK negative: no source supplied -> real CLI reports unavailability
     const ckNoSource = await orch.ckPreview();
@@ -232,7 +200,7 @@ test("real bridge: payload -> bootstrap -> machine install -> project cycle -> C
     if (fs.existsSync(path.join(CK_SOURCE, ".git"))) {
       const head = sh(CK_SOURCE, ["git", "rev-parse", "HEAD"]);
       if (head !== CK_PIN) {
-        t.skip(`CK checkout at ${CK_SOURCE} is ${head}, not the pinned ${CK_PIN}`);
+        await t.test("optional pinned CK install", child => child.skip(`CK checkout ${head} differs from pin ${CK_PIN}`));
       } else {
         fs.mkdirSync(WORKSPACE_SCRATCH, { recursive: true });
         const ckCopy = path.join(WORKSPACE_SCRATCH, `ck-source-${Date.now()}`);
@@ -253,7 +221,7 @@ test("real bridge: payload -> bootstrap -> machine install -> project cycle -> C
         }
       }
     } else {
-      t.skip(`real CK checkout missing at ${CK_SOURCE}; CK positive path not exercised`);
+      await t.test("optional pinned CK install", child => child.skip(`CK checkout missing at ${CK_SOURCE}`));
     }
 
     // --- REAL kernel drift: after an exact preview, modify a managed
@@ -282,6 +250,40 @@ test("real bridge: payload -> bootstrap -> machine install -> project cycle -> C
       assert.notEqual(drifted.status, "completed", JSON.stringify(drifted));
       assert.equal(fs.readFileSync(projectEntry).toString(), "PRIVATE: user wrote this first\n", "private bytes altered by refused plan");
     }
+
+    // Actual current Node argv -> current Python core, temporary HOME only.
+    // Age synthetic orphan artifacts; no neighboring operation grants ownership.
+    const stageRoot=path.join(home,".local/share/mem-sharing-plugin-staging");
+    const age=(dir:string):void=>{if(!fs.existsSync(dir))return;for(const name of fs.readdirSync(dir)){const file=path.join(dir,name);if(fs.lstatSync(file).isDirectory())age(file);else {const old=new Date(Date.now()-660000);fs.utimesSync(file,old,old);}}};
+    age(stageRoot);
+    const evidence=path.join(area2,"host-evidence");fs.mkdirSync(evidence);
+    const stage=await orch.stagingCleanupPreview(evidence);
+    assert.equal(stage.status,"approval_required",JSON.stringify(stage));
+    if(stage.status!=="approval_required")return;
+    const cleaned=await orch.stagingCleanupConfirm({action:"confirm",confirmationToken:stage.confirmationToken});
+    assert.equal(cleaned.status,"completed",JSON.stringify(cleaned));
+    const backup=path.join(area2,"external-uninstall");
+    const uninstall=await orch.uninstallPreview(backup);
+    assert.equal(uninstall.status,"approval_required",JSON.stringify(uninstall));
+    if(uninstall.status!=="approval_required")return;
+    assert.equal((uninstall.plan.host_obligation as Record<string,unknown>).plugin_id,"bridge-custom-alias");
+    const deleted=await orch.uninstallConfirm({action:"confirm",confirmationToken:uninstall.confirmationToken});
+    assert.equal(deleted.status,"completed",JSON.stringify(deleted));
+    if(deleted.status!=="completed")return;
+    assert.equal(deleted.envelope.machine_assets,"completed");assert.equal(deleted.envelope.host_plugin,"pending");assert.equal(deleted.envelope.overall,"partial");
+    assert.equal(fs.existsSync(path.join(home,".mem-sharing")),false);assert.equal(fs.existsSync(path.join(home,".local/share/mem-sharing")),false);
+    assert.equal(fs.existsSync(stageRoot),false);
+    assert.ok(fs.existsSync(path.join(project,"AGENTS.md"))); // Native project rules survive.
+    const runtime=uninstall.plan.recovery_runtime as Record<string,unknown>;
+    const external=["-I","-S","-B",path.join(backup,"recover.py"),"--manifest",path.join(backup,"manifest.json")];
+    const restore=spawnSync(String(runtime.interpreter),external,{encoding:"utf8"});
+    assert.equal(restore.status,5,restore.stdout+restore.stderr);
+    const restorePlan=JSON.parse(restore.stdout).plan,approval=path.join(area2,"restore-approval.json");
+    fs.writeFileSync(approval,JSON.stringify({plan:restorePlan,reference:"explicit synthetic external restore",confirmed_at:new Date().toISOString()}),{mode:0o600});
+    const restored=spawnSync(String(runtime.interpreter),[...external,"--approval-file",approval],{encoding:"utf8"});
+    assert.equal(restored.status,0,restored.stdout+restored.stderr);
+    assert.equal(JSON.parse(restored.stdout).status,"restored");
+    assert.ok(fs.existsSync(path.join(home,".mem-sharing/var/registry.json")));
 
     // --- Actual in-flight machine CLI cancellation at a deterministic
     // journal/output boundary. Only a test-side Python hook pauses; the
@@ -365,7 +367,7 @@ test("real bridge negative: dev sentinel blocks bootstrap on a real machine", { 
   fs.mkdirSync(home, { recursive: true });
   try {
     const { pluginDir } = buildReleaseFixture(area);
-    const orch = new Orchestrator({ runner: realRunner(home), home, pluginDir, searchedPluginDirs: [pluginDir] });
+    const orch = new Orchestrator({ runner: realRunner(home), home, pluginDir, searchedPluginDirs: [pluginDir], releaseManifestSha256: "" });
     assert.equal(orch.releaseIdentity().status, "missing");
     const blocked = await orch.bootstrapPreview();
     assert.equal(blocked.status, "identity_missing");

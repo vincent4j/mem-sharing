@@ -12,8 +12,10 @@ memSharing(多 Agent 记忆共享与融合):纯文件、零服务、一句话安
 ## 体系文档
 
 - [系统架构](docs/architecture.md):R/C/V 布局、台账 schema=3、事务与恢复、六家执行器（含 OpenCode 桌面／CLI 分面检测）接入与升级；机器 fresh/同来源再次安装/合法 upgrade 缺省全部核验 installed，显式限定新增；项目缺省旧三家、专属入口按实际使用维护。
-- [操作手册](docs/operations.md):安装/启用/批量/停用/整理/健康检查/排查的完整操作说明。
+- [操作手册](docs/operations.md):安装/规则接入/批量/政策迁移/整机卸载/整理/健康检查/排查的完整操作说明。
 - [验收门禁总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md):分层结论、当前验收与暂停续审入口；阶段原件按 Git 历史取回。
+
+- [整机卸载方案](docs/uninstall-design.md):六家归还、外置恢复、宿主绑定与 CK 独立选择。
 
 ## 设计与验收
 

@@ -127,7 +127,7 @@ class CliHarness(unittest.TestCase):
         """完整装配记忆档:先建项目 Skill 链接供源发现,再预览→批准→执行。"""
         (self.root/".workbuddy/memory").mkdir(parents=True,exist_ok=True)  # Native WorkBuddy-created fixture, §8.2.
         self.link_alias()
-        return self.approve(["enable-memory", "--project", str(self.root), "--memory", "--agent", "codex", "claude", "workbuddy"], edit=edit)
+        return self.approve(["enable-memory", "--project", str(self.root), "--agent", "codex", "claude", "workbuddy"], edit=edit)
 
     def check(self, *extra):
         return self.cli(["check-memory", "--project", str(self.root), *extra])
@@ -209,13 +209,15 @@ class IdempotencyTests(CliHarness):
         self.assertTrue((self.root/'AGENTS.md').read_bytes().startswith(b'user rules\xff\r\n'))
 
     def test_disabled_persisted_healthy_and_no_silent_flip(self):
-        argv=['enable-memory','--project',str(self.root),'--no-memory']
-        self.assertEqual(self.approve(argv)[0],0)
-        self.assertEqual(self.check()[0],0)
-        self.assertEqual(self.cli(['enable-memory','--project',str(self.root)])[0],0)
+        self.assertEqual(self.enable_memory()[0],0)
+        data=json.loads(self.registry.read_bytes());data['projects'][str(self.root)]['memory_policy']='disabled'
+        self.registry.write_text(json.dumps(data))
+        before=self.outputs_snapshot()
+        rc,result=self.cli(['enable-memory','--project',str(self.root)])
+        self.assertEqual(rc,1,result)
+        self.assertEqual(self.outputs_snapshot(),before)
         self.assertEqual(json.loads(self.registry.read_bytes())['projects'][str(self.root)]['memory_policy'],'disabled')
-        self.assertEqual(self.cli(['enable-memory','--project',str(self.root),'--memory'])[0],5)
-        self.assertEqual(self.approve(['enable-memory','--project',str(self.root),'--memory'])[0],0)
+        self.assertEqual(self.cli(['enable-memory','--project',str(self.root),'--memory'])[0],2)
 
     def test_invalid_legacy_approval_fields_rejected(self):
         def edit(plan):plan['provider_source']=str(self.keeper)
@@ -236,13 +238,14 @@ class IdempotencyTests(CliHarness):
 
     def test_remove_twice_then_explicit_reenable_cycle(self):
         self.assertEqual(self.enable_memory()[0],0)
-        rc,result=self.approve_remove();self.assertEqual(rc,0,result)
-        self.assertNotIn(b'mem-sharing:project-experience',(self.root/'AGENTS.md').read_bytes())
-        self.assertIn(b'mem-sharing:memory-denied',(self.root/'AGENTS.md').read_bytes())
-        self.assertEqual(self.cli_tty(['remove-memory','--project',str(self.root)])[0],0)
+        before=self.outputs_snapshot()
+        for _ in range(2):
+            rc,result=self.cli(['remove-memory','--project',str(self.root)])
+            self.assertEqual(rc,2,result)
+            self.assertEqual(self.outputs_snapshot(),before)
         self.assertEqual(self.check()[0],0)
-        self.assertEqual(self.approve(['enable-memory','--project',str(self.root),'--memory'])[0],0)
-        self.assertEqual(self.check()[0],0)
+        self.assertEqual(self.cli(['enable-memory','--project',str(self.root),'--agent','codex','claude','workbuddy'])[0],0)
+        self.assertEqual(self.outputs_snapshot(),before)
 
     def test_check_all_two_projects_zero_write(self):
         self.assertEqual(self.enable_memory()[0],0)
@@ -257,7 +260,7 @@ class IdempotencyTests(CliHarness):
     def test_noninteractive_remove_never_consumes_stdin_as_approval(self):
         self.assertEqual(self.enable_memory()[0],0);before=self.outputs_snapshot()
         rc,result=self.cli(['remove-memory','--project',str(self.root)])
-        self.assertEqual(rc,5,result);self.assertEqual(before,self.outputs_snapshot())
+        self.assertEqual(rc,2,result);self.assertEqual(before,self.outputs_snapshot())
 
     def test_no_pycache_or_lock_residue(self):
         self.assertEqual(self.enable_memory()[0],0);self.assertEqual(self.check()[0],0)

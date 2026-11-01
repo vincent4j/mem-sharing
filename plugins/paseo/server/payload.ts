@@ -6,9 +6,20 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 
+export interface HostPluginRecord {
+  /** 真实安装 ID(config.plugins 键,非包身份 EXPECTED_PLUGIN_ID)。 */
+  readonly id: string;
+  /** 宿主来源类型,仅原样透传精确值(如 directory),不猜。 */
+  readonly source: string;
+  /** 规范绝对路径(等于被匹配的 source_dir)。 */
+  readonly path: string;
+  readonly enabled?: boolean;
+}
 export interface PluginDirResolution {
   readonly dir: string | null;
   readonly searched: readonly string[];
+  /** 与本次选中目录匹配的全部 config alias 记录(同物理目录可多别名)。 */
+  readonly records: readonly HostPluginRecord[];
 }
 export type PluginSources = Readonly<Record<string, { source: string; path: string; enabled?: boolean }>>;
 
@@ -16,7 +27,7 @@ interface Match {
   readonly dir: string;
   readonly inode: number;
   readonly device: number;
-  readonly records: readonly string[];
+  readonly records: readonly HostPluginRecord[];
 }
 // Package identity is fixed in source, independent of the user-selected CLI --id.
 const EXPECTED_PLUGIN_ID = "memsharing";
@@ -97,7 +108,8 @@ export class HostPayloadBinding<T> {
           const info = fs.statSync(dir);
           if (!info.isDirectory() || !completePayload(dir, this.manifestSha256)) continue;
           const previous = matches.get(dir);
-          matches.set(dir, { dir, inode: info.ino, device: info.dev, records: [...(previous?.records ?? []), `${id}:${source.path}`] });
+          matches.set(dir, { dir, inode: info.ino, device: info.dev,
+            records: [...(previous?.records ?? []), { id, source: source.source, path: source.path, enabled: source.enabled }] });
         } catch { /* Not this compiled release; retain no unrelated file contents. */ }
       }
     }
@@ -114,7 +126,7 @@ export class HostPayloadBinding<T> {
       }
       return this.instance as T;
     }
-    this.instance = this.create({ dir: match?.dir ?? null, searched });
+    this.instance = this.create({ dir: match?.dir ?? null, searched, records: match?.records ?? [] });
     this.selection = selection;
     return this.instance;
   }

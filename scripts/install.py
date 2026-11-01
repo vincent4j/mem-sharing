@@ -215,9 +215,9 @@ def _report(plan, status, *, result=None, entries=None, project=None):
     code = plan['layout']['code']
     command = [sys.executable, '-B', str(Path(code)/'scripts/agm.py'), 'enable-memory']
     if project:
-        command += ['--project', str(_absolute(project)), '--memory']
+        command += ['--project', str(_absolute(project))]
     else:
-        command += ['--project', '/absolute/path/to/your/project', '--memory']
+        command += ['--project', '/absolute/path/to/your/project']
     static = {}
     if status in ('completed', 'partial'):
         try:

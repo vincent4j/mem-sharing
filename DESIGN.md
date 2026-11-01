@@ -57,9 +57,9 @@ OpenCode 第一版仅支持默认用户配置根 `~/.config/opencode`（default-
 
 短协议只说明经历库位置、`/context-keeper` 入口与职责。默认启用不调用 Context Keeper 安装、不装项目级 Skill、不创建记录库；首次 `/context-keeper` 按 Context Keeper 流程处理。旧桥接 created/reused/漂移必须按精确计划和所有权分别处理，不能拿旧标记当任意替换授权。
 
-项目写入前核对身份、受管单元与精确计划；陌生内容或受管漂移停止。AGENTS 正文可自由编辑，工具不据骨架创建取得整文件删除权。复用单元不取得删除权；纯薄入口仅在容器创建与全部单元所有权证据齐备、没有其他正文时可删除。Context Keeper 记录库、安装及用户独有内容保留。
+项目写入前核对身份、受管单元与精确计划；陌生内容或受管漂移停止。AGENTS 正文可自由编辑，工具不据骨架创建取得整文件删除权。复用单元不取得删除权；本次整机卸载保留有效项目 @AGENTS/WB 原生桥接，只清理证明产品自有、指纹吻合且依赖待删路径的失效单元，不继承旧 remove 的容器删除权。Context Keeper 记录库、安装及用户独有内容保留。
 
-`remove-memory` 撤允许撤销的入口并登记 disabled；`enable-memory --no-memory` 保留入口但禁止自动项目经历记录与初始化。两者都不会被默认启用或批量启用恢复；解除须显式 `--memory` 并批准精确计划。该政策约束 Agent，不能冒称 Context Keeper 脚本具有硬拒写接口。
+旧 `remove-memory`、`--memory`、`--no-memory` 已退役，新请求零写拒绝。历史 disabled 只作规则接入 tombstone，默认跳过、不重建；它不否决 Context Keeper 的自动规则，不表示 CK 已停用或入口已删除。使用 `migrate-policy [--project ABS]` 精确预览并批准后，仅退役产品自有且指纹匹配的旧控制与已知旧模板，保留私文、CK 设置和历史数据，不替用户启用 CK。
 
 项目规则的子目录要求留在相应规则文件；经历仍集中于 Context Keeper 记录库，以主题区分来源。WorkBuddy 子目录可见性有限，对它重要的要求放根规则摘要。现有子目录薄入口未经运行验证不自动删。
 
@@ -92,3 +92,5 @@ OpenCode 第一版仅支持默认用户配置根 `~/.config/opencode`（default-
 完整接力在获授权的合成记录库进行：Codex 保存随机事实/待办 → Claude 普通续接并更新 → WorkBuddy 读取前两轮并追加 → Codex 新会话核对累积结果。四轮提示不带答案或库位置，保留各次 session、来源和库 diff。禁止保存与迁移门禁另做负向测试，不关闭或清空执行器自己的自动记忆来虚构边界。
 
 当前证据与未验范围集中在[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)和[M4-10 判定（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/m4/m4-10-runtime/verdict.md)。发布准备见[发布清单（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/m4/m4-10-prep/release-checklist.md)；这份设计不构成发布授权。
+
+机器资产归还、独立恢复与 Paseo 宿主范围详见[整机卸载方案](docs/uninstall-design.md)。

@@ -22,23 +22,30 @@ import {
   projectCheckRpc,
   projectEnablePreviewRpc,
   projectEnableConfirmRpc,
-  projectRemovePreviewRpc,
-  projectRemoveConfirmRpc,
+  uninstallPreviewRpc,
+  uninstallConfirmRpc,
+  stagingInventoryRpc,
+  stagingCleanupPreviewRpc,
+  stagingCleanupConfirmRpc,
   ckPreviewRpc,
   ckConfirmRpc,
   recoverPreviewRpc,
   recoverConfirmRpc,
+  ckChoiceRetainRpc,
+  ckUninstallPreviewRpc,
+  ckUninstallConfirmRpc,
   cancelPendingRpc,
 } from "./shared/contracts";
 
 export default function contribute(server: PluginServerContext) {
   let active: Orchestrator | undefined;
   const cancelAll = () => {
-    for (const flow of ["dependency", "bootstrap", "machine", "enable", "remove", "ck", "recover"] as const) active?.cancel(flow);
+    for (const flow of ["dependency", "bootstrap", "machine", "enable", "uninstall", "stagingCleanup", "ck", "recover", "ckUninstall"] as const) active?.cancel(flow);
   };
   const binding = new HostPayloadBinding(CORE_RELEASE_MANIFEST_SHA256, (resolution) => {
     active = new Orchestrator({ runner: realRunner(homedir()), home: homedir(),
-      pluginDir: resolution.dir, searchedPluginDirs: resolution.searched });
+      pluginDir: resolution.dir, searchedPluginDirs: resolution.searched,
+      pluginRecords: resolution.records });
     return active;
   });
   function handle<I extends ZodType, O extends ZodType>(contract: PluginRpcContract<I, O>,
@@ -97,12 +104,22 @@ export default function contribute(server: PluginServerContext) {
 
   handle(projectCheckRpc, async (orchestrator, input) => orchestrator.projectCheck(input.projectRoot));
   handle(projectEnablePreviewRpc, async (orchestrator, input) =>
-    orchestrator.projectEnablePreview({ projectRoot: input.projectRoot, agents: input.agents, memory: input.memory }),
+    orchestrator.projectEnablePreview({ projectRoot: input.projectRoot, agents: input.agents }),
   );
   handle(projectEnableConfirmRpc, async (orchestrator, input) => orchestrator.projectEnableConfirm(input));
 
-  handle(projectRemovePreviewRpc, async (orchestrator, input) => orchestrator.projectRemovePreview(input.projectRoot));
-  handle(projectRemoveConfirmRpc, async (orchestrator, input) => orchestrator.projectRemoveConfirm(input));
+  handle(uninstallPreviewRpc, async (orchestrator, input) => orchestrator.uninstallPreview(input.backupDir));
+  handle(uninstallConfirmRpc, async (orchestrator, input) => orchestrator.uninstallConfirm(input));
+  handle(stagingInventoryRpc, async (orchestrator) => orchestrator.stagingInventory());
+
+  handle(stagingCleanupPreviewRpc, async (orchestrator, input) => orchestrator.stagingCleanupPreview(input.evidenceDir));
+  handle(stagingCleanupConfirmRpc, async (orchestrator, input) => orchestrator.stagingCleanupConfirm(input));
+
+  handle(ckChoiceRetainRpc, async (orchestrator, input) => orchestrator.ckChoiceRetain(input.manifest));
+  handle(ckUninstallPreviewRpc, async (orchestrator, input) =>
+    orchestrator.ckUninstallPreview({ manifest: input.manifest, ckSource: input.ckSource, ckAgents: input.ckAgents, ckProject: input.ckProject }),
+  );
+  handle(ckUninstallConfirmRpc, async (orchestrator, input) => orchestrator.ckUninstallConfirm(input));
 
   handle(ckPreviewRpc, async (orchestrator, input) => orchestrator.ckPreview());
   handle(ckConfirmRpc, async (orchestrator, input) => orchestrator.ckConfirm(input));

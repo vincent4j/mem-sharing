@@ -1,6 +1,6 @@
 ---
 name: mem-sharing
-description: memSharing，多 Agent 记忆共享与融合。提供用户记忆与项目记忆的启用、检查、停用、主动接入与整理操作路由；项目经历交由 Context Keeper。
+description: memSharing，多 Agent 记忆共享与融合。提供公共用户记忆共享、项目规则接入、检查、整理与整机卸载路由；支持明确自然语言卸载意图，项目经历由 Context Keeper 独立管理。
 ---
 
 # memSharing 操作说明
@@ -14,19 +14,27 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 | 选项 | 操作路由 |
 |---|---|
 | 添加新的 Agent | 核验 installed 后同版接入 → `scripts/install.py --agent <名字>`，来源参数见 INSTALL。 |
-| 批量启用项目记忆 | 扫目录、集中预览批准 → `scripts/agm.py enable-memory-batch --directory <目录>`。 |
+| 批量接入项目规则 | 扫目录、集中预览批准 → `scripts/agm.py enable-memory-batch --directory <目录>`。 |
 | 整理用户记忆 | 逐条计划、一次批准 → 下文“用户记忆治理”的模块 API 流程。 |
 | 健康检查 | 只读检查当前项目 → `scripts/agm.py check-memory --project <根>`，全量用 `--all`。 |
-| 给项目停用记忆 | 撤入口、保数据并登记 disabled → `scripts/agm.py remove-memory --project <根>`。 |
-| 给项目启用记忆 | 建立或显式恢复当前项目入口 → `scripts/agm.py enable-memory --project <根> --memory`；默认启用不翻转 disabled，本项用于首次显式接入与恢复已停用项目。 |
+| 接入项目规则 | `scripts/agm.py enable-memory --project <根> --agent <当前执行器>`；历史停用登记默认跳过。 |
+| 整机卸载 | 归还公共用户记忆并外置恢复材料 → `scripts/agm.py uninstall-machine --backup-dir <全新外置目录>`，预览后精确批准。 |
 
 以上脚本均以 `python3 -B` 从已核验产品代码目录执行。详细安装、批准与恢复只在需要时读 [INSTALL.md](INSTALL.md)，批量边界与详细操作读[操作手册](docs/operations.md)。
 
-停用之外的进阶选项：仅禁止自动项目经历记录与初始化而保留入口，使用 `enable-memory --project <根> --no-memory`；它不执行 remove。两者均登记 disabled，默认启用与批量均不翻转；解除走菜单“给项目启用记忆”的显式 `--memory` 并批准精确计划。
+旧 `remove-memory`、`--memory`、`--no-memory` 已退役，新请求零写拒绝。历史 disabled 只作规则接入 tombstone，默认跳过、不重建；它不否决 Context Keeper 的自动规则，不表示 CK 已停用或入口已删除。使用 `migrate-policy [--project ABS]` 精确预览并批准后，仅退役产品自有且指纹匹配的旧控制与已知旧模板，保留私文、CK 设置和历史数据，不替用户启用 CK。
 
 支持 `codex`、`claude`、`workbuddy`、`dsh`、`zcode`、`opencode` 六家。机器安装、再次安装与升级缺省接入全部已核验 `installed` 的支持对象，`unknown/absent` 只报告；显式重复 `--agent` 限定机器目标，指定对象未核验为 installed 时整单拒绝。升级中的公共布局迁移与新增接入在同一外层精确计划内预览并一次批准，不推迟到执行后再确认。项目命令缺省仍为前三家，当前执行者使用时显式选择自身；项目启用 `--agent dsh zcode opencode` 为一次多值。后三家用户入口为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，均保留私文且原生读取项目 `AGENTS.md`。OpenCode 支持独立核验桌面 App 与 CLI 安装面，CLI-only 不证明桌面存在；官方原生 CLI 与 App 并装采用受限身份校验。OpenCode v2 第一版 default-root-only，环境重定向整单停写，错误不回显原值；详见[操作手册](docs/operations.md#桌面端默认根与验证边界)。真实新会话加载仍待验收。
 
 后装 Agent 可通过“添加新的 Agent”限定接入；重新运行机器安装器也会按当前安装事实发现并预览全部支持对象。名字、残留目录、hint 或历史台账不能代替当前 installed；absent 不创建入口，unknown 只报告不写。
+
+## 自然语言卸载入口
+
+在任何已接入且读到公共索引的 Agent 中，说“卸载 memSharing”“卸载 mem-sharing”或“不想用这个共享记忆工具了，帮我卸载”，直接进入同一只读卸载预览，无须 `/mem-sharing`，也无须进入源码目录。入口链为原生用户文件 → 公共 `MEMORY.md` 的短触发 → 《使用约定》的完整路由 → 已核验安装 C 的本文件与[完整卸载合同](docs/uninstall-design.md)。公共路由由 `user_entries.natural_language_uninstall_text()` 单源生成，不复制六套流程、不新增 Skill 投影。
+
+“卸载这个项目”“停用项目记忆”不足以确定产品，只澄清目标；不得删当前项目。明确的产品卸载意图仍不批准未展示的精确计划。先核验安装台账、代码来源与实际安装形态，提议全新外置路径（预览不创建目录），用已核验 C 的绝对路径调用 `python3 -B <C>/scripts/agm.py uninstall-machine --backup-dir <外置绝对路径> --json`。展示归还、保全、删除范围与恢复材料，获得精确批准后才加 `--approval-file` 执行。
+
+跨 Agent 发起不改变 Paseo 宿主义务。已有 Paseo 来源须沿既有 RPC 或完整宿主参数合同；来源或目标不明先补证，不能默认独立 CLI、伪造 absent 或扫全 HOME。Paseo 仍按外置 bind→官方 remove→同 daemon 缺席核验→CK 尾步；全部声明范围成功后才单独问是否卸载 CK，默认保留，另行预览与批准。已卸载或 C 缺失只报告状态或使用已核验外置恢复入口，不自动重装。安装代码已具备当前兼容实现时可只迁公共指南；不兼容旧 C 先沿现有精确安装/升级流程更新代码，迁移门禁零写拒绝新指针配旧执行器。六家静态读取链可合成验证，真实模型理解与新会话触发仍 pending。
 
 ## 安装与项目默认启用
 
@@ -50,7 +58,7 @@ Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep
 
 装机尾步按安装页的固定正向问句征询 Context Keeper 用户级安装，回车同意，n 跳过。同意后走 `scripts/install.py --context-keeper` 独立路由与 `install-context-keeper` 封皮，由 Context Keeper 自有安装器为已接入的 Codex、Claude Code、WorkBuddy 安装；固定 pin 的安装器仅支持这三家的 flags，`dsh`、`zcode`、`opencode` 明确跳过（`reason=upstream_unsupported`），混合接入时旧三家仍可安装，不影响它们的 memSharing 接入。其 Skill 落位由 Context Keeper 负责。EOF、非交互或空格不视为同意；缺源或失败独立报告，不回滚主产品。来源与批准细节按需读 INSTALL。未装 Context Keeper 不报产品错误，用户记忆和项目记忆照常工作。
 
-项目 enable 不再调用 Context Keeper 安装器，不安装项目级其 Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 Context Keeper 首次命令，memSharing 不接管保存或查找流程。disabled 优先禁止自动经历，已有 Context Keeper 自动规则不得覆盖；其脚本本身不读取该政策，不能宣称硬拒写。手动 Context Keeper 操作仍按明确请求与其自身门禁处理。
+项目 enable 不再调用 Context Keeper 安装器，不安装项目级其 Skill。协议桥接首行说明记录库位置与 `/context-keeper` 入口。初始化与授权归 Context Keeper 首次命令，memSharing 不接管保存或查找流程。历史 disabled 仅保留为规则接入 tombstone，默认不重建过去撤掉的入口；不否决 Context Keeper 的自动规则。Context Keeper 开启后的记录、续接与检索按其自身规则运行，memSharing 不写其开关，也不借迁移自动恢复入口。
 
 ## 检索与分层读取
 
@@ -70,4 +78,10 @@ Agent 独有内容永不并入公共源、永不删除；归属不明保持 keep
 
 项目写操作无批准先预览；批量待批准退出码 5，`next_action` 提供完整批量封皮模板，变更 `applied=false` 不表示已写入。schema=3 为活动合同，旧 v1/v2 仅只读诊断，旧开发版与旧标记不做迁移；详情按需读 INSTALL。
 
-`AGENTS.md` 永不整文件删除；新建纯 CLAUDE 入口只在 created 证据完备时可删，有正文只撤允许撤销的单元，旧 reused 不追认删除权。记录库、私有记忆与其他 Skills/MCP 不由本产品删除。本轮不交付完整机器卸载。
+本次卸载保留项目 `AGENTS.md`、有效 Claude `@AGENTS.md` 与 WorkBuddy 原生桥接；只清理已证明产品自有、指纹吻合且引用待删产品路径的失效依赖，不延续旧 remove 的整容器删除权。记录库、私有记忆与其他 Skills/MCP 不由本产品删除。完整机器卸载按下述独立合同执行。
+
+## 整机卸载与独立尾步
+
+整机卸载使用 `python3 -B scripts/agm.py uninstall-machine --backup-dir <全新外置目录>` 先预览，再以 `--approval-file` 精确批准。归还当前完整公共记忆给每个实际接入者的自身用户目录，再核验、清依赖、最后删除产品；不是恢复安装前。外置 manifest/recover.py 与独立解释器支持删除代码后的精确恢复。未知/漂移阻断，项目 AGENTS、有效 Claude/WB 桥接及 CK 默认保留。完整数据与门槛见[整机卸载方案](docs/uninstall-design.md)。
+
+CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调用范围；Paseo 为 `machine_and_paseo`，机器 completed 但插件仍在时 overall=partial。必须在插件移除前经外置入口独立绑定真实安装 ID/来源/CLI/daemon/live serverId，再用户 remove、同目标 full-list check 证实缺席，最后才可另选卸载 CK。disabled、查询错误、能力/版本错误均不算 removed；默认保留 CK，尾步另行精确批准。正式 payload 待干净提交与版本授权后生成，本轮源码/合成验证不等于实际宿主卸载或六家新会话加载验收。

@@ -84,7 +84,7 @@ linked worktree 不作为可启用项目，移动或重新 clone 后须重新核
 
 - `enable-memory`：启用规则入口和项目经历协议。
 - `enable-memory-batch`：扫描目录并集中批准批量启用。
-- `remove-memory`：撤销允许撤销的项目受管对象。
+- `uninstall-machine`：精确归还公共记忆并清理机器资产；`recover-uninstall` 提供外置恢复；`migrate-policy` 退役历史产品控制。
 - `check-memory`：只读核查登记和现场。
 
 `scripts/install.py` 是独立机器安装入口，负责安装、获取、升级及恢复路由。
@@ -226,7 +226,7 @@ Context Keeper 失败不回滚主产品，也不合报为全部成功；结果�
 
 为什么这样设计：主产品与可选引擎有独立授权、失败边界和交付证据。
 
-## 8. 项目启用、批量与停用
+## 8. 项目接入、历史迁移与整机卸载
 
 未登记 Git 主 checkout 的默认启用由用户级规则与公共指南驱动，当前实际执行者以 `--agent <当前执行者>` 执行，并非后台监听。
 启用保留已有规则正文，补缺失骨架与项目经历短协议。
@@ -240,17 +240,13 @@ Context Keeper 失败不回滚主产品，也不合报为全部成功；结果�
 锁内重新扫描核对后逐项目执行，失败即停止后续，已完成项目保留。
 批量不是跨项目全有或全无事务，不提供整批回滚。
 
-停用分三层语义：
+旧 `remove-memory`、`--memory`、`--no-memory` 已退役，新请求零写拒绝。历史 disabled 只作规则接入 tombstone，默认跳过、不重建；它不否决 Context Keeper 的自动规则，不表示 CK 已停用或入口已删除。使用 `migrate-policy [--project ABS]` 精确预览并批准后，仅退役产品自有且指纹匹配的旧控制与已知旧模板，保留私文、CK 设置和历史数据，不替用户启用 CK。
 
-- 菜单“给项目停用记忆”调用 `remove-memory`，撤销允许撤销的入口与桥接，保留数据。
-- remove 后登记 disabled，默认启用不再触发；恢复须显式 `enable-memory --memory`。
-- `enable-memory --no-memory` 保留规则接入，禁止自动项目经历记录及初始化。
+整机卸载使用 `python3 -B scripts/agm.py uninstall-machine --backup-dir <全新外置目录>` 先预览，再以 `--approval-file` 精确批准。归还当前完整公共记忆给每个实际接入者的自身用户目录，再核验、清依赖、最后删除产品；不是恢复安装前。外置 manifest/recover.py 与独立解释器支持删除代码后的精确恢复。未知/漂移阻断，项目 AGENTS、有效 Claude/WB 桥接及 CK 默认保留。完整数据与门槛见[整机卸载方案](uninstall-design.md)。
 
-停用防护优先于残留 Context Keeper 自动规则，但不是其脚本的硬拒写接口。
-手动 Context Keeper 操作仍遵循用户明确请求与其自身流程。
-机器安装、用户记忆、Context Keeper 安装和项目经历数据不因项目停用被删除。
+CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调用范围；Paseo 为 `machine_and_paseo`，机器 completed 但插件仍在时 overall=partial。必须在插件移除前经外置入口独立绑定真实安装 ID/来源/CLI/daemon/live serverId，再用户 remove、同目标 full-list check 证实缺席，最后才可另选卸载 CK。disabled、查询错误、能力/版本错误均不算 removed；默认保留 CK，尾步另行精确批准。正式 payload 待干净提交与版本授权后生成，本轮源码/合成验证不等于实际宿主卸载或六家新会话加载验收。
 
-为什么这样设计：撤销接入和暂停自动记录是不同需求，数据始终作为用户资产保留。
+为什么这样设计：公共共享与规则接入归 memSharing，经历行为归 Context Keeper；退役项目 remove 和经历开关可避免跨产品否决，卸载按数据归还与所有权证据清理，用户规则和历史数据保留。
 
 ## 9. 升级承诺与证据边界
 
