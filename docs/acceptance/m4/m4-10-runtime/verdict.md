@@ -1,41 +1,36 @@
-# M4-10 当前判定与证据索引
+# M4 暂停验收与续审位置
 
-更新：2026-10-31。**M4-10 部分通过，M4 整体不关闭。** 已部署基线为 `04c32e24b9ab9504514908f2368cddca4356e478` / 0.1.1；后续仓库收尾不等于再次部署或发布。
+更新：2026-11-01。这里保留尚未完成的人工验收状态；当前机器已更新至0.1.4，不再以历史0.1.1部署当作当前版本。**WorkBuddy新会话、CK首次激活、自动入口与四会话接力仍按用户暂停处理**，整理文档不恢复其执行授权。产品/Paseo后续证据见[验收总览](../../index.md)。
 
-## 当前状态
+## 已有证据与边界
 
-| 验证层 | 判定 | 证据与限制 |
-|---|---|---|
-| 本机 0.1.0 主装与 v0 导入 | 已有记录 | [前轮日志](../../../context-keeper/worklogs/2026-10-31-M4-10真机安装与仓库整理.md)；用户选择本机路线，不能称独立用户/VM 隔离首装 |
-| WorkBuddy 0.1.1 源码修复与窄合同升级 | 本地回归及历史真机部署通过 | [部署报告](workbuddy-live-deployment.md)、[读回](workbuddy-live-readback.json)；474 单元/74 集成是该冻结版本的历史结果 |
-| WorkBuddy 入口及私人字节保全 | 静态通过 | 27 产品文件 hash、原私人 5788 字节前缀及 CK 块、保护入口/公共索引、台账/收据读回；不含新会话证明 |
-| Codex CLI 0.162.0 公共规则/已有项目规则 | 限定范围通过 | [Codex](codex.json)；公共索引/主题工具读取与随机答案匹配，已有 AGENTS 行为与字节保全 |
-| Claude CLI 2.1.295 公共规则/已有项目规则 | 限定范围通过 | [Claude](claude.json)；主题实际 Read，索引原生导入；项目标记行为成立，没有独立 AGENTS 工具读取事件 |
-| WorkBuddy 修复前手动新会话 | 未达到验收条件 | [可见回答](workbuddy-manual-result.md)无 PUBLIC/PROJECT 字面标记，读取仅回答自述；不能推断不可见工具链不存在或根因已知 |
-| WorkBuddy 部署后新会话 | blocked，用户暂停 | Computer Use `cgWindowNotFound` / 旧 Raise 元素失效后停止；未发送新提示，未新增临时规则 |
-| keeper 安装尾步 | 实际尾步未复验 | 独立 keeper 安装已有记录；0.1.1 `_scene` 只读通过，未再次调用安装，不等同真实尾步成功 |
-| CK 首次激活/自动入口/四会话接力 | pending，用户暂停 | 本轮不重启；已有规则只读验收不能证明缺失入口自动生成或新库写入 |
-| Windows/Linux、缺依赖自动安装、隔离首装 | 未验 | 不以本地 Python 回归替代 |
+- 本机0.1.0安装及v0导入为历史本机路线，不是独立用户/VM首装。
+- WorkBuddy 0.1.1修复已真实部署：公共指针/登记入口与私人5788字节前缀、CK块保全，固定27文件与台账读回成立。旧整文件保留造成的入口/keeper前置冲突已修；CK实际安装尾步与修复后公共实读仍未复验，不能称缺陷全闭合。
+- Codex CLI0.162.0 session `01a18f59-3aec-7c40-94a2-a5bf2fbe841a`：公共索引/主题工具读取及随机答案匹配，已有项目规则行为和字节保全。Claude CLI2.1.295 session `85bdc56b-8380-4425-a1ca-d150ebeccd0e`：主题实际Read、索引原生导入与项目标记行为；没有独立AGENTS工具读取事件。两者均exit0，未证明缺失入口自动生成或CK建库。
+- 用户曾提供首轮 `e4198600674e` 截图，不能称从未执行；但主题当时已不存在且答案提到manifest，不能排除来源污染。
+- 手动任务 `纸卡核验-62c1da664d93` 已于2026-10-31取回。WorkBuddy5.9.3，会话标题“纸卡核验规则文件整理”，项目空间workbuddy，用户确认项目 `/tmp/mem-sharing-m4-runtime-20261031/workbuddy`（实际回答用 `/private/tmp/...`）。可见结果未出现PUBLIC/PROJECT字面标记，读取路径只有回答自述，session-id与独立工具事件不可见；不把不可见推断为根因已知。完整原提示/转录在Git历史，不用旧答案污染新测试。
+- 修复部署后的自动续测在窗口 `cgWindowNotFound` / 旧Raise元素失效时停止，没有发新提示，未新增临时规则。2026-11-01的Paseo新Codex读回不能替代WorkBuddy或四会话接力。
 
-## 缺陷状态
+## 现场与恢复状态
 
-- **D-M4-CK-WB：** 旧版整文件保留导致没有 WorkBuddy 登记入口，与 keeper 尾步前置条件冲突。源码及合成组合已修、正式 0.1.1 已部署、只读前置已过；剩余关闭条件为实际尾步验证。不能再称“尚无修复/未部署”，也不能称全缺陷已关闭。
-- **R-M4-WB：** 旧版缺少公共索引指针，现有入口与静态接入已修并读回；公共实读仍待独立新会话证据。
-- **项目标记缺失：** 修复前可见回答未呈现项目标记；尚不确定是规则执行、输出或界面提取问题，不能用安装器修复推断已解决。
-- **发行转换阻断：** dirty source 与旧 `entries=preserve` 合同限制曾阻止升级；固定来源、窄转换处理器与正式升级已解除这两个历史阻断。成功升级后不承诺自动降回旧版。
+人工项目曾保留在 `/tmp/mem-sharing-m4-runtime-20261031/workbuddy`；此处只提供续审定位，本轮未检查、重建、启动或删除该目录。后续先核对它是否仍存在以及是否有新用户修改，不盲跑旧命令。
 
-## 历史过程与来源
+旧续测 `纸卡核验-6ab436d62882` 未发送。公共索引在2026-10-31T00:35:56Z恢复，临时主题撤除。手动62c任务结果取回后，于01:16:31Z恢复索引并撤主题；before/restored SHA均为 `b86fbc67104aedec142c66c8d421204e2c5190ea7f19524377a5b777303d135b`。不存在仍需等旧回答而保留临时公共规则的待办。测试标记已失效，不复用于盲测。
 
-下列材料是当时的原始操作或诊断记录；其中“当前”“未部署”“待批准”仅指该阶段，不替代上表。
+原私人备份、机器journal/库存位于仓库外受限目录；本文不是恢复脚本，也不授权自动删除、抢锁、重放计划或已提交版本降级。
 
-1. 初轮只读夹具与公共主题：[checks](checks.json)、[fixture](fixture.json)、[prompt](prompt.txt)、[public-topic](public-topic.txt)。Codex session `01a18f59-3aec-7c40-94a2-a5bf2fbe841a`、Claude session `85bdc56b-8380-4425-a1ca-d150ebeccd0e`，均 exit 0。未创建 CK 库、CLAUDE 或 WB 原生目录；权限只读，不能证明自动写行为。公共索引随后[原字节恢复](cleanup.json)。
-2. WorkBuddy 两次自动化未发送：[初轮](workbuddy.md)、[续测](workbuddy-continuation.md)、[续测恢复](workbuddy-continuation-cleanup.json)。用户随后提供首轮 e4198600674e 截图，项目标记行为匹配，但公共主题已不存在且提到 manifest，来源污染不能排除；不是“用户从未执行”。
-3. 用户手动新会话 `62c1da664d93` 已执行并取证：[可见转录](workbuddy-manual-result.md)、[合成夹具](manual-fixture.json)、[临时主题](manual-public-topic.txt)、[恢复](manual-cleanup.json)。主题保持有效直至对应回答取回；不能归因于提前撤规则。没有重发提示。
-4. [诊断](workbuddy-diagnosis.md) → [源码修复/冻结回归](workbuddy-fix-verification.md) → [升级准备与当时阻断](workbuddy-live-plan.md) → [正式部署/静态读回](workbuddy-live-deployment.md)。部署中首次 UTC `+00:00` 格式拒绝发生于写入前，旧操作未重放；新唯一操作 `wb-public-index-011b` 使用 Z 时间成功。
-5. 本轮收尾另见[仓库质量报告](../../release-review.md)。它只验证本地源码与静态材料，不扩大上述运行证据。
+## 恢复验收时的最小步骤
 
-## 证据保全与适用范围
+仅在新的明确指令下执行[运行验收规格](../m4-10-prep/release-checklist.md)：重新核对当前产品版本、项目与新会话身份；通过章教授inspect→action→verify取得可读窗口后才发送一次新合成任务。不可读就blocked，不换CLI冒充桌面。公共临时规则结束/阻断后按before恢复；来源不明或提交结果未知不重发。
 
-CLI 事件按合成任务白名单保留，完整筛选前流只留关联 hash，不能称完整原流仍可复查；不保存账号元数据、思考内容、无关私人正文或供应商诊断载荷。历史自动记忆注入未整体关闭，因此不宣称全环境无历史上下文。临时公共源每轮按原字节恢复，测试标记已失效，不用于后续盲测。
+需要独立验证：WorkBuddy用户公共读取及项目约定、CK独立安装尾步/首次激活、默认缺失入口生成、禁止保存/迁移门禁/disabled、Codex→Claude→WorkBuddy→Codex四会话接力。日志必须区分工具事件、原生注入与回答自述；已存在规则的只读证明不等于自动写行为。
 
-原始私人备份仍在仓库外受限目录；仓库只保留脱敏摘要、hash、合成数据。历史 CK 日志保持原文，仅当前主题更新。本轮已按用户指令暂停 WorkBuddy 新会话、CK 真实激活、自动入口及跨客户端接力；恢复这些活动须新的明确指令。
+## 历史原件
+
+以下均可用 `git show 0906d7a:<路径>` 取回：
+
+- `docs/acceptance/m4/m4-10-runtime/workbuddy-manual-result.md`：人工转录与定点复核。
+- 同目录 `manual-fixture.json`、`manual-cleanup.json`、`workbuddy-continuation.md`、`workbuddy-continuation-cleanup.json`：原任务与恢复回执。
+- 同目录 `workbuddy-live-deployment.md`、`workbuddy-live-readback.json`、`codex.json`、`claude.json`：部署及规则读取证据。
+
+完整失败、诊断和修复沿革由Git及只追加CK日志保存，不在工作树维持失效的hash清单或临时测试正文。

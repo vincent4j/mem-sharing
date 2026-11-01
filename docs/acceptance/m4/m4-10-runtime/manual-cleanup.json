@@ -1,8 +1,0 @@
-{
-  "utc": "2026-10-31T01:16:31.457772+00:00",
-  "before_sha256": "b86fbc67104aedec142c66c8d421204e2c5190ea7f19524377a5b777303d135b",
-  "restored_sha256": "b86fbc67104aedec142c66c8d421204e2c5190ea7f19524377a5b777303d135b",
-  "exact_restore": true,
-  "temporary_topic_removed": true,
-  "reason": "User confirmed task completed; matching output captured before cleanup."
-}
