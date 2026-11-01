@@ -859,6 +859,7 @@ def execute_install(plan,approval,*,request=None,hook=None):
         # Recheck while owning installation lock, excluding that transient lock.
         # Independently compare every bound observation while owning the lock.
         if any(_node(p)!=n for p,n in plan['observations'].items()):_fail('Locked before scene changed','source_drift')
+        _source_unchanged(plan)
         bootstrap.mkdir(mode=0o700);_save(journal)
         try:
             _mkdir(journal,runtime.var,hook)

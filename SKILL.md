@@ -24,7 +24,7 @@ description: memSharing，多 Agent 记忆共享与融合。提供用户记忆�
 
 停用之外的进阶选项：仅禁止自动项目经历记录与初始化而保留入口，使用 `enable-memory --project <根> --no-memory`；它不执行 remove。两者均登记 disabled，默认启用与批量均不翻转；解除走菜单“给项目启用记忆”的显式 `--memory` 并批准精确计划。
 
-支持 `codex`、`claude`、`workbuddy`、`dsh`、`zcode`、`opencode` 六家。机器安装、再次安装与升级缺省接入全部已核验 `installed` 的支持对象，`unknown/absent` 只报告；显式重复 `--agent` 限定机器目标，指定对象未核验为 installed 时整单拒绝。升级中的公共布局迁移与新增接入在同一外层精确计划内预览并一次批准，不推迟到执行后再确认。项目命令缺省仍为前三家，当前执行者使用时显式选择自身；项目启用 `--agent dsh zcode opencode` 为一次多值。后三家用户入口为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，均保留私文且原生读取项目 `AGENTS.md`。OpenCode v2 第一版 default-root-only，环境重定向整单停写，错误不回显原值；详见[操作手册](docs/operations.md#桌面端默认根与验证边界)。真实新会话加载仍待验收。
+支持 `codex`、`claude`、`workbuddy`、`dsh`、`zcode`、`opencode` 六家。机器安装、再次安装与升级缺省接入全部已核验 `installed` 的支持对象，`unknown/absent` 只报告；显式重复 `--agent` 限定机器目标，指定对象未核验为 installed 时整单拒绝。升级中的公共布局迁移与新增接入在同一外层精确计划内预览并一次批准，不推迟到执行后再确认。项目命令缺省仍为前三家，当前执行者使用时显式选择自身；项目启用 `--agent dsh zcode opencode` 为一次多值。后三家用户入口为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，均保留私文且原生读取项目 `AGENTS.md`。OpenCode 支持独立核验桌面 App 与 CLI 安装面，CLI-only 不证明桌面存在；官方原生 CLI 与 App 并装采用受限身份校验。OpenCode v2 第一版 default-root-only，环境重定向整单停写，错误不回显原值；详见[操作手册](docs/operations.md#桌面端默认根与验证边界)。真实新会话加载仍待验收。
 
 后装 Agent 可通过“添加新的 Agent”限定接入；重新运行机器安装器也会按当前安装事实发现并预览全部支持对象。名字、残留目录、hint 或历史台账不能代替当前 installed；absent 不创建入口，unknown 只报告不写。
 

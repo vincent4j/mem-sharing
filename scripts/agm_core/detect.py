@@ -37,7 +37,7 @@ from pathlib import Path
 from . import paths as agm_paths
 from .paths import PathsError
 
-DETECT_RULES_VERSION = "m4-05/1"
+DETECT_RULES_VERSION = "m4-05/2"
 STANDARD_APP_DIRECTORIES = ("/Applications",)
 
 _CODESIGN_VERIFY = ("codesign", "--verify")
@@ -270,6 +270,10 @@ def _check_app_bundle(signal, path, *, runner):
     executable_name = info.get("CFBundleExecutable")
     if not isinstance(executable_name, str) or not executable_name:
         return _record("macos_app_bundle", path, "failed", "CFBundleExecutable 为空")
+    opencode = signal["bundle_name"] == "OpenCode.app" and signal["product_name"] == "OpenCode"
+    if opencode and (bundle_id != "ai.opencode.desktop" or executable_name != "OpenCode"
+                     or info.get("CFBundleDisplayName") != "OpenCode"):
+        return _record("macos_app_bundle", path, "failed", "OpenCode 固定 bundle identity 不符")
     executable = os.path.join(path, "Contents", "MacOS", executable_name)
     real, problem = _resolve_active_entry(executable)
     if real is None:
@@ -277,7 +281,16 @@ def _check_app_bundle(signal, path, *, runner):
     version = info.get("CFBundleShortVersionString") or info.get("CFBundleVersion")
     if signal.get("require_bundle_version") and (not isinstance(version, str) or not version):
         return _record("macos_app_bundle", path, "failed", "bundle 版本为空(要求非空)", name=bundle_id)
-    verified = runner(list(_CODESIGN_VERIFY) + [path])
+    if opencode:
+        if (not isinstance(version, str) or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version)
+                or info.get("CFBundleVersion") != version
+                or info.get("CFBundleShortVersionString") != version):
+            return _record("macos_app_bundle", path, "failed", "OpenCode bundle 版本缺失或不一致")
+        requirement = ('=identifier "ai.opencode.desktop" and anchor apple generic '
+                       'and certificate leaf[subject.OU] = "5NZ4Q7NXJ4"')
+        verified = runner(['codesign', '--verify', '--deep', '--strict', '-R', requirement, path])
+    else:
+        verified = runner(list(_CODESIGN_VERIFY) + [path])
     if verified is None:
         return _record(
             "macos_app_bundle", path, "failed",
@@ -459,7 +472,18 @@ def _detect_one(agent, entry, *, home, search_paths, user_candidates, runner, ap
                 verified.append(record)
         elif record["result"] == "failed":
             failed.append(record)
-    if len(verified) > 1:
+    # Coalesce only the two independently verified official installation
+    # surfaces. This static detection does not verify rule-loading compatibility.
+    # Extra candidates, receipts, npm wrappers and any failed check remain ambiguous.
+    coexist = (agent == "opencode" and len(verified) == 2 and not failed
+               and sum(r.get("type") == "macos_native_executable" and r.get("name") == "OpenCode"
+                       for r in verified) == 1
+               and sum(r.get("type") == "app_bundle" and r.get("name") == "ai.opencode.desktop"
+                       for r in verified) == 1)
+    if coexist:
+        status = "installed"
+        summary = "官方 OpenCode CLI 与桌面 App 并装；各安装面身份已独立核验；规则加载兼容性未由本次检测验证"
+    elif len(verified) > 1:
         status = "unknown"
         summary = "多个可核验候选,无法确定活动来源: " + "; ".join(
             str(record.get("path") or record.get("candidate")) for record in verified)
@@ -476,7 +500,7 @@ def _detect_one(agent, entry, *, home, search_paths, user_candidates, runner, ap
     else:
         status = "absent"
         summary = "全部支持候选均可检查且不存在,无 hint"
-    return {
+    result = {
         "agent": agent,
         "status": status,
         "observed_at": _utc_now(),
@@ -485,6 +509,14 @@ def _detect_one(agent, entry, *, home, search_paths, user_candidates, runner, ap
         "hints": hints,
         "evidence": records,
     }
+    if agent == "opencode":
+        result["surfaces"] = {
+            "desktop": {"status": "verified" if any(r.get("name") == "ai.opencode.desktop" for r in verified) else "unverified",
+                        "candidates": [r for r in records if r["kind"] == "macos_app_bundle"]},
+            "cli": {"status": "verified" if any(r["kind"] == "path_executable" for r in verified) else "unverified",
+                    "candidates": [r for r in records if r["kind"] == "path_executable"]},
+        }
+    return result
 
 
 def detect_agents(platform_config, agents=None, *, home, search_paths=None,

@@ -62,3 +62,21 @@ DESIGN 完整同步六家（含 OpenCode）、机器 fresh/同来源再次安装
 本次仅运行既有 test_release_closure 两项（通过），并检查七份随包文档的旧五家、机器默认三家、后装不自动发现、禁止 --agent 残句，现行合同无命中；剩余项目三家与专用历史不变说明分别核对保留。git diff --check 通过。修前/修后 63 个生产脚本与测试文件哈希零漂移；具体证据见 closing-doc-fix-v1/document-checks.json 与 before-core-tests.json。原全量 612/74 属于上文先前候选，本次没有重跑全量，不把此次文档窄验证标成新全量通过。
 
 新证据独立存于 /tmp/opencode-adapter-20261101/closing-doc-fix-v1/：release-closure.log、document-checks.json、before-all.json、after-all.json、closing-doc-delta.patch、delivery-manifest.json、delivery-files.md、candidate.patch 与 evidence-check.json。新完整候选补丁包含未提交实现和此次文档增量，不含 CK，文件枚举使用 Git -z；清单按实际变更计数。此版本 supersedes 原交付的文档摘要与完整候选补丁引用，原 bfb5758a682558384095cad49ec51a8e808c20f6c0578e884da2143430fa610d 补丁、delivery-manifest、final-before/after/results、首轮及最终原始日志全部原样保留。文档中的源码仓库链接用于定位，不保证未发布链接已可访问。
+
+
+## 桌面检测收尾（2026-11-01，desktop-finish-v1）
+
+用户明确当前从未发布，无需继续升级准备。本轮已移除刚启动的 0.1.5 版本声明、CLI 版本选项、安装源版本 AST 守卫与历史来源白名单；三个文件逐字恢复到能力保全 checkpoint SHA。没有新增升级 handler、历史版本 fixture 或兼容路线；既有升级模块及 SOURCE 门禁保留。此前 preserve-014-v1 的十文件能力保全及 53 项定向证据仍有效，不宣称本轮重新跑过这 53 项。
+
+桌面检测新增 OpenCode.app 强信号，固定 CFBundleName/DisplayName=OpenCode、BundleID=ai.opencode.desktop、CFBundleExecutable=OpenCode，两个 bundle 版本须非空且一致；codesign 使用 strict/deep、Apple 锚与团队 5NZ4Q7NXJ4 的固定身份要求。CLI 与桌面安装面分别列在 surfaces 中，CLI-only 不证明桌面安装。仅一个官方原生 CLI 与一个官方 App 独立核验通过且没有失败候选时收敛为 installed；多个 CLI、多个 App、npm/收据与 App 的混合来源仍沿用冲突门禁。CLI 无静态版本证据时不填造版本。默认配置根守卫及专属项目入口按实际使用的策略不变。
+
+沿用章教授交付的桌面 2.2.5 安装、签名与引擎静态读取合同证据，私有证据目录为 /tmp/opencode-desktop-acceptance-20261101/。本实现阶段未再次检测真实安装、操作 App/UI 或发出认证／模型请求。真实 memSharing 接入、桌面新会话规则加载及模型调用验收由用户延后统一进行，均 pending；CLI 的历史 401 不能证明桌面账号状态。
+
+本轮固定源码定向共 88 项通过：新增桌面 10、既有安装检测 40、OpenCode 18、CLI preview 8、升级入口投影 8、发行文档闭包 2、锁内来源漂移探针 2。原始日志、运行期前后哈希与零漂移结果独立存于 /tmp/opencode-adapter-20261101/desktop-finish-v1/。现有 TARGET 只同步 agents.json 的桌面信号字节哈希，user_entries.py/public_layout.py 哈希与历史 SOURCE 常量保持原值。之前 612/74 全量是旧阶段证据，本轮没有重跑，也不将其计为桌面增量的新全量。
+
+README、SKILL、INSTALL、DESIGN、llms、architecture 与 operations 同步桌面／CLI 分面及验收暂停边界；本节为测试后证据补记。实现子 Agent 不修改 CK；主 Agent 维护项目当前记忆与协调日志。完整候选补丁与清单另存本阶段目录，不覆盖此前任何补丁、失败记录或原始日志；文档源码链接仅作定位，不保证未发布链接可访问。
+
+
+### 并装检测报告口径窄修（summary-fix-v1）
+
+按巴克队长最终窄审，检测注释与并装 summary 仅报告两个官方安装面各自的身份核验，不声称本次检测证明规则加载兼容性。输出明确“规则加载兼容性未由本次检测验证”，官方 pair→installed 逻辑不变，没有新增版本门禁。合成并装用例新增精确输出断言；本次仅重跑 test_opencode_desktop，10 项通过（0.021 秒），不是新全量。原始日志与本次三文件增量、当前完整 21 文件候选补丁／SHA 清单另存 /tmp/opencode-adapter-20261101/desktop-finish-v1/summary-fix-v1/，旧桌面证据保留。真实验收仍按用户要求暂停，未操作 CK、版本或真实环境，未提交推送。

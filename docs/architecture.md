@@ -144,6 +144,8 @@ WorkBuddy 仅在 `.workbuddy/memory/` 原生目录已存在时补规则指针。
 
 DeepSeek Harness 本次合同限默认 coding `cordis` preset 与默认根；非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根，检查不回传变量值，自定义配置未验证。`ZCODE_HOME` 不是 ZCode 规则根。两家静态支持 `~/.agents/skills` 及各自用户 Skill 根，不创建投影，不代表实际加载。详见[操作手册](operations.md#桌面端默认根与验证边界)。
 
+OpenCode 检测分别报告 CLI 与桌面 App 安装面。桌面核验 `OpenCode.app` 的固定产品名、`ai.opencode.desktop` 标识、`OpenCode` 可执行入口、非空且一致的 bundle 版本，以及 Apple 证书链与团队 `5NZ4Q7NXJ4` 签名。CLI-only 不表示桌面已安装；只有一个官方原生 CLI 与一个官方桌面 App 均通过、且无失败候选时允许并装，额外来源仍为 unknown。CLI 没有静态版本证据时保持版本 unknown。
+
 OpenCode 原生 Mach-O 入口优先以 Apple 签名要求核验标识 `opencode` 与团队 `5NZ4Q7NXJ4`，父级无 name 的 package.json 不阻断识别；原生签名失败不会回落 npm 包名放行。非 Mach-O 包装入口核验 `@opencode/cli` 包身份，文件名或目录 hint 不构成 installed。版本没有静态证据时保持 unknown。规则根仅支持默认绝对路径；`XDG_CONFIG_HOME`、`OPENCODE_CONFIG_DIR` 的相对值、字面 `~` 或非默认值及非空 `OPENCODE_CONFIG` 均拒绝，不回显原值。
 
 为什么这样设计：机器安装清单不代表每个项目都使用每个执行器。

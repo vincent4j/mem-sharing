@@ -167,7 +167,9 @@ DeepSeek Harness（`dsh`）用户入口为 `~/.dsh/AGENTS.md`，ZCode（`zcode`�
 
 OpenCode v2 用户入口为 `~/.config/opencode/AGENTS.md`，项目原生读取 `AGENTS.md`，不预建专属项目私文。第一版只支持默认配置根：`XDG_CONFIG_HOME` 与 `OPENCODE_CONFIG_DIR` 可未设置、为空白，或分别为规范化后等于 `<home>/.config`、`<home>/.config/opencode` 的绝对路径；相对路径、字面 `~` 与其他根均拒绝。`OPENCODE_CONFIG` 非空即拒绝。拒绝时整单零写，不回显变量原值。原生签名匹配可核验 installed，但没有静态版本证据仍如实标记版本 unknown。大文件不套用 Codex 的 32KiB 提醒，不代表客户端没有其他限制。
 
-本机只读安装检测与临时 HOME 测试不能证明真实新会话已加载规则；OpenCode 新会话、真实安装及模型调用验收仍 pending。验收分层见[OpenCode 验证记录](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/opencode-adapter/verification.md)。
+OpenCode 检测分别报告 CLI 与桌面 App 安装面。桌面核验 `OpenCode.app` 的固定产品名、`ai.opencode.desktop` 标识、`OpenCode` 可执行入口、非空且一致的 bundle 版本，以及 Apple 证书链与团队 `5NZ4Q7NXJ4` 签名。CLI-only 不表示桌面已安装；只有一个官方原生 CLI 与一个官方桌面 App 均通过、且无失败候选时允许并装，额外来源仍为 unknown。CLI 没有静态版本证据时保持版本 unknown。
+
+章教授已交付桌面 2.2.5 安装、签名与默认规则读取逻辑的静态证据；本轮未重复操作真实环境。静态检测和临时 HOME 测试不能证明真实新会话已加载规则；memSharing 真实接入、新会话与模型调用验收由用户延后统一进行，均 pending。验收分层见[OpenCode 验证记录](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/opencode-adapter/verification.md)。
 
 DSH 本次限默认 coding `cordis` preset 与默认根。接入规划自动检查 `DSH_HOME`，非默认根拒绝默认入口接入，错误不回传变量值。`DSH_AGENTS_HOME` 影响共享 Skill 根，目前不自动检测，也不承诺默认共享 Skill 目录已被客户端发现。显式插件配置也可能覆盖根，自定义配置与桌面进程实际环境未验证。`ZCODE_HOME` 不是 ZCode 规则根，不能用它推导规则位置。
 

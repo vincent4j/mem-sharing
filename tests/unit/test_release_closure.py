@@ -38,11 +38,12 @@ def _manifest_names():
 
 
 class ReleaseClosureTests(unittest.TestCase):
-    def test_manifest_is_thirty_one_files_including_public_layout(self):
+    def test_manifest_is_thirty_two_files_including_release_resolver(self):
         manifest = _manifest_names()
-        # 0.1.3 dev payload:30 冻结文件 + 新迁移模块 public_layout.py = 31。
+        # Current source payload adds the shared release resolver to the 31 files.
         self.assertIn('scripts/agm_core/public_layout.py', manifest)
-        self.assertEqual(len(manifest), 31, sorted(manifest))
+        self.assertIn('scripts/agm_core/plugin_release.py', manifest)
+        self.assertEqual(len(manifest), 32, sorted(manifest))
 
     def test_shipped_doc_links_stay_inside_manifest(self):
         manifest = _manifest_names()

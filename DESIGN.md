@@ -4,6 +4,8 @@
 
 ## 定位与边界
 
+OpenCode 桌面 App 与 CLI 分面核验，CLI-only 不证明桌面存在；官方原生 CLI 与 App 并装采用受限身份校验，详见[操作手册](docs/operations.md#桌面端默认根与验证边界)。真实新会话验收由用户延后统一进行。
+
 memSharing（多 Agent 记忆共享与融合，Multi-Agent Memory Sharing & Fusion）是跨执行器的规则共享与经历编排层，覆盖 Codex、Claude Code、WorkBuddy、DeepSeek Harness（`dsh`）、ZCode（`zcode`）与 OpenCode v2（`opencode`）六家。机器全新安装（fresh）、同来源再次安装及符合来源与转换门禁的合法升级（upgrade）缺省接入全部已核验为 `installed` 的支持对象；显式 `--agent` 限定新增接入范围。项目命令缺省仍为 Codex、Claude Code、WorkBuddy 三家，专属项目入口由实际使用驱动，disabled 项目不自动恢复。纯文件、零服务，使用 Python 标准库；当前实证平台为 macOS，Windows/Linux 未验证。
 
 不增加向量库、界面、模型配置、数据库或通用 provider 框架。不管理共享 Skills/MCP，不投影 memSharing 自身 Skill，不写各执行器的自动私有记忆库。其他记忆工具可独立共存，本产品不集成或管理其服务端。

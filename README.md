@@ -78,7 +78,7 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 
 支持 Codex、Claude Code、WorkBuddy、DeepSeek Harness（`dsh`）、ZCode 和 OpenCode v2 六家。机器安装、再次安装及升级默认接入支持清单内全部已核验为 `installed` 的 Agent；显式 `--agent` 限定目标，`unknown` 或 `absent` 不自动接入。历史公共布局迁移与新增接入在写入前合成一份精确计划，一次批准；既有公共依赖仍完整迁移。
 
-`AGENTS.md` 是共享项目记忆基座，不依赖安装 Codex。项目命令缺省仍为 Codex、Claude Code、WorkBuddy；当前执行者实际使用时以自身 `--agent` 接入。DeepSeek Harness、ZCode、OpenCode 的用户入口分别为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，项目均原生读取 `AGENTS.md`。Claude 引用和 WorkBuddy 桥接在它们实际使用时补齐，保留私文，不预建其他执行器项目入口，也不自动恢复 disabled 项目。OpenCode 第一版仅支持默认配置根，详见[操作手册](docs/operations.md#桌面端默认根与验证边界)；新会话加载验收仍 pending。
+`AGENTS.md` 是共享项目记忆基座，不依赖安装 Codex。项目命令缺省仍为 Codex、Claude Code、WorkBuddy；当前执行者实际使用时以自身 `--agent` 接入。DeepSeek Harness、ZCode、OpenCode 的用户入口分别为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，项目均原生读取 `AGENTS.md`。Claude 引用和 WorkBuddy 桥接在它们实际使用时补齐，保留私文，不预建其他执行器项目入口，也不自动恢复 disabled 项目。OpenCode 支持独立核验桌面 App 与 CLI 安装面，CLI-only 不证明桌面存在；官方原生 CLI 与 App 并装采用受限身份校验。OpenCode 第一版仅支持默认配置根，详见[操作手册](docs/operations.md#桌面端默认根与验证边界)；新会话加载验收仍 pending。
 
 **想要项目经历？** 在需要的项目里使用 `/context-keeper`：首次按 Context Keeper 的流程初始化记录库，记录库建在项目里、随 Git 走，各家 Agent 共用（安装时会问一句要不要装它：回车＝同意，输入 n 跳过）。用户级安装目前覆盖 Codex、Claude Code 与 WorkBuddy；DeepSeek Harness、ZCode 与 OpenCode 暂不在其安装范围，不影响它们共享记忆。没装它，用户记忆与项目记忆照常工作。
 

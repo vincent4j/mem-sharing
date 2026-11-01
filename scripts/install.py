@@ -23,20 +23,17 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agm_core import detect, legacy_import as legacy, migrate, paths, registry
-from agm_core import upgrade, user_entries, user_install, ck_install, public_layout
+from agm_core import upgrade, user_entries, user_install, ck_install, public_layout, plugin_release
 
 OFFICIAL = 'https://github.com/vincent4j/mem-sharing'
 LEGACY_OFFICIAL = 'https://github.com/vincent4j/agent-group-memory'  # 远程改名前的旧 URL,仍视作官方来源
 # Closed release manifest: the seven docs a C-side install can click through,
 # plus scripts/. Acceptance records, CK worklogs and local state stay source-only.
-SHIPPED_DOCS = ('SKILL.md', 'README.md', 'INSTALL.md', 'llms.txt', 'DESIGN.md',
-                'docs/architecture.md', 'docs/operations.md')
+SHIPPED_DOCS = plugin_release.SHIPPED_DOCS
 
 
 def _managed_source(name):
-    if name in SHIPPED_DOCS or name.startswith('scripts/'):
-        return name != 'scripts/registry.json' and not name.startswith(('scripts/backups/', 'scripts/.agm.lock/'))
-    return False
+    return plugin_release.managed_source(name)
 INPUT_KEYS = {'source', 'conversions', 'legacy_registries', 'legacy_source_commits',
               'evidence_files', 'legacy_identity',
               # Explicit detection inputs: keep cold-CLI tests and M4-09/M4-10-A
@@ -94,6 +91,8 @@ def checkout_source(root, commit, version):
     if _git(root, '-c', 'core.fsmonitor=false', 'status', '--porcelain'):
         raise InstallError('Dirty checkout: preserve it and supply a clean verified source', 'source_drift')
     names = _git(root, 'ls-files', '-z').split('\0')
+    if plugin_release.ROOT_MANIFEST in names:
+        raise InstallError('Release checkout requires the durable export stage; use the installer --source route', 'release_export_required')
     files = {}
     for name in names:
         if not name or not _managed_source(name):
@@ -351,6 +350,7 @@ def build_parser():
     p = Parser(description='Machine installation: preview first; execute only an exact approved plan.', allow_abbrev=False)
     p.add_argument('--source', help='Absolute clean local Git checkout (default: this source checkout)')
     p.add_argument('--source-manifest', help='Absolute JSON file containing a verified source object')
+    p.add_argument('--release-request', help='Absolute package-bound release delivery JSON; prepares a durable source before machine installation')
     p.add_argument('--commit', help='Full pinned source commit; local default is current verified HEAD')
     p.add_argument('--version', help='Target product code version MAJOR.MINOR.PATCH')
     p.add_argument('--request-file', help='Absolute JSON: conversions/legacy ledger identity/evidence inputs')
@@ -376,10 +376,18 @@ def run(args):
     if shutil.which('git') is None:
         raise InstallError('Git missing. Install Git manually (macOS: xcode-select --install), then retry', 'runtime_missing')
     approval = _json(args.approval_file) if args.approval_file else None
+    if approval and approval.get('command') == 'prepare-release-source':
+        if any(getattr(args, name) for name in ('source', 'source_manifest', 'release_request', 'commit', 'version',
+                'request_file', 'operation_id', 'agent', 'acquire', 'staging', 'project', 'context_keeper', 'ck_source', 'recover', 'action')):
+            raise InstallError('Export approval must be applied independently with --approval-file')
+        plan = approval_without_evidence(approval)
+        if str(Path(os.environ.get('HOME', '')).resolve()) != plan['home'] or not os.environ.get('HOME'):
+            raise InstallError('Export approval HOME mismatch', 'approval_mismatch')
+        return plugin_release.execute_export(plan, approval)
     ordinary = any(getattr(args, name) for name in ('source', 'source_manifest', 'commit', 'version',
-                    'request_file', 'operation_id', 'agent', 'acquire', 'staging', 'project'))
+                    'release_request', 'request_file', 'operation_id', 'agent', 'acquire', 'staging', 'project'))
     if args.context_keeper:
-        if any(getattr(args, name) for name in ('source', 'source_manifest', 'commit', 'version',
+        if any(getattr(args, name) for name in ('source', 'source_manifest', 'release_request', 'commit', 'version',
                 'request_file', 'agent', 'acquire', 'staging', 'project', 'recover', 'action')):
             raise InstallError('--context-keeper cannot mix with recovery/acquisition/ordinary installation')
         if approval and approval.get('command') != 'install-context-keeper':
@@ -438,7 +446,7 @@ def run(args):
     if args.action:
         raise InstallError('--action is only valid with --recover')
     if args.acquire:
-        if any((args.source, args.source_manifest, args.request_file, args.operation_id, args.agent, args.project)) or not args.staging:
+        if any((args.source, args.source_manifest, args.release_request, args.request_file, args.operation_id, args.agent, args.project)) or not args.staging:
             raise InstallError('--acquire requires --staging, --commit, --version; no installation arguments')
         plan = plan_acquisition(args.commit, args.staging, args.version)
         if approval is None:
@@ -451,22 +459,43 @@ def run(args):
     inputs = _json(args.request_file) if args.request_file else copy.deepcopy({k:v for k,v in saved.items() if k in INPUT_KEYS})
     if set(inputs) - INPUT_KEYS:
         raise InstallError('Unknown request fields: ' + str(sorted(set(inputs)-INPUT_KEYS)))
-    if args.source_manifest:
+    home = str(Path(os.environ.get('HOME', '')).resolve())
+    if not os.environ.get('HOME'):
+        raise InstallError('Explicit HOME is required')
+    operation_id = args.operation_id or saved.get('operation_id') or datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex
+    delivery = None
+    if args.release_request:
+        if args.source or args.source_manifest or args.commit or args.version or 'source' in inputs:
+            raise InstallError('--release-request cannot mix with source identity arguments')
+        delivery = _json(args.release_request)
+        if delivery.get('kind') != 'plugin-package':
+            raise InstallError('--release-request requires a plugin-package delivery')
+    elif args.source_manifest:
         if args.source or args.commit or args.version or (args.request_file and 'source' in inputs):
             raise InstallError('--source-manifest cannot mix with source identity arguments')
         inputs['source'] = _json(args.source_manifest)
     elif args.source or args.commit or args.version or 'source' not in inputs:
         if not args.version:
             raise InstallError('--version is required with a checkout; alternatively provide --source-manifest')
-        inputs['source'] = checkout_source(args.source or str(Path(__file__).resolve().parents[1]), args.commit, args.version)
-    home = str(Path(os.environ.get('HOME', '')).resolve())
-    if not os.environ.get('HOME'):
-        raise InstallError('Explicit HOME is required')
+        root = args.source or str(Path(__file__).resolve().parents[1])
+        # HEAD/pin/clean keep their original meanings. Only after checking R do
+        # we resolve S through the tracked release and a durable export.
+        if plugin_release.ROOT_MANIFEST in _git(root, 'ls-files', '-z').split('\0'):
+            delivery = plugin_release.checkout_delivery(root, args.commit, args.version)
+        else:
+            inputs['source'] = checkout_source(root, args.commit, args.version)
+    if delivery:
+        export = plugin_release.plan_export(delivery, home, operation_id)
+        if not export['reused']:
+            if approval:
+                raise InstallError('Release export requires independent approval', 'approval_mismatch')
+            return {'status':'approval_required','approval_required':True,'approval_plan':export,
+                    'installation_complete':False,'source_trust':export['source_trust']}
+        inputs['source'] = plugin_release.export_result(export)['source']
     config = paths.select_platform(paths.load_agents_table(), sys.platform)
     request = dict(inputs, home=home, platform_config=config,
                    agents=args.agent if args.agent is not None else saved.get('agents'),
-                   operation_id=args.operation_id or saved.get('operation_id') or
-                   datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex)
+                   operation_id=operation_id)
     plan = plan_machine(request)
     if approval is not None:
         return ck_install.tail(execute_machine(plan, approval, request=request, project=args.project), request)
