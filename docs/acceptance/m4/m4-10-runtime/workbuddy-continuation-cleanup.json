@@ -1,9 +1,0 @@
-{
-  "utc": "2026-10-31T00:35:56.587149+00:00",
-  "before_sha256": "b86fbc67104aedec142c66c8d421204e2c5190ea7f19524377a5b777303d135b",
-  "restored_sha256": "b86fbc67104aedec142c66c8d421204e2c5190ea7f19524377a5b777303d135b",
-  "exact_restore": true,
-  "topic_removed": true,
-  "prompt_submitted": false,
-  "reason": "Computer Use cgWindowNotFound; stopped before submit"
-}

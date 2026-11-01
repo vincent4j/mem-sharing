@@ -1,8 +1,0 @@
-{
-  "utc": "2026-10-31T00:29:12.854594+00:00",
-  "index_before_sha256": "b86fbc67104aedec142c66c8d421204e2c5190ea7f19524377a5b777303d135b",
-  "index_restored_sha256": "b86fbc67104aedec142c66c8d421204e2c5190ea7f19524377a5b777303d135b",
-  "exact_restore": true,
-  "temporary_topic_removed": true,
-  "reason": "Both CLI probes complete; WorkBuddy stopped before submission. Future continuation requires new temporary marker."
-}

@@ -422,6 +422,14 @@ def _run_locked(request, runtime, result, *, locked=True):
     result['projects']=[{'main_checkout':key,'checkout':str(root),'memory_policy':choice,'agents':assembly['agents'],
         'runtime_acceptance':assembly['runtime_acceptance'],'evidence':[str(registry_path)]}]
     consistent = not transitions and _consistent_repair(previous,assembly,plan,choice,previous_registry['shared_objects'])
+    if request.get('preview'):
+        # Reuse the actual plan before implicit consistent repairs, confirmation
+        # callbacks or any writer lock. Preview never supplies its own approval.
+        if consistent and not rebuild and not plan.changes() and data==previous_registry:
+            result['status']='completed'
+        else:
+            result.update(status='approval_required',approval_required=True,next_action=approval_template())
+        return result
     confirmation = None
     if approval:
         if set(approval) != set(actual_plan)|{'confirmed_at','reference'}|({'rebuild_confirmation'} if rebuild else set()) or any(approval.get(k)!=v for k,v in actual_plan.items()):

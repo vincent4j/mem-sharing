@@ -13,12 +13,13 @@ memSharing(多 Agent 记忆共享与融合):纯文件、零服务、一句话安
 
 - [系统架构](docs/architecture.md):R/C/V 布局、台账 schema=3、事务与恢复、五家执行器接入与升级机制。
 - [操作手册](docs/operations.md):安装/启用/批量/停用/整理/健康检查/排查的完整操作说明。
-- [验收门禁总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md):分层结论与历史精确定位；当前 M4-10 证据仍在工作树。
+- [验收门禁总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md):分层结论、当前验收与暂停续审入口；阶段原件按 Git 历史取回。
 
 ## 设计与验收
 
 - [发布清单（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/m4/m4-10-prep/release-checklist.md):发布门禁与暂停中的后续运行验收规格。
-- [收尾质量报告（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/release-review.md):本次删合留、问题修复与本地发布结论。
+- [Paseo 维护手册（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/plugin-adapters/README.md):单仓发行、宿主批准、依赖与恢复合同。
+- [Paseo 验收记录（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/plugin-adapters/acceptance.md):当前分层证据、现场定位与尚未验证范围。
 
 - 现行合同的完整裁定沿革存 Git 历史(`f06db31:docs/plan/decisions-m4.md`);[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md) 汇总各里程碑结论。
 

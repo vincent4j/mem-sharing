@@ -660,6 +660,9 @@ def execute_upgrade(plan,approval=None,*,request=None,hook=None):
         _open_locks(stack,runtime,plan)
         if install._node(runtime.registry)!=plan['before_registry']:_fail('V drift under locks')
         install._code_matches(runtime,plan['before_product']);_entry_unchanged(plan)
+        locked_source, locked_files = _source(req, runtime)
+        if locked_source != plan['source'] or locked_files != plan['source_files']:
+            _fail('Source changed under upgrade locks', 'source_drift')
         Path(plan['bootstrap']).mkdir(mode=0o700);_save(journal)
         try:return _finish(journal,hook)
         except BaseException:
