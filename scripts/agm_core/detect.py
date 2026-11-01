@@ -51,6 +51,14 @@ _CLAUDE_NATIVE_REQUIREMENT = (
     '=identifier "com.anthropic.claude-code" and anchor apple generic '
     'and certificate leaf[subject.OU] = "Q6L2SF6YDW"'
 )
+# OpenCode v2 原生二进制的发布者身份(2026-11-01 本机 codesign 只读核验):
+# identifier "opencode",Developer ID Application: Anomaly Innovations, Inc.,
+# TeamIdentifier 5NZ4Q7NXJ4。签名可证发布者身份,但不证明 v2 release 的精确
+# 字节;版本无经认证的静态元数据,检测不记录版本、不伪造。
+_OPENCODE_NATIVE_REQUIREMENT = (
+    '=identifier "opencode" and anchor apple generic '
+    'and certificate leaf[subject.OU] = "5NZ4Q7NXJ4"'
+)
 _MACHO_MAGIC = {bytes.fromhex(value) for value in (
     'feedface', 'cefaedfe', 'feedfacf', 'cffaedfe',
     'cafebabe', 'bebafeca', 'cafebabf', 'bfbafeca')}
@@ -149,12 +157,47 @@ def _check_claude_native(path, real, *, runner):
                    executable_path=real, sha256=_sha256_file(real))
 
 
+def _check_opencode_native(path, real, *, runner):
+    """Verify the OpenCode native binary without executing it or trusting its name.
+
+    与 Claude native 同口径:Mach-O 魔数前置,codesign -R 固定发布者要求
+    (identifier + Apple 锚 + Anomaly Innovations 团队 OU),拒绝 ad-hoc 签名与
+    其他产品的同名二进制。版本未知:安装目录名不是经认证的产品版本元数据。
+    """
+    try:
+        with open(real, 'rb') as handle:
+            if handle.read(4) not in _MACHO_MAGIC:
+                return None
+    except OSError:
+        return _record('path_executable', path, 'failed',
+                       'OpenCode 原生入口不可读', path=real)
+    result = runner(['codesign', '--verify', '--strict', '-R',
+                     _OPENCODE_NATIVE_REQUIREMENT, real])
+    if result is None or result.returncode != 0:
+        return _record('path_executable', path, 'failed',
+                       'OpenCode 原生二进制签名/发布者身份未通过核验', path=real,
+                       type='macos_native_executable')
+    return _record('path_executable', path, 'verified',
+                   'OpenCode 原生 Mach-O 入口与 Anomaly Innovations 签名身份一致',
+                   path=real, type='macos_native_executable', name='OpenCode',
+                   executable_path=real, sha256=_sha256_file(real))
+
+
 def _check_path_executable(signal, path, *, runner=None):
     real, problem = _resolve_active_entry(path)
     if real is None:
         if problem == "not_found":
             return _record("path_executable", path, "not_found", "该路径不存在命令")
         return _record("path_executable", path, "failed", problem)
+    if signal['package_name'] == '@opencode/cli':
+        # OpenCode v2 官方安装器把原生二进制装在 ~/.opencode/bin/ 下,同目录树的
+        # 父级 ~/.opencode/package.json 无 name/version(2026-11-01 本机复现:按
+        # npm 元数据先判会把真实安装误判为"包名不符"unknown)。先做 Mach-O 签名
+        # native 识别:非 Mach-O(如 npm 包装脚本)返回 None 落回 npm 身份门禁;
+        # Mach-O 但签名/发布者不匹配直接 failed,不回落、不因包名假装可信。
+        native = _check_opencode_native(path, real, runner=runner or _default_runner)
+        if native is not None:
+            return native
     package_json = _nearest_package_json(os.path.dirname(real))
     if package_json is None:
         if signal['package_name'] == '@anthropic-ai/claude-code':
@@ -471,9 +514,10 @@ def detect_agents(platform_config, agents=None, *, home, search_paths=None,
         "rules_version": DETECT_RULES_VERSION,
         "agents": {},
     }
-    # agents=None 是"全量支持清单"语义(五家):安装事实报告必须覆盖 dsh/zcode,
-    # 否则显式接入预览(install.plan_machine agent_facts)会漏报或 KeyError。
-    # 用户请求缺省三家由 CLI/命令体经 resolve_agents 先行收敛,不经本函数。
+    # agents=None 是"全量支持清单"语义(六家):安装事实报告必须覆盖
+    # dsh/zcode/opencode,否则显式接入预览(install.plan_machine agent_facts)
+    # 会漏报或 KeyError。用户请求缺省三家由 CLI/命令体经 resolve_agents 先行
+    # 收敛,不经本函数;机器安装器缺省目标同样由调用方显式表达。
     for agent in agm_paths.resolve_agents(agents, default=agm_paths.AGENT_ORDER):
         result["agents"][agent] = _detect_one(
             agent, platform_config[agent], home=home,

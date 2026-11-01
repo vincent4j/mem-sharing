@@ -14,6 +14,8 @@
 
 ## 主题摘要（按类型）
 
+- **OpenCode 适配与默认接入：** 源码候选完成：第六家opencode；机器安装默认自动配置全部支持且确认installed者，显式--agent限定新增范围，历史依赖完整迁移且一次外层批准。最终612单元/74集成通过；巴克队长收尾审核P2/P3文档问题已按用户授权修复并经同一审核者窄复核通过；本次仅四文档变化、闭包2项通过、63脚本/测试零漂移，原全量未重跑。新证据closing-doc-fix-v1保留全部旧证据；GLM基础实现后EPIPE，由呱唧接替收尾。125个覆盖文件测试期零漂移，17份中文CK日志的清单遗漏已披露。真实memSharing未部署、版本未变、未提交推送；真实OpenCode新会话/非默认根/其他平台pending。来源：[日志](worklogs/2026-11-01-OpenCode安装核验与默认接入修正.md)、[验证报告](../acceptance/opencode-adapter/verification.md)。
+
 - **收尾审核（当前）：** 用户纠正为巴克队长而非8个，误解的审核安排已撤回；用户授权修复后，CK块保护P1、DSH tilde兼容与文档口径P3均关闭。新全量582单元/74集成通过，主Agent独立复核并按hash整合，源码收尾通过；原失败历史保留。该源码审核时未提交安装；后续ea55373已推送并真实部署0.1.3，桌面运行仍pending，见双桌面端主题。来源：[修后报告](../acceptance/desktop-adapters/review-fix/verification.md)、[修复日志](worklogs/2026-10-31-收尾审核问题修复.md)。
 
 - **双桌面端适配：** dsh/zcode源码适配、原生用户入口与AGENTS项目合同完成。GLM初版因额度中断后呱唧接续；审核问题修后582/74通过。主Agent补Claude原生签名识别，最新全量586/74通过；先push bfc6580，再push ea55373并从0.1.1真实升级为0.1.3；Claude既有引用显式登记、原正文保留，dsh/zcode真实接入完成，五家静态connected、私文逐字节保留、幂等零写。章教授CUA无法绑定双端窗口（30/45秒超时），新会话/Skill仍blocked/pending；不修改上游Context Keeper。来源：[实际报告](../acceptance/desktop-adapters/runtime/verification.md)、[接入日志](worklogs/2026-10-31-双桌面端源码固化与真实接入.md)。 用户已明确本轮任务结束，剩余原生验收等待回到电脑前人工操作；不再自动重试。

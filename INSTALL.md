@@ -21,7 +21,7 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 
 同意后由安装器编排 Context Keeper 自有安装器，为**已接入的 Codex、Claude Code、WorkBuddy**完成用户级安装，Skill 落位由 Context Keeper 负责。只有明确的交互回车才算同意；无响应、非交互 EOF 不等于同意。装后只提醒：“在任意需要的项目里使用 `/context-keeper`。首次使用按它的流程创建项目记录库，记录库随 Git 走，各家 Agent 共用。”到此结束。
 
-固定 pin 的 Context Keeper 安装器仅支持旧三家的 flags；DeepSeek Harness（`dsh`）与 ZCode（`zcode`）跳过用户级 CK 安装（`reason=upstream_unsupported`）。混合接入时旧三家仍可安装，不影响新两家的 memSharing 接入；不可把两家报告为 CK 已安装。
+固定 pin 的 Context Keeper 安装器仅支持旧三家的 flags；DeepSeek Harness（`dsh`）、ZCode（`zcode`）与 OpenCode（`opencode`）跳过用户级 CK 安装（`reason=upstream_unsupported`）。混合接入时旧三家仍可安装，不影响它们的 memSharing 接入；不可报告为 CK 已安装。
 
 跳过 Context Keeper 不影响用户记忆与项目记忆。装 Context Keeper 不等于所有项目立即创建记录库；项目经历按项目首次命令激活。装后 Context Keeper 的命令、记录格式、保存与查找行为均由其自行定义，memSharing 只保留桥接文本协议。
 
@@ -56,7 +56,7 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 
 ## 支持的执行器
 
-支持 Codex、Claude Code、WorkBuddy、DeepSeek Harness 桌面端（`dsh`）与 ZCode 桌面端（`zcode`）。缺省目标仍为 `codex/claude/workbuddy`，新增两家须显式选择；用户入口分别为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`，项目均原生读取 `AGENTS.md`，不新增隐藏桥接或 Skill 投影。共用公共记忆索引，各自私文保留。默认项目接入由当前实际执行者显式使用自身 ID，不预建其他执行器入口，disabled 不恢复。
+支持 Codex、Claude Code、WorkBuddy、DeepSeek Harness（`dsh`）、ZCode（`zcode`）、OpenCode v2（`opencode`）六家。机器安装、再次安装与升级缺省接入支持对象中全部已核验 installed 者，显式重复 `--agent` 限定范围。后三家用户入口为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，项目均原生读取 `AGENTS.md`，不新增隐藏桥接或 Skill 投影。共用公共记忆索引，各自私文保留。项目命令缺省仍三家；当前实际执行者使用时显式指定自身 ID，不预建其他执行器入口，disabled 不恢复。
 
 两家均仅有默认根的静态支持；DSH 限本次默认 coding `cordis` preset，非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根，检查不回传变量值。自定义配置未验证；`ZCODE_HOME` 不是 ZCode 规则根。Skill 发现及验收边界见[操作手册](docs/operations.md#桌面端默认根与验证边界)。
 
@@ -153,9 +153,9 @@ python3 -B /absolute/path/verified-source/scripts/install.py --recover /absolute
 
 ### 公共记忆分层发行转换（0.1.3 候选，本地限定验收通过）
 
-公共记忆分层把六项菜单与详细维护规则集中到公共指南 `memories/topics/使用约定.md`，`MEMORY.md` 瘦身为读取契约与真实主题索引，各执行器用户文件只保留公共指针与自身规则。该转换已在 0.1.3 候选实现：固定处理器为 `scripts/agm_core/public_layout.py`，外部 conversion 的 `entries` 固定为 `{"type": "public-memory-layout-v1"}`，沿用既有 `_conversions` 四键 schema（`before/after/direction/entries`）。两个精确前身冻结在 `scripts/agm_core/upgrade.py` 常量：0.1.1（commit `04c32e24b9ab9504514908f2368cddca4356e478`）与 0.1.2 候选（commit `0f690ef7aabf747a23bacc7662c19bee34c4bf52`），各绑定核验过的 tree 哈希。目标版本 0.1.3 由 CLI `--version`／来源清单承载，无版本文件；目标合同三文件（`agents.json` 不变，`user_entries.py` 与新增 `public_layout.py` 的精确 SHA256）为冻结字面量，门禁同时核对目标来源清单与运行模块字节一致，再冻结须显式声明并留测试证据。旧 0.1.2 的 `entries=preserve` 只对旧固定合同成立，`user_entries.py` 指纹变化后不能沿用。当前候选拼版共 31 文件。
+公共记忆分层把六项菜单与详细维护规则集中到公共指南 `memories/topics/使用约定.md`，`MEMORY.md` 瘦身为读取契约与真实主题索引，各执行器用户文件只保留公共指针与自身规则。该转换已在 0.1.3 候选实现：固定处理器为 `scripts/agm_core/public_layout.py`，外部 conversion 的 `entries` 固定为 `{"type": "public-memory-layout-v1"}`，沿用既有 `_conversions` 四键 schema（`before/after/direction/entries`）。两个精确前身冻结在 `scripts/agm_core/upgrade.py` 常量：0.1.1（commit `04c32e24b9ab9504514908f2368cddca4356e478`）与 0.1.2 候选（commit `0f690ef7aabf747a23bacc7662c19bee34c4bf52`），各绑定核验过的 tree 哈希。目标版本 0.1.3 由 CLI `--version`／来源清单承载，无版本文件；SOURCE 历史前身身份与合同保持冻结；TARGET 合同三文件 `agents.json`、`user_entries.py`、`public_layout.py` 按当前六家字节冻结为精确 SHA256 字面量，门禁同时核对目标来源清单与运行模块字节一致，再冻结须显式声明并留测试证据。旧 0.1.2 的 `entries=preserve` 只对旧固定合同成立，`user_entries.py` 指纹变化后不能沿用。当前候选拼版共 31 文件。
 
-正常流程一份外层批准绑定两阶段，且请求不得带 `--agent`（携带即拒绝该转换）。预览阶段即触发未登记读者门禁，零写拒绝可预见的失败升级：只有存在已登记公共依赖（import 引用或受管块消费者）的入口才迁移，无依赖私文仅观察保全、零更新；已登记但入口缺失拒整单；未登记的 Claude 读者被阻断并指引先显式 `--agent claude` 完成登记再重新预览，不暗中接入。代码已同版 0.1.3 而布局仍为旧状时，预览继续生成迁移子计划，布局与入口全新才是真零写 noop；其他版本的 noop 不派迁移。执行先完成代码与台账 V，再以同一批准运行迁移事务（公共 MEMORY、公共指南、全部已登记依赖用户入口，V2 最后提交）；只有 V2 读回才报告 completed，否则 partial 并给出 `migration_phase=pending/recovery_required`。
+正常流程一份外层批准绑定代码、公共布局迁移与新增入口装配；显式 `--agent` 仅限定新增接入范围，既有公共依赖仍完整迁移。新增入口按预测 V2 快照预览，执行后回到真实现场严格比较原批准。预览阶段即触发未登记读者门禁，零写拒绝可预见的失败升级：只有存在已登记公共依赖（import 引用或受管块消费者）的入口才迁移，无依赖私文仅观察保全、零更新；已登记但入口缺失拒整单；未登记的 Claude 读者被阻断并指引先显式 `--agent claude` 完成登记再重新预览，不暗中接入。代码已同版 0.1.3 而布局仍为旧状时，预览继续生成迁移子计划，布局与入口全新才是真零写 noop；其他版本的 noop 不派迁移。执行先完成代码与台账 V，再以同一批准运行迁移事务（公共 MEMORY、公共指南、全部已登记依赖用户入口，V2 最后提交）；只有 V2 读回才报告 completed，否则 partial 并给出 `migration_phase=pending/recovery_required`。
 
 两阶段恢复入口分开。代码阶段沿用既有 `--recover <升级journal> --action continue|rollback` 与固定 toolkit；迁移阶段用 `--recover <迁移journal> --action continue|rollback`，标准动作映射为 `continue`=`finish`（仅 V2 已提交侧允许）、`rollback` 仅限 V1 侧，V1 状态只允许回滚，重做迁移必须新预览批准。固定 launcher 同样可用：`recover.py preview <journal> continue|rollback` 与 `recover.py apply <批准JSON>`。等值 V 以完整可信事务 manifest 状态 `committed` 为分界，非 committed 即拒绝收尾；非等值以 V2 读回判定；`last_operation_id` 不变；未尝试输出出现第三种字节即保全停止；准备阶段无任何 attempt 且全部 before 时可仅清场收尾。
 
@@ -172,7 +172,7 @@ python3 -B /absolute/path/verified-source/scripts/install.py --recover /absolute
  "direction": "upgrade", "entries": {"type": "public-memory-layout-v1"}}
 ```
 
-将上述条目放入 request.json 的 `conversions` 数组（`{"conversions": [条目]}`）；source.json 必须是从最终干净来源核验得到的 source 对象。批准文件保存完整 `approval_plan`，并附严格 UTC Z 的 `confirmed_at` 与 `reference`，不改计划内容。预览与执行沿用普通安装入口，不得附加 `--agent`：
+将上述条目放入 request.json 的 `conversions` 数组（`{"conversions": [条目]}`）；source.json 必须是从最终干净来源核验得到的 source 对象。批准文件保存完整 `approval_plan`，并附严格 UTC Z 的 `confirmed_at` 与 `reference`，不改计划内容。预览与执行沿用普通安装入口，可用重复 `--agent` 限定新增接入范围，既有公共依赖仍完整迁移：
 
 ```bash
 python3 -B scripts/install.py --source-manifest /absolute/path/source.json --request-file /absolute/path/request.json

@@ -88,10 +88,10 @@ class CKInstallTests(InstallFixture):
     def connect_desktops(self):
         facts = detect.detect_agents(self.config, None, home=str(self.home),
             search_paths=self.request['search_paths'], app_directories=[])
-        for agent in ('dsh', 'zcode'):
+        for agent in ('dsh', 'zcode', 'opencode'):
             facts['agents'][agent] = copy.deepcopy(facts['agents']['codex'])
-        req = dict(self.request, agents=['dsh', 'zcode'])
-        with patch.dict(os.environ, DSH_HOME=''), patch.object(detect, 'detect_agents', return_value=facts):
+        req = dict(self.request, agents=['dsh', 'zcode', 'opencode'])
+        with patch.dict(os.environ, DSH_HOME='', XDG_CONFIG_HOME='', OPENCODE_CONFIG_DIR='', OPENCODE_CONFIG=''), patch.object(detect, 'detect_agents', return_value=facts):
             preview = user_entries.run_user_entries(req)
             self.assertEqual(preview['status'], 'approval_required', preview)
             plan = json.loads(preview['next_action'])
@@ -101,20 +101,20 @@ class CKInstallTests(InstallFixture):
 
     def test_mixed_upstream_support_reports_skipped_and_preserves_desktop_bytes(self):
         self.connect_desktops()
-        private = {a: (self.home/('.'+a)/'AGENTS.md').read_bytes() for a in ('dsh', 'zcode')}
+        private = {a: (Path(paths.expand_path(self.config[a]['user_entry'], home=str(self.home)))).read_bytes() for a in ('dsh', 'zcode', 'opencode')}
         before = self.snapshot()
         plan = self.plan_ck()
-        skipped = [{'agent': a, 'reason': 'upstream_unsupported'} for a in ('dsh', 'zcode')]
+        skipped = [{'agent': a, 'reason': 'upstream_unsupported'} for a in ('dsh', 'zcode', 'opencode')]
         self.assertEqual(plan['agents'], ['codex'])
         self.assertEqual(plan['skipped_upstream_agents'], skipped)
         self.assertEqual(self.snapshot(), before)
-        self.assertNotIn('--dsh', plan['argv']); self.assertNotIn('--zcode', plan['argv'])
+        self.assertNotIn('--dsh', plan['argv']); self.assertNotIn('--zcode', plan['argv']); self.assertNotIn('--opencode', plan['argv'])
         result = self.apply(plan)
         self.assertEqual(result['status'], 'configured', result)
         self.assertEqual(result['agents'], ['codex'])
         self.assertEqual(result['skipped_upstream_agents'], skipped)
         for a, raw in private.items():
-            self.assertEqual((self.home/('.'+a)/'AGENTS.md').read_bytes(), raw)
+            self.assertEqual((Path(paths.expand_path(self.config[a]['user_entry'], home=str(self.home)))).read_bytes(), raw)
             self.assertFalse((self.home/('.'+a)/'skills').exists())
 
     def test_desktop_only_ck_skip_never_invokes_upstream_or_changes_product(self):
@@ -134,8 +134,8 @@ class CKInstallTests(InstallFixture):
         self.assertEqual(result['status'], 'completed')
         self.assertEqual(result['context_keeper']['status'], 'skipped')
         self.assertEqual(result['context_keeper']['reason'], 'upstream_unsupported')
-        self.assertEqual([x['agent'] for x in result['context_keeper']['skipped_upstream_agents']], ['dsh', 'zcode'])
-        for name in ('DeepSeek Harness', 'ZCode'):
+        self.assertEqual([x['agent'] for x in result['context_keeper']['skipped_upstream_agents']], ['dsh', 'zcode', 'opencode'])
+        for name in ('DeepSeek Harness', 'ZCode', 'OpenCode'):
             self.assertIn(name, output.getvalue())
         self.assertIn('上游支持范围', output.getvalue())
         from test_m408_installer import cli
@@ -147,7 +147,7 @@ class CKInstallTests(InstallFixture):
         result = json.loads(output.getvalue())
         self.assertEqual(result['status'], 'skipped')
         self.assertEqual(result['reason'], 'upstream_unsupported')
-        self.assertEqual([x['agent'] for x in result['skipped_upstream_agents']], ['dsh', 'zcode'])
+        self.assertEqual([x['agent'] for x in result['skipped_upstream_agents']], ['dsh', 'zcode', 'opencode'])
         self.assertEqual(self.snapshot(), before)
 
     def test_no_connected_agent_keeps_missing_agent_error(self):

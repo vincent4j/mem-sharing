@@ -14,8 +14,9 @@ from pathlib import Path
 
 from .paths import AGENT_ORDER
 
-# 台账层执行器枚举与路径表 AGENT_ORDER 同源(五家);台账可登记 dsh/zcode 对象,
-# 用户请求缺省仍为旧三家(见 paths.DEFAULT_AGENTS),两语义互不混用。
+# 台账层执行器枚举与路径表 AGENT_ORDER 同源(六家);台账可登记 dsh/zcode/opencode
+# 对象,项目命令用户请求缺省仍为旧三家(见 paths.DEFAULT_AGENTS),机器安装器缺省
+# 按安装事实全量接入(user_entries),两语义互不混用。
 AGENTS = AGENT_ORDER
 OWNERSHIP = ("created", "reused", "unknown")
 

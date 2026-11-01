@@ -147,7 +147,7 @@ class UserEntryFixture(unittest.TestCase):
         self.assertEqual(result["status"], "completed", result)
         self.assertEqual(result["agents"]["effective"], [])
         self.assertEqual(result["agents"]["skipped"],
-                         {"codex": "absent", "claude": "absent", "workbuddy": "absent"})
+                         {a: "absent" for a in paths.AGENT_ORDER})
 
     # ---- approved execution -------------------------------------------------
 

@@ -206,6 +206,17 @@ class PublicLayoutMigrationFixture(unittest.TestCase):
     def apply(self, plan, request, **kwargs):
         return cli.execute_machine(plan, approved(plan), request=request, **kwargs)
 
+    def migrate_selected_connected_agents(self):
+        """Keep no-Codex matrices explicit under the new full machine default."""
+        facts = detect.detect_agents(self.config, None, home=str(self.home),
+                                     search_paths=[str(self.bin_dir)], app_directories=[])
+        for agent in self.CONNECTED:
+            facts['agents'][agent] = copy.deepcopy(facts['agents']['codex'])
+        with patch.object(detect, 'detect_agents', return_value=facts):
+            plan, request = self.plan(agents=list(self.CONNECTED))
+            done = self.apply(plan, request)
+        return plan, request, done
+
     def index_bytes(self):
         return (self.runtime.root / 'memories/MEMORY.md').read_bytes()
 
@@ -303,11 +314,10 @@ class PublicLayoutMigrationFixture(unittest.TestCase):
 
     def test_no_codex_matrix_migrates_claude_and_workbuddy_only(self):
         variant = self.make_variant(CONNECTED=('claude', 'workbuddy'))
-        plan, request = variant.plan()
+        plan, request, done = variant.migrate_selected_connected_agents()
         migration = plan['plan']['migration_plan']
         self.assertFalse(any(t['path'].startswith(str(variant.home / '.codex'))
                              for t in migration['targets']))
-        done = variant.apply(plan, request)
         self.assertEqual(done['status'], 'completed', done)
         self.assertFalse((variant.home / '.codex').exists())
         data = variant.ledger()
@@ -613,8 +623,7 @@ class PublicLayoutHardeningTests(PublicLayoutMigrationFixture):
     def test_only_workbuddy_real_assembly_without_codex_or_claude(self):
         # fix-6/用户关键场景:仅 WorkBuddy 也能独立完成入口与共享基座装配。
         variant = self.make_variant(CONNECTED=('workbuddy',))
-        plan, request = variant.plan()
-        done = variant.apply(plan, request)
+        plan, request, done = variant.migrate_selected_connected_agents()
         self.assertEqual(done['status'], 'completed', done)
         self.assertFalse((variant.home / '.codex').exists())
         self.assertFalse((variant.home / '.claude').exists())
@@ -645,8 +654,7 @@ class PublicLayoutHardeningTests(PublicLayoutMigrationFixture):
 
     def test_only_claude_real_assembly_without_codex_or_workbuddy(self):
         variant = self.make_variant(CONNECTED=('claude',))
-        plan, request = variant.plan()
-        done = variant.apply(plan, request)
+        plan, request, done = variant.migrate_selected_connected_agents()
         self.assertEqual(done['status'], 'completed', done)
         self.assertFalse((variant.home / '.codex').exists())
         # 私文 .workbuddy/MEMORY.md(夹具预置)被观察保全,不新增任何受管痕迹。

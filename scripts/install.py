@@ -152,6 +152,25 @@ def _entry_preview(request):
     return None, result
 
 
+def _upgrade_entry_preview(request, inner):
+    migration = inner.get('migration_plan')
+    if migration is None:
+        return _entry_preview(request)
+    # Reuse the migration's exact byte builder, including before/after checks.
+    # These are memory-only snapshots at V2; the real execution never uses them.
+    snapshots = {change.path: change.after
+                 for change in public_layout._build_changes(migration)}
+    runtime = user_install._runtime(request)
+    raw = bytes.fromhex(migration['v2_registry_hex'])
+    ledger = json.loads(raw, object_pairs_hook=registry._no_duplicates)
+    registry.validate_registry(ledger,
+        allowed_user_paths=migration['allowed_user_paths'],
+        _pending_manifest=migration['manifest_path'])
+    snapshots[runtime.registry] = user_entries.Snapshot('file', raw, 0o600)
+    with user_entries._preview_state(runtime, ledger, snapshots):
+        return _entry_preview(request)
+
+
 def plan_machine(request):
     """Serializable outer approval; no fake project identity or implicit migration."""
     scene = user_install.inspect_machine(request)
@@ -160,11 +179,7 @@ def plan_machine(request):
         entry = None  # First installation already stages/commits the entry subplan.
     elif scene['channel'] == 'upgrade':
         inner = upgrade.plan_upgrade(request)
-        entry = None
-        # A legacy ledger has no active V until the approved migration commits.
-        # Do not invent a registry to predict its entry ownership.
-        if inner['migration_plan'] is None and request.get('agents') is not None:
-            entry, _ = _entry_preview(request)
+        entry, _ = _upgrade_entry_preview(request, inner)
     else:
         raise InstallError('Machine scene %s: %s' % (scene['scene'], scene['errors']),
                            'machine_route_' + scene['scene'])
@@ -175,16 +190,7 @@ def plan_machine(request):
                                 user_candidates=request.get('user_candidates'), runner=request.get('detect_runner'))
     agent_facts = {a: {'status': f['status'], 'fingerprint': detect.detection_fingerprint(f)}
                    for a, f in facts['agents'].items()}
-    requested = paths.resolve_agents(request.get('agents'))
-    if inner['command'] == 'upgrade-machine' and request.get('agents') is None:
-        # Later executor onboarding is user-initiated only. Facts below are a
-        # report, never a driver for discovering/promoting new machine consumers.
-        data = (inner.get('migration_plan') or {}).get('after_registry')
-        if data is None and inner.get('migration_plan'):
-            data = json.loads(bytes.fromhex(inner['migration_plan']['v2_registry_hex']))
-        if data is None:
-            data = json.loads(bytes.fromhex(inner['before_registry_hex']))
-        requested = sorted(data['machine']['agents'])
+    requested = paths.resolve_agents(request.get('agents'), default=paths.AGENT_ORDER)
     saved = {k: copy.deepcopy(v) for k, v in request.items() if k != 'detect_runner'}
     saved['operation_id'] = inner['operation_id']
     return _seal({'schema_version': 1, 'command': 'install-machine-cli',
@@ -199,8 +205,8 @@ def plan_machine(request):
         'metadata_scopes': inner['metadata_scopes'],
         'reference_map': (inner.get('migration_plan') or {}).get('reference_map', {}),
         'plan': inner, 'entry_plan': entry,
-        'entry_requested': request.get('agents') is not None,
-        'entry_followup': inner.get('migration_plan') is not None and request.get('agents') is not None,
+        'entry_requested': inner['command'] == 'upgrade-machine',
+        'entry_followup': False,  # Every entry change is bound before the first write.
         'changes': inner['changes'] + (entry or {}).get('changes', [])})
 
 
@@ -236,7 +242,7 @@ def _report(plan, status, *, result=None, entries=None, project=None):
                    'absent': [a for a, f in facts.items() if f['status'] == 'absent'],
                    'unknown': [a for a, f in facts.items() if f['status'] == 'unknown'],
                    'unselected': [a for a in facts if a not in requested],
-                   'note': '默认接入范围为 codex/claude/workbuddy;dsh/zcode 需显式 --agent 指定;未适配的执行器不在覆盖范围,由后续版本按路径表扩展'},
+                   'note': '未指定 --agent 时按安装事实自动接入全部已核验安装的执行器(支持清单内 installed 者);显式 --agent 限定目标,显式指定且未核验为 installed 整单拒绝;未适配的执行器不在覆盖范围,由后续版本按路径表扩展'},
         'copies': imported.get('items', []),
         'code_copies': plan['plan']['source_files'],
         'exclusions': ['v0 skills/scripts/state/mcp stay in place; only memories/references are imported',
@@ -288,7 +294,7 @@ def execute_machine(plan, approval, *, request=None, project=None, hook=None):
                                  if guard_pending else '修正后重新预览外层计划'}]
             return report
         result = dict(result, migration=migration_result)
-    if not plan['entry_requested']:
+    if plan['entry_plan'] is None:
         return _report(plan, 'completed', result=result, project=project)
     try:
         entry_request = dict(request)
@@ -349,7 +355,8 @@ def build_parser():
     p.add_argument('--version', help='Target product code version MAJOR.MINOR.PATCH')
     p.add_argument('--request-file', help='Absolute JSON: conversions/legacy ledger identity/evidence inputs')
     p.add_argument('--operation-id')
-    p.add_argument('--agent', action='append', choices=['codex', 'claude', 'workbuddy', 'dsh', 'zcode'])
+    p.add_argument('--agent', action='append', choices=['codex', 'claude', 'workbuddy', 'dsh', 'zcode', 'opencode'],
+                   help='限定接入目标;缺省按安装事实自动接入全部已核验安装的执行器')
     p.add_argument('--approval-file', help='Absolute JSON exact plan plus confirmed_at/reference')
     p.add_argument('--recover', help='Absolute operation journal; independent recovery mode')
     p.add_argument('--action', choices=['continue', 'rollback'], help='Recovery action')

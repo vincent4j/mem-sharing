@@ -69,16 +69,18 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 | 给项目停用记忆 | 某个项目不想让本工具再管 | “/mem-sharing，给项目停用记忆” |
 | 给项目启用记忆 | 恢复之前停用的项目，或手动启用 | “/mem-sharing，给项目启用记忆” |
 
-- **添加新的 Agent**：核验确已安装后按同版安装通道接入；不会自动发现或提示后来安装的 Agent。
+- **添加新的 Agent**：核验确已安装后按同源再次安装通道接入；重新运行安装器也会发现全部已核验 installed 的支持对象并精确预览。
 - **批量启用项目记忆**：递归扫描你指定的目录，逐项目一行预览，一次批准后执行；已停用的项目不会被自动恢复。
 - **整理用户记忆**：先只读扫描，公共、独有与归属不明的内容分开列出，你调整逐条提议后一次批准完整计划，不会自动删除内容。
 - **健康检查**：只读报告登记与现场缺口，不修复、不写入。
 - **给项目停用记忆**：只撤销该项目允许撤销的受管入口；项目记忆内容、项目经历记录库与用户记忆全部保留。该项目记为已停用，默认不会再自动启用。
 - **给项目启用记忆**：主要用于显式恢复已停用的项目；进入未登记的 Git 项目会默认开启项目记忆（非 Git 目录与 linked worktree 不触发），已停用的项目默认不恢复。
 
-`AGENTS.md` 是共享的项目记忆基座，不依赖安装 Codex——只用 Claude、WorkBuddy 或两者组合同样成立。DeepSeek Harness 与 ZCode 桌面端同样原生读取 `AGENTS.md`（用户入口分别为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`），接入时显式指定 `dsh`、`zcode`；默认选择仍为 Codex、Claude Code、WorkBuddy。各家专属入口由实际使用驱动：Claude 的引用、WorkBuddy 的桥接都等它们真正用上时才补，不预建文件；机器上装了某个 Agent，不等于它已在使用。菜单与使用细则由公共指南按需读取，各家 Agent 的用户文件只保留公共指针与自身规则。
+支持 Codex、Claude Code、WorkBuddy、DeepSeek Harness（`dsh`）、ZCode 和 OpenCode v2 六家。机器安装、再次安装及升级默认接入支持清单内全部已核验为 `installed` 的 Agent；显式 `--agent` 限定目标，`unknown` 或 `absent` 不自动接入。历史公共布局迁移与新增接入在写入前合成一份精确计划，一次批准；既有公共依赖仍完整迁移。
 
-**想要项目经历？** 在需要的项目里使用 `/context-keeper`：首次按 Context Keeper 的流程初始化记录库，记录库建在项目里、随 Git 走，各家 Agent 共用（安装时会问一句要不要装它：回车＝同意，输入 n 跳过）。用户级安装目前覆盖 Codex、Claude Code 与 WorkBuddy；DeepSeek Harness 与 ZCode 暂不在其安装范围，不影响它们共享记忆。没装它，用户记忆与项目记忆照常工作。
+`AGENTS.md` 是共享项目记忆基座，不依赖安装 Codex。项目命令缺省仍为 Codex、Claude Code、WorkBuddy；当前执行者实际使用时以自身 `--agent` 接入。DeepSeek Harness、ZCode、OpenCode 的用户入口分别为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，项目均原生读取 `AGENTS.md`。Claude 引用和 WorkBuddy 桥接在它们实际使用时补齐，保留私文，不预建其他执行器项目入口，也不自动恢复 disabled 项目。OpenCode 第一版仅支持默认配置根，详见[操作手册](docs/operations.md#桌面端默认根与验证边界)；新会话加载验收仍 pending。
+
+**想要项目经历？** 在需要的项目里使用 `/context-keeper`：首次按 Context Keeper 的流程初始化记录库，记录库建在项目里、随 Git 走，各家 Agent 共用（安装时会问一句要不要装它：回车＝同意，输入 n 跳过）。用户级安装目前覆盖 Codex、Claude Code 与 WorkBuddy；DeepSeek Harness、ZCode 与 OpenCode 暂不在其安装范围，不影响它们共享记忆。没装它，用户记忆与项目记忆照常工作。
 
 命令参数、停用与恢复的精确语义见 [SKILL.md](SKILL.md) 与 [INSTALL.md](INSTALL.md)。
 
@@ -93,7 +95,7 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 | **需要自己维护吗？** | Agent 按规则使用和整理记忆；整理先给完整逐条计划，一次确认后执行。独有或归属不明的内容保留。 |
 | **会动我的文件吗？** | 写入有明确范围；发现冲突或受管内容漂移即停止，不覆盖你的改动。Agent 独有内容永不并入公共源、永不删除。 |
 | **怎么检索记忆？** | 检索只用索引精确查找（find），不使用 search 或语义搜索。 |
-| **如何添加新 Agent？** | 主动打开 `/mem-sharing`，选择“添加新的 Agent”，输入名字；核验确已安装后接入，不自动发现或提示。 |
+| **如何添加新 Agent？** | 打开 `/mem-sharing` 选择“添加新的 Agent”可限定接入；重新运行安装器会按 installed 自动发现并精确预览全部支持对象。 |
 | **想停用怎么办？** | 选择“给项目停用记忆”，只撤销该项目允许撤销的受管入口；项目记忆内容、项目经历记录库与用户级接入都保留，重新启用须显式选择“给项目启用记忆”。这不是整机卸载。 |
 | **不装 Context Keeper 可以吗？** | 可以。用户记忆、项目记忆照常共享，只没有项目经历的保存与续接能力。 |
 

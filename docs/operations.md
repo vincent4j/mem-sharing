@@ -53,7 +53,7 @@ Agent 展示完整计划并绑定真实确认，将计划连同 `confirmed_at/re
 python3 scripts/install.py --approval-file /absolute/path/install-approval.json
 ```
 
-支持 `codex/claude/workbuddy/dsh/zcode` 五家，缺省仍选择旧三家；新两家须显式选择。安装可重复 `--agent codex --agent claude` 或 `--agent dsh --agent zcode` 限定目标，仍须通过安装事实核验。来源与预览批准流程不变。
+支持 `codex/claude/workbuddy/dsh/zcode/opencode` 六家。机器安装、再次安装及升级默认接入全部已核验为 `installed` 的支持对象；`unknown/absent` 仅报告，不创建入口。安装可重复 `--agent codex --agent opencode` 限定目标，指定未核验安装的对象整单拒绝。公共布局迁移与新增接入合并在同一份外层精确计划内预览并一次批准；显式范围限制新增装配，既有公共依赖仍完整迁移。来源与现场漂移仍拒绝；同版不同来源替换仍不属于升级。
 
 ```bash
 python3 scripts/install.py --source-manifest /absolute/path/source.json --agent dsh --agent zcode
@@ -165,6 +165,10 @@ check 只报告登记与现场缺口，不写锁、不备份、不修复、不�
 
 DeepSeek Harness（`dsh`）用户入口为 `~/.dsh/AGENTS.md`，ZCode（`zcode`）为 `~/.zcode/AGENTS.md`；均共用公共记忆索引，保留各自私文，项目原生读取根 `AGENTS.md`，无需额外桥接。默认项目接入仍由当前实际执行者显式使用自身 ID，不预建其他执行器入口，也不恢复 disabled。
 
+OpenCode v2 用户入口为 `~/.config/opencode/AGENTS.md`，项目原生读取 `AGENTS.md`，不预建专属项目私文。第一版只支持默认配置根：`XDG_CONFIG_HOME` 与 `OPENCODE_CONFIG_DIR` 可未设置、为空白，或分别为规范化后等于 `<home>/.config`、`<home>/.config/opencode` 的绝对路径；相对路径、字面 `~` 与其他根均拒绝。`OPENCODE_CONFIG` 非空即拒绝。拒绝时整单零写，不回显变量原值。原生签名匹配可核验 installed，但没有静态版本证据仍如实标记版本 unknown。大文件不套用 Codex 的 32KiB 提醒，不代表客户端没有其他限制。
+
+本机只读安装检测与临时 HOME 测试不能证明真实新会话已加载规则；OpenCode 新会话、真实安装及模型调用验收仍 pending。验收分层见[OpenCode 验证记录](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/opencode-adapter/verification.md)。
+
 DSH 本次限默认 coding `cordis` preset 与默认根。接入规划自动检查 `DSH_HOME`，非默认根拒绝默认入口接入，错误不回传变量值。`DSH_AGENTS_HOME` 影响共享 Skill 根，目前不自动检测，也不承诺默认共享 Skill 目录已被客户端发现。显式插件配置也可能覆盖根，自定义配置与桌面进程实际环境未验证。`ZCODE_HOME` 不是 ZCode 规则根，不能用它推导规则位置。
 
 静态读取逻辑支持 DSH 的 `~/.dsh/skills`、ZCode 的 `~/.zcode/skills`，以及两者共用的 `~/.agents/skills`；项目侧也有各自隐藏目录与 `.agents/skills` 发现逻辑。memSharing 不创建、复制或投影这些 Skill。静态发现与符号链接支持不等于桌面实际加载通过。
@@ -192,8 +196,8 @@ python3 scripts/install.py --context-keeper --approval-file /absolute/ck-approva
 
 源码须为持久、干净且符合固定 pin 的 checkout，目前不自动下载。
 只有真实交互回车表示同意，空格、EOF 或非交互输入不算。
-同意后为已接入的 Codex、Claude Code、WorkBuddy 安装用户级 Context Keeper，落位由其自有安装器负责。固定 pin 安装器仅支持旧三家的 flags；`dsh`、`zcode` 明确跳过用户级 CK 安装（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响新两家的 memSharing 接入，不可宣称它们已安装 CK 或新会话已通过。
-仅接入 `dsh/zcode` 时，`--context-keeper` 输出 `status=skipped`、`reason=upstream_unsupported` 与 `skipped_upstream_agents`；交互安装尾步的 `context_keeper` 同样为 `status=skipped`、`reason=upstream_unsupported`，主安装保持 `status=completed`。混合接入执行时，`agents` 仅列受支持的执行器；跳过项列于 `skipped_upstream_agents`，每项为 `{"agent":"dsh或zcode","reason":"upstream_unsupported"}`（`agent` 取实际 ID）。`upstream_unsupported` 是原因，不是顶层状态。
+同意后为已接入的 Codex、Claude Code、WorkBuddy 安装用户级 Context Keeper，落位由其自有安装器负责。固定 pin 安装器仅支持旧三家的 flags；`dsh`、`zcode`、`opencode` 明确跳过用户级 CK 安装（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响它们的 memSharing 接入，不可宣称它们已安装 CK 或新会话已通过。
+仅接入 `dsh/zcode/opencode` 中的执行器时，`--context-keeper` 输出 `status=skipped`、`reason=upstream_unsupported` 与 `skipped_upstream_agents`；交互安装尾步的 `context_keeper` 同样为 `status=skipped`、`reason=upstream_unsupported`，主安装保持 `status=completed`。混合接入执行时，`agents` 仅列受支持的执行器；跳过项列于 `skipped_upstream_agents`，每项为 `{"agent":"dsh或zcode或opencode","reason":"upstream_unsupported"}`（`agent` 取实际 ID）。`upstream_unsupported` 是原因，不是顶层状态。
 
 缺源、失败或结果不明分别报告，主产品成功保留，结果不明不自动重放。
 在需要的项目首次运行 `/context-keeper`，按其流程确认并初始化项目经历库。
@@ -224,7 +228,7 @@ python3 /absolute/verified-source/scripts/install.py --recover /absolute/journal
 
 用户级 `~/.workbuddy/MEMORY.md` 的私人原文字节保留；精确批准计划后追加受管块，块内明确读取本机公共索引绝对路径及项目 `AGENTS.md`。已登记旧块仅在指纹匹配时，经精确批准更新；漂移、未登记旧块或不满足公共读取语义的共享用户块停止自动接入，交回原有治理路径。与当前模板完全相同的未登记块可保真登记为 reused，不取得删除权。安装器只拥有其新增受管块，不拥有私人全文；本次不提供机器卸载。
 
-报告中的 installed 是安装探测，connected 是登记与实际入口语义的静态核验；缺口列于 `entry_status`，接入未全完成报告 partial。每项 `runtime_acceptance: pending` 仍需真实新会话证据。已有/noop 安装也重新核验静态入口，不凭应用存在宣称接入。需要更新 WorkBuddy 已登记约定时使用显式 `--agent workbuddy` 的精确预览/批准流程；不因同版无参数重跑而自动接入新 Agent。Context Keeper 尾步继续检查主操作、登记对象与指纹，不绕过缺口。本修复不修改私人规则、不预建 WorkBuddy 原生项目目录，不扩大旧版本迁移承诺。
+报告中的 installed 是安装探测，connected 是登记与实际入口语义的静态核验；缺口列于 `entry_status`，接入未全完成报告 partial。每项 `runtime_acceptance: pending` 仍需真实新会话证据。已有/noop 安装也重新核验静态入口，不凭应用存在宣称接入。同版同来源再次安装会按当前 installed 事实发现新 Agent，并将入口差异纳入精确预览与批准；显式 `--agent workbuddy` 可限定本次装配。Context Keeper 尾步继续检查主操作、登记对象与指纹，不绕过缺口。本修复不修改私人规则、不预建 WorkBuddy 原生项目目录，不扩大旧版本迁移承诺。
 
 ### 0.1.0 → 0.1.1 的 WorkBuddy 入口合同转换
 

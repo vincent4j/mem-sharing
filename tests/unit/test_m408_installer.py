@@ -59,9 +59,9 @@ class InstallerTests(InstallFixture):
         code,done=self.invoke('--approval-file',self.approval_file(p),'--project',str(self.area/'actual project'))
         self.assertEqual(code,0,done);self.assertEqual(done['status'],'completed')
         self.assertEqual(done['agents']['connected'],[]);self.assertTrue(done['connection_pending'])
-        # 装机枚举逐家列出五家安装事实;默认接入范围是旧三家,dsh/zcode 需显式指定。
-        self.assertIn('默认接入范围为 codex/claude/workbuddy',done['agents']['note'])
-        self.assertIn('dsh/zcode 需显式 --agent 指定',done['agents']['note'])
+        # 机器安装默认全部支持且核验为 installed 的执行器。
+        self.assertIn('自动接入全部已核验安装',done['agents']['note'])
+        self.assertIn('显式 --agent 限定目标',done['agents']['note'])
         self.assertEqual(sorted(done['agents']),['absent','connected','note','unknown','unselected'])
         # v1.11 裁定 §14.4:装完报告不再携带新会话自检提示。
         self.assertNotIn('runtime_acceptance',done)
@@ -90,9 +90,10 @@ class InstallerTests(InstallFixture):
         same = cli.plan_machine(self.request)
         self.assertTrue(same['plan']['noop'])
         done = cli.execute_machine(same, approved(same), request=self.request)
-        self.assertEqual(done['status'], 'partial')
-        self.assertEqual(done['agents']['connected'], [])
-        self.assertEqual(done['entry_status']['codex']['reason'], 'entry_not_registered')
+        self.assertTrue(same['entry_plan']['machine_objects'])
+        self.assertEqual(done['status'], 'completed')
+        self.assertEqual(done['agents']['connected'], ['codex'])
+        self.assertIsNone(done['entry_status']['codex']['reason'])
 
     def test_exact_approval_unknown_field_and_scene_drift_stop(self):
         plan=cli.plan_machine(self.request);before=self.snapshot()
@@ -120,18 +121,15 @@ class InstallerTests(InstallFixture):
         self.assertEqual(cli.execute_machine(same,approved(same),request=self.request)['status'],'completed')
         self.assertEqual(before,self.snapshot())
 
-    def test_later_agent_requires_named_request_same_version_add_path(self):
+    def test_later_installed_agent_is_bound_on_same_release_reinstall(self):
         self.execute()
         self.codex()
         before=self.snapshot();plan=cli.plan_machine(self.request)
-        self.assertEqual(plan['effective_agents'],[]);self.assertEqual(plan['changes'],[])
-        with patch.object(user_entries,'run_user_entries',side_effect=AssertionError('no auto onboarding')):
-            self.assertEqual(cli.execute_machine(plan,approved(plan),request=self.request)['status'],'completed')
-        self.assertEqual(before,self.snapshot());self.assertFalse((self.home/'.codex').exists())
-        named=dict(self.request,agents=['codex'])
-        plan=cli.plan_machine(named);self.assertTrue(plan['plan']['noop'])
-        self.assertTrue(plan['entry_plan']['changes']);self.assertEqual(plan['effective_agents'],['codex'])
-        done=cli.execute_machine(plan,approved(plan),request=named)
+        self.assertTrue(plan['plan']['noop'])
+        self.assertEqual(plan['effective_agents'], ['codex'])
+        self.assertTrue(plan['entry_plan']['changes'])
+        self.assertEqual(before,self.snapshot())
+        done=cli.execute_machine(plan,approved(plan),request=self.request)
         self.assertEqual(done['status'],'completed',done)
         entry=self.home/'.codex/AGENTS.md'
         self.assertTrue(entry.is_file())

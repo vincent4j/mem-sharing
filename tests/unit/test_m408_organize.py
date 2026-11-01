@@ -236,8 +236,8 @@ class CKProtectionTests(unittest.TestCase):
         fixture = OrganizeTests('runTest')
         fixture.setUp()
         self.addCleanup(fixture.doCleanups)
-        path = fixture.home / ('.'+agent) / {'claude': 'CLAUDE.md', 'workbuddy': 'MEMORY.md'}.get(agent, 'AGENTS.md')
-        path.parent.mkdir(exist_ok=True)
+        path = Path(paths.expand_path(fixture.config[agent]['user_entry'], home=str(fixture.home)))
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(raw)
         fixture.request['agents'] = [agent]
         return fixture, path
