@@ -12,7 +12,7 @@
 | 本机产品升级 | 原安装器0.1.3→0.1.4 completed，精确preserve转换，16记忆/入口节点保全 | 用户核验的clean本地d14来源；不能称插件自动升级或官方远端发行 |
 | 插件项目接入 | 主checkout新preview→confirm completed，codex/follow_ck，registered且errors空 | 新preview不是全新机器；AGENTS原正文及16节点保全 |
 | 新Codex会话 | 用户MEMORY与项目memory-keeper实际读回，CK resume/check退出0，无写入 | 主checkout与worktree记忆不同，没有当前Paseo主题命中；不代表其他provider或CK远端激活通过 |
-| UI | 用户确认⌘K可打开 | 新一轮截图 CUA 连续超时，等待用户前置条件处理；未保存真实截图，也未取得完整Modal/拒绝/取消/断连自动UI验收 |
+| UI | 用户确认⌘K可打开 | 用户已将 Paseo 主窗口前置，CUA 新鲜复核仍超时；未保存真实截图，也未取得完整Modal/拒绝/取消/断连自动UI验收 |
 
 ## 0.1.5 固定发行候选与当前 Host 验收
 
