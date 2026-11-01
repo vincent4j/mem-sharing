@@ -1,14 +1,15 @@
 {
   "id": "memsharing",
   "name": "memSharing",
-  "description": "Cross-executor shared memory for coding agents, driven from Paseo without a terminal",
+  "description": "Connect shared memory and project rules to coding agents through Paseo.",
   "requirements": {
     "paseo": ">=0.13.2"
   },
   "translations": {
     "zh-CN": {
       "name": "memSharing 公共记忆",
-      "description": "在 Paseo 内完成机器接入与项目记忆启用，无需终端"
+      "description": "通过 Paseo 接入共享记忆和项目规则，预览并确认机器与项目变更。"
     }
-  }
+  },
+  "icon": "assets/icon.png"
 }
