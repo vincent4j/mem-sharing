@@ -12,6 +12,7 @@ import type { PluginTheme } from "@getpaseo/plugin";
 import { useRpc } from "@getpaseo/plugin/client";
 import { Modal } from "@getpaseo/plugin/client/ui";
 import {
+  dependencyConfirmRpc,
   cancelPendingRpc,
   operationStatusRpc,
   bootstrapPreviewRpc,
@@ -32,7 +33,7 @@ import {
 type Phase =
   | { kind: "form" }
   | { kind: "loading" }
-  | { kind: "preview"; flow: "onboard" | "machine" | "enable" | "remove" | "ck" | "recover"; planKind: string; digest: string; confirmationToken: string; summary: { label: string; value: string }[]; planText: string }
+  | { kind: "preview"; flow: "dependency" | "onboard" | "machine" | "enable" | "remove" | "ck" | "recover"; planKind: string; digest: string; confirmationToken: string; summary: { label: string; value: string }[]; planText: string }
   | { kind: "gate"; message: string }
   | { kind: "busy"; message: string }
   | { kind: "result"; ok: boolean; message: string; detail?: string };
@@ -73,6 +74,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
   const flow = params.flow ?? "onboard";
   const projectRoot = params.projectRoot ?? "";
   const bootstrapPreview = useRpc(bootstrapPreviewRpc);
+  const dependencyConfirm = useRpc(dependencyConfirmRpc);
   const bootstrapConfirm = useRpc(bootstrapConfirmRpc);
   const machinePreview = useRpc(machinePreviewRpc);
   const machineConfirm = useRpc(machineConfirmRpc);
@@ -93,7 +95,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
   const [agents, setAgents] = useState<AgentName[]>(["codex", "claude", "workbuddy"]);
   const cancelPending = useRpc(cancelPendingRpc);
   const operations = useRpc(operationStatusRpc);
-  const currentFlow = useRef<"bootstrap" | "machine" | "enable" | "remove" | "ck" | "recover">("bootstrap");
+  const currentFlow = useRef<"dependency" | "bootstrap" | "machine" | "enable" | "remove" | "ck" | "recover">("bootstrap");
   const [journalPath, setJournalPath] = useState("");
   const [recoverAction, setRecoverAction] = useState<"continue" | "rollback">("continue");
 
@@ -175,7 +177,8 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
     try {
       const input = { action, confirmationToken: phase.confirmationToken };
       let outcome;
-      if (phase.flow === "onboard") outcome = await bootstrapConfirm(input);
+      if (phase.flow === "dependency") outcome = await dependencyConfirm(input);
+      else if (phase.flow === "onboard") outcome = await bootstrapConfirm(input);
       else if (phase.flow === "machine") outcome = await machineConfirm(input);
       else if (phase.flow === "enable") outcome = await enableConfirm(input);
       else if (phase.flow === "remove") outcome = await removeConfirm(input);
@@ -193,7 +196,9 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
           detail: JSON.stringify(outcome.envelope, null, 2),
         });
       } else if (outcome.status === "completed") {
-        if (outcome.envelope.status === "source_prepared") {
+        if (outcome.envelope.status === "tool_assets_ready") {
+          await runPreview();
+        } else if (outcome.envelope.status === "source_prepared") {
           const next = await ckPreview({});
           adoptPreview("ck", "install-context-keeper", next, setPhase, setShowPlan);
         } else {
@@ -376,8 +381,8 @@ function adoptPreview(
     setShowPlan(true);
     setPhase({
       kind: "preview",
-      flow: result.planKind === "prepare-release-source" ? "onboard" : flow,
-      planKind,
+      flow: result.planKind === "prepare-tool-assets" ? "dependency" : result.planKind === "prepare-release-source" ? "onboard" : flow,
+      planKind: result.planKind ?? planKind,
       digest: result.digest,
       confirmationToken: result.confirmationToken,
       summary: result.summary ?? [],

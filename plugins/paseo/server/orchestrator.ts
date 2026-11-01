@@ -7,7 +7,7 @@
 
 import fs from "node:fs";
 import { randomUUID, createHash } from "node:crypto";
-import { hostname } from "node:os";
+import { hostname, release } from "node:os";
 import path from "node:path";
 import { CORE_RELEASE_MANIFEST_SHA256 } from "./shared/release-identity";
 import { ensureRealDirectory } from "./owned-paths";
@@ -20,8 +20,10 @@ import type { PythonEnvironment } from "./shared/common/python";
 import type { GitEnvironment } from "./shared/common/git";
 import { probePythonEnvironment } from "./shared/common/python";
 import { probeGitEnvironment } from "./shared/common/git";
+import { PRODUCTION_TOOL_ASSETS } from "./shared/common/production-assets";
+import { assetScene, assetDestination, prepareToolAsset, toolEnvironment, type ToolAsset } from "./shared/common/tool-assets";
 
-export type FlowKind = "bootstrap" | "machine" | "enable" | "remove" | "ck" | "recover";
+export type FlowKind = "dependency" | "bootstrap" | "machine" | "enable" | "remove" | "ck" | "recover";
 
 export interface CliRunOutcome {
   kind: "completed" | "timeout" | "canceled" | "spawn_error";
@@ -32,7 +34,7 @@ export interface CliRunOutcome {
 }
 
 export interface Runner {
-  run(argv: readonly string[], options: { timeoutMs: number; signal?: AbortSignal }): Promise<CliRunOutcome>;
+  run(argv: readonly string[], options: { timeoutMs: number; signal?: AbortSignal; env?: NodeJS.ProcessEnv }): Promise<CliRunOutcome>;
 }
 
 export const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000;
@@ -42,7 +44,7 @@ export function realRunner(home: string): Runner {
     async run(argv, options) {
       const result = await runProcess({
         argv,
-        env: { ...process.env, HOME: home },
+        env: { ...process.env, ...options.env, HOME: home, PYTHONPATH: "", PYTHONHOME: "", PYTHONDONTWRITEBYTECODE: "1", PYTHONNOUSERSITE: "1" },
         timeoutMs: options.timeoutMs,
         signal: options.signal,
       });
@@ -89,6 +91,9 @@ export interface OrchestratorDeps {
    * is the only source; no RPC can ever influence it.
    */
   readonly releaseManifestSha256?: string;
+  /** Constructor-only fixture seams; never provided by RPC or plugin entry. */
+  readonly toolAssets?: readonly ToolAsset[];
+  readonly allowInsecureAssetTransportForTests?: boolean;
 }
 
 export type PreviewOutcome =
@@ -231,7 +236,7 @@ export class Orchestrator {
   private kernelBinding(argv: readonly string[]): string {
     const script = argv[2];
     const hash = createHash("sha256");
-    hash.update(JSON.stringify({ home: this.deps.home, host: hostname(), argv, release: this.releaseDigest() }));
+    hash.update(JSON.stringify({ home: this.deps.home, host: hostname(), argv, release: this.releaseDigest(), toolAssets: this.assetBinding() }));
     const walk = (file: string): void => {
       const st = fs.lstatSync(file);
       hash.update(JSON.stringify([file, st.dev, st.ino, st.mode]));
@@ -265,17 +270,72 @@ export class Orchestrator {
     return `paseo-${this.now().toISOString().replace(/[-:T]/g, "").slice(0, 14)}Z-${Math.random().toString(16).slice(2, 10)}`;
   }
 
+  private assets(): readonly ToolAsset[] {
+    if (this.deps.toolAssets) return this.deps.toolAssets;
+    if (process.platform !== "darwin") return [];
+    if (Number.parseInt(release(), 10) < (process.arch === "arm64" ? 20 : 19)) return [];
+    return PRODUCTION_TOOL_ASSETS.filter(a => a.arch === (process.arch === "x64" ? "x86_64" : process.arch));
+  }
+
+  private assetBinding(): string {
+    return planDigest({ home: this.deps.home, host: hostname(), assets: this.assets(), scenes: this.assets().map(a => assetScene(this.paths.runtimeRoot, a)) });
+  }
+
+  private async dependencyPreviewImpl(): Promise<PreviewOutcome> {
+    const [python, git] = await Promise.all([this.python(), this.git()]);
+    const needed = ([...(python.status === "ready" ? [] : ["python"]), ...(git.status === "ready" ? [] : ["git"])]);
+    if (!needed.length) return { status: "completed", envelope: { status: "tool_assets_ready", installation_complete: false } };
+    const assets = this.assets().filter(a => needed.includes(a.tool));
+    if (assets.length !== needed.length) return { status: "failed", code: "unsupported_runtime_supply", message: "No fixed supplier for this daemon OS/architecture" };
+    const blocked = assets.filter(a => a.blockedReason);
+    if (blocked.length) return { status: "failed", code: "supply_evidence_incomplete", message: blocked.map(a => `${a.tool}: ${a.blockedReason}`).join("; "), envelope: { assets } };
+    const scenes = assets.map(a => assetScene(this.paths.runtimeRoot, a));
+    if (scenes.some(s => s.state === "conflict")) return { status: "failed", code: "foreign_runtime_conflict", message: "Existing runtime differs from fixed archive; preserved without replacement", envelope: { scenes } };
+    if (scenes.some(s => (s.lease as Record<string, unknown> | undefined)?.active)) return { status: "failed", code: "asset_busy", message: "Another dependency preparation owns a live lease" };
+    const plan = { command: "prepare-tool-assets", home: this.deps.home, host: hostname(), assets, scenes,
+      writes: assets.map((a, i) => ({ destination: scenes[i].destination, marker: "asset.json", exclusive_lease: "lease.json", download: "download-<exclusive-uuid>.tar.gz", extraction: "payload (exclusive; sibling .extract-<random> staging)", source: a.url, reuse: scenes[i].state === "ready", recovery: "interrupted owned downloads retained; retry requires a new preview/token", cleanup: "only this operation's inode-matching lease and download/extractor-owned partial staging; verified archives retained for audit", uninstall: "persists outside plugin directory" })), installation_complete: false };
+    const stored = this.storePending("dependency", plan, "plan-plus-evidence", []);
+    stored.summary.push(...assets.flatMap((a, i) => [
+      { label: `${a.tool} version`, value: `${a.version} (${a.arch})` },
+      { label: `${a.tool} source`, value: a.url },
+      { label: `${a.tool} bytes / sha256`, value: `${a.bytes} / ${a.sha256}` },
+      { label: `${a.tool} license`, value: `${a.license}; ${a.licenseUrls.join("; ")}` },
+      { label: `${a.tool} notices`, value: `${a.noticeFile ?? "fixture"}; ${a.disclosure ?? "synthetic fixture"}` },
+      { label: `${a.tool} minimum macOS`, value: a.minimumMacos ?? "fixture" },
+      { label: `${a.tool} corresponding source`, value: a.sourceUrls.join("; ") },
+      { label: `${a.tool} destination`, value: String(scenes[i].destination) },
+    ]));
+    return { status: "approval_required", planKind: "prepare-tool-assets", ...stored, plan };
+  }
+
+  private async dependencyConfirmImpl(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<PlanConfirmOutcome> {
+    if (input.action === "reject") { this.pending.delete("dependency"); return { status: "rejected" }; }
+    const popped = this.popPending("dependency", input.confirmationToken);
+    if (!popped.ok) return popped.outcome as PlanConfirmOutcome;
+    const assets = popped.pending.plan.assets as ToolAsset[];
+    const scenes = popped.pending.plan.scenes as Record<string, unknown>[];
+    for (let i = 0; i < assets.length; i++) {
+      await prepareToolAsset({ runtimeRoot: this.paths.runtimeRoot, home: this.deps.home, asset: assets[i], scene: scenes[i], signal, allowInsecureTransportForTests: this.deps.allowInsecureAssetTransportForTests });
+    }
+    this.cachedPython = null; this.cachedGit = null;
+    return { status: "completed", envelope: { status: "tool_assets_ready", installation_complete: false, next_action: "Resume original preview for a separate machine/source approval" } };
+  }
+
   private reference(flow: FlowKind): string {
     return `paseo-plugin memsharing ${flow} confirm-screen user press`;
   }
 
   async python(): Promise<PythonEnvironment> {
+    const privateAsset = this.assets().find(a => a.tool === "python" && assetScene(this.paths.runtimeRoot, a).state === "ready");
+    if (privateAsset) return probePythonEnvironment({ runtimeRoot: "", systemCandidates: [path.join(assetDestination(this.paths.runtimeRoot, privateAsset), "payload", privateAsset.entry)] });
     if (this.deps.pythonProbe) return this.deps.pythonProbe();
-    this.cachedPython ??= await probePythonEnvironment({ runtimeRoot: this.paths.runtimeRoot });
+    this.cachedPython ??= await probePythonEnvironment({ runtimeRoot: "" });
     return this.cachedPython;
   }
 
   async git(): Promise<GitEnvironment> {
+    const privateAsset = this.assets().find(a => a.tool === "git" && assetScene(this.paths.runtimeRoot, a).state === "ready");
+    if (privateAsset) return probeGitEnvironment({ candidateDirs: [path.join(assetDestination(this.paths.runtimeRoot, privateAsset), "payload", "bin")] });
     if (this.deps.gitProbe) return this.deps.gitProbe();
     this.cachedGit ??= await probeGitEnvironment();
     return this.cachedGit;
@@ -333,9 +393,9 @@ export class Orchestrator {
 
   private async resolveCurrent(agents: readonly string[] | undefined, signal?: AbortSignal): Promise<PreviewOutcome> {
     const python = await this.requirePython();
-    if (!python.ok) return { status: "missing_dependency", dependency: "python", detail: python.detail };
+    if (!python.ok) return this.dependencyPreviewImpl();
     const git = await this.git();
-    if (git.status !== "ready") return { status: "missing_dependency", dependency: "git", detail: git.detail };
+    if (git.status !== "ready") return this.dependencyPreviewImpl();
     const identity = this.releaseIdentity();
     if (identity.status !== "ready") return { status: "identity_missing", detail: identity.detail };
     const payload = this.payload();
@@ -373,7 +433,7 @@ export class Orchestrator {
   }
 
   private async runCli(argv: readonly string[], options?: { timeoutMs?: number; signal?: AbortSignal }): Promise<CliRunOutcome> {
-    return this.deps.runner.run(argv, { timeoutMs: options?.timeoutMs ?? DEFAULT_TIMEOUT_MS, signal: options?.signal });
+    return this.deps.runner.run(argv, { timeoutMs: options?.timeoutMs ?? DEFAULT_TIMEOUT_MS, signal: options?.signal, env: toolEnvironment(this.paths.runtimeRoot, this.assets().find(a => a.tool === "git")) });
   }
 
   // Runs a CLI expecting a JSON envelope; maps exit codes per kernel contract.
@@ -415,7 +475,7 @@ export class Orchestrator {
   }
 
   private storePending(flow: FlowKind, plan: Record<string, unknown>, approvalShape: PendingPlan["approvalShape"], confirmArgv: readonly string[]): { digest: string; confirmationToken: string; summary: { label: string; value: string }[] } {
-    const binding = this.kernelBinding(confirmArgv);
+    const binding = flow === "dependency" ? this.assetBinding() : this.kernelBinding(confirmArgv);
     const digest = planDigest(plan);
     const confirmationToken = planDigest({ digest, binding, nonce: randomUUID() });
     this.pending.set(flow, {
@@ -444,7 +504,7 @@ export class Orchestrator {
       return { ok: false, outcome: { status: "stale_plan", detail: "confirmation token does not match the pending plan; preview again" } };
     }
     let currentBinding: string;
-    try { currentBinding = this.kernelBinding(pending.confirmArgv); }
+    try { currentBinding = flow === "dependency" ? this.assetBinding() : this.kernelBinding(pending.confirmArgv); }
     catch { currentBinding = "unavailable"; }
     if (pending.binding !== currentBinding) {
       this.pending.delete(flow);
@@ -593,9 +653,9 @@ export class Orchestrator {
     memory?: "enable" | "disable";
   }, signal?: AbortSignal): Promise<PreviewOutcome> {
     const python = await this.requirePython();
-    if (!python.ok) return { status: "missing_dependency", dependency: "python", detail: python.detail };
+    if (!python.ok) return this.dependencyPreviewImpl();
     const git = await this.git();
-    if (git.status !== "ready") return { status: "missing_dependency", dependency: "git", detail: git.detail };
+    if (git.status !== "ready") return this.dependencyPreviewImpl();
     const agm = this.activeKernelAgm();
     if (!agm) {
       return { status: "failed", code: "kernel_missing", message: "memSharing machine install not found; run onboarding first" };
@@ -689,7 +749,7 @@ export class Orchestrator {
 
   private async projectRemovePreviewImpl(projectRoot: string, signal?: AbortSignal): Promise<PreviewOutcome> {
     const python = await this.requirePython();
-    if (!python.ok) return { status: "missing_dependency", dependency: "python", detail: python.detail };
+    if (!python.ok) return this.dependencyPreviewImpl();
     const agm = this.activeKernelAgm();
     if (!agm) {
       return { status: "failed", code: "kernel_missing", message: "memSharing machine install not found; nothing to remove" };
@@ -753,9 +813,9 @@ export class Orchestrator {
 
   private async ckPreviewImpl(ckSource?: string, signal?: AbortSignal): Promise<PreviewOutcome> {
     const python = await this.requirePython();
-    if (!python.ok) return { status: "missing_dependency", dependency: "python", detail: python.detail };
+    if (!python.ok) return this.dependencyPreviewImpl();
     const git = await this.git();
-    if (git.status !== "ready") return { status: "missing_dependency", dependency: "git", detail: git.detail };
+    if (git.status !== "ready") return this.dependencyPreviewImpl();
     const kernel = this.activeKernel();
     if (!kernel) {
       return { status: "failed", code: "kernel_missing", message: "memSharing machine install not found; CK is a separate optional step after it" };
@@ -801,7 +861,7 @@ export class Orchestrator {
       if (planDigest(popped.pending.plan) !== planDigest(ckAcquisitionPlan(this.deps.home))) return { status: "stale_plan", detail: "CK acquisition target changed" };
       const git = await this.git();
       if (git.status !== "ready" || !git.path) return { status: "failed", code: "git_missing", message: git.detail };
-      const source = await acquireCkSource(this.deps.home, git.path, this.deps.runner, signal);
+      const source = await acquireCkSource(this.deps.home, git.path, { run: (argv, options) => this.runCli(argv, options) }, signal);
       return { status: "completed", envelope: { status: "source_prepared", source, installation_complete: false, next_action: "Preview Context Keeper installation for separate approval" } };
     }
     const approvalFile = this.buildApprovalFile(popped.pending);
@@ -822,7 +882,7 @@ export class Orchestrator {
 
   private async recoverPreviewImpl(input: { journalPath: string; action?: "continue" | "rollback" }, signal?: AbortSignal): Promise<PreviewOutcome> {
     const python = await this.requirePython();
-    if (!python.ok) return { status: "missing_dependency", dependency: "python", detail: python.detail };
+    if (!python.ok) return this.dependencyPreviewImpl();
     // Candidate discovery is not trust: bind the chosen toolkit's bytes to
     // the original journal BEFORE running it. The original CLI then checks
     // the journal, source, locks and recovery scene with its existing rules.
@@ -894,6 +954,14 @@ export class Orchestrator {
 
   async bootstrapPreview(signal?: AbortSignal): Promise<PreviewOutcome> {
     return this.operate("bootstrap", "preview", signal, owned => this.bootstrapPreviewImpl(owned));
+  }
+
+  async dependencyPreview(signal?: AbortSignal): Promise<PreviewOutcome> {
+    return this.operate("dependency", "preview", signal, () => this.dependencyPreviewImpl());
+  }
+
+  async dependencyConfirm(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<PlanConfirmOutcome> {
+    return this.operate("dependency", "execute", signal, owned => this.dependencyConfirmImpl(input, owned));
   }
 
   async bootstrapConfirm(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<ConfirmOutcome> {

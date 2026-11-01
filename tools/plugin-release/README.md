@@ -20,7 +20,7 @@ python3 -B tools/plugin-release/check.py release --source "$PWD" --commit "$R" -
 
 退出 0 表示本阶段静态检查通过，失败退出 2；参数错误也退出 2。stdout 是 JSON，包含原 common 测试的 TAP 输出。`published: false` 表示此命令不证明发布状态；`runtime_acceptance: pending` 表示未验收真实宿主。
 
-检查入口不运行写入型 sync 或 generate。它要求 sync 脚本、既有 sync 测试、identity、shared 真源及 common 生成物受 Git 跟踪，且工作树字节/模式等于 pin 中的 blob；隐藏在 `assume-unchanged` 后的修改也不能冒充已核验输入。随后复用 `plugins/paseo/test/sync.test.ts`：S 运行 common 两项和空哨兵测试，R 仅运行 common 两项，并确认预期测试实际运行，不能因全跳过而通过。转换算法不在 Python 中重复实现。
+检查入口不运行写入型 sync 或 generate。它要求 sync 脚本、既有 sync 测试、identity、shared 真源、common 生成物、两份 `THIRD_PARTY_NOTICES.md` 与两个 `notices/` 目录中的许可文件受 Git 跟踪，且工作树字节/模式等于 pin 中的 blob；拒绝 notice 符号链接和额外未跟踪文件，隐藏在 `assume-unchanged` / `skip-worktree` 后的修改也不能冒充已核验输入。随后复用 `plugins/paseo/test/sync.test.ts`：S 运行 common 两项、notice 同步和空哨兵共四项；R 运行 common 两项和 notice 同步共三项，排除开发空哨兵测试。检查预期测试实际运行，不能因全跳过而通过。转换算法不在 Python 中重复实现。
 
 R 阶段继续复用 `scripts/agm_core/plugin_release.py::checkout_delivery`，核验 S 是 R 的祖先、S/R 受管文件集合/字节/模式一致、跟踪描述与 pin 一致、Paseo 载荷闭合、identity 精确等于 canonical manifest 摘要，以及 R 仅改允许生成路径。缺少正式 manifest/payload/identity 的开发树不能通过此阶段。
 

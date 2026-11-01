@@ -97,3 +97,9 @@ v5 独立复验限定shared通过，无剩余具体阻断。31hash审前后匹�
 发行check.py与README按2新增hash整合，见paseo-ci-files.json；复用既有common测试与release verifier，无远程CI供应商配置。五个临时Git场景符合预期（S正常/漂移、缺正式产物冒充R、完整R/漂移），含.git全fixture字节/模式/mtime不变，证据paseo-ci-evidence.json；协调者静态核对薄调用、阶段选择和README命令，无新产品写路径。最终64个唯一实现/测试/说明文件hash现场一致，见paseo-final-files.sha256；git diff --check通过、无plugins/orca。原CK dirty保留，未写CK。
 
 当前可交付的是未提交的源码与合成验证候选，不是可发布/即装即用验收。固定Python/Git资产URL/hash/完整许可未核实，自动私有供应尚未启用；真实Paseo安装/Modal/provider/workspace/断连/新会话与CK官方网络仍pending；正式S/R提交与载荷未生成发布。细分交付与后续门槛见delivery.md。
+
+## 2026-11-01 当前 Host 验收与收尾审核
+
+以上为逐阶段历史，早期供应阻断、未安装和未改版本的结论保留原时点含义。后续供应与 payload v3 增量已独立审查；当前 Host 的开发候选真实 payload ready。用户授权后本机更新至 0.1.4，再经插件 fresh preview/confirm 完成主 checkout 的 Codex 项目接入；接入后新 Codex 会话实际读取用户公共记忆和该项目记忆。记忆、用户入口及原项目正文保全，原生备份已验证。
+
+[巴克队长收尾审核](paseo-closeout-review.md)通过，可提交开发候选；本轮只补跑生成一致性 4 项，不重复全量。各阶段测试计数不合并。完整新机器缺依赖宿主首装、x64 动态、远程 HTTPS/CK 激活、完整 UI/断连及正式 S/R 发行仍待验，不能称为公开发行通过。当前证据见[验收汇总](paseo-current-host-acceptance-20261101.json)。

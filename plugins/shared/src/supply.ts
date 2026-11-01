@@ -1,13 +1,10 @@
 // memSharing plugin common layer — dependency supply manifest contract.
 // True source: plugins/shared/src. Generated copy: plugin server bundles.
 //
-// FAIL-CLOSED: no upstream URL, hash, or version is built into this file.
-// A supply manifest is a runtime input the user approves in the host UI;
-// it must satisfy every constraint below before any download happens.
-// Status of real suppliers (2026-10-31): astral python-build-standalone is
-// the candidate but its release SHA manifest was unreachable
-// (UPSTREAM_BROKEN), so no production manifest is shipped. When a verified
-// manifest exists it is loaded from disk at runtime, never from RPC input.
+// This generic legacy Python manifest validator checks structure, not source
+// trust. The host's production path uses package-locked production-assets.ts
+// and the Node-only tool-assets protocol; neither RPC nor this disk loader
+// can override those suppliers. A valid hash alone does not establish trust.
 
 export interface SupplyArchive {
   readonly arch: "arm64" | "x86_64";

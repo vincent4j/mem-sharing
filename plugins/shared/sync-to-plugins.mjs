@@ -45,3 +45,7 @@ for (const target of targets) {
   }
   console.log(`synced ${files.length} modules -> ${path.relative(process.cwd(), target)}`);
 }
+
+// The disclosure text travels with the host package, independent of downloads.
+fs.copyFileSync(path.join(here, "THIRD_PARTY_NOTICES.md"), path.resolve(here, "../paseo/THIRD_PARTY_NOTICES.md"));
+fs.cpSync(path.join(here, "notices"), path.resolve(here, "../paseo/notices"), { recursive: true });

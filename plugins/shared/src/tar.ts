@@ -28,6 +28,9 @@ export interface ExtractOptions {
   readonly destDir: string;
   readonly maxBytes: number;
   readonly allowedSymlinks?: readonly string[];
+  /** Exact, package-locked targets. Required for links using parent segments. */
+  readonly expectedLinks?: Readonly<Record<string, string>>;
+  readonly signal?: AbortSignal;
 }
 
 class ExtractFailure extends Error {
@@ -93,7 +96,7 @@ function parseHeader(block: Buffer, overrides: { path?: string }): Header {
 function safeRelative(candidate: string, what: string): string {
   if (candidate.length === 0) throw new ExtractFailure("bad_path", `${what} is empty`);
   const posix = candidate.replace(/\\/g, "/");
-  const parts = posix.split("/").filter((part) => part.length > 0);
+  const parts = posix.split("/").filter((part) => part.length > 0 && part !== ".");
   if (posix.startsWith("/") || /^[A-Za-z]:/.test(posix)) {
     throw new ExtractFailure("absolute_path", `${what} must be relative: ${candidate}`);
   }
@@ -282,6 +285,7 @@ async function extractInto(staging: string, options: ExtractOptions): Promise<{ 
     };
 
     for (;;) {
+      if (options.signal?.aborted) throw new ExtractFailure("canceled", "extraction canceled");
       const block = await readBlock();
       if (block === null) throw new ExtractFailure("truncated", "archive ended without terminator");
       if (block.every((byte) => byte === 0)) break;
@@ -326,7 +330,10 @@ async function extractInto(staging: string, options: ExtractOptions): Promise<{ 
           throw new ExtractFailure("link_not_allowed", `link entry not allowlisted: ${relative}`);
         }
         const linkTarget = header.linkname;
-        if (linkTarget.startsWith("/") || linkTarget.split("/").includes("..")) {
+        if (options.expectedLinks && options.expectedLinks[relative] !== linkTarget) {
+          throw new ExtractFailure("link_target_mismatch", `unexpected link target: ${relative}`);
+        }
+        if (linkTarget.startsWith("/") || (linkTarget.split("/").includes("..") && options.expectedLinks?.[relative] !== linkTarget)) {
           throw new ExtractFailure("link_escape", `link target escapes the tree: ${relative} -> ${linkTarget}`);
         }
         deferredLinks.push({ type: header.typeflag === "1" ? "hardlink" : "symlink", linkname: linkTarget, relative });
@@ -357,9 +364,19 @@ async function extractInto(staging: string, options: ExtractOptions): Promise<{ 
     }
 
     for (const link of deferredLinks) {
+      if (options.signal?.aborted) throw new ExtractFailure("canceled", "extraction canceled");
       const target = resolveInside(staging, link.relative);
+      // Deferred links must not turn a later link's parent into a symlink.
+      let parent = path.dirname(target);
+      while (parent !== staging) {
+        const st = await fs.promises.lstat(parent);
+        if (!st.isDirectory() || st.isSymbolicLink()) throw new ExtractFailure("link_escape", `link parent is not a real directory: ${link.relative}`);
+        parent = path.dirname(parent);
+      }
       if (link.type === "hardlink") {
         const source = resolveInside(staging, link.linkname);
+        const sourceReal = await fs.promises.realpath(source);
+        if (!sourceReal.startsWith(await fs.promises.realpath(staging) + path.sep)) throw new ExtractFailure("link_escape", `hardlink source escapes root: ${link.relative}`);
         const stat = await fs.promises.stat(source).catch(() => {
           throw new ExtractFailure("truncated", `hardlink source missing: ${link.linkname}`);
         });
@@ -371,6 +388,13 @@ async function extractInto(staging: string, options: ExtractOptions): Promise<{ 
         resolveInside(staging, path.join(path.dirname(link.relative), link.linkname));
         await fs.promises.symlink(link.linkname, target);
       }
+    }
+
+    // All links are installed after files. Resolve the completed link graph,
+    // including intermediate symlinks, before publishing any directory.
+    for (const link of deferredLinks) {
+      const resolved = await fs.promises.realpath(resolveInside(staging, link.relative));
+      if (!resolved.startsWith(await fs.promises.realpath(staging) + path.sep)) throw new ExtractFailure("link_escape", `link graph escapes root: ${link.relative}`);
     }
 
     // Verify executability for every entry that declared an execute bit.

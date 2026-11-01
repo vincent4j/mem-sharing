@@ -17,7 +17,7 @@ test("missing git in the scanned directories reports missing, never installs", a
   try {
     const env = await probeGitEnvironment({ candidateDirs: [empty] });
     assert.equal(env.status, "missing");
-    assert.match(env.detail, /no private Git supply exists/);
+    assert.match(env.detail, /host dependency preparation is required/);
   } finally {
     fs.rmSync(empty, { recursive: true, force: true });
   }

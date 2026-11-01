@@ -180,6 +180,30 @@ test("a malformed redirect Location fails structurally", async () => {
   }
 });
 
+test("network starts only after delayed staging open, so fast errors cannot orphan a part", async () => {
+  const original = fs.createWriteStream;
+  let opened = false, networkAfterOpen = false;
+  const fixture = await serveOnce((_request, response) => {
+    networkAfterOpen = opened;
+    response.statusCode = 302; response.setHeader("Location", "http://[::invalid-host]"); response.end();
+  });
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ms-dl-open-race-"));
+  fs.createWriteStream = ((file: string, options: Record<string, unknown>) => {
+    const stream = original(file, { ...options, fs: {
+      open: (...args: unknown[]) => { setTimeout(() => (fs.open as Function)(...args), 50); },
+      write: fs.write, close: fs.close,
+    } } as Parameters<typeof original>[1]);
+    stream.once("open", () => { opened = true; });
+    return stream;
+  }) as typeof fs.createWriteStream;
+  try {
+    const result = await download({ url: fixture.url, expectedSha256: "0".repeat(64), maxBytes: 4096, stagingPath: path.join(dir, "runtime.tar.gz") });
+    assert.equal(result.kind === "failed" && result.code, "bad_redirect");
+    assert.equal(networkAfterOpen, true);
+    assert.deepEqual(fs.readdirSync(dir), []);
+  } finally { fs.createWriteStream = original; await fixture.close(); fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("a staging path that cannot be written fails without crashing", async () => {
   const payload = Buffer.from("bytes");
   const fixture = await serveOnce((_request, response) => response.end(payload));

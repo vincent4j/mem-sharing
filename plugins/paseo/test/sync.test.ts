@@ -49,3 +49,9 @@ test("the committed release identity is fail-closed: no fake hash in dev source"
     assert.fail("a concrete digest is release-generated only; do not commit one from a development source");
   }
 });
+test("supplier notices are generated from shared disclosure source", () => {
+  assert.equal(fs.readFileSync(path.resolve(here, "../../shared/THIRD_PARTY_NOTICES.md"), "utf8"), fs.readFileSync(path.resolve(here, "../THIRD_PARTY_NOTICES.md"), "utf8"));
+  const source = path.resolve(here, "../../shared/notices"), target = path.resolve(here, "../notices");
+  assert.deepEqual(fs.readdirSync(source).sort(), fs.readdirSync(target).sort());
+  for (const name of fs.readdirSync(source)) assert.equal(fs.readFileSync(path.join(source, name), "utf8"), fs.readFileSync(path.join(target, name), "utf8"));
+});

@@ -199,6 +199,13 @@ export async function downloadVerified(options: DownloadOptions): Promise<Downlo
     const outputFailure = new Promise<never>((_, reject) => {
       output!.on("error", (error) => reject(new DownloadFailure("write_failed", error.message)));
     });
+    // Bind the actual file before starting the network. A fast failed
+    // response can otherwise reach cleanup before the asynchronous open,
+    // then create an orphan part file after cleanup has already returned.
+    await Promise.race([
+      new Promise<void>((resolve) => output!.once("open", () => resolve())),
+      outputFailure,
+    ]);
     const hash = createHash("sha256");
     const sink: Sink = (chunk) => {
       if (!output!.write(chunk)) {

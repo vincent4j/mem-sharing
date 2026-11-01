@@ -1,0 +1,49 @@
+{
+  "recorded_at": "2026-11-01T13:40:38+08:00",
+  "scope": "Current macOS Host existing-machine plugin project enable and fresh Codex memory read",
+  "host": "localhost:6767",
+  "serverId": "srv_snTWUoI0EgfS",
+  "runtime_id": "memsharing-synthetic-dev",
+  "development_candidate": true,
+  "product_version": "0.1.4",
+  "project": "/Users/vincent4j/Tools/Source/mem-sharing",
+  "results": {
+    "plugin_payload": "ready",
+    "project_enable": "completed via plugin fresh preview/confirm",
+    "registered": true,
+    "agents": [
+      "codex"
+    ],
+    "memory_policy": "follow_ck",
+    "project_check_errors": [],
+    "original_project_text_preserved": true,
+    "user_memory_and_entry_nodes_preserved": 16,
+    "new_codex_session_user_memory_read": "passed",
+    "new_codex_session_project_memory_read": "passed"
+  },
+  "fresh_session": {
+    "agentId": "18ac05cf-08ee-4fd4-8874-2b977d2d0db8",
+    "workspaceId": "wks_6712fc2176016436",
+    "cwd_verified": true,
+    "user_memory": "/Users/vincent4j/.mem-sharing/memories/MEMORY.md",
+    "project_memory": "/Users/vincent4j/Tools/Source/mem-sharing/docs/context-keeper/memory-keeper.md",
+    "resume_exit_code": 0,
+    "check_memory_exit_code": 0,
+    "performed_writes": false,
+    "note": "Main checkout memory differs from normal-panda worktree: Paseo query had no current-topic match; existing desktop-acceptance pending item was actually read. No injected summary substituted."
+  },
+  "evidence": {
+    "project_handoff": "/Users/vincent4j/.paseo/memsharing-project-acceptance/20261101-83679ac2/FINAL-PROJECT-HANDOFF.json",
+    "project_handoff_sha256": "12f733f153cde678109596d646ca5a61cf69615d684f42a5f107d1f1a70fc09b",
+    "machine_upgrade_handoff": "/Users/vincent4j/.paseo/memsharing-upgrade-evidence/0.1.4-20261101-b282e379/FINAL-UPGRADE-HANDOFF.json"
+  },
+  "boundaries": {
+    "formal_release": false,
+    "commit_push": false,
+    "CK_install_or_init": false,
+    "registry_runtime_acceptance": "pending; not manually rewritten; actual read proof is recorded separately",
+    "first_install_on_fresh_machine": "not established by this existing-machine acceptance",
+    "x86_64_execution": "not tested",
+    "CK_remote_network_and_activation": "not tested"
+  }
+}

@@ -7,8 +7,8 @@
 // treats a missing Git as a hard runtime dependency (runtime_missing). The
 // Paseo plugin documents make no promise that a daemon host exposes git on
 // the plugin subprocess PATH, so this probe only reports; it never
-// installs or fabricates a Git. No verified private Git supply package
-// exists today. On macOS /usr/bin/git can be a CommandLineTools stub that
+// installs or fabricates a Git. The host separately prepares package-locked
+// private Git assets before passing their candidate directory. On macOS /usr/bin/git can be a CommandLineTools stub that
 // pops a developer-tools dialog when executed; it is guarded with a
 // read-only xcode-select check first, exactly like the Python probe.
 
@@ -138,7 +138,7 @@ export async function probeGitEnvironment(options: ProbeGitOptions = {}): Promis
   }
   return {
     status: "missing",
-    detail: "no git executable on daemon PATH or standard locations; host Git availability is unverified, no private Git supply exists",
+    detail: "no git executable on daemon PATH or candidate locations; host dependency preparation is required",
     candidates,
   };
 }

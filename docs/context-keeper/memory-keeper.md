@@ -1,7 +1,7 @@
 # 项目记忆索引
 
 ## 未完成事项
-- Paseo 插件即装即用补齐；状态：源码候选已集成、64文件hash通过且分层独立审查通过，最终产品目标仍未完成；触发：固定Python/Git供应取得可靠资产/许可及具备真实隔离宿主后；完成：自动依赖供应启用、真实Paseo/CK网络与provider新会话验收、获授权固定S/R发行闭合；证据：[交付记录](../plugin-adapters/delivery.md)、[阶段日志](worklogs/2026-10-31-Paseo插件单仓双入口调研.md)。Orca本轮不动，未安装/提交/发布。
+- Paseo 插件即装即用补齐；状态：供应、CI、payload v3独立审查通过，本机0.1.4及当前Host真实项目接入完成，接入后新Codex读用户/项目记忆通过；触发：准备正式发行时；完成：获授权固定正式来源并发布，未验范围明确；证据：[交付](../plugin-adapters/delivery.md)、[日志](worklogs/2026-10-31-Paseo插件单仓双入口调研.md)。测试daemon已停，Orca未动。
 - 双桌面端原生运行补证；状态：ea55373已推送并真实部署0.1.3，dsh/zcode接入completed、五家静态connected、私文与只读幂等通过；桌面CUA双端绑定超时，原生验收blocked/pending；触发：恢复CUA窗口访问后续验；完成：双端新会话用户/项目规则读回及Skill实际加载有独立证据；证据：[接入日志](worklogs/2026-10-31-双桌面端源码固化与真实接入.md)、[实际后检](../acceptance/desktop-adapters/runtime/verification.md)。
 - 公共记忆分层与独立执行器接入；状态：源码/合成验证及本机0.1.1→0.1.3迁移已完成；触发：用户已批准实现；完成：新安装与已有用户迁移、无 Codex 组合、私人内容保全及恢复验证通过；证据：[实施日志](worklogs/2026-10-31-公共记忆分层与独立执行器接入.md)。
 - M4-10 真实运行补证；状态：暂停（用户明确暂停）；触发：用户恢复对应范围后；完成：WorkBuddy 新会话、CK 实际尾步/首次激活、自动入口、四会话接力各有独立证据；证据：[当前判定](../acceptance/m4/m4-10-runtime/verdict.md)。0.1.1 已部署和静态通过不替代这些验证。
@@ -15,7 +15,7 @@
 
 ## 主题摘要（按类型）
 
-- **多平台插件适配（调研）：** 用户赞同 plugins/paseo、plugins/orca 单仓多入口与唯一 Python 内核；首版改为无独立管理界面。Paseo 支持 Git 子目录，Orca 已确认 catalog source.path 子目录和无界面 trusted-worker，但通用 hooks 仍 planned，直接 Git 子目录与社区自动发现未证实。Orca 安装载荷须自包含，建议由唯一源码生成发布文件；巴克队长只读审核为修改后通过，提出发行来源、统一活动内核、精确批准及事件边界修正；用户已否决先普通安装，要求只装插件即用；巴克队长已完成[架构方案](../plugin-adapters/design.md)与[PA-00～11任务书](../plugin-adapters/tasks.md)，含Context Keeper可选接入；用户已确认联网准备私有依赖与必要的一次性确认面板；先验证Orca交互、运行时分发和发行身份，用户现已授权Paseo开发及必要隔离验证，Orca暂不动；真实用户部署/迁移、改版本、提交推送发布仍独立授权。来源：[调研日志](worklogs/2026-10-31-Paseo插件单仓双入口调研.md)。
+- **Paseo 插件适配（当前）：** 单仓唯一 Python 真源与普通 Agent 安装入口保留，Orca 仍冻结。用户要求只安装插件即可使用、无独立管理页；依赖准备、机器安装和可选 Context Keeper 各自批准。供应、payload v3 与 CI 增量独立审核通过；当前 Host 开发候选真实载荷可用，本机已按授权更新 0.1.4；插件完成主 checkout Codex/follow_ck 接入，接入后新会话实际读到用户和项目记忆。巴克队长收尾审核允许提交开发候选；用户已授权本分支提交推送，未授权公开发行。本次拒绝启用 PRD Distill，保持未启用。完整新机器首装、x64 动态、CK 远端激活、完整 UI 和正式 S/R 仍待验。来源：[验收汇总](../plugin-adapters/paseo-current-host-acceptance-20261101.json)、[收尾审核](../plugin-adapters/paseo-closeout-review.md)、[日志](worklogs/2026-10-31-Paseo插件单仓双入口调研.md)；经验：[CK-PASEO-001](evolution/Paseo插件运行边界验收.md)。
 
 - **收尾审核（当前）：** 用户纠正为巴克队长而非8个，误解的审核安排已撤回；用户授权修复后，CK块保护P1、DSH tilde兼容与文档口径P3均关闭。新全量582单元/74集成通过，主Agent独立复核并按hash整合，源码收尾通过；原失败历史保留。该源码审核时未提交安装；后续ea55373已推送并真实部署0.1.3，桌面运行仍pending，见双桌面端主题。来源：[修后报告](../acceptance/desktop-adapters/review-fix/verification.md)、[修复日志](worklogs/2026-10-31-收尾审核问题修复.md)。
 

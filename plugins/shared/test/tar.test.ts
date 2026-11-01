@@ -74,6 +74,39 @@ function regularTree(): TarEntry[] {
   ];
 }
 
+test("fixed Git parent-relative links require exact targets and reject replacement/escape graphs", async () => {
+  const dir = tempDir();
+  try {
+    const entries: TarEntry[] = [
+      { name: "./bin/", typeflag: "5" },
+      { name: "./libexec/git-core/", typeflag: "5" },
+      { name: "./libexec/git-core/git", data: Buffer.from("fixture"), mode: 0o755 },
+      { name: "./bin/git", typeflag: "2", linkname: "../libexec/git-core/git" },
+    ];
+    const links = { "bin/git": "../libexec/git-core/git" };
+    const good = writeArchive(dir, buildTar(entries));
+    assert.equal((await extractTarGz({ archivePath: good, destDir: path.join(dir, "good"), maxBytes: 65536, allowedSymlinks: Object.keys(links), expectedLinks: links })).kind, "ok");
+    entries[3].linkname = "../libexec/git-core/other";
+    const bad = writeArchive(dir, buildTar(entries));
+    const replaced = await extractTarGz({ archivePath: bad, destDir: path.join(dir, "replaced"), maxBytes: 65536, allowedSymlinks: Object.keys(links), expectedLinks: links });
+    assert.equal(replaced.kind === "failed" && replaced.code, "link_target_mismatch");
+    const escaping = writeArchive(dir, buildTar([{ name: "bin/", typeflag: "5" }, { name: "bin/git", typeflag: "2", linkname: "../../outside" }]));
+    const escape = await extractTarGz({ archivePath: escaping, destDir: path.join(dir, "escape"), maxBytes: 65536, allowedSymlinks: ["bin/git"], expectedLinks: { "bin/git": "../../outside" } });
+    assert.equal(escape.kind === "failed" && escape.code, "path_escape");
+    const chain = writeArchive(dir, buildTar([
+      { name: "a/", typeflag: "5" }, { name: "a/root", typeflag: "2", linkname: ".." },
+      { name: "b", typeflag: "2", linkname: "a/root/../outside" },
+    ]));
+    const result = await extractTarGz({ archivePath: chain, destDir: path.join(dir, "chain"), maxBytes: 65536, allowedSymlinks: ["a/root", "b"], expectedLinks: { "a/root": "..", b: "a/root/../outside" } });
+    assert.equal(result.kind, "failed");
+    const parent = writeArchive(dir, buildTar([
+      { name: "a/", typeflag: "5" }, { name: "a/link", typeflag: "2", linkname: ".." },
+      { name: "a/link/other", typeflag: "2", linkname: "a" },
+    ]));
+    assert.equal((await extractTarGz({ archivePath: parent, destDir: path.join(dir, "parent"), maxBytes: 65536, allowedSymlinks: ["a/link", "a/link/other"], expectedLinks: { "a/link": "..", "a/link/other": "a" } })).kind, "failed");
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test("extracts a regular tree with nested directories", async () => {
   const dir = tempDir();
   try {

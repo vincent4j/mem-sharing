@@ -3,11 +3,16 @@
 // go through the kernel's exact-plan approvals; the client can only
 // confirm or reject the digest of a server-held plan.
 
-import type { PluginServerContext } from "@getpaseo/plugin/server";
+import type { PluginHandlerContext, PluginServerContext } from "@getpaseo/plugin/server";
 import { homedir } from "node:os";
 import { Orchestrator, realRunner } from "./server/orchestrator";
-import { resolvePluginDir } from "./server/payload";
+import { HostPayloadBinding } from "./server/payload";
+import { CORE_RELEASE_MANIFEST_SHA256 } from "./server/shared/release-identity";
+import type { PluginRpcContract } from "@getpaseo/plugin";
+import type { ZodType, input as ZodInput, output as ZodOutput } from "zod";
 import {
+  dependencyPreviewRpc,
+  dependencyConfirmRpc,
   operationStatusRpc,
   envStatusRpc,
   bootstrapPreviewRpc,
@@ -27,15 +32,36 @@ import {
 } from "./shared/contracts";
 
 export default function contribute(server: PluginServerContext) {
-  const resolution = resolvePluginDir();
-  const orchestrator = new Orchestrator({
-    runner: realRunner(homedir()),
-    home: homedir(),
-    pluginDir: resolution.dir,
-    searchedPluginDirs: resolution.searched,
+  let active: Orchestrator | undefined;
+  const cancelAll = () => {
+    for (const flow of ["dependency", "bootstrap", "machine", "enable", "remove", "ck", "recover"] as const) active?.cancel(flow);
+  };
+  const binding = new HostPayloadBinding(CORE_RELEASE_MANIFEST_SHA256, (resolution) => {
+    active = new Orchestrator({ runner: realRunner(homedir()), home: homedir(),
+      pluginDir: resolution.dir, searchedPluginDirs: resolution.searched });
+    return active;
   });
+  function handle<I extends ZodType, O extends ZodType>(contract: PluginRpcContract<I, O>,
+    run: (orchestrator: Orchestrator, input: ZodOutput<I>) => ZodInput<O> | Promise<ZodInput<O>>) {
+    server.handle(contract, async (input, context: PluginHandlerContext) => {
+      let sources;
+      try {
+        // Consume only host-owned plugin sources. Never log/return/persist the
+        // full SDK configuration, provider values or a raw SDK failure.
+        sources = (await context.paseo.config.get()).config.plugins;
+      } catch {
+        binding.invalidate();
+        cancelAll();
+        throw new Error("plugin_source_unavailable: daemon plugin sources could not be read");
+      }
+      let orchestrator: Orchestrator;
+      try { orchestrator = binding.get(sources); }
+      catch (error) { cancelAll(); throw error; }
+      return run(orchestrator, input);
+    });
+  }
 
-  server.handle(envStatusRpc, async () => {
+  handle(envStatusRpc, async (orchestrator) => {
     const [python, git] = await Promise.all([orchestrator.python(), orchestrator.git()]);
     const payload = orchestrator.payload();
     return {
@@ -56,34 +82,36 @@ export default function contribute(server: PluginServerContext) {
         payload.status === "ready"
           ? { status: "ready" as const, installerPath: payload.installerPath, searched: payload.searched }
           : { status: "missing" as const, searched: payload.searched },
-      releaseIdentity: orchestrator.releaseIdentity(),
+      releaseIdentity: { ...orchestrator.releaseIdentity(), manifestSha256: CORE_RELEASE_MANIFEST_SHA256 || undefined },
       durableSource: orchestrator.durableSource(),
     };
   });
 
-  server.handle(bootstrapPreviewRpc, async () => orchestrator.bootstrapPreview());
-  server.handle(bootstrapConfirmRpc, async (input) => orchestrator.bootstrapConfirm(input));
+  handle(bootstrapPreviewRpc, async (orchestrator) => orchestrator.bootstrapPreview());
+  handle(dependencyPreviewRpc, async (orchestrator) => orchestrator.dependencyPreview());
+  handle(dependencyConfirmRpc, async (orchestrator, input) => orchestrator.dependencyConfirm(input));
+  handle(bootstrapConfirmRpc, async (orchestrator, input) => orchestrator.bootstrapConfirm(input));
 
-  server.handle(machinePreviewRpc, async (input) => orchestrator.machinePreview(input.agents));
-  server.handle(machineConfirmRpc, async (input) => orchestrator.machineConfirm(input));
+  handle(machinePreviewRpc, async (orchestrator, input) => orchestrator.machinePreview(input.agents));
+  handle(machineConfirmRpc, async (orchestrator, input) => orchestrator.machineConfirm(input));
 
-  server.handle(projectCheckRpc, async (input) => orchestrator.projectCheck(input.projectRoot));
-  server.handle(projectEnablePreviewRpc, async (input) =>
+  handle(projectCheckRpc, async (orchestrator, input) => orchestrator.projectCheck(input.projectRoot));
+  handle(projectEnablePreviewRpc, async (orchestrator, input) =>
     orchestrator.projectEnablePreview({ projectRoot: input.projectRoot, agents: input.agents, memory: input.memory }),
   );
-  server.handle(projectEnableConfirmRpc, async (input) => orchestrator.projectEnableConfirm(input));
+  handle(projectEnableConfirmRpc, async (orchestrator, input) => orchestrator.projectEnableConfirm(input));
 
-  server.handle(projectRemovePreviewRpc, async (input) => orchestrator.projectRemovePreview(input.projectRoot));
-  server.handle(projectRemoveConfirmRpc, async (input) => orchestrator.projectRemoveConfirm(input));
+  handle(projectRemovePreviewRpc, async (orchestrator, input) => orchestrator.projectRemovePreview(input.projectRoot));
+  handle(projectRemoveConfirmRpc, async (orchestrator, input) => orchestrator.projectRemoveConfirm(input));
 
-  server.handle(ckPreviewRpc, async (input) => orchestrator.ckPreview());
-  server.handle(ckConfirmRpc, async (input) => orchestrator.ckConfirm(input));
+  handle(ckPreviewRpc, async (orchestrator, input) => orchestrator.ckPreview());
+  handle(ckConfirmRpc, async (orchestrator, input) => orchestrator.ckConfirm(input));
 
-  server.handle(recoverPreviewRpc, async (input) => orchestrator.recoverPreview(input));
-  server.handle(recoverConfirmRpc, async (input) => orchestrator.recoverConfirm(input));
+  handle(recoverPreviewRpc, async (orchestrator, input) => orchestrator.recoverPreview(input));
+  handle(recoverConfirmRpc, async (orchestrator, input) => orchestrator.recoverConfirm(input));
 
-  server.handle(cancelPendingRpc, async (input) => orchestrator.cancel(input.flow));
+  handle(cancelPendingRpc, async (orchestrator, input) => orchestrator.cancel(input.flow));
 
-  server.handle(operationStatusRpc, async () => orchestrator.operationStatus());
-  return () => { for (const flow of ["bootstrap", "machine", "enable", "remove", "ck", "recover"] as const) orchestrator.cancel(flow); };
+  handle(operationStatusRpc, async (orchestrator) => orchestrator.operationStatus());
+  return cancelAll;
 }

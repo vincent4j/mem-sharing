@@ -2,8 +2,10 @@
 
 memSharing lets coding agents (Codex, Claude Code, WorkBuddy, DSH, ZCode) share one set of
 project rules and memories. The release plugin is designed to expose onboarding and exact
-plan confirmation inside Paseo. This development source has not been installed or accepted
-in a real host session; missing Python/Git currently blocks onboarding.
+plan confirmation inside Paseo. A generated development candidate has been installed on
+a local macOS host, with payload loading, project connection and a fresh Codex memory read
+verified. This is not a published release or complete fresh-machine acceptance. Missing
+Python/Git can be prepared through a separate host confirmation before onboarding continues.
 
 ## What it does
 
@@ -30,23 +32,22 @@ The plugin is a thin Paseo client plus a daemon-side bridge:
   confirm or reject in a host modal. The plan digest stays stable for identical plans; a separate single-use server token
   binds the preview to host, HOME, stored arguments and kernel bytes. Re-preview
   invalidates the old token. Full plan JSON is expanded by default.
-- The daemon side runs the bundled product payload with the machine's Python. If Python or
-  Git is missing, the plugin reports exactly that and stops — it does not silently install
-  or fake a runtime. Private runtime preparation is designed but not enabled until a
-  verified supply manifest exists.
+- If Python or Git is missing, the host shows the fixed official archive, version,
+  architecture, size, SHA256, license/source links and private destination. A separate
+  confirmation downloads and verifies the original archive, safely extracts it and probes
+  the private tool. The original onboarding preview then resumes with its own approvals.
+  Private runtimes persist outside the plugin directory. Git paths are supplied only to
+  child processes; the plugin does not change the user's global PATH or Git config.
 
 ## Setup
 
 Requirements: Paseo 0.13.2 or later on macOS (the plugin uses only client/server RPC and
-Command Center surfaces, type-verified against the 0.13.2 SDK; real-host verification
-pending), plus Python 3.9+ and Git available to the Paseo daemon (the installer refuses
-to run without Git).
-
-Install from the repository subdirectory:
-
-```text
-git:vincent4j/mem-sharing:plugins/paseo
-```
+Command Center surfaces, type-verified against the 0.13.2 SDK and exercised on a local
+host). Private archive targets are Apple Silicon macOS 11+ and Intel macOS 10.15+;
+Intel execution remains untested.
+Compatible existing Python 3.9+ and Git can also be reused. Downloads require HTTPS access
+to the official GitHub release assets; license texts and fixed source references are
+included in THIRD_PARTY_NOTICES.md and its sidecars.
 
 No service account is needed. The plan lists product files, explicitly selected executor
 user entries and the project you enable. Optional CK source acquisition contacts only its

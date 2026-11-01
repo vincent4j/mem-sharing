@@ -35,6 +35,7 @@ export const envStatusRpc = defineRpc({
       searched: z.array(z.string()),
     }),
     releaseIdentity: z.object({
+      manifestSha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
       status: z.enum(["ready", "missing"]),
       detail: z.string(),
     }),
@@ -105,6 +106,13 @@ export const bootstrapConfirmRpc = defineRpc({
   name: "memsharing.bootstrap.confirm",
   input: confirmAction.strict(),
   output: confirmStatus,
+});
+
+export const dependencyPreviewRpc = defineRpc({
+  name: "memsharing.dependency.preview", input: z.object({}).strict(), output: previewStatus,
+});
+export const dependencyConfirmRpc = defineRpc({
+  name: "memsharing.dependency.confirm", input: confirmAction.strict(), output: confirmStatus,
 });
 
 export const machinePreviewRpc = defineRpc({
@@ -204,7 +212,7 @@ export const recoverConfirmRpc = defineRpc({
 
 export const cancelPendingRpc = defineRpc({
   name: "memsharing.pending.cancel",
-  input: z.object({ flow: z.enum(["bootstrap", "machine", "enable", "remove", "ck", "recover"]) }).strict(),
+  input: z.object({ flow: z.enum(["dependency", "bootstrap", "machine", "enable", "remove", "ck", "recover"]) }).strict(),
   output: z.object({ status: z.enum(["cancel_requested", "cleared", "none"]) }),
 });
 
