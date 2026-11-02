@@ -266,3 +266,53 @@ python3 -B <干净来源>/scripts/install.py --approval-file <精确批准JSON�
 代码阶段中断继续使用升级操作中固定的 `recover.py` 与 toolkit 做只读恢复预览，再批准 continue 或 rollback。未提交代码台账时可按既有原子恢复回退；台账已提交则只能完成代码收尾。专用转换的代码恢复结果明确 `scope=product_code`、`entry_phase=not_run_by_upgrade_core`，**不代表 WorkBuddy 接入完成**；恢复后仍要进行同版显式入口预览/批准。外部台账、已登记入口、代码出现第三态时仍拒绝覆盖。
 
 成功完成代码与入口之后，不承诺通过该专用转换自动降级为0.1.0；保留旧代码版本、台账/入口事务备份及恢复材料。撤回已成功新增的用户块必须另行精确计划，不能以恢复旧整文件覆盖后续私人内容。本通道不创建项目原生目录、不新增机器卸载、不更新上游 Context Keeper。
+
+## 独立退役旧 Paseo staging（未发行工具）
+
+当旧宿主插件已通过官方命令移除，而遗留 staging 阻止核心卸载时，
+可从另行审定、固定的 clean Git checkout 运行独立工具。它不替换已安装
+0.1.6，不要求先安装新版插件，也不更改核心的退休回执消费门禁。
+`--tool-commit` 是操作者审定的完整工具提交，不是工具内自引用的版本。
+工具会逐个核对 scripts 下的受管文件与该 pin 的字节/模式。
+
+```sh
+python3 -B /absolute/trusted-checkout/scripts/retire_staging.py \
+  --tool-commit FULL_REVIEWED_TOOL_COMMIT \
+  --paseo-cli /absolute/official/paseo --cli-sha256 VERIFIED_CLI_SHA256 \
+  --server-id VERIFIED_SERVER_ID --plugin-id memsharing-synthetic-dev \
+  --evidence-dir /absolute/existing-private-evidence-directory
+# preview exit 5; 将完整 approval_plan 原样放入下述 envelope：
+# {"plan": <approval_plan>, "confirmed_at": "真实UTC时间Z", "reference": "真实用户批准依据"}
+python3 -B /absolute/trusted-checkout/scripts/retire_staging.py \
+  --approval-file /absolute/private-approval.json
+```
+
+证据目录须真实、0700、位于所有产品/卸载/恢复根之外；计划和批准包含
+私有路径，保存0600且不在会话展示。官方 Paseo status/list/status 必须绑定
+同一 HOME/serverId/PID，完整列表中精确插件 ID 不存在；disabled 不算移除。
+工具核对已安装的固定0.1.6身份和完整代码；不同来源/版本不能搭乘此入口。
+
+当前窄入口仅支持已知旧插件 ID memsharing-synthetic-dev；其它宿主身份拒绝。
+当前窄格式只认每件独立的终态 operation（无 journal），以及已登记项目
+的固定 enable-memory approval（仅首次 Codex 主 checkout 的 AGENTS.md 经历块 append，既有文件 update，无 rebuild/transition）。
+该 approval 必须对应 follow_ck 登记、真实主 checkout/Git common-dir、精确登记对象及其 committed enable Transaction。
+完整事务只允许目标文件与最后提交的 registry，原 before 备份必须精确匹配；按固定公共模板/append 规则独立重建目标 after 与完整 registry after，核准两个历史指纹。
+历史 installation fingerprint 只是格式受限的原始观测，不作为作者或删除权信任根，也不拿当前检测结果冒充历史检测；认领依赖上述独立已登记对象/完整事务/固定 producer 输出闭包。
+所有支持的 manifest、before 备份及事务目录闭包纳入 preview 与锁内/删除前漂移校验。
+其它历史组合或证据不全继续拒绝，不为当前现场拓宽。每件均须本人所有、普通0600文件、精确
+JSON schema，且超过既有600秒静默期；目录须0700，不跟随符号链接。
+独立目录没有共同 operation 外键，不能凭相邻终态记录认领其它文件。
+request、其它 approval、journal 恢复分支、未知/运行状态一律拒绝，不是
+通用清理/adopt 接口。公开预览逐件列出 hash、mode、路径、目录子项和
+宿主/产品身份；这不是声称旧 JSON 具有密码学作者签名。
+
+精确批准后取得产品写锁并重建预览；先把所有原件完整外置、保留字节、
+mode、mtime，fsync并核对归档，再复核宿主移除/产品身份/完整目录闭包。
+逐文件最后复核后unlink，不递归删除。只在全部完成后写现有consumer
+可校验的 host-receipt.json。外置 retirement-progress.json 记录批准与
+执行阶段；任何失败保留归档及现场，禁止自动重试、造回执或手动补删。
+中断后必须另行审阅实际剩余文件/归档并制定具体恢复方案，本入口不
+声称自动断点恢复。备份不能替代归属、终态或无活动证明。
+
+本工具只退役遗留宿主暂存，不执行核心卸载、归还、新装或 Context Keeper
+操作。回执就绪后仍须公开 uninstall-machine 的新预览与精确批准。
