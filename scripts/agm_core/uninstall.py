@@ -236,7 +236,8 @@ def _verify_inventory(runtime):
 
 def _verify_backups(runtime, ledger):
     """A backup namespace is not blanket deletion ownership over its children."""
-    if not runtime.backups.exists():return
+    observations = {}
+    if not runtime.backups.exists():return observations
     for directory in runtime.backups.iterdir():
         if recovery.snapshot(directory)['kind']!='directory':
             raise recovery.Conflict('Unknown backup object: '+str(directory))
@@ -265,6 +266,16 @@ def _verify_backups(runtime, ledger):
                 raise recovery.Conflict('Unknown archived backup child')
             continue
         manifest = directory/'manifest.json'
+        if (directory.name.startswith('upgrade-')
+                and recovery.snapshot(manifest)['kind']=='absent'):
+            from .uninstall_compat import verify_upgrade_backup
+            observations.update(verify_upgrade_backup(runtime,directory))
+            continue
+        if (directory.name.startswith('migration-')
+                and recovery.snapshot(manifest)['kind']=='absent'):
+            from .uninstall_compat import verify_public_layout_backup
+            observations.update(verify_public_layout_backup(runtime,directory))
+            continue
         if recovery.snapshot(manifest)['kind']!='file':
             raise recovery.Conflict('Unknown backup directory: '+str(directory))
         receipt = json.loads(manifest.read_text())
@@ -285,6 +296,7 @@ def _verify_backups(runtime, ledger):
         if {p.name for p in directory.iterdir()}!=expected:
             raise recovery.Conflict('Unknown transaction backup child')
 
+    return observations
 
 def _strict_json(path):
     value=json.loads(Path(path).read_bytes(),object_pairs_hook=registry._no_duplicates)
@@ -704,7 +716,7 @@ def _ck_audit_journal(path, runtime):
     return document
 
 
-def preview(*, home, backup_dir, host_obligation=None):
+def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
     runtime = resolve_layout(home)
     runtime.validate_paths()
     if os.path.lexists(runtime.home/'.mem-sharing-upgrade.json'):
@@ -733,7 +745,7 @@ def preview(*, home, backup_dir, host_obligation=None):
         _ck_audit_journal(member, runtime)
     user_install._code_matches(runtime,ledger['product'])
     _verify_inventory(runtime)
-    _verify_backups(runtime,ledger)
+    historical_observations = _verify_backups(runtime,ledger)
     for root in roots:
         if root.is_symlink():
             raise recovery.Conflict('Product root symlink: ' + str(root))
@@ -746,6 +758,7 @@ def preview(*, home, backup_dir, host_obligation=None):
     connected = set()
     user_paths = {agent: Path(paths.expand_path(data['user_entry'],home=str(runtime.home))) for agent,data in config.items()}
     observations = dict(extras)
+    observations.update(historical_observations)
     observations.update(observed)
     observations.update({str(p):recovery.snapshot(p) for p in user_paths.values()})
     for obj in units:
@@ -759,6 +772,7 @@ def preview(*, home, backup_dir, host_obligation=None):
     if not connected:
         raise recovery.Conflict('No proven recipients; cannot discard the only public copy')
     ordered = [a for a in paths.AGENT_ORDER if a in connected]
+    user_reference_redirects = []
     for agent in ordered:
         path = user_paths[agent]
         state = recovery.snapshot(path)
@@ -790,9 +804,16 @@ def preview(*, home, backup_dir, host_obligation=None):
             if _preserve_ck(obj,roots,raw):continue
             if obj['kind']!='import':
                 raw = _without_object(raw,obj)
+        redirected = False
+        if (agent=='dsh' and not imported and
+                ((tool_identity or {}).get('user_conversions') or {}).get('dsh_reference')=='explicit-single-path-to-return-v1'):
+            from .uninstall_compat import redirect_dsh_reference
+            raw, proof = redirect_dsh_reference(runtime,path,bytes.fromhex(state['hex']),raw,
+                state['mode'],index,changes,active,own_units)
+            user_reference_redirects.append(proof);redirected=True
         if any(value.encode() in raw for value in (str(runtime.root),str(runtime.code))):
             raise recovery.Conflict('Unregistered/private dependency in Agent entry: ' + str(path))
-        pointer = ('' if imported else '\n@%s\n' % index if agent == 'claude' else
+        pointer = ('' if imported or redirected else '\n@%s\n' % index if agent == 'claude' else
                    '\n开始任务前读取并遵守 %s；按索引按需读取主题，路径不可用时说明。\n' % index)
         _change(changes,path,_file(raw+pointer.encode(),state['mode']),'detach')
     # Retain AGENTS.md, Claude @AGENTS.md, effective WorkBuddy/CK bridges.
@@ -853,13 +874,15 @@ def preview(*, home, backup_dir, host_obligation=None):
             'evidence_mtime_ns':{p:t for row in retained for p,t in row.get('mtime_ns',{}).items()},
             'runtime_acceptance':'pending','context_keeper':'retained'}
     body['recovery_runtime']=_interpreter_plan(runtime,roots,backup)
+    if tool_identity is not None: body['independent_tool']=tool_identity
+    if user_reference_redirects: body['user_reference_redirects']=user_reference_redirects
     return recovery.seal(body)
 
 
-def execute(approval, *, home, backup_dir, hook=None, host_obligation=None):
+def execute(approval, *, home, backup_dir, hook=None, host_obligation=None, tool_identity=None):
     # Rebuild immediately before creating the external backup. The engine takes
     # cooperating writer locks and verifies the complete scene again inside.
-    plan = preview(home=home,backup_dir=backup_dir,host_obligation=host_obligation)
+    plan = preview(home=home,backup_dir=backup_dir,host_obligation=host_obligation,tool_identity=tool_identity)
     recovery.approve(approval,recovery.summary(plan))
     backup = Path(plan['backup_dir'])
     backup.mkdir(mode=0o700)
@@ -894,7 +917,7 @@ def execute(approval, *, home, backup_dir, hook=None, host_obligation=None):
             'context_keeper':recovery.ck_choice(home),**recovery.completion_metadata(plan)}
 
 
-def cli(argv, *, home=None):
+def cli(argv, *, home=None, tool_identity=None):
     if argv and argv[0]=='recover-uninstall':
         return recovery.cli(argv[1:])
     parser = argparse.ArgumentParser(prog=COMMAND)
@@ -930,12 +953,14 @@ def cli(argv, *, home=None):
         elif any((args.host_plugin_id,args.host_plugin_source,args.host_plugin_manifest_sha256,args.host_plugin_record_json)):
             raise recovery.Conflict('Plugin identity requires explicit host obligation')
         if args.approval_file:
-            result = execute(json.loads(Path(args.approval_file).read_text()),home=home,backup_dir=args.backup_dir,host_obligation=obligation)
+            result = execute(json.loads(Path(args.approval_file).read_text()),home=home,backup_dir=args.backup_dir,host_obligation=obligation,tool_identity=tool_identity)
         else:
-            plan = preview(home=home,backup_dir=args.backup_dir,host_obligation=obligation)
+            plan = preview(home=home,backup_dir=args.backup_dir,host_obligation=obligation,tool_identity=tool_identity)
             view = recovery.summary(plan)
             result = {'status':'approval_required','approval_required':True,'plan':view,
                       'approval':{'plan':view,'reference':'<user approval>','confirmed_at':'<UTC timestamp>'}}
+            if plan.get('user_reference_redirects'): result['user_reference_redirects']=plan['user_reference_redirects']
+        if tool_identity is not None: result['independent_tool']=tool_identity
         print(json.dumps(result,ensure_ascii=False))
         return recovery.exit_code(result)
     except (ValueError,OSError,KeyError,TypeError) as exc:

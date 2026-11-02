@@ -316,3 +316,38 @@ mode、mtime，fsync并核对归档，再复核宿主移除/产品身份/完整�
 
 本工具只退役遗留宿主暂存，不执行核心卸载、归还、新装或 Context Keeper
 操作。回执就绪后仍须公开 uninstall-machine 的新预览与精确批准。
+
+## 独立卸载兼容工具（候选，未发行）
+
+`scripts/uninstall_compat.py` 从另行审定的 clean Git 工具 pin 运行，不替换
+已安装0.1.6，也不改变其来源。必须显式提供 `--tool-commit`、`--paseo-cli`、
+`--cli-sha256`、`--server-id`、`--plugin-id`，随后传公开 `uninstall-machine`
+参数及真实 Paseo host obligation。它复用独立 staging 工具的逐 scripts blob/
+mode 信任核验、固定已装0.1.6完整代码核验与官方 host removed 查询。
+工具身份进入完整计划及 plan hash；批准与执行仍使用既有卸载/归还/恢复引擎。
+
+新增识别只限两类完整证据：
+
+- `migration-*/tx/manifest.json`：只接受 committed `migrate-public-layout`，
+  复用已审 legacy reconciliation 的固定 producer/helper/launcher/完整输出
+  验证，拒绝伪 after、自报seal、缺失/外来文件、非终态、错HOME、漂移。
+- `upgrade-*`：必须由同operation的正式 committed upgrade journal绑定，
+  通过原升级loader与before验证，精确核 `registry-before.json` 和全部
+  `code-before` 字节/模式/目录闭包；不因目录名就准许删除。
+
+验证过的历史节点加入原计划 observations，归还、外置备份、锁内漂移门禁、
+独立recover.py均复用原合同；未知类型仍拒绝。不执行历史归档里的代码。
+
+DSH 自有块外公共读取引用仍属不透明用户正文。本轮用户明确批准独立的
+单处路径重定向设计，须在独立入口显式传 `--redirect-dsh-reference-to-return`。
+它不新增 import 登记或所有权，只允许既有「开始任务前读取并遵守 」行上
+唯一非自有 MEMORY 绝对路径 token 改向 DSH 的 `memsharing-return/memories/MEMORY.md`。
+精确原文件 hash/mode、原始及 detach 后 offset、old/new token、after hash、
+不变前后片段 hash、归还 index hash/mode 进入完整计划与摘要附带证明，
+均由 plan SHA 绑定；真实删除仍须批准该完整卸载计划，设计批准不是删除批准。
+
+普通卸载仍拒绝该未知依赖，只有上述显式模式可规划转换。重复/模糊路径、
+Context Keeper 内引用、非精确行前缀、未完整规划归还副本、目标不符、
+审批后全文或模式漂移均拒绝。其余私文、Context Keeper、换行、权限、
+片段相对顺序按字节保全；不重定向到 Context Keeper，也不额外追加重复指针。
+已登记产品自有块仍按原卸载所有权合同拆除，公共记忆完整归还副本按原引擎生成。
