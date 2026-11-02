@@ -96,6 +96,10 @@ class Release014UpgradeTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.area = Path(self.temp.name).resolve()
+        from frozen_kernel_fixture import export, bind, FROZEN_NATIVE
+        self.fixed_kernel_root = self.area/'fixed-native-kernel'
+        export(self.fixed_kernel_root, FROZEN_NATIVE)
+        bind(self, globals(), self.fixed_kernel_root)
         self.home = self.area/'home'
         self.home.mkdir()
         self.runtime = install._runtime({'home': str(self.home)})
@@ -159,11 +163,11 @@ class Release014UpgradeTests(unittest.TestCase):
         # from this external request (the frozen handler never pins it).
         self.next_root = self.area/'release-015'
         self.next_root.mkdir()
-        self.next_files = _export_target(self.next_root)
+        self.next_files = export(self.next_root, FROZEN_NATIVE)
         self.assertIn('scripts/agm_core/policy_migration.py', self.next_files)
         self.assertIn('docs/uninstall-design.md', self.next_files)
         self.next_source = {'root': str(self.next_root), 'url': 'local-checkout:'+self.next_root.as_uri(),
-                            'commit': 'e'*40, 'version': '0.1.5', 'files': self.next_files}
+                            'commit': FROZEN_NATIVE, 'version': '0.1.5', 'files': self.next_files}
         target_checked, _ = install._source(dict(source=self.next_source))
         self.target_tree = target_checked['tree_sha256']
         self.req = self.request()
@@ -198,7 +202,7 @@ class Release014UpgradeTests(unittest.TestCase):
                                product_code_version='0.1.4', source=dict(PREDECESSOR_014)),
                 'after': dict(schema_version=3, product_structure_version=1,
                               product_code_version='0.1.5',
-                              source={'url': self.next_source['url'], 'commit': 'e'*40,
+                              source={'url': self.next_source['url'], 'commit': self.next_source['commit'],
                                       'tree_sha256': self.target_tree}),
                 'direction': 'upgrade', 'entries': upgrade.NATIVE_ENTRY_CONVERSION}
 
@@ -400,13 +404,13 @@ class NativeEntryFixedGateTests(unittest.TestCase):
             blob = _git('cat-file', 'blob', PREDECESSOR_014['commit'] + ':' + name)
             self.assertEqual(upgrade.NATIVE_ENTRY_CONVERSION['before_contract'][name], legacy.digest(blob), name)
             self.assertEqual(upgrade.NATIVE_ENTRY_CONVERSION['after_contract'][name],
-                             legacy.digest((REPO/name).read_bytes()), name)
+                             legacy.digest(_git('show', '542f248f35e9de8fb2e7566b6312e6f13d26cd41:'+name)), name)
         # The 0.1.5 entry contract is exactly the frozen 0.1.3-lineage target:
         # same agents table and user_entries bytes the reviewed chain ended on.
         self.assertEqual(upgrade.NATIVE_ENTRY_CONVERSION['after_contract']['scripts/agents.json'],
                          upgrade.PUBLIC_LAYOUT_TARGET_CONTRACT['scripts/agents.json'])
         self.assertEqual(upgrade.NATIVE_ENTRY_CONVERSION['after_contract']['scripts/agm_core/user_entries.py'],
-                         legacy.digest(Path(user_entries.__file__).read_bytes()))
+                         legacy.digest(_git('show','542f248f35e9de8fb2e7566b6312e6f13d26cd41:scripts/agm_core/user_entries.py')))
         # Historical handlers stay pinned to their own predecessors; the real
         # 0.1.4 identity cannot ride them.
         for item in upgrade.PUBLIC_LAYOUT_PREDECESSORS:

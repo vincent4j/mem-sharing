@@ -85,12 +85,22 @@ class InstallerTests(InstallFixture):
             self.assertTrue(report['connection_pending'])
         entry.write_bytes(raw)
         ledger = json.loads(self.runtime.registry.read_bytes())
+        saved_objects = copy.deepcopy(ledger['machine']['objects'])
         ledger['machine']['objects'] = {}
+        self.runtime.registry.write_text(json.dumps(ledger))
+        before = self.snapshot()
+        with self.assertRaises(cli.InstallError) as denied:
+            cli.plan_machine(self.request)
+        self.assertIn('Unregistered user unit', str(denied.exception))
+        self.assertEqual(self.snapshot(), before)
+        ledger = json.loads(self.runtime.registry.read_bytes())
+        # Restore the legitimate registration, never adopt unknown file units.
+        ledger['machine']['objects'] = saved_objects
         self.runtime.registry.write_text(json.dumps(ledger))
         same = cli.plan_machine(self.request)
         self.assertTrue(same['plan']['noop'])
         done = cli.execute_machine(same, approved(same), request=self.request)
-        self.assertTrue(same['entry_plan']['machine_objects'])
+        self.assertIsNone(same['entry_plan'])
         self.assertEqual(done['status'], 'completed')
         self.assertEqual(done['agents']['connected'], ['codex'])
         self.assertIsNone(done['entry_status']['codex']['reason'])
@@ -260,7 +270,7 @@ class InstallerTests(InstallFixture):
 
     def test_source_checkout_commit_and_dirty_are_verified_no_reset(self):
         def git(*args):return subprocess.run(['git','-C',str(self.source),*args],check=True,capture_output=True,text=True).stdout.strip()
-        git('init');git('add','SKILL.md','scripts');git('-c','user.name=fixture','-c','user.email=fixture@example.invalid','commit','-m','fixture')
+        git('init');git('add','.');git('-c','user.name=fixture','-c','user.email=fixture@example.invalid','commit','-m','fixture')
         commit=git('rev-parse','HEAD')
         source=cli.checkout_source(str(self.source),commit,'0.4.0')
         self.assertEqual(source['commit'],commit);self.assertEqual(source['files'],self.request['source']['files'])

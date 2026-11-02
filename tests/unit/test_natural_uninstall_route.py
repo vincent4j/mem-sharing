@@ -35,6 +35,7 @@ class NaturalUninstallRouteTests(InstallFixture):
         self.claude=self.home/'.claude/CLAUDE.md'
         self.claude.parent.mkdir();self.private=b'private Claude\r\n\xff no final newline'
         self.claude.write_bytes(self.private)
+        remember_mode(self, self.claude)
 
     def install_agents(self, agents=None):
         self.request['agents']=agents
@@ -61,7 +62,7 @@ class NaturalUninstallRouteTests(InstallFixture):
             raw=entry.read_bytes()
             self.assertIn(str(self.index).encode(),raw,agent)
             self.assertNotIn(route.encode(),raw,agent)
-        self.assertTrue(self.claude.read_bytes().startswith(self.private))
+        assert_opaque(self, self.claude.read_bytes(), self.private, index=self.runtime.root/"memories/MEMORY.md", path=self.claude)
         for link in re.findall(r'\]\(<([^>]+)>\)',route):
             path=Path(link);self.assertTrue(path.is_absolute());self.assertTrue(path.is_file(),link)
         self.assertEqual((self.runtime.code/'SKILL.md').read_bytes(),(REPO/'SKILL.md').read_bytes())
@@ -172,7 +173,7 @@ class NaturalUninstallRouteTests(InstallFixture):
             self.assertEqual((returned/'memories/topics/private.md').read_bytes(),b'# Private\r\nmy complete topic\xff',agent)
             for token in (b'SKILL.md',b'uninstall-machine','卸载 memSharing'.encode(),'自然语言卸载'.encode()):
                 self.assertNotIn(token,topic.read_bytes()+index.read_bytes(),agent)
-        self.assertTrue(self.claude.read_bytes().startswith(self.private))
+        assert_opaque(self, self.claude.read_bytes(), self.private, index=self.claude.parent/"memsharing-return/memories/MEMORY.md", path=self.claude)
 
     def test_actual_old_public_return_six_copies_retire_route(self):
         self.assert_actual_return('old')
@@ -222,3 +223,5 @@ class NaturalUninstallRouteTests(InstallFixture):
         self.assertEqual(updated,'# 公共记忆\n\n'.encode()+public_layout.new_contract_bytes()+b'private bytes\r\n\xff')
         self.assertEqual(public_layout.migrate_index_bytes(updated,code),(updated,0))
         self.assertEqual(public_layout.migrate_index_bytes(old.replace('读取契约'.encode(),b'custom'),code),(None,0))
+
+from entry_opaque_fixture import assert_opaque, remember_mode

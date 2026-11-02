@@ -64,7 +64,9 @@ class Release016Tests(unittest.TestCase):
         self.entry_set={name:(Path(name).read_bytes(),Path(name).stat().st_mode) if Path(name).is_file() else None for name in names}
         ledger=json.loads(self.runtime.registry.read_bytes())
         self.object_set=copy.deepcopy((ledger['machine']['objects'],ledger['shared_objects']))
-        target=self.area/'candidate016';files16=_export_target(target)
+        from frozen_kernel_fixture import export, bind, FROZEN_016
+        target=self.area/'candidate016';files16=export(target,FROZEN_016)
+        bind(self, globals(), target)
         self.source16=dict(root=str(target),url='fixture://unissued-016',commit='6'*40,
                            version='0.1.6',files=files16)
         for name in ('scripts/agents.json','scripts/agm_core/user_entries.py'):

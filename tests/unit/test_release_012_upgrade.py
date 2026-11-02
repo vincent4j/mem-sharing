@@ -7,11 +7,8 @@ candidate 0f690ef with its real commit SHA and tree hash. The install/upgrade
 kernel is real throughout; only executor detection uses synthetic facts, and
 no real HOME, client or CK is touched.
 
-Fixture caveat: the 0.1.1 baseline is installed with the CURRENT install
-kernel, so its generated user templates are current-shaped. This test
-therefore proves the code preserve mechanism (entry bytes untouched), not
-historical template generation; the 0.1.3 migration tests must generate old
-entries/public layout with the actual old modules.
+Both historical source and producer/target kernels are isolated fixed exports.
+The moving new-layout candidate is never used as an old release payload.
 """
 import copy
 import importlib.util
@@ -105,8 +102,13 @@ class Release012UpgradeTests(InstallFixture):
 
         self.req11 = dict(self.request, source=source11, agents=['codex', 'workbuddy'],
                           operation_id='install-011')
-        done = install.execute_install(install.plan_install(self.req11), approved(
-            install.plan_install(self.req11)), request=self.req11)
+        from frozen_kernel_fixture import Kernel
+        predecessor_kernel = Kernel(self.prev_root)
+        predecessor_install = predecessor_kernel.module('user_install')
+        predecessor_detect = predecessor_kernel.module('detect')
+        patch.object(predecessor_detect, 'detect_agents', return_value=facts).start()
+        done = predecessor_install.execute_install(predecessor_install.plan_install(self.req11), approved(
+            predecessor_install.plan_install(self.req11)), request=self.req11)
         self.assertEqual(done['status'], 'completed', done)
         self.user_entries_before = {
             '.workbuddy/MEMORY.md': (self.home/'.workbuddy/MEMORY.md').read_bytes(),
@@ -127,6 +129,8 @@ class Release012UpgradeTests(InstallFixture):
         self.assertEqual(len(records), 30)
         self.next_root = self.area/'release-012'
         self.next_files = _export(self.next_root, records)
+        from frozen_kernel_fixture import bind
+        bind(self, globals(), self.next_root)
         self.next_source = {'root': str(self.next_root), 'url': PREDECESSOR['url'],
                             'commit': TARGET_012['commit'], 'version': '0.1.2',
                             'files': self.next_files}
@@ -182,9 +186,12 @@ class Release012UpgradeTests(InstallFixture):
         plan = cli.plan_machine(self.req12)
         # Existing connected agents have no entry difference; default still scans all installed agents.
         self.assertIsNone(plan['entry_plan'])
-        self.assertTrue(plan['entry_requested'])
+        # Historical .1.2 producer has no current default entry stage on preserve.
+        self.assertFalse(plan['entry_requested'])
         self.assertEqual(plan['channel'], 'upgrade')
-        self.assertEqual(plan['effective_agents'], ['codex', 'workbuddy'])
+        # The frozen .1.2 CLI defaulted to Codex; current all-installed routing
+        # remains covered by current-kernel installer/layout tests.
+        self.assertEqual(plan['effective_agents'], ['codex'])
         self.assertEqual(preview_before, self.snapshot())  # preview is read-only
 
         done = cli.execute_machine(plan, approved(plan), request=self.req12)

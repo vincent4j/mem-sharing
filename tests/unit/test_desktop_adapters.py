@@ -80,7 +80,7 @@ class DesktopInstallTests(InstallFixture):
         self.request['agents'] = list(DESKTOP)
         private = b'\xef\xbb\xbfprivate\xff\r\n<!-- context-keeper:start -->\nprivate CK\n<!-- context-keeper:end -->'
         for agent in DESKTOP:
-            p = self.home / ('.'+agent) / 'AGENTS.md'; p.parent.mkdir(); p.write_bytes(private)
+            p = self.home / ('.'+agent) / 'AGENTS.md'; p.parent.mkdir(); p.write_bytes(private); remember_mode(self, p)
         before = snapshot(self.home)
         plan = self.plan()
         self.assertEqual(before, snapshot(self.home))
@@ -91,7 +91,7 @@ class DesktopInstallTests(InstallFixture):
         self.assertEqual(list(ledger['machine']['agents']), list(DESKTOP))
         for agent in DESKTOP:
             p = self.home / ('.'+agent) / 'AGENTS.md'
-            self.assertTrue(p.read_bytes().startswith(private))
+            assert_opaque(self, p.read_bytes(), private, index=self.runtime.root/"memories/MEMORY.md", path=p)
             self.assertIn(user_entries.NATIVE_FALLBACK_TEXTS[agent].encode(), p.read_bytes())
             self.assertNotIn(user_entries.CODEX_FALLBACK_TEXT.encode(), p.read_bytes())
             self.assertFalse((p.parent / 'skills').exists())
@@ -199,3 +199,5 @@ class DesktopProjectTests(EnableFixture):
         self.assertEqual(check._entry_warnings(DESKTOP, self.config, home=str(self.home), checkout=str(self.root)), [])
         warnings = check._entry_warnings(['codex'], self.config, home=str(self.home), checkout=str(self.root))
         self.assertTrue(any('32KiB' in w for w in warnings))
+
+from entry_opaque_fixture import assert_opaque, remember_mode

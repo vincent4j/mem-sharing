@@ -113,6 +113,10 @@ class PublicLayoutMigrationFixture(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.area = Path(self.temp.name).resolve()
+        from frozen_kernel_fixture import export, bind, FROZEN_NATIVE
+        self.fixed_kernel_root = self.area / 'fixed-public-kernel'
+        export(self.fixed_kernel_root, FROZEN_NATIVE)
+        self.fixed_kernel = bind(self, globals(), self.fixed_kernel_root)
         self.home = self.area / 'home'
         self.home.mkdir()
         self.runtime = install._runtime({'home': str(self.home)})
@@ -174,10 +178,10 @@ class PublicLayoutMigrationFixture(unittest.TestCase):
 
         # 0.1.3 target: the current worktree payload (frozen at release).
         self.next_root = self.area / 'release-013'
-        self.next_files = _export_target(self.next_root)
+        self.next_files = export(self.next_root, FROZEN_NATIVE)
         self.assertIn('scripts/agm_core/public_layout.py', self.next_files)
         self.next_source = {'root': str(self.next_root), 'url': URL,
-                            'commit': 'd' * 40, 'version': '0.1.3', 'files': self.next_files}
+                            'commit': FROZEN_NATIVE, 'version': '0.1.3', 'files': self.next_files}
         self.old_product = json.loads(self.runtime.registry.read_bytes())['product']
         checked, _ = install._source(dict(source=self.next_source))
         self.req13 = {'home': str(self.home), 'platform_config': self.config, 'agents': None,
@@ -637,8 +641,8 @@ class PublicLayoutHardeningTests(PublicLayoutMigrationFixture):
         self.assertEqual(status['workbuddy']['status'], 'connected')
         # 项目接入:--agent workbuddy 在无 Codex 机器上装配共享 AGENTS 基座。
         project = self._git_project()
-        from agm_core import enable
-        from agm_core import detect
+        enable = self.fixed_kernel.module('enable')
+        detect = self.fixed_kernel.module('detect')
         facts = detect.detect_agents(variant.config, None, home=str(variant.home),
                                      search_paths=[str(variant.bin_dir)], app_directories=[])
         facts['agents']['workbuddy'] = copy.deepcopy(facts['agents']['codex'])
@@ -667,8 +671,8 @@ class PublicLayoutHardeningTests(PublicLayoutMigrationFixture):
                                                 variant.ledger(), ['claude'])
         self.assertEqual(status['claude']['status'], 'connected')
         project = self._git_project()
-        from agm_core import enable
-        from agm_core import detect
+        enable = self.fixed_kernel.module('enable')
+        detect = self.fixed_kernel.module('detect')
         facts = detect.detect_agents(variant.config, None, home=str(variant.home),
                                      search_paths=[str(variant.bin_dir)], app_directories=[])
         facts['agents']['workbuddy'] = copy.deepcopy(facts['agents']['codex'])
@@ -738,7 +742,7 @@ class PublicLayoutHardeningTests(PublicLayoutMigrationFixture):
         self.assertEqual(before, self.snapshot())
 
     def test_r2_crash_after_guard_without_manifest_recovers_cleanly(self):
-        from agm_core import registry as registry_module
+        registry_module = self.fixed_kernel.module('registry')
         plan, request = self.plan()
         migration = plan['plan']['migration_plan']
         with patch.object(registry_module, 'commit_registry',
@@ -871,7 +875,7 @@ def hook(event,path):
     if event==x['event'] and str(path)==x['path']: os._exit(73)
 public_layout.execute_migration(x['plan'],x['approval'],request=x['request'],hook=hook)
 """
-        done = subprocess.run([sys.executable, '-B', '-c', code, str(REPO/'scripts'), str(payload)],
+        done = subprocess.run([sys.executable, '-B', '-c', code, str(self.fixed_kernel_root/'scripts'), str(payload)],
                               capture_output=True, text=True)
         self.assertEqual(done.returncode, 73, done.stdout + done.stderr)
         # This child is confirmed dead. Only its two empty synthetic lock dirs
@@ -1003,7 +1007,7 @@ public_layout.execute_migration(x['plan'],x['approval'],request=x['request'],hoo
         self.assertEqual(self.ledger()['product']['last_operation_id'], main_id)
 
     def test_equal_v_real_crash_after_manifest_commit_finish_and_context_keeper_source(self):
-        from agm_core import ck_install
+        ck_install = self.fixed_kernel.module('ck_install')
         migration, request, main_id, main_journal, main_bytes = self._equal_v_fixture()
         self._crash_migration_process(migration, request, 'after_commit', migration['manifest_path'])
         with self.assertRaises(ValueError):
@@ -1158,7 +1162,7 @@ public_layout.execute_migration(x['plan'],x['approval'],request=x['request'],hoo
         public_layout.recover_migration(recovery, approved(recovery))
 
     def test_second_backup_failure_full_manifest_prewrite_cleanup(self):
-        from agm_core import transaction
+        transaction = self.fixed_kernel.module('transaction')
         plan, request = self.plan()
         inner = plan['plan']
         upgrade.execute_upgrade(inner, approved(inner), request=request)

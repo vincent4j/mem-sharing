@@ -184,11 +184,23 @@ class LifecycleTests(EnableFixture):
         self.assertFalse(any(Path(o['path']).name=='MEMORY.md' for o in a['objects'].values()))
 
     def test_project_remove_retains_machine_installation_and_user_objects(self):
-        self.runtime.code.mkdir(parents=True);(self.runtime.code/'SKILL.md').write_text('# installed product\n')
+        from test_m404_install import InstallFixture
+        from agm_core import user_install
+        import shutil
+        # Discard only this temporary test's incomplete seed product, not user data.
+        shutil.rmtree(self.runtime.root)
+        if self.runtime.code.exists(): shutil.rmtree(self.runtime.code)
+        machine_source = self.area/'machine-source'
+        from test_public_layout import _export_target
+        files = _export_target(machine_source)
+        machine_request = dict(self.request, source=dict(root=str(machine_source),url='fixture://lifecycle',commit='a'*40,version='0.4.0',files=files))
+        machine_plan = user_install.plan_install(machine_request)
+        user_install.execute_install(machine_plan,dict(machine_plan,confirmed_at=NOW,reference='real complete lifecycle fixture'),request=machine_request)
         request={k:self.request[k] for k in ('home','platform_config','search_paths','app_directories','detect_runner')}
         request['agents']=None
-        preview=user_entries.run_user_entries(request);approval=json.loads(preview['next_action']);approval.update(confirmed_at=NOW,reference='machine entry confirmation')
-        result=user_entries.run_user_entries(dict(request,approval=approval));self.assertEqual(result['status'],'completed',result)
+        preview=user_entries.run_user_entries(request)
+        self.assertEqual(preview['status'],'completed',preview)
+        self.assertIsNone(preview['next_action'])
         machine=copy.deepcopy(self.load()['machine']);code=(self.runtime.code/'SKILL.md').read_bytes()
         self.apply(None,True)
         self.tombstone();self.request.update(approval=None)

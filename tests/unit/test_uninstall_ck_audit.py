@@ -279,8 +279,19 @@ class RealProducerAuditTests(CKAuditFixture):
     """Real pinned CK producer through the whole uninstall/restore cycle."""
 
     def setUp(self):
-        super().setUp()
-        self.journal.unlink()
+        from test_m404_install import InstallFixture
+        self.fixture = fixtures.UninstallTests(); InstallFixture.setUp(self.fixture)
+        self.addCleanup(self.fixture.doCleanups)
+        self.fixture.codex()
+        self.home = self.fixture.home; self.runtime = self.fixture.runtime
+        entry = self.home / '.codex/AGENTS.md'
+        entry.parent.mkdir(parents=True, exist_ok=True)
+        self.fixture.entry = entry
+        self.fixture.backup = self.fixture.area/'independent-backup'
+        self.private_before = b'private\x00\r\nprivate footer\r\n'
+        entry.write_bytes(self.private_before)
+        self.fixture.execute()
+        self.var = self.runtime.var; self.journal = self.var / 'ck-install-fixture-m404.json'
         source = os.environ.get('CK_PINNED_SOURCE_FIXTURE')
         if not source:
             self.skipTest('Set CK_PINNED_SOURCE_FIXTURE to a clean pinned CK checkout for real-producer acceptance')
@@ -294,6 +305,18 @@ class RealProducerAuditTests(CKAuditFixture):
                                                    request=self.fixture.request)
         self.assertEqual(report['status'], 'configured', report)
         return report
+
+    def test_postinstall_private_prefix_blocks_real_producer_zero_write(self):
+        entry = self.home / '.codex/AGENTS.md'
+        entry.write_bytes(b'new private prefix\r\n' + entry.read_bytes())
+        before = recovery.tree(self.home)
+        from agm_core import user_entries
+        ledger = json.loads(self.runtime.registry.read_bytes())
+        proof = user_entries.connection_status(self.runtime, self.fixture.config, ledger, ['codex'])
+        self.assertEqual(proof['codex']['reason'], 'entry_layout_not_top')
+        with self.assertRaisesRegex(ValueError, 'verified public-memory entry'):
+            ck_install.plan_context_keeper(self.fixture.request, 'fixture-m404', self.source)
+        self.assertEqual(recovery.tree(self.home), before)
 
     def test_real_configured_audit_full_cycle_with_ck_retained_and_byte_restore(self):
         import stat as stat_module

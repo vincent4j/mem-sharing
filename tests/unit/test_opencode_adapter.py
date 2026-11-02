@@ -194,11 +194,12 @@ class OpenCodeInstallTests(InstallFixture):
         entry = self.entry_path()
         entry.parent.mkdir(parents=True)
         entry.write_bytes(private)
+        remember_mode(self, entry)
         before = snapshot(self.home)
         plan = self.plan()
         self.assertEqual(before, snapshot(self.home))
         self.assertEqual(self.execute(plan)['status'], 'completed')
-        self.assertTrue(entry.read_bytes().startswith(private))
+        assert_opaque(self, entry.read_bytes(), private, index=self.runtime.root/"memories/MEMORY.md", path=entry)
         before = snapshot(self.home)
         again = user_entries.run_user_entries(dict(self.request, home=str(self.home),
                                                    platform_config=self.config, runtime_layout=self.runtime))
@@ -352,3 +353,5 @@ class OpenCodeProjectTests(EnableFixture):
         result = enable.run(dict(self.request))
         self.assertEqual(result['status'], 'gaps', result)  # 合成 HOME 无三家 installed
         self.assertEqual(result['installation']['requested'], ['codex', 'claude', 'workbuddy'])
+
+from entry_opaque_fixture import assert_opaque, remember_mode

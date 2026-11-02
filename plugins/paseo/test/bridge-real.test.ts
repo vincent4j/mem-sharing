@@ -397,7 +397,7 @@ test("current package release wins over old/multiple inventories; same-version t
   const runner = { async run(argv: readonly string[], options: { timeoutMs: number; signal?: AbortSignal }) { calls.push([...argv]); return base.run(argv, options); } };
   try {
     const fixture = (name: string, version: string, marker?: string) => { const dir = path.join(area, name); fs.mkdirSync(dir); return buildReleaseFixture(dir, version, marker); };
-    const a = fixture("A", "0.1.3");
+    const a = fixture("A", "0.8.0");
     const aWorker = new Orchestrator({ runner, home, pluginDir: a.pluginDir, searchedPluginDirs: [], releaseManifestSha256: a.digest });
     const exportA = await aWorker.bootstrapPreview();
     assert.equal(exportA.status, "approval_required", JSON.stringify(exportA));
@@ -411,7 +411,7 @@ test("current package release wins over old/multiple inventories; same-version t
     assert.equal(installA.status, "completed", JSON.stringify(installA));
     const registry = path.join(home, ".mem-sharing/var/registry.json");
     const originalRegistry = fs.readFileSync(registry, "utf8");
-    const b = fixture("B", "0.2.0"); // synthetic release descriptor only
+    const b = fixture("B", "0.9.0"); // synthetic release descriptor only
     const bWorker = new Orchestrator({ runner, home, pluginDir: b.pluginDir, searchedPluginDirs: [], releaseManifestSha256: b.digest });
     const before = calls.length;
     const exportB = await bWorker.bootstrapPreview();
@@ -419,14 +419,14 @@ test("current package release wins over old/multiple inventories; same-version t
     assert.equal(exportB.status, "approval_required", JSON.stringify(exportB));
     if (exportB.status !== "approval_required") return;
     assert.equal(exportB.planKind, "prepare-release-source");
-    assert.equal((exportB.plan.manifest as { source: { version: string } }).source.version, "0.2.0");
+    assert.equal((exportB.plan.manifest as { source: { version: string } }).source.version, "0.9.0");
     const acquiredB = await bWorker.bootstrapConfirm({ action: "confirm", confirmationToken: exportB.confirmationToken });
     assert.equal(acquiredB.status, "acquired", JSON.stringify(acquiredB));
     const machineB = await bWorker.machinePreview(["codex"]);
     assert.equal(machineB.status, "failed", JSON.stringify(machineB)); // no approved conversion
     assert.equal(calls[calls.length - 1][2], path.join(b.pluginDir, "payload/core/scripts/install.py"));
     assert.equal(fs.readFileSync(registry, "utf8"), originalRegistry);
-    const c = fixture("C", "0.1.3", "synthetic different tree");
+    const c = fixture("C", "0.8.0", "synthetic different tree");
     const cWorker = new Orchestrator({ runner, home, pluginDir: c.pluginDir, searchedPluginDirs: [], releaseManifestSha256: c.digest });
     const exportC = await cWorker.bootstrapPreview();
     assert.equal(exportC.status, "approval_required", JSON.stringify(exportC));

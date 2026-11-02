@@ -314,6 +314,7 @@ class MultiAgentUninstallTests(InstallFixture):
         self.claude.parent.mkdir()
         self.private = b'private before\r\n\xff\x00\nprivate tail without final newline'
         self.claude.write_bytes(self.private)
+        remember_mode(self, self.claude)
         real_detect = detect.detect_agents
         def synthetic_installed(*args,**kwargs):
             report = real_detect(*args,**kwargs)
@@ -335,7 +336,7 @@ class MultiAgentUninstallTests(InstallFixture):
             self.assertTrue((returned/'memories/MEMORY.md').is_file(),agent)
             self.assertTrue((returned/'original/memories/MEMORY.md').is_file(),agent)
         raw = self.claude.read_bytes()
-        self.assertTrue(raw.startswith(self.private))
+        assert_opaque(self, raw, self.private, index=self.claude.parent/"memsharing-return/memories/MEMORY.md", path=self.claude)
         self.assertEqual(raw.count(b'@'),1)
         self.assertNotIn(str(self.runtime.root).encode(),raw)
 
@@ -360,3 +361,5 @@ class MultiAgentUninstallTests(InstallFixture):
 
 
 if __name__ == '__main__':unittest.main()
+
+from entry_opaque_fixture import assert_opaque, remember_mode

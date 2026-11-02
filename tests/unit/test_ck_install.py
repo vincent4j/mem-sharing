@@ -206,6 +206,7 @@ class CKInstallTests(InstallFixture):
         entry.parent.mkdir()
         private = b"my private rules\r\n"
         entry.write_bytes(private)
+        remember_mode(self, entry)
         facts=detect.detect_agents(self.config,None,home=str(self.home),
             search_paths=self.request['search_paths'],app_directories=[])
         for agent in ('claude','workbuddy'):
@@ -218,7 +219,7 @@ class CKInstallTests(InstallFixture):
             result=user_entries.run_user_entries(dict(request,approval=approved({k:v for k,v in plan.items() if k not in ('confirmed_at','reference')})))
             self.assertEqual(result['status'],'completed',result)
         installed = entry.read_bytes()
-        self.assertTrue(installed.startswith(private))
+        assert_opaque(self, installed, private, index=self.runtime.root/"memories/MEMORY.md", path=entry)
         self.assertIn(str(self.runtime.root/'memories/MEMORY.md').encode(), installed)
         for damaged in (b'', installed.replace(b'AGENTS.md', b'CHANGED.md')):
             entry.write_bytes(damaged)
@@ -512,3 +513,5 @@ class CKInstallTests(InstallFixture):
             after=(block+b'\n\n'+b'user\r\n\r\ntail' if agent=='workbuddy' else before.replace(old,block))
             ck._verify_rule(before,after,agent)
             with self.assertRaises(ck.CKError):ck._verify_rule(before,after+b'corruption',agent)
+
+from entry_opaque_fixture import assert_opaque, remember_mode

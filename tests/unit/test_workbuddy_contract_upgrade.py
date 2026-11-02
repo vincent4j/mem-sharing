@@ -20,30 +20,30 @@ cli = importlib.util.module_from_spec(spec); spec.loader.exec_module(cli)
 class WorkBuddyContractUpgradeTests(InstallFixture):
     def setUp(self):
         super().setUp()
-        # Synthetic predecessor content; only pin constants are substituted.
-        # All source validation, transactions, private bytes and recovery are real.
-        # Keep the historical three-agent table: the current five-agent table is
-        # a different contract and must not masquerade as this predecessor.
-        (self.source/'scripts/agents.json').write_bytes(_git('cat-file', 'blob',
-            '0f690ef7aabf747a23bacc7662c19bee34c4bf52:scripts/agents.json'))
-        (self.source/'scripts/agm_core/user_entries.py').write_text('# synthetic old WB entry contract\n')
-        self.request['source'].update(version='0.1.0', files=self.files(self.source))
-        self.codex(); self.execute()
+        from frozen_kernel_fixture import export, bind, FROZEN_NATIVE
+        import shutil
+        shutil.rmtree(self.source)
+        # Real source and corresponding running target kernel, no contract mocks.
+        from frozen_kernel_fixture import Kernel
+        predecessor_pin = '4cfe7bedfde695b0bd4085ccc453afd3ef161711'
+        target_pin = '04c32e24b9ab9504514908f2368cddca4356e478'
+        previous_files = export(self.source, predecessor_pin)
+        self.request['source'].update(url='https://github.com/vincent4j/mem-sharing',
+            version='0.1.0', commit=predecessor_pin, files=previous_files)
+        self.codex()
+        previous = Kernel(self.source)
+        previous_install = previous.module('user_install')
+        baseline = previous_install.plan_install(self.request)
+        previous_install.execute_install(baseline, approved(baseline), request=self.request)
         self.old_product = json.loads(self.runtime.registry.read_bytes())['product']
         self.target = self.area/'release'
-        shutil.copytree(self.source, self.target)
-        (self.target/'scripts/agm_core/user_entries.py').write_bytes(Path(user_entries.__file__).read_bytes())
+        target_files = export(self.target, target_pin)
+        bind(self, globals(), self.target)
         self.target_source = dict(self.request['source'], root=str(self.target), version='0.1.1',
-                                  commit='b'*40, files=self.files(self.target))
+                                  commit=target_pin, files=target_files)
         self.policy = copy.deepcopy(upgrade.WORKBUDDY_ENTRY_CONVERSION)
-        self.policy['before_contract']['scripts/agm_core/user_entries.py'] = self.request['source']['files']['scripts/agm_core/user_entries.py']
-        # 机制测试:前后合同摘要随场景/当前内核动态替换,不冒充固定历史哈希;
-        # 010→011 真实历史链不在本文件锁定,生产常量门禁由
-        # WorkBuddyFixedGateTests 不打补丁回归覆盖。
-        self.policy['after_contract']['scripts/agm_core/user_entries.py'] = legacy.digest(Path(user_entries.__file__).read_bytes())
+        self.assertEqual(self.old_product['source'], upgrade.WORKBUDDY_PREDECESSOR)
         self.addCleanup(patch.stopall)
-        patch.object(upgrade, 'WORKBUDDY_PREDECESSOR', self.old_product['source']).start()
-        patch.object(upgrade, 'WORKBUDDY_ENTRY_CONVERSION', self.policy).start()
         self.req = dict(self.request, source=self.target_source, operation_id='wb-contract-release', agents=['workbuddy'])
         source, _ = user_install._source(self.req)
         self.conversion = {
@@ -224,14 +224,17 @@ class WorkBuddyFixedGateTests(InstallFixture):
 
     def test_current_contract_cannot_pass_via_old_handler_or_preserve(self):
         # 前身侧安装真实的 010 合同字节(从 Git 历史导出),目标侧换成当前内核字节。
-        old_bytes = _git('cat-file', 'blob', self.OLD_PREDECESSOR_COMMIT +
-                         ':scripts/agm_core/user_entries.py')
-        self.assertEqual(legacy.digest(old_bytes), self.OLD_USER_ENTRIES_SHA)
-        (self.source/'scripts/agm_core/user_entries.py').write_bytes(old_bytes)
-        (self.source/'scripts/agents.json').write_bytes(_git(
-            'cat-file', 'blob', self.OLD_PREDECESSOR_COMMIT + ':scripts/agents.json'))
-        self.request['source'].update(version='0.1.0', files=self._files(self.source))
-        self.execute()
+        from frozen_kernel_fixture import export, Kernel
+        import shutil
+        shutil.rmtree(self.source)
+        historical_files = export(self.source, self.OLD_PREDECESSOR_COMMIT)
+        self.assertEqual(historical_files['scripts/agm_core/user_entries.py'], self.OLD_USER_ENTRIES_SHA)
+        self.request['source'].update(version='0.1.0', files=historical_files)
+        old_kernel = Kernel(self.source)
+        old_kernel.module('detect').detect_agents = detect.detect_agents
+        historical_install = old_kernel.module('user_install')
+        plan = historical_install.plan_install(self.request)
+        historical_install.execute_install(plan, approved(plan), request=self.request)
         old_product = json.loads(self.runtime.registry.read_bytes())['product']
 
         target = self.area/'release-current'

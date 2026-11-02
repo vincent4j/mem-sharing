@@ -301,10 +301,12 @@ upgrade.execute_upgrade(plan,dict(plan,confirmed_at="2026-10-30T00:00:00Z",refer
     def test_new_agent_same_version_uses_separately_approved_entry_transaction(self):
         from runtime_fixture import seed_project_executors
         self.execute_upgrade();request=dict(self.req,agents=['codex'],**seed_project_executors(self.home))
-        before=self.product();preview=upgrade.run_same_version_entries(request)
+        from frozen_kernel_fixture import Kernel
+        installed_upgrade = Kernel(self.runtime.code).module('upgrade')
+        before=self.product();preview=installed_upgrade.run_same_version_entries(request)
         self.assertEqual(preview['status'],'approval_required',preview)
         request['approval']=approved(json.loads(preview['next_action']))
-        result=upgrade.run_same_version_entries(request);self.assertEqual(result['status'],'completed',result)
+        result=installed_upgrade.run_same_version_entries(request);self.assertEqual(result['status'],'completed',result)
         self.assertEqual(self.product(),before)
         self.assertTrue((self.home/'.codex/AGENTS.md').is_file())
         self.assertFalse((self.home/'.codex/skills').exists())
