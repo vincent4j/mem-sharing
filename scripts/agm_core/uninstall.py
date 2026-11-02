@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import socket
+import stat
 import subprocess
 import sys
 from datetime import datetime, timezone, timedelta
@@ -565,6 +566,144 @@ def _prepare_interpreter(plan):
         raise recovery.Conflict('Independent recovery interpreter/stdlib probe failed')
 
 
+_CK_AUDIT_NAME = re.compile(r'ck-install-([A-Za-z0-9][A-Za-z0-9._-]*)\.json')
+_CK_SHA256 = re.compile(r'[0-9a-f]{64}')
+
+
+def _recorded_link_target(name, target):
+    """Lexically normalize a recorded symlink target against its own parent.
+
+    Pure string normalization only — never resolve() and never touch the
+    current filesystem — so a historical audit stays checkable long after
+    the link itself is gone. Returns None for unusable input.
+    """
+    if not isinstance(target, str) or not target:
+        return None
+    return os.path.normpath(os.path.join(str(Path(name).parent), target))
+
+
+def _ck_audit_journal(path, runtime):
+    """Strictly recognize a completed CK audit journal (ck_install producer).
+
+    A name match alone is never trusted. The document must carry the exact
+    producer schema {plan, approval, status, result, after} with the single
+    success terminal state 'configured'; the plan must be canonical-digest
+    self-consistent, bound to this home/registry, to its own path, metadata
+    scope and filename main-operation id, and corroborated by its historical
+    main journal through the existing loaders (same home, same operation,
+    committed). The recorded result and after nodes must match the producer's
+    readback contract for that exact plan. Later main-product versions,
+    registry growth, or a since-removed CK checkout/skill links never count
+    as forgery: only structure, identity and corroboration are checked, and
+    nothing is ever replayed. Every failure keeps the original fail-closed
+    conflict so unclear operations, locks, forged names and unknown keys
+    still block the whole uninstall.
+    """
+    from . import ck_install, legacy_import as legacy, migrate
+    match = _CK_AUDIT_NAME.fullmatch(path.name)
+    if (not match or path.is_symlink() or not path.is_file()
+            or stat.S_IMODE(path.stat().st_mode) != 0o600):
+        raise recovery.Conflict('Unknown runtime metadata or writer lock')
+    document = _strict_json(path)
+    plan = document.get('plan')
+    approval = document.get('approval')
+    plan_keys = {'schema_version', 'command', 'scope', 'main_operation_id', 'home',
+                 'platform_config', 'registry_path', 'registry_sha256', 'agents',
+                 'skipped_upstream_agents', 'main_journal', 'source', 'preview_argv',
+                 'argv', 'interpreter', 'upstream_preview', 'observations',
+                 'skill_entries', 'rule_files', 'journal', 'metadata_scopes', 'changes',
+                 'plan_sha256'}
+    structural = (
+        set(document) == {'plan', 'approval', 'status', 'result', 'after'}
+        and document['status'] == 'configured'
+        and isinstance(plan, dict) and set(plan) == plan_keys
+        and isinstance(approval, dict) and set(approval) == plan_keys | {'confirmed_at', 'reference'}
+        and {key: approval[key] for key in plan_keys} == plan
+        and plan['schema_version'] == 1 and plan['command'] == 'install-context-keeper'
+        and plan['scope'] == 'user' and plan['home'] == str(runtime.home)
+        and plan['registry_path'] == str(runtime.registry)
+        and plan['journal'] == str(path) and plan['metadata_scopes'] == [str(path)]
+        and plan['main_operation_id'] == match.group(1)
+        and isinstance(plan['agents'], list) and plan['agents']
+        and all(agent in ck_install.LABELS for agent in plan['agents'])
+        and isinstance(plan['skill_entries'], list) and isinstance(plan['rule_files'], list)
+        and plan['skill_entries'] and plan['rule_files']
+        and isinstance(plan['source'], dict) and plan['source'].get('commit') == ck_install.PIN
+        and isinstance(plan['source'].get('root'), str) and isinstance(plan['source'].get('files'), dict)
+        and legacy.digest(legacy.encoded({key: value for key, value in plan.items()
+                                           if key != 'plan_sha256'})) == plan['plan_sha256'])
+    if not structural:
+        raise recovery.Conflict('Unknown runtime metadata or writer lock')
+    try:
+        registry._evidence({key: approval[key] for key in ('confirmed_at', 'reference')})
+    except (ValueError, TypeError):
+        raise recovery.Conflict('Unknown runtime metadata or writer lock')
+    # Corroborate the recorded main operation via its still-present historical
+    # journal; upgrades retain old operation evidence, so absence is anomalous.
+    main = runtime.home / ('.mem-sharing-install-' + plan['main_operation_id']) / 'journal.json'
+    if (plan['main_journal'].get('path') != str(main)
+            or main.is_symlink() or not main.is_file()):
+        raise recovery.Conflict('Unknown runtime metadata or writer lock')
+    saved = migrate._json(main)
+    command = saved.get('plan', {}).get('command') if isinstance(saved.get('plan'), dict) else None
+    if saved.get('status') != 'committed' or command not in ('install-machine', 'upgrade-machine'):
+        raise recovery.Conflict('Unknown runtime metadata or writer lock')
+    if command == 'install-machine':
+        _, bound = user_install._load_journal(main)
+    else:
+        from . import upgrade
+        _, bound = upgrade._load_journal(main)
+    if bound != runtime:
+        raise recovery.Conflict('Unknown runtime metadata or writer lock')
+    # Recorded readback must mirror the producer's verified result contract.
+    # The plan digest is not a root of trust: every recorded set and node is
+    # re-derived or shape-checked against the real producer schema.
+    result, after = document['result'], document['after']
+    skills, rules = plan['skill_entries'], plan['rule_files']
+    source_root = os.path.normpath(str(plan['source']['root']))
+    files = plan['source']['files']
+    expected_skills = sorted(str(runtime.home / root / 'context-keeper')
+                             for agent in plan['agents'] for root in ck_install.ROOTS[agent])
+    expected_rules = sorted(str(runtime.home / ck_install.RULES[agent]) for agent in plan['agents'])
+    safe_files = (
+        isinstance(files, dict) and files
+        and {'SKILL.md', 'scripts/install.py'} <= set(files)
+        and all(isinstance(name, str) and name and not Path(name).is_absolute()
+                and '..' not in Path(name).parts for name in files)
+        and all(isinstance(item, dict) and set(item) == {'sha256', 'mode'}
+                and isinstance(item.get('sha256'), str)
+                and _CK_SHA256.fullmatch(item['sha256'])
+                and isinstance(item.get('mode'), int) and 0 <= item['mode'] <= 0o777
+                for item in files.values()))
+    consistent = (
+        isinstance(result, dict) and result.get('scope') == 'user'
+        and result.get('project') is None
+        and result.get('configured_agents') == [ck_install.LABELS[agent] for agent in plan['agents']]
+        and result.get('installed') == skills and result.get('removed') == []
+        and isinstance(result.get('bridges'), list)
+        and all(isinstance(item, dict) and item.get('action') in
+                ('created', 'unchanged', 'updated', 'prepended', 'appended')
+                for item in result['bridges'])
+        and [item.get('file') for item in result['bridges']] == rules
+        and sorted(skills) == expected_skills and sorted(rules) == expected_rules
+        and isinstance(after, dict) and set(after) == set(skills) | set(rules)
+        and all(isinstance(after.get(name), dict) and set(after[name]) == {'kind', 'target'}
+                and after[name]['kind'] == 'symlink'
+                and _recorded_link_target(name, after[name]['target']) == source_root
+                for name in skills)
+        and all(isinstance(after.get(name), dict) and set(after[name]) == {'kind', 'sha256', 'mode'}
+                and after[name]['kind'] == 'file'
+                and isinstance(after[name]['sha256'], str)
+                and _CK_SHA256.fullmatch(after[name]['sha256'])
+                and isinstance(after[name]['mode'], int)
+                and 0 <= after[name]['mode'] <= 0o777
+                for name in rules)
+        and safe_files)
+    if not consistent:
+        raise recovery.Conflict('Unknown runtime metadata or writer lock')
+    return document
+
+
 def preview(*, home, backup_dir, host_obligation=None):
     runtime = resolve_layout(home)
     runtime.validate_paths()
@@ -585,8 +724,13 @@ def preview(*, home, backup_dir, host_obligation=None):
     ledger = registry.require_installed(registry.load_registry(runtime.registry,allowed_user_paths=allowed))
     if {p.name for p in runtime.root.iterdir()} - {'memories','references','backups','var'}:
         raise recovery.Conflict('Unknown object at public product root')
-    if {p.name for p in runtime.var.iterdir()} - {'registry.json'}:
-        raise recovery.Conflict('Unknown runtime metadata or writer lock')
+    # var/ holds the ledger plus, after a real CK install, that operation's
+    # completed audit journal. Anything else — or any audit that is not a
+    # strictly corroborated 'configured' record — still blocks here.
+    for member in runtime.var.iterdir():
+        if member.name == 'registry.json':
+            continue
+        _ck_audit_journal(member, runtime)
     user_install._code_matches(runtime,ledger['product'])
     _verify_inventory(runtime)
     _verify_backups(runtime,ledger)

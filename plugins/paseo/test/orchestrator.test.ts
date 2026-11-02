@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
-import { Orchestrator, type CliRunOutcome, type Runner } from "../server/orchestrator";
+import { Orchestrator, recordJournalForOperation, type CliRunOutcome, type Runner } from "../server/orchestrator";
 import { planDigest as digestOf } from "../server/shared/common/digest";
 import { isSha256Hex } from "../server/shared/common/digest";
 
@@ -531,4 +531,29 @@ test("project rules forward no retired experience options", async () => {
     await orch.projectEnableConfirm({action:"confirm",confirmationToken:preview.confirmationToken});
     for(const argv of runner.calls){assert.equal(argv.includes("--memory"),false);assert.equal(argv.includes("--no-memory"),false);}
   } finally { cleanup(); }
+});
+
+test("operation record journal rule drops only this HOME's CK audit journal, keeps every other journal verbatim", () => {
+  const home = "/fixtures/home";
+  const varDir = path.join(home, ".mem-sharing", "var");
+  const ckAudit = path.join(varDir, "ck-install-paseo-20261102045403Z-1c107197.json");
+  // 仅 flow==ck 且精确命中本 HOME var/ck-install-*.json(受限字符集)才不写入。
+  assert.equal(recordJournalForOperation("ck", ckAudit, home), undefined);
+  // 同形但越出受限字符集/前缀不符 → 原样保留,交由 staging 认领规则拒绝。
+  assert.equal(recordJournalForOperation("ck", path.join(varDir, "ck-install-../escape.json"), home), path.join(varDir, "ck-install-../escape.json"));
+  assert.equal(recordJournalForOperation("ck", path.join(varDir, "ck-installnotes.json"), home), path.join(varDir, "ck-installnotes.json"));
+  assert.equal(recordJournalForOperation("ck", path.join(varDir, "ck-install-.hidden.json"), home), path.join(varDir, "ck-install-.hidden.json"));
+  // 他 HOME 的同形路径、OS 临时区、任意未知路径 → 原样保留。
+  const foreignHome = path.join(varDir, "ck-install-paseo-20261102045403Z-1c107197.json").replace(home, "/other/home");
+  assert.equal(recordJournalForOperation("ck", foreignHome, home), foreignHome);
+  assert.equal(recordJournalForOperation("ck", "/tmp/ck-install-x.json", home), "/tmp/ck-install-x.json");
+  // 非 ck 流程永不丢弃:可归结 install journal 与 ck 审计路径本身都原样保留。
+  assert.equal(recordJournalForOperation("machine", ckAudit, home), ckAudit);
+  assert.equal(recordJournalForOperation("machine", path.join(home, ".mem-sharing-install-op1", "journal.json"), home), path.join(home, ".mem-sharing-install-op1", "journal.json"));
+  // 未知形态(null/undefined/空串/对象)行为与旧写入语义一致,原样返回。
+  assert.equal(recordJournalForOperation("ck", undefined, home), undefined);
+  assert.equal(recordJournalForOperation("ck", null, home), null);
+  assert.equal(recordJournalForOperation("ck", "", home), "");
+  const odd = { stray: true };
+  assert.equal(recordJournalForOperation("machine", odd, home), odd);
 });

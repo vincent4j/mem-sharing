@@ -16,6 +16,10 @@
 
 ## 主题摘要（按类型）
 
+- **0.1.5最终本机验收：** 用户已授权并发开始并明确重生0.1.5候选/当前用户环境。ca26e66 Python基线已终态：unit711中709过/1冻结测试锚点失败/1fixture跳过，integration64全过；已证OLD字节等于0f690ef，测试锚点交门禁线修正，最终整合仍待跑。CK审计两层修复GLM交付：pin Node56/56无skip、卸载族52无skip及真实外置恢复定向过；TS独立review已过；Python P2 r2独立5/5及三轴拒绝复验通过，六冻结hash一致；6路径已按hash纳入最终独立集成区，正由GLM恢复源码态，尚未commit/生成新S-R。原fixture跳过已真实单项补测通过，最终集成仍待全量。升级/source gate v2补lexists后独立复验通过，13旧定向冻结结果保留；7路径已按hash集成。两条review均关闭，准备固定待验源码pin并统一完整回归，未生成新R或真机安装。Claude原生已装但旧nvm断链导致unknown。新S/R和真实写入/卸载计划尚未形成。来源：[计划](plans/2026-11-02-0.1.5最终候选并行测试与本机验收.md)、[日志](worklogs/2026-11-02-0.1.5最终候选并行测试与本机验收.md)。
+
+- **上线前验收盘点：** ca26e66下仅收集711单元/64集成，当前完整回归待跑；旧0.1.5 payload仍绑定e1a7c39且缺最新卸载三模块。已整理20组与六家24格人工观测，先回归/新S-R再真实安装/客户端/Paseo，卸载恢复最后做；本轮未执行真实验收。来源：[清单](../acceptance/release-readiness.md)、[日志](worklogs/2026-11-02-上线前测试与验收缺口盘点.md)。
+
 - **项目规则入口：** AGENTS.md 已去除重复 Context Keeper 手写段，区分 Python 内核与 Paseo 插件并补齐检查命令；自动维护协议块字节不变；按用户纠正移除已删除旧 ~/.agents-group 目录的源码保护条款，仅保留 Context Keeper 上游源码约束。来源：[日志](worklogs/2026-11-02-项目规则入口精简与现状对齐.md)。
 
 - **分支与工作树清理：** 2026-11-02 已核对全部分支提交均在 main，删除19个非 main本地分支、2个远端分支及15个旧worktree，仅保留主checkout/main。原AGENTS.md改动保全；旧dirty、草案与引用在仓库外0700备份 `/Users/vincent4j/Tools/memsharing-worktree-cleanup-6bzv4q5q`，未将被替代版本重新合入。来源：[清理日志](worklogs/2026-11-02-已合并分支与旧工作树清理.md)。

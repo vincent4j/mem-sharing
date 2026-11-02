@@ -185,6 +185,20 @@ export function summarizePlan(plan: Record<string, unknown>): { label: string; v
   return rows;
 }
 
+// CK 执行计划携带的 journal 是本 HOME var/ck-install-*.json 的非事务审计件
+// (无 layout.root,宿主与内核认领规则均永不可归结);照抄进操作记录会把已完成
+// 的 CK 安装永久留成 staging 阻断。仅这一已知来源不写入记录——CK 审计原件与
+// 计划批准材料原样保留。其余任何 journal(非 ck 流程、路径不符、他 HOME、
+// 未知形态)一律原样写入,交由 staging 认领规则拒绝,不静默清洗。
+export function recordJournalForOperation(flow: FlowKind, journal: unknown, home: string): unknown {
+  if (flow !== "ck" || typeof journal !== "string" || !journal) return journal;
+  const audit = path.join(home, ".mem-sharing", "var");
+  return journal.startsWith(audit + path.sep)
+    && /^ck-install-[A-Za-z0-9][A-Za-z0-9._-]*\.json$/.test(journal.slice(audit.length + 1))
+    ? undefined
+    : journal;
+}
+
 export class Orchestrator {
   private readonly pending = new Map<FlowKind, PendingPlan>();
   private readonly running = new Map<FlowKind, { controller: AbortController; record: string }>();
@@ -236,7 +250,8 @@ export class Orchestrator {
       signal?.removeEventListener("abort", abort);
       return { status: "failed", code: "operation_prepare_failed", message: String(error) } as T;
     }
-    const entry = { id: randomUUID(), flow, phase, journal: this.pending.get(flow)?.plan.journal ?? (this.pending.get(flow)?.plan.plan as Record<string, unknown> | undefined)?.journal, home: this.deps.home, host: hostname(), state: "running", started_at: this.now().toISOString() };
+    const planJournal = this.pending.get(flow)?.plan.journal ?? (this.pending.get(flow)?.plan.plan as Record<string, unknown> | undefined)?.journal;
+    const entry = { id: randomUUID(), flow, phase, journal: recordJournalForOperation(flow, planJournal, this.deps.home), home: this.deps.home, host: hostname(), state: "running", started_at: this.now().toISOString() };
     const save = () => { fs.ftruncateSync(recordFd); fs.writeSync(recordFd, JSON.stringify(entry), 0, "utf8"); fs.fsyncSync(recordFd); };
     this.running.set(flow, { controller, record });
     try {

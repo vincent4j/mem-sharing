@@ -2,6 +2,8 @@
 
 日期：2026-11-01。工作区：`short-wolverine`。这是未提交、未发布的源码候选，不是机器安装或新会话加载验收。
 
+阶段补记（2026-11-02）：“未提交、未发布”指本文写作时点状态；该适配随后经 `e1a7c39` 合入主线并包含于 0.1.5 候选 R 的 Python 内核，Paseo 选择器/RPC 亦在 `daee8d6` 扩至含 OpenCode 的六家。产品至今未发布，真实机器安装、新会话读取与模型请求依旧 pending；当前整体待验范围见[上线前清单](../release-readiness.md)，下文各节结论仍按原时点阅读。
+
 ## 范围与接替
 
 支持列表扩至 Codex、Claude Code、WorkBuddy、DeepSeek Harness、ZCode、OpenCode。机器 fresh、再次安装与 upgrade 默认接入支持清单内全部已核验 installed 的对象；显式 `--agent` 限定目标，unknown/absent 不自动写入。项目命令仍缺省旧三家，专属项目入口由实际使用驱动，disabled 不自动恢复。

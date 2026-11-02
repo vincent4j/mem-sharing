@@ -239,21 +239,31 @@ class TemplateSemanticsTests(unittest.TestCase):
         self.assertNotIn("tombstone", user_entries.CLAUDE_FALLBACK_TEXT)
         self.assertNotIn("tombstone", user_entries.WORKBUDDY_FALLBACK_TEXT)
 
-    def test_public_layout_frozen_literals_equal_head_bytes(self):
-        """历史模板识别冻结:旧字面量必须与退役前的当前模板逐字节一致。"""
+    def test_public_layout_frozen_literals_match_012_history_and_live_uses_new_wording(self):
+        """历史模板识别冻结:旧字面量锚定固定历史 blob(0f690ef=0.1.2,与 0.1.1 相同),
+        不随 HEAD 漂移;live 常量已按 2026-11-01 裁定改用新职责文案,与冻结旧值不同。
+        证据核对:0f690ef、04c32e2(0.1.1)、d14a3c0d(0.1.4)三处 blob 的
+        CLAUDE/WORKBUDDY_FALLBACK_TEXT 与本仓 public_layout._OLD_* 逐字节一致。"""
         repo = Path(__file__).resolve().parents[2]
-        from agm_core import public_layout
-        head = subprocess.run(["git", "show", "HEAD:scripts/agm_core/user_entries.py"],
-                              cwd=repo, capture_output=True, text=True, check=True).stdout
+        from agm_core import public_layout, user_entries
+        blob = subprocess.run(["git", "show", "0f690ef7aabf747a23bacc7662c19bee34c4bf52:scripts/agm_core/user_entries.py"],
+                              cwd=repo, capture_output=True, check=True).stdout
         namespace = {}
-        tree = ast.parse(head)
+        tree = ast.parse(blob)
         wanted = {"CLAUDE_FALLBACK_TEXT", "WORKBUDDY_FALLBACK_TEXT"}
         keep = [node for node in tree.body
                 if isinstance(node, ast.Assign) and isinstance(node.targets[0], ast.Name)
                 and node.targets[0].id in wanted]
-        exec(compile(ast.Module(body=keep, type_ignores=[]), "<head>", "exec"), namespace)
+        exec(compile(ast.Module(body=keep, type_ignores=[]), "<012-blob>", "exec"), namespace)
         self.assertEqual(public_layout._OLD_CLAUDE_FALLBACK, namespace["CLAUDE_FALLBACK_TEXT"])
         self.assertEqual(public_layout._OLD_WORKBUDDY_FALLBACK, namespace["WORKBUDDY_FALLBACK_TEXT"])
+        # live 语义独立断言:当前模板必须仍是退役后的新职责文案,而非历史旧句;
+        # 冻结旧字面量与新文案共存,供迁移精确识别历史字节。
+        for live in (user_entries.CLAUDE_FALLBACK_TEXT, user_entries.WORKBUDDY_FALLBACK_TEXT):
+            self.assertIn("历史停用登记", live)
+            self.assertNotIn("政策非 disabled", live)
+        self.assertNotEqual(user_entries.CLAUDE_FALLBACK_TEXT, public_layout._OLD_CLAUDE_FALLBACK)
+        self.assertNotEqual(user_entries.WORKBUDDY_FALLBACK_TEXT, public_layout._OLD_WORKBUDDY_FALLBACK)
 
     def test_denied_constants_frozen_for_migration(self):
         self.assertIn("--memory", enable.DENIED_TEXT)  # 历史原文保留,字节不改

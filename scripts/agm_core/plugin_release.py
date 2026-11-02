@@ -117,7 +117,7 @@ def _validate_manifest(value):
             _fail('Unsupported product mode')
         names.append(name)
     if names != sorted(set(names)) or not set(SHIPPED_DOCS) <= set(names):
-        _fail('Release must contain all seven shipped documents, sorted without duplicates')
+        _fail('Release must contain all %d shipped documents, sorted without duplicates' % len(SHIPPED_DOCS))
     if source['tree_sha256'] != legacy.digest(legacy.encoded(files)):
         _fail('Release tree mismatch')
     return value

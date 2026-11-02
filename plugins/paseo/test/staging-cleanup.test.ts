@@ -259,6 +259,79 @@ test("non-terminal or unresolvable journal blocks cleanup with zero deletion", a
   }
 });
 
+function seedCkOp(home: string, state: "completed" | "running", journal?: string): { root: string; op: string; file: string } {
+  const root = path.join(home, ".local", "share", "mem-sharing-plugin-staging");
+  const pending = path.join(root, "pending"); fs.mkdirSync(pending, { mode: 0o700, recursive: true });
+  const op = fs.mkdtempSync(path.join(pending, "op-")); fs.chmodSync(op, 0o700);
+  const record: Record<string, unknown> = { id: "aaaa1111-2222-3333-4444-555566667777", flow: "ck", phase: "execute", home, host: os.hostname(), state, started_at: "2026-11-02T05:00:00Z" };
+  if (journal !== undefined) record.journal = journal;
+  fs.writeFileSync(path.join(op, "operation.json"), JSON.stringify(record), { mode: 0o600 });
+  return { root, op, file: path.join(op, "operation.json") };
+}
+
+test("completed CK record without the non-transactional audit journal is claimable and consumed by real Python parser", async () => {
+  // 修复后形态:ck 完成记录不携带 var/ck-install-*.json 审计 journal(7 键)。
+  const { execFileSync } = await import("node:child_process");
+  const { fileURLToPath } = await import("node:url");
+  const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+  const { home, cleanup } = tempHome();
+  try {
+    const seeded = seedCkOp(home, "completed");
+    assert.equal("journal" in JSON.parse(fs.readFileSync(seeded.file, "utf8")), false);
+    const orch = makeOrchestrator(home);
+    const inventory = await orch.stagingInventory();
+    assert.equal(inventory.entries[0].activity, "terminal");
+    assert.equal(inventory.entries[0].disposition, "preserve_external_then_clean");
+    const evidenceDir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "ms-ev-")));
+    try {
+      const preview = await orch.stagingCleanupPreview(evidenceDir);
+      assert.equal(preview.status, "approval_required", JSON.stringify(preview));
+      const done = await orch.stagingCleanupConfirm(approve(preview));
+      assert.equal(done.status, "completed", JSON.stringify(done));
+      const receipt = JSON.parse(fs.readFileSync(String((done as { envelope: { receipt: string } }).envelope.receipt), "utf8"));
+      assert.equal(receipt.terminal_evidence[0].record_state, "completed");
+      assert.equal(receipt.terminal_evidence[0].journal_status, null);
+      // 真实 Python receipt 消费:内核 uninstall 侧按同口径接受该 ck 记录。
+      const source = "from pathlib import Path; from agm_core.layout import resolve_layout; from agm_core.uninstall import _host_staging_receipt; import sys; r=resolve_layout(sys.argv[1]); _host_staging_receipt(r,r.code.parent/'mem-sharing-plugin-staging',Path(sys.argv[2])); print('accepted')";
+      const parsed = execFileSync("python3", ["-B", "-c", source, home, path.join(evidenceDir, "core-backup")], { encoding: "utf8", env: { ...process.env, PYTHONPATH: path.join(repo, "scripts") } });
+      assert.equal(parsed.trim(), "accepted");
+    } finally { fs.rmSync(evidenceDir, { recursive: true, force: true }); }
+  } finally { cleanup(); }
+});
+
+test("interrupted CK record without journal stays unknown and blocks; foreign journals keep blocking cleanup", async () => {
+  const { home, cleanup } = tempHome();
+  try {
+    // 中断的 ck 执行(无内存属主、无 transaction journal)→ unknown → block。
+    const interrupted = seedCkOp(home, "running");
+    const orch = makeOrchestrator(home);
+    let inventory = await orch.stagingInventory();
+    let entry = inventory.entries.find(e => e.path === interrupted.op);
+    assert.equal(entry?.activity, "unknown");
+    assert.equal(entry?.disposition, "block");
+    // 错误 CK journal(不在本 HOME var/ck-install 已知形态)→ 原样保留 → 不可归结阻断。
+    fs.writeFileSync(interrupted.file, JSON.stringify({ ...JSON.parse(fs.readFileSync(interrupted.file, "utf8")), state: "completed", journal: "/tmp/ck-install-evil.json" }), { mode: 0o600 });
+    inventory = await orch.stagingInventory();
+    entry = inventory.entries.find(e => e.path === interrupted.op);
+    assert.equal(entry?.activity, "unknown");
+    assert.equal(entry?.disposition, "block");
+    assert.match(String(entry?.reason), /不可归结/);
+    // 非CK流程携带 var/ck-install 审计路径 → 修复不清洗非ck记录 → 依旧阻断。
+    const stranger = seedCkOp(home, "completed", path.join(home, ".mem-sharing", "var", "ck-install-paseo-20261102045403Z-1c107197.json"));
+    fs.writeFileSync(stranger.file, JSON.stringify({ ...JSON.parse(fs.readFileSync(stranger.file, "utf8")), flow: "machine" }), { mode: 0o600 });
+    inventory = await orch.stagingInventory();
+    entry = inventory.entries.find(e => e.path === stranger.op);
+    assert.equal(entry?.activity, "unknown");
+    assert.equal(entry?.disposition, "block");
+    assert.match(String(entry?.reason), /不可归结/);
+    const evidenceDir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "ms-ev-")));
+    const preview = await orch.stagingCleanupPreview(evidenceDir);
+    assert.equal((preview as { code?: string }).code, "staging_blocked");
+    assert.ok(fs.existsSync(interrupted.file) && fs.existsSync(stranger.file)); // 零删除
+    fs.rmSync(evidenceDir, { recursive: true, force: true });
+  } finally { cleanup(); }
+});
+
 test("known persisted outcomes are phase scoped and consumed by real Python parser", async () => {
   const { execFileSync } = await import("node:child_process");
   const { fileURLToPath } = await import("node:url");
@@ -267,6 +340,7 @@ test("known persisted outcomes are phase scoped and consumed by real Python pars
     ["bootstrap","execute","acquired",true], ["enable","execute","stale_plan",true],
     ["enable","execute","no_pending_plan",true], ["bootstrap","preview","already_prepared",true],
     ["bootstrap","preview","identity_missing",true], ["bootstrap","preview","payload_missing",true],
+    ["ck","execute","completed",true], ["ck","execute","running",false],
     ["enable","preview","acquired",false], ["enable","execute","already_prepared",false],
     ["bootstrap","execute","identity_missing",false], ["enable","execute","canceled",false],
     ["enable","execute","unknown",false],

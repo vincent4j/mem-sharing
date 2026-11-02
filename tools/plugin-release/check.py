@@ -27,6 +27,40 @@ COMMON_TESTS = ('^every generated common module matches the true source determin
                 '|^supplier notices are generated from shared disclosure source$')
 
 
+def _verify_clean_source(root, commit):
+    """S must not carry stale generated release artifacts; only R regenerates them.
+
+    The dev sync test deliberately tolerates a non-empty identity when it still
+    matches an existing generated manifest, so an old release descriptor, an old
+    Paseo payload tree or a leftover concrete identity must be rejected here;
+    otherwise a dirty generated state could pass the source stage and pose as
+    clean S. Tracked artifacts are found via ls-tree; physical lexists checks
+    additionally catch artifacts hidden behind Git ignores (e.g. .git/info/exclude
+    keeps status clean) without reading payload content or following links.
+    The release stage keeps the opposite, full real-identity checks.
+    """
+    stale = []
+    for record in plugin_release._git(root, 'ls-tree', '-rz', '--full-tree', commit).split(b'\0'):
+        if not record:
+            continue
+        name = record.split(b'\t', 1)[1].decode('utf-8')
+        if name == plugin_release.ROOT_MANIFEST or name.startswith(plugin_release.PAYLOAD + '/'):
+            stale.append(name)
+    stale += [name for name in (plugin_release.ROOT_MANIFEST, plugin_release.PAYLOAD)
+              if os.path.lexists(root/name)]
+    if stale:
+        raise ValueError('Clean source must not carry old generated release artifacts '
+                         '(tracked, ignored or untracked): ' + ', '.join(sorted(set(stale))))
+    identity = root/plugin_release.IDENTITY
+    sentinel = plugin_release._identity_bytes('')
+    if (identity != identity.resolve() or not identity.is_file()
+            or identity.read_bytes() != sentinel
+            or identity.read_bytes() != plugin_release._git(root, 'cat-file', 'blob',
+                                                            commit + ':' + plugin_release.IDENTITY)):
+        raise ValueError('Source release identity must be the empty dev sentinel '
+                         '(old non-empty identity is R-only)')
+
+
 def _tracked_inputs(root, commit):
     required = {SYNC, TEST, plugin_release.IDENTITY, *NOTICE_FILES}
     entries = {}
@@ -72,6 +106,8 @@ def _tracked_inputs(root, commit):
 
 def check(args):
     root, commit = plugin_release.clean_checkout(args.source, args.commit)
+    if args.stage == 'source':
+        _verify_clean_source(root, commit)
     count = _tracked_inputs(root, commit)
     argv = [args.node, '--experimental-strip-types', '--test', '--test-reporter=tap']
     if args.stage == 'release':
@@ -89,6 +125,10 @@ def check(args):
     # Detect changes while the subprocess ran without taking any writer lock.
     plugin_release.clean_checkout(root, commit)
     _tracked_inputs(root, commit)
+    if args.stage == 'source':
+        # Re-verify the source state itself: a stale artifact ignored during
+        # the Node run (or planted while it ran) must not ship as "checked".
+        _verify_clean_source(root, commit)
     release = None
     if args.stage == 'release':
         release = plugin_release.checkout_delivery(root, commit, args.version)

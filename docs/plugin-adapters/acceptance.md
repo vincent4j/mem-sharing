@@ -1,6 +1,6 @@
 # Paseo 验收记录
 
-更新：2026-11-01。**0.1.5 固定发行候选 R 已生成并通过当前 Host 的真实加载与只读状态验收；尚未完成目录上架、截图和全新机器缺依赖的宿主首装全链路。** 当前实现与维护边界见[维护手册](README.md)。下表区分不同冻结时点，不把重叠用例数相加。
+更新：2026-11-01。**0.1.5 固定发行候选 R 已生成并通过当前 Host 的真实加载与只读状态验收；尚未完成目录上架、截图和全新机器缺依赖的宿主首装全链路。** 该 R 固定于 S=`e1a7c391…`（2026-11-01），不含其后合入维护 HEAD 的六家选择器与卸载三模块；最终新 S/R 尚未生成，现行整体待验范围见[上线前清单](../acceptance/release-readiness.md)。当前实现与维护边界见[维护手册](README.md)。下表区分不同冻结时点，不把重叠用例数相加。
 
 | 层次 | 已取得证据 | 范围与未验项 |
 | --- | --- | --- |
@@ -37,6 +37,8 @@
 - 本轮仅执行 `memsharing.env.status`，未调用 bootstrap/dependency/machine/enable/CK/recover 或任何预览。产品 registry 整文件 SHA 与关键节点 metadata 前后一致，活动产品仍是下节记录的 0.1.4 / d14 来源，其他插件来源和启用配置未变。安装插件正常写入 `~/.paseo` 的该插件配置、候选目录及 loader 状态，不能称整个 HOME 零写；未重启 daemon。旧 `2a65…` 持久开发候选及更早回退材料保留。
 
 OpenCode 已纳入 Python 核心，但本轮 Paseo 选择器/RPC 仍限定 codex、claude、workbuddy、dsh、zcode 五项；不称六家插件接入闭环。新一轮有界核查未找到已核实的缺 Python/Git macOS 测试目标或独立 provider 测试身份；新 HOME 与最小 PATH 不能屏蔽探测器的固定系统候选。尚无免登录可用推理路径证据，不复制真实 provider 凭据，也不以假 runner、localHTTP 或现有 0.1.4 Host 替代首次宿主全链路验收。
+
+2026-11-02 补记：上段“五项”是本节 R 验收时点状态，不删改。其后维护 HEAD 的 `client/flow.tsx` 与 `shared/contracts.ts` agents 枚举已加入 opencode 成六项，`scripts/agm_core/` 合入 `uninstall.py`、`uninstall_recovery.py`、`policy_migration.py` 与自然语言入口（`daee8d6`）。这些仅是源码状态：最终新 S/R 未生成，本节旧 R 不能用于验收六家插件接入或整机卸载；最终回归、发行包与逐组真实验收缺口按[上线前清单](../acceptance/release-readiness.md)执行。
 
 ## 历史本机交接定位与保留材料
 

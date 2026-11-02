@@ -71,6 +71,31 @@ PUBLIC_LAYOUT_PREDECESSORS = (
 )
 PUBLIC_MEMORY_LAYOUT_CONVERSION = {'type': public_layout.HANDLER_TYPE}
 
+
+# 0.1.5 native-entry-refresh-v1:现机真实前身 0.1.4(local-checkout 来源)→新 0.1.5
+# 的专用一次性入口合同转换。前身 url/commit/tree 与前后入口合同均为冻结发行
+# 字面量(前身合同字节与现装 .agm-code-manifest.json 核对一致);目标 S/tree 只由
+# 外部精确 conversion 绑定,源码不自引用。入口/公共模板字节刷新不在升级核心内
+# 隐式执行:代码升级后由既有入口装配与 agm.py migrate-policy(私文/指纹保全)
+# 另行精确预览批准。历史 SOURCE 常量与 same-version/漂移/缺转换门禁不变。
+NATIVE_ENTRY_PREDECESSOR = {
+    'url': 'local-checkout:file:///Users/vincent4j/.local/share/mem-sharing-upgrade-sources/d14a3c0d121576cc7dbcab0c55ef4a680985f84e',
+    'commit': 'd14a3c0d121576cc7dbcab0c55ef4a680985f84e',
+    'tree_sha256': '5f65647a0b496bed48feadae67107a968fc086173e9766db74dc5b01fe80dfca',
+}
+NATIVE_ENTRY_TARGET_VERSION = '0.1.5'
+NATIVE_ENTRY_CONVERSION = {
+    'type': 'native-entry-refresh-v1',
+    'before_contract': {
+        'scripts/agents.json': '5aff7ec53cfddea2dca86e844a85903411c017488dd66f5f8ea7cb3e2a07f038',
+        'scripts/agm_core/user_entries.py': '48e5677857b2aaece1cf2e711db4bb90ec2b9d6447b3baf682b76959c422346f',
+    },
+    'after_contract': {
+        'scripts/agents.json': 'aa9a28a27f3c9bea6ca603dfa2cc24560a9feda3e5085a65d26960790fea9b24',
+        'scripts/agm_core/user_entries.py': '81646d141068d76ccc8cb236c1dfd59e9379bbefd6b132fc6c461ff753ff8033',
+    },
+}
+
 # 目标合同冻结字面量(2026-11-01 增OpenCode桌面安装信号按授权重冻结;
 # test_opencode_desktop与既有投影/冻结完整性定向验证,历史SOURCE不变;
 # 六家接入与V2入口预测按授权重冻结;
@@ -126,6 +151,21 @@ def _workbuddy_conversion(before, after, direction, entry_conversion):
                                product_code_version='0.1.0', source=WORKBUDDY_PREDECESSOR)
             and after['schema_version'] == 3 and after['product_structure_version'] == 1
             and after['product_code_version'] == '0.1.1')
+
+
+def _native_entry_conversion(before, after, direction, entry_conversion):
+    """Dedicated 0.1.4→0.1.5 gate: exact frozen predecessor, target S/tree free.
+
+    The after identity (commit/tree) is bound only by the external exact
+    conversion request; the handler pins direction, versions and the frozen
+    entry contracts so no other predecessor or target can ride this path.
+    """
+    return (entry_conversion == NATIVE_ENTRY_CONVERSION
+            and direction == 'upgrade'
+            and before == dict(schema_version=3, product_structure_version=1,
+                               product_code_version='0.1.4', source=NATIVE_ENTRY_PREDECESSOR)
+            and after['schema_version'] == 3 and after['product_structure_version'] == 1
+            and after['product_code_version'] == NATIVE_ENTRY_TARGET_VERSION)
 
 
 
@@ -198,6 +238,8 @@ def _conversion(request, data, target, direction):
               and request.get('agents') == ['workbuddy']):
             matches.append(item)
         elif _public_layout_conversion(before, after, direction, item['entries'], request):
+            matches.append(item)
+        elif _native_entry_conversion(before, after, direction, item['entries']):
             matches.append(item)
     if len(matches) != 1:
         _fail('Future/unknown release or no exact supported conversion', 'upgrade_unsupported')
@@ -290,6 +332,14 @@ def _plan(request, *, allow_marker=False):
                     and contract_after == WORKBUDDY_ENTRY_CONVERSION['after_contract']
                     and legacy.digest(Path(user_entries.__file__).read_bytes()) == contract_after['scripts/agm_core/user_entries.py']):
                 pass
+            elif (entry_conversion == NATIVE_ENTRY_CONVERSION
+                    and contract_before == NATIVE_ENTRY_CONVERSION['before_contract']
+                    and contract_after == NATIVE_ENTRY_CONVERSION['after_contract']
+                    and legacy.digest(Path(user_entries.__file__).read_bytes())
+                    == contract_after['scripts/agm_core/user_entries.py']):
+                pass  # 专用0.1.4→0.1.5入口合同转换:固定 handler 审查实际模块可信;
+                      # 模板字节刷新由代码升级后的入口装配与 migrate-policy 另行
+                      # 精确批准执行,不在升级核心内隐式改写用户入口。
             else:
                 _fail('Conversion has no handler for changed entry contract')
         elif conversion and conversion['entries'] != 'preserve':
@@ -623,6 +673,12 @@ def _finalize(journal,hook):
         # requires the exact pinned dict and source contract in _conversion/_plan.
         result.update(scope='product_code', entry_phase='not_run_by_upgrade_core',
                       entry_next_action='Preview and approve same-release install.py --agent workbuddy; code recovery does not assemble user entries')
+    elif (isinstance(entry_conversion, dict)
+          and entry_conversion.get('type') == 'native-entry-refresh-v1'):
+        result.update(scope='product_code', entry_phase='not_run_by_upgrade_core',
+                      entry_next_action='代码升级完成后,另经入口装配预览批准接入新增执行器,'
+                                        '并以 agm.py migrate-policy 精确预览批准刷新公共/入口模板;'
+                                        '代码恢复不装配入口')
     return result
 
 

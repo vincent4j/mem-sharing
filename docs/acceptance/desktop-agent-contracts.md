@@ -68,7 +68,7 @@ ZCode 上述用户规则读取器不使用 `ZCODE_HOME`，该名字在本次 `zc
 2. 真机安装：需主 Agent 按授权另行执行，核对实际写入位置、默认根约束与公共入口。
 3. 桌面新会话：使用目标桌面产品原生新会话证明用户规则、项目规则和 Skill 发现分别生效。DSH 需注明实际 preset；不以 CLI、ACP 或静态源码结果代替。
 
-上述静态合同形成后，本机0.1.3真实升级与DSH/ZCode用户入口接入已完成，原文字节保全、幂等预览通过；后续机器已更新0.1.4。桌面新会话与Skill实际加载仍pending。当前分层结果见[验收总览](index.md)，历史安装摘要可用 `git show 0906d7a:docs/acceptance/desktop-adapters/runtime/verification.md` 取回。
+上述静态合同形成后，本机0.1.3真实升级与DSH/ZCode用户入口接入已完成，原文字节保全、幂等预览通过；后续机器已更新0.1.4。桌面新会话与Skill实际加载仍pending。当前分层结果见[验收总览](index.md)，历史安装摘要可用 `git show 0906d7a:docs/acceptance/desktop-adapters/runtime/verification.md` 取回。2026-11-02 起，DSH/ZCode 桌面新会话及六家读取、自然语言卸载的现行待验范围统一按[上线前清单](release-readiness.md)第09/16/17组与六家人工观测表执行，本文 pending 结论不自动关闭。
 
 ## 主 Agent 检测器补验
 

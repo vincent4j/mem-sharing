@@ -15,7 +15,9 @@ import { Orchestrator, realRunner } from "../server/orchestrator";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const CORE = path.resolve(here, "../../..");
-const CK_SOURCE = "/Users/vincent4j/Tools/Source/context-keeper";
+// Pinned-fixture runs may point this at a durable local clone checked out at
+// the pin; the HEAD==pin gate below still applies unchanged.
+const CK_SOURCE = process.env.MEMSHARING_TEST_CK_SOURCE ?? "/Users/vincent4j/Tools/Source/context-keeper";
 const CK_PIN = "695074ee4b6ddb9999be858093f833d6377bd641";
 // CK sources may not live under /tmp or /var/folders (kernel forbids it);
 // scratch inside the worktree is durable and outside every forbidden zone.
@@ -215,6 +217,14 @@ test("real bridge: payload -> bootstrap -> machine install -> project cycle -> C
             assert.equal(ck.planKind, "install-context-keeper");
             const ckDone = await orch.ckConfirm({ action: "confirm", confirmationToken: ck.confirmationToken });
             assert.equal(ckDone.status, "completed", JSON.stringify(ckDone));
+            // 修复回归:完成的 ck 执行记录不得携带 var/ck-install 审计 journal,
+            // 否则下方 staging 清理与卸载桥接会被"不可归结"永久阻断。
+            const pendingRoot = path.join(home, ".local", "share", "mem-sharing-plugin-staging", "pending");
+            const ckRecord = fs.readdirSync(pendingRoot).map(dir => {
+              try { return JSON.parse(fs.readFileSync(path.join(pendingRoot, dir, "operation.json"), "utf8")); } catch { return null; }
+            }).find((r): r is Record<string, unknown> => r !== null && r.flow === "ck" && r.phase === "execute");
+            assert.ok(ckRecord, "ck execute operation record missing after CK install");
+            assert.equal("journal" in ckRecord, false, "ck record must not carry the non-transactional audit journal");
           }
         } finally {
           fs.rmSync(ckCopy, { recursive: true, force: true });
