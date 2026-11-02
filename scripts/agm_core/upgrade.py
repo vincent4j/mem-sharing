@@ -216,6 +216,44 @@ def _entry_facts(data):
     return {obj['path']:install._node(obj['path']) for obj in data['machine']['objects'].values()}
 
 
+UNIFIED_ENTRY_CONVERSION = {'type': 'unified-user-entry-layout-v1'}
+UNIFIED_ENTRY_PREDECESSOR = {
+    'url': 'https://github.com/vincent4j/mem-sharing',
+    'commit': 'eb31607bcd5fb1c2e5a6332e9e67682cd0cf956b',
+    'tree_sha256': '3e792c336cd1b73c250e2f51aa2a919126920f96ec98e498b0b9864ed57e0303'}
+UNIFIED_ENTRY_BEFORE = {
+    'scripts/agents.json': 'aa9a28a27f3c9bea6ca603dfa2cc24560a9feda3e5085a65d26960790fea9b24',
+    'scripts/agm_core/user_entries.py': '81646d141068d76ccc8cb236c1dfd59e9379bbefd6b132fc6c461ff753ff8033'}
+
+
+# Reviewed target semantics. upgrade.py is deliberately excluded to avoid a hash cycle.
+UNIFIED_ENTRY_AFTER = {'scripts/agents.json': 'aa9a28a27f3c9bea6ca603dfa2cc24560a9feda3e5085a65d26960790fea9b24',
+ 'scripts/agm_core/user_entries.py': '8e22f8876c8437a806ecd1cdc0fa8308c05c317a348e01166a3a0a37b95c62d4',
+ 'scripts/agm_core/user_entry_layout.py': '2c77e72163edb7fdecb33acc371bff91efc2b5ee958b4bde5509bbb98b4b2abc',
+ 'scripts/agm_core/entry_layout.py': '347c4c83cbda932c0a8eeb153708673948316b4e6bd344643acc524bad09f50f'}
+
+
+def _unified_after_contract(source):
+    root = Path(__file__).resolve().parents[2]
+    for name, expected in UNIFIED_ENTRY_AFTER.items():
+        if source['files'].get(name) != expected:
+            _fail('Unified layout manifest differs from frozen after contract')
+        for base in (Path(source['root']), root):
+            candidate = base / name
+            if (candidate.is_symlink() or not candidate.is_file()
+                    or legacy.digest(candidate.read_bytes()) != expected):
+                _fail('Unified layout source/running bytes differ from frozen after contract')
+    return True
+
+
+def _unified_entry_conversion(before, after, direction, entry, request):
+    if not (entry == UNIFIED_ENTRY_CONVERSION and direction == 'upgrade'
+            and before['product_code_version'] == '0.1.6'
+            and before['source'] == UNIFIED_ENTRY_PREDECESSOR):
+        return False
+    return _unified_after_contract(request['source'])
+
+
 def _conversion(request, data, target, direction):
     before = {'schema_version':data['schema_version'],
               'product_structure_version':data['product']['product_structure_version'],
@@ -232,7 +270,9 @@ def _conversion(request, data, target, direction):
         registry._keys(item, 'before after direction entries', 'release conversion')
         if any(item.get(k) != v for k, v in dict(before=before, after=after, direction=direction).items()):
             continue
-        if item['entries'] == 'preserve':
+        if _unified_entry_conversion(before, after, direction, item['entries'], request):
+            matches.append(item)
+        elif item['entries'] == 'preserve':
             matches.append(item)
         elif (_workbuddy_conversion(before, after, direction, item['entries'])
               and request.get('agents') == ['workbuddy']):
@@ -340,6 +380,11 @@ def _plan(request, *, allow_marker=False):
                 pass  # 专用0.1.4→0.1.5入口合同转换:固定 handler 审查实际模块可信;
                       # 模板字节刷新由代码升级后的入口装配与 migrate-policy 另行
                       # 精确批准执行,不在升级核心内隐式改写用户入口。
+            elif (entry_conversion == UNIFIED_ENTRY_CONVERSION
+                    and contract_before == UNIFIED_ENTRY_BEFORE
+                    and contract_after == {name: UNIFIED_ENTRY_AFTER[name] for name in _ENTRY_CONTRACT_NAMES}
+                    and _unified_after_contract(request['source'])):
+                pass  # Exact 0.1.6 predecessor, target identity in approved conversion.
             else:
                 _fail('Conversion has no handler for changed entry contract')
         elif conversion and conversion['entries'] != 'preserve':

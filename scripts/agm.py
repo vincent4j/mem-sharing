@@ -50,6 +50,7 @@ CORE_COMMAND_ROUTES = {
     "recover-uninstall": "agm_core.uninstall",
     "migrate-policy": "agm_core.policy_migration",
     "reconcile-legacy-import": "agm_core.legacy_reconcile",
+    "migrate-user-entry-layout": "agm_core.entry_layout",
 }
 INSTALL_NEXT_ACTION = "先阅读 INSTALL.md，运行 python3 -B <已核验源>/scripts/install.py 预览机器安装；确认后用 --approval-file 执行。"
 
@@ -213,6 +214,11 @@ def build_parser():
     )
     migrate_cmd.add_argument("--project", metavar="ABS", help="限定项目的绝对路径;缺省为全部登记项目(核心参数)")
     migrate_cmd.add_argument("--approval-file", metavar="JSON", help="绑定迁移计划的批准文件(核心参数)")
+    layout_cmd = sub.add_parser("migrate-user-entry-layout", help="精确批准已登记用户入口顶部布局；默认只读预览")
+    layout_cmd.add_argument("--agent", action="append", choices=["codex", "claude", "workbuddy", "dsh", "zcode", "opencode"])
+    layout_cmd.add_argument("--request-file", metavar="JSON")
+    layout_cmd.add_argument("--approval-file", metavar="JSON")
+    layout_cmd.add_argument("--json", action="store_true")
     reconcile = sub.add_parser("reconcile-legacy-import", help="仅历史证据证明CK块独立变化时的Claude旧引用精确协调；默认只读预览")
     reconcile.add_argument("--approval-file", metavar="JSON", help="精确预览加真实确认凭据")
     reconcile.add_argument("--json", action="store_true")

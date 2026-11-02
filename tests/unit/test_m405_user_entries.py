@@ -36,9 +36,22 @@ class UserEntryFixture(unittest.TestCase):
         # Machine installed: complete ledger + product code source C.
         seed_runtime(self.home)
         code = self.runtime.code
-        (code / "scripts").mkdir(parents=True)
-        (code / "SKILL.md").write_text("# agent-group-memory fixture skill\n")
+        from test_public_layout import _export_target
+        from agm_core import user_install, legacy_import
+        files = _export_target(code)
+        source = dict(root=str(code), url='fixture://agm', commit='a'*40, version='0.4.0', files=files)
+        checked, manifest = user_install._source({'source': source})
+        data = installed_registry()
+        data['product']['source'] = {k: checked[k] for k in ('url','commit','tree_sha256')}
+        self.runtime.registry.write_bytes(registry.serialize_registry(data))
+        (code/'.agm-code-manifest.json').write_bytes(legacy_import.encoded(dict(
+            product_id='mem-sharing', source=data['product']['source'], files=manifest)))
         self.memory_index = self.runtime.root / "memories" / "MEMORY.md"
+
+    def installed_ledger(self):
+        data = installed_registry()
+        data['product'] = copy.deepcopy(json.loads(self.runtime.registry.read_bytes())['product'])
+        return data
 
     # ---- fixture helpers ---------------------------------------------------
 
@@ -354,7 +367,7 @@ class UserEntryFixture(unittest.TestCase):
         block = (BASE_MARKER["start"] + "\n项目规则读取当前项目根 AGENTS.md。保留已有公共源与用户约定。\n"
                  + BASE_MARKER["end"]).encode("utf-8")
         entry.write_bytes(b"existing header\n" + block + b"\n")
-        data = installed_registry()
+        data = self.installed_ledger()
         data["shared_objects"]["wb-convention"] = {
             "kind": "user_convention", "path": str(entry), "scope": "user",
             "agents": ["workbuddy"], "ownership": "reused", "marker": BASE_MARKER,
@@ -396,13 +409,13 @@ class UserEntryFixture(unittest.TestCase):
         approval = self.approval_for(result)
         outcome = user_entries.run_user_entries(dict(request, approval=approval))
         self.assertEqual(outcome["status"], "completed", outcome)
-        self.assertTrue(entry.read_bytes().startswith(before))
+        self.assertTrue(entry.read_bytes().endswith(before))
         self.assertIn(str(self.memory_index).encode(), entry.read_bytes())
         ledger = self.load_ledger()
         obj = ledger["machine"]["objects"][str(entry) + "#convention"]
         from agm_core.entries import remove_block
         self.assertEqual(remove_block(entry.read_bytes(), **BASE_MARKER,
-                         expected_fingerprint=obj["fingerprint"]["value"]), before)
+                         expected_fingerprint=obj["fingerprint"]["value"]), b"\n" + before)
         self.assertEqual(self.preview(detect_runner=self.workbuddy_runner())["changes"], [])
 
     def test_workbuddy_old_registered_block_update_is_approved_and_preserves_private_bytes(self):
@@ -421,7 +434,7 @@ class UserEntryFixture(unittest.TestCase):
         self.assertEqual(before, entry.read_bytes())
         result = self.execute(preview, detect_runner=self.workbuddy_runner())
         self.assertEqual(result["status"], "completed", result)
-        self.assertEqual(entry.read_bytes(), b"private\r\n" + new + b"\r\ntail")
+        self.assertEqual(entry.read_bytes(), new + b"\nprivate\r\n\r\ntail")
         self.assertEqual(self.preview(detect_runner=self.workbuddy_runner())["changes"], [])
         entry.write_bytes(entry.read_bytes().replace(b"AGENTS.md", b"CHANGED.md"))
         result = self.preview(detect_runner=self.workbuddy_runner())
@@ -463,7 +476,7 @@ class UserEntryFixture(unittest.TestCase):
         self.assertEqual(result["errors"][0]["code"], "entry_semantics_missing")
         self.assertEqual(before, self.tree())
 
-    def test_workbuddy_unregistered_current_block_is_reused_without_ownership(self):
+    def test_workbuddy_unregistered_current_block_is_rejected_without_adoption(self):
         self.seed_workbuddy_bundle()
         self.execute(detect_runner=self.workbuddy_runner())
         entry = self.home / ".workbuddy/MEMORY.md"
@@ -471,10 +484,13 @@ class UserEntryFixture(unittest.TestCase):
         ledger = self.load_ledger()
         ledger["machine"]["objects"] = {}
         self.runtime.registry.write_text(json.dumps(ledger))
-        result = self.execute(detect_runner=self.workbuddy_runner())
-        self.assertEqual(result["status"], "completed", result)
+        before = self.tree()
+        result = self.preview(detect_runner=self.workbuddy_runner())
+        self.assertEqual(result["status"], "failed", result)
+        self.assertEqual(result["errors"][0]["code"], "entry_layout_conflict")
         self.assertEqual(raw, entry.read_bytes())
-        self.assertEqual(self.load_ledger()["machine"]["objects"][str(entry)+"#convention"]["ownership"], "reused")
+        self.assertEqual(before, self.tree())
+        self.assertEqual(self.load_ledger()["machine"]["objects"], {})
 
     def test_claude_receipt_import_line_references_common_source(self):
         exe = self.area / "native" / "claude"
@@ -542,7 +558,7 @@ class UserEntryFixture(unittest.TestCase):
         self.assertFalse((self.home / ".codex").exists())
         self.assertFalse((self.home / ".workbuddy").exists())
 
-    def test_claude_existing_content_keeps_reference_append_only(self):
+    def test_claude_existing_content_kept_after_top_reference(self):
         exe = self.area / "native" / "claude"
         exe.parent.mkdir()
         exe.write_text("#!/bin/sh\n")
@@ -562,7 +578,8 @@ class UserEntryFixture(unittest.TestCase):
         outcome = user_entries.run_user_entries(dict(request, approval=approval))
         self.assertEqual(outcome["status"], "completed", outcome)
         data = entry.read_bytes()
-        self.assertTrue(data.startswith(b"# my claude rules\n"))
+        self.assertTrue(data.endswith(b"# my claude rules\n"))
+        self.assertTrue(data.startswith(("@"+str(self.memory_index)).encode()))
         self.assertIn(("@" + str(self.memory_index)).encode(), data)
         self.assertIn(user_entries.CLAUDE_FALLBACK_TEXT.encode(), data)
 
@@ -612,7 +629,7 @@ class UserEntryFixture(unittest.TestCase):
         entry = self.home / ".claude" / "CLAUDE.md"
         entry.parent.mkdir(parents=True, exist_ok=True)
         entry.write_bytes(entry_bytes if entry_bytes is not None else b"")
-        data = installed_registry()
+        data = self.installed_ledger()
         data["shared_objects"].update(shared_objects)
         data["machine"]["objects"].update(machine_objects or {})
         allowed = paths.allowed_user_paths(self.config, None, home=str(self.home))
@@ -651,7 +668,7 @@ class UserEntryFixture(unittest.TestCase):
         content = b"# shared claude rules\n"
         for scope, objects in (("user", "shared_objects"), ("machine", "machine_objects")):
             with self.subTest(scope=scope):
-                data = installed_registry()
+                data = self.installed_ledger()
                 unit = self._unit("file", entry, scope=scope, fingerprint_value=sha256(content))
                 if scope == "user":
                     data["shared_objects"]["claude-file"] = unit
@@ -724,7 +741,7 @@ class UserEntryFixture(unittest.TestCase):
         self.assertEqual(status["claude"]["status"], "pending")
         self.assertEqual(status["claude"]["reason"], "machine_entry_not_registered_shared_reference")
 
-    def test_codex_existing_rules_get_block_appended(self):
+    def test_codex_existing_rules_get_block_at_top(self):
         self.seed_codex_package()
         entry = self.home / ".codex" / "AGENTS.md"
         entry.parent.mkdir(parents=True, exist_ok=True)
@@ -732,7 +749,8 @@ class UserEntryFixture(unittest.TestCase):
         result = self.execute()
         self.assertEqual(result["status"], "completed", result)
         data = entry.read_bytes()
-        self.assertTrue(data.startswith(b"# my codex rules\n"))
+        self.assertTrue(data.endswith(b"# my codex rules\n"))
+        self.assertTrue(data.startswith(BASE_MARKER["start"].encode()))
         self.assertIn(BASE_MARKER["start"].encode(), data)
         # 重复规划:同标记同模板不再追加第二个块;收敛后零差异,直接完成无需批准。
         fingerprint = block_fingerprint(data, BASE_MARKER["start"], BASE_MARKER["end"])

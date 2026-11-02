@@ -23,9 +23,10 @@ class InstallFixture(unittest.TestCase):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.area=Path(self.temp.name).resolve();self.home=self.area/'home';self.home.mkdir()
         self.runtime=resolve_layout(self.home);self.source=self.area/'source'
-        (self.source/'scripts/agm_core').mkdir(parents=True)
-        for rel,raw in {'SKILL.md':b'# agent-group-memory\n','scripts/agm.py':b'print("fixture")\n','scripts/agm_core/__init__.py':b''}.items():
-            (self.source/rel).write_bytes(raw)
+        # Install fixtures now carry the real kernel: layout source capability
+        # must not be bypassed by a three-file pretend installation.
+        from test_public_layout import _export_target
+        _export_target(self.source)
         self.config=paths.select_platform(paths.load_agents_table(),'darwin')
         self.request={'home':str(self.home),'platform_config':self.config,'agents':None,'search_paths':[],
             'app_directories':[], 'operation_id':'fixture-m404',

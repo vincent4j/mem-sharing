@@ -49,6 +49,7 @@ from . import detect as detect_module
 from . import layout as layout_module
 from . import paths as agm_paths
 from . import registry as registry_module
+from . import user_entry_layout
 from .enable import BASE_MARKER
 from .entries import EntryConflict, block_fingerprint, sha256, managed_span, render_block
 from .transaction import (Change, Snapshot, Transaction, TransactionError,
@@ -415,6 +416,14 @@ class _Planner:
                                      fingerprint={"algorithm": "sha256", "basis": "block_bytes", "value": desired})
                 return
             if update_registered and actual != desired:
+                known_old = _wrap_block(BASE_MARKER, "\n".join(
+                    [WORKBUDDY_CONVENTION_TEXT, WORKBUDDY_FALLBACK_TEXT]))
+                from . import policy_migration
+                old_span = managed_span(snap.data, **BASE_MARKER)
+                old_unit = snap.data[slice(*old_span)] if old_span is not None else b""
+                if old_unit not in (known_old, policy_migration.legacy('old_workbuddy', self.runtime),
+                                    policy_migration.legacy('workbuddy', self.runtime)):
+                    raise UserEntryError("entry_layout_conflict", "Unknown registered user block template")
                 if trusted is None:
                     raise UserEntryError("entry_semantics_missing", "旧受管块无可信指纹，不自动更新: " + str(path))
                 self.after[Path(path)] = Snapshot("file", render_block(
@@ -538,6 +547,33 @@ class _Planner:
                     "共享整文件单元(%s)承载该入口，普通接入不得隐式迁移；需专用精确迁移后再接入: %s"
                     % (",".join(owners), path))
 
+    def top_layout(self, agent, path):
+        original = self.before[Path(path)]
+        raw = original.data or b""
+        # A shared user-owned carrier may be referenced without claiming or
+        # relocating it. Static connection remains pending in that case.
+        if (self.after[Path(path)] == original and self._shared_whole_file_owners(path)
+                and not any(o['path'] == str(path) for o in self.objects.values())):
+            self.notes.append("shared user layout retained; no machine relocation")
+            return
+        marker = CLAUDE_FALLBACK_MARKER if agent == "claude" else BASE_MARKER
+        staged = self.after[Path(path)].data
+        span = managed_span(staged, **marker)
+        if span is None:
+            raise UserEntryError("entry_layout_conflict", "Entry has no managed public unit")
+        desired = staged[slice(*span)]
+        if agent in NATIVE_FALLBACK_TEXTS and desired != native_public_source_block(agent, self.memory_index):
+            raise UserEntryError("entry_layout_conflict", "Unknown registered native block template")
+        units = [(marker, desired, self.units.get((str(path), marker["start"])))]
+        if agent == "claude":
+            units.insert(0, (None, ("@" + str(self.memory_index)).encode(),
+                             self.units.get((str(path), None))))
+        try:
+            final = user_entry_layout.arrange(raw, units)
+        except EntryConflict as exc:
+            raise UserEntryError("entry_layout_conflict", str(exc)) from exc
+        self.after[Path(path)] = Snapshot("file", final, original.mode if original.kind == "file" else 0o600)
+
     def rebind_import_fingerprints(self):
         """同一文件随后追加其他受管单元时,把 import 指纹重绑到最终整文件字节。
 
@@ -615,7 +651,9 @@ class _Planner:
         return [{"path": str(change.path),
                  "operation": "create" if change.expected.kind == "absent" else "update",
                  "before_fingerprint": change.expected.fingerprint,
-                 "after_fingerprint": change.after.fingerprint}
+                 "after_fingerprint": change.after.fingerprint,
+                 "before_mode": change.expected.mode,
+                 "after_mode": change.after.mode}
                 for change in changes]
 
     def machine_agent_records(self):
@@ -720,6 +758,17 @@ def _public_block_intact(raw, obj, memory_index, agent):
             and (agent != "workbuddy" or WORKBUDDY_CONVENTION_TEXT.encode() in block.splitlines()))
 
 
+def top_layout_intact(raw, agent, memory_index):
+    bom = user_entry_layout.BOM if raw.startswith(user_entry_layout.BOM) else b""
+    if agent == "claude":
+        top = ("@" + str(memory_index)).encode() + b"\n" + _wrap_block(CLAUDE_FALLBACK_MARKER, CLAUDE_FALLBACK_TEXT)
+    elif agent == "workbuddy":
+        top = _wrap_block(BASE_MARKER, "\n".join([public_read_text(memory_index), WORKBUDDY_CONVENTION_TEXT, WORKBUDDY_FALLBACK_TEXT]))
+    else:
+        top = native_public_source_block(agent, memory_index)
+    return raw.startswith(bom + top)
+
+
 def connection_status(runtime, config, ledger, agents):
     """Read-only entry proof; detection and runtime acceptance are separate facts."""
     result = {}
@@ -770,6 +819,8 @@ def connection_status(runtime, config, ledger, agents):
                         if config[agent]["rule_mode"] == "import_agents" else {"public_pointer"})
             if not required <= passed:
                 reasons.append("entry_evidence_incomplete")
+            if not reasons and not top_layout_intact(snap.data, agent, runtime.root / "memories/MEMORY.md"):
+                reasons.append("entry_layout_not_top")
             reason = None if not reasons else reasons[0]
         result[agent] = {"status": "connected" if reason is None else "pending", "reason": reason,
                          "runtime_acceptance": "pending"}
@@ -837,6 +888,16 @@ def _plan(request, runtime, detection, effective, *, transaction):
         elif not context[2] or code_skill.is_symlink():
             raise UserEntryError("product_code_missing", "Installer execution requires verified code at C")
     ledger, registry_snap = _load_ledger(runtime, allowed)
+    try:
+        if context is not None:
+            candidate = verified or (request.get("source") or {}).get("root")
+            if candidate is None:
+                raise EntryConflict("Installer candidate source is required")
+            user_entry_layout.require_source(candidate)
+        elif ledger is not None:
+            user_entry_layout.require_kernel(runtime)
+    except (ValueError, OSError) as exc:
+        raise UserEntryError("entry_layout_code_incompatible", str(exc)) from exc
     if ledger is not None:
         _preflight_machine_units(ledger)
     planner = _Planner(config=config, runtime=runtime, ledger=ledger,
@@ -882,6 +943,7 @@ def _plan(request, runtime, detection, effective, *, transaction):
                                           _wrap_block(CLAUDE_FALLBACK_MARKER, CLAUDE_FALLBACK_TEXT))
         else:  # pragma: no cover - 路径表枚举已限定 rule_mode
             raise UserEntryError("agents_table_invalid", "未知 rule_mode: %r" % entry["rule_mode"])
+        planner.top_layout(agent, user_path)
         # Claude 兜底块在 import 行之后追加:同文件 import 登记按最终字节重绑。
         planner.rebind_import_fingerprints()
         # 终局保护:shared 整文件单元承载的入口不允许被普通接入改写(零写拒绝)。
@@ -901,6 +963,13 @@ def _plan(request, runtime, detection, effective, *, transaction):
         "changes": _Planner.describe(planner.changes()),
         "machine_objects": planner.machine_object_updates(),
         "machine_agents": machine_agents,
+        "registry_before_fingerprint": (None if verified is not None and
+            (ledger is None or not ledger["machine"]["objects"]) else registry_snap.fingerprint),
+        "registry_before_mode": (None if verified is not None and
+            (ledger is None or not ledger["machine"]["objects"]) else registry_snap.mode),
+        "entry_layout": "owned-top-v1",
+        "machine_object_projection": {oid: {k: v for k, v in obj.items() if k != "backup_manifest"}
+                                      for oid, obj in sorted(planner.objects.items())},
     }
     if verified is not None:
         approval_plan["verified_product_source"] = {"skill_sha256": context[1], "target": str(runtime.code)}

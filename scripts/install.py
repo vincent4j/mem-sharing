@@ -153,21 +153,17 @@ def _entry_preview(request):
 
 def _upgrade_entry_preview(request, inner):
     migration = inner.get('migration_plan')
-    if migration is None:
-        return _entry_preview(request)
-    # Reuse the migration's exact byte builder, including before/after checks.
-    # These are memory-only snapshots at V2; the real execution never uses them.
-    snapshots = {change.path: change.after
-                 for change in public_layout._build_changes(migration)}
     runtime = user_install._runtime(request)
-    raw = bytes.fromhex(migration['v2_registry_hex'])
+    snapshots = ({change.path: change.after for change in public_layout._build_changes(migration)}
+                 if migration is not None else {})
+    raw = bytes.fromhex(migration['v2_registry_hex'] if migration is not None else inner['after_registry_hex'])
     ledger = json.loads(raw, object_pairs_hook=registry._no_duplicates)
-    registry.validate_registry(ledger,
-        allowed_user_paths=migration['allowed_user_paths'],
-        _pending_manifest=migration['manifest_path'])
+    registry.validate_registry(ledger, allowed_user_paths=inner['allowed_user_paths'],
+        _pending_manifest=migration['manifest_path'] if migration is not None else None)
     snapshots[runtime.registry] = user_entries.Snapshot('file', raw, 0o600)
-    with user_entries._preview_state(runtime, ledger, snapshots):
-        return _entry_preview(request)
+    with user_entries._installer_source(runtime.code, inner['source']['files']['SKILL.md'], preview=True):
+        with user_entries._preview_state(runtime, ledger, snapshots):
+            return _entry_preview(request)
 
 
 def plan_machine(request):
