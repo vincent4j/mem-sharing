@@ -167,7 +167,185 @@ def _retire_legacy_text(raw, runtime):
     return b''.join(kept)
 
 
-def public_body(runtime, original):
+# Frozen complete producer unit; never classify individual headings as ownership.
+FUSION_GENERATED_PREFIX = (
+    '# 用户记忆\n\n## L1 概要\n\n'
+    '当前有效结论：以下记忆经完整清单确认后共享；独有与未选内容保留。\n'
+    '待办：记忆变化后更新概要和索引。\n\n## L2 原文与来源\n'
+).encode()
+
+
+class FusionEvidenceReader:
+    """Same proof reads from disk or an explicit immutable uninstall snapshot map."""
+    def __init__(self, nodes=None):
+        self.nodes = nodes
+
+    def safe(self, value):
+        if self.nodes is None: return recovery.safe(value)
+        path = Path(value)
+        if not path.is_absolute() or os.path.normpath(str(path)) != str(path):
+            raise recovery.Conflict('Noncanonical snapshot path')
+        for parent in (path, *path.parents):
+            if self.nodes.get(str(parent),{}).get('kind') == 'symlink':
+                raise recovery.Conflict('Symlink in snapshot evidence')
+        return path
+
+    def file(self, path):
+        path = self.safe(path)
+        if self.nodes is None: return not path.is_symlink() and path.is_file()
+        return self.nodes.get(str(path),{}).get('kind') == 'file'
+
+    def read(self, path):
+        path = self.safe(path)
+        if not self.file(path): raise recovery.Conflict('Missing regular snapshot evidence')
+        return path.read_bytes() if self.nodes is None else bytes.fromhex(self.nodes[str(path)]['hex'])
+
+    def manifests(self, root):
+        root = self.safe(root)
+        if self.nodes is None: return list(root.glob('*/manifest.json'))
+        return [Path(p) for p in self.nodes if Path(p).name=='manifest.json' and Path(p).parent.parent==root]
+
+    def children(self, root):
+        root = self.safe(root)
+        if self.nodes is None: return {p.name for p in root.iterdir()}
+        if self.nodes.get(str(root),{}).get('kind') != 'directory':
+            raise recovery.Conflict('Missing snapshot evidence directory')
+        return {Path(p).name for p in self.nodes if Path(p).parent==root}
+
+
+def fusion_generated_units(runtime, original, *, evidence=None):
+    """Prove topic wrappers through a closed committed fusion topic chain.
+
+    Only exact connected before/after states count; an ambiguous producer chain requires
+    review. Native user text and Context Keeper spans are outside this classifier.
+    """
+    import json
+    from . import registry
+    evidence = evidence or FusionEvidenceReader()
+    index = runtime.root/'memories/MEMORY.md'
+    index_raw = bytes.fromhex(original[str(index)]['hex'])
+    units = {}
+    signature = '当前有效结论：以下记忆经完整清单确认后共享'.encode()
+    for name, state in original.items():
+        path = Path(name)
+        if state['kind'] != 'file' or path == index: continue
+        raw = bytes.fromhex(state['hex'])
+        parts = [part for protected,part in protected_parts(raw) if not protected]
+        looks_generated = any(signature in part or '待办：记忆变化后更新概要和索引。'.encode() in part for part in parts)
+        if not looks_generated: continue
+        if (path.parent != index.parent or not raw.startswith(FUSION_GENERATED_PREFIX)
+                or sum(part.count(FUSION_GENERATED_PREFIX) for part in parts) != 1):
+            raise recovery.Conflict('Unknown/customized fusion governance; review required')
+        link = ('- 用户记忆：['+path.name+']('+path.name+')\n').encode()
+        if (sum(line == link for line in index_raw.splitlines(keepends=True)) != 1
+                or index_raw.count(('('+path.name+')').encode()) != 1):
+            raise recovery.Conflict('Missing/duplicate fusion navigation; review required')
+        candidates = evidence.manifests(runtime.backups)
+        if len(candidates) > 256: raise recovery.Conflict('Bounded fusion producer evidence exhausted')
+        from . import paths
+        config = paths.select_platform(paths.load_agents_table(),'darwin')
+        allowed = set(paths.allowed_user_paths(config,None,home=str(runtime.home)))
+        topic_rows = []
+        index_rows = []
+        def previous_bytes(row, manifest):
+            before = row['before']
+            if before['kind'] == 'absent': return None
+            saved = before.get('backup')
+            if before['kind'] != 'file' or not isinstance(saved,str) or Path(saved).name != saved:
+                raise recovery.Conflict('Invalid fusion before evidence; review required')
+            backup = manifest.parent/saved
+            if not evidence.file(backup): raise recovery.Conflict('Missing fusion backup; review required')
+            value = evidence.read(backup)
+            if recovery.digest(value) != before['fingerprint']: raise recovery.Conflict('Fusion backup drift; review required')
+            return value
+        for manifest in candidates:
+            if not evidence.file(manifest): continue
+            data = json.loads(evidence.read(manifest),object_pairs_hook=registry._no_duplicates)
+            if data.get('operation') != 'organize-user-rules' or data.get('status') != 'committed': continue
+            rows = data.get('entries',[])
+            if not any(r['path']==name for r in rows): continue
+            expected_keys = {'schema_version','operation','status','registry_path','created_directories','entries','error'}
+            if data.get('phased_writes') is True: expected_keys.add('phased_writes')
+            if set(data)!=expected_keys or data['schema_version']!=1 or data['error'] is not None:
+                raise recovery.Conflict('Unknown fusion history schema; review required')
+            if len({r['path'] for r in rows})!=len(rows) and not data.get('phased_writes'):
+                raise recovery.Conflict('Duplicate fusion outputs; review required')
+            if any(not evidence.safe(d).is_relative_to(index.parent) for d in data['created_directories']):
+                raise recovery.Conflict('Unexpected fusion created directory; review required')
+            if data.get('registry_path') not in (None,str(runtime.registry)):
+                raise recovery.Conflict('Invalid fusion registry scope; review required')
+            expected = {'manifest.json'}
+            for row in rows:
+                target = evidence.safe(row['path'])
+                if (row['path'] not in allowed and target != runtime.registry
+                        and not (target.is_relative_to(index.parent) and target.suffix=='.md')):
+                    raise recovery.Conflict('Invalid fusion history target; review required')
+                if row.get('attempted') is not True or row['after']['kind'] != 'file':
+                    raise recovery.Conflict('Incomplete fusion history; review required')
+                previous_bytes(row,manifest)
+                if row['before']['kind']=='file':expected.add(row['before']['backup'])
+            if evidence.children(manifest.parent) != expected:
+                raise recovery.Conflict('Fusion history closure drift; review required')
+            # Retain the existing exact Claude observation-only delta contract.
+            if data.get('registry_path') is not None:
+                import copy
+                vrows=[r for r in rows if r['path']==str(runtime.registry)]
+                native=paths.expand_path(config['claude']['user_entry'],home=str(runtime.home))
+                nrows=[r for r in rows if r['path']==native]
+                if len(vrows)!=1 or rows[-1] is not vrows[0] or len(nrows)!=1 or data.get('phased_writes'):
+                    raise recovery.Conflict('Invalid fusion reference history; review required')
+                old=registry.validate_registry(json.loads(previous_bytes(vrows[0],manifest)),allowed_user_paths=allowed)
+                updated=copy.deepcopy(old);matched=[]
+                for oid,obj in old['machine']['objects'].items():
+                    if (obj['path']==native and obj['kind']=='import' and obj['scope']=='machine'
+                            and obj['ownership']=='reused' and obj['marker'] is None and obj['agents']==['claude']
+                            and obj['original_existed'] is True and obj['backup_manifest'] is None and obj['consumers']==[]
+                            and obj['fingerprint']=={'algorithm':'sha256','basis':'file_bytes','value':nrows[0]['before']['fingerprint']}):
+                        updated['machine']['objects'][oid]['fingerprint']['value']=nrows[0]['after']['fingerprint'];matched.append(oid)
+                if len(matched)!=1 or recovery.digest(registry.serialize_registry(updated,allowed_user_paths=allowed))!=vrows[0]['after']['fingerprint']:
+                    raise recovery.Conflict('Fusion reference history changes ownership; review required')
+            elif any(r['path']==str(runtime.registry) for r in rows):
+                raise recovery.Conflict('Unbound fusion registry history; review required')
+            topic_rows += [(r,manifest) for r in rows if r['path']==name]
+            index_rows += [(r,manifest) for r in rows if r['path']==str(index)]
+        creations=[pair for pair in topic_rows if pair[0]['before']['kind']=='absent']
+        if len(creations)!=1: raise recovery.Conflict('Unproven/ambiguous fusion creation; review required')
+        current_pair=creations[0];visited=set();states=[]
+        while True:
+            row,manifest=current_pair
+            identity=(str(manifest),id(row))
+            if identity in visited: raise recovery.Conflict('Cyclic fusion history; review required')
+            visited.add(identity)
+            matches=[pair for pair in topic_rows if pair[0]['before']['kind']=='file'
+                     and pair[0]['before']['fingerprint']==row['after']['fingerprint']
+                     and pair[0]['before']['mode']==row['after']['mode']]
+            if len(matches)>1: raise recovery.Conflict('Ambiguous fusion history; review required')
+            after=previous_bytes(*matches[0]) if matches else raw
+            if (recovery.digest(after)!=row['after']['fingerprint'] or not after.startswith(FUSION_GENERATED_PREFIX)
+                    or (not matches and state['mode'] != row['after']['mode'])):
+                raise recovery.Conflict('Incomplete/customized fusion history; review required')
+            if after.count(FUSION_GENERATED_PREFIX)!=1:
+                raise recovery.Conflict('Duplicate fusion governance; review required')
+            if states and [p for protected,p in protected_parts(states[-1]) if protected] != [p for protected,p in protected_parts(after) if protected]:
+                raise recovery.Conflict('Protected fusion history changed; review required')
+            states.append(after)
+            if not matches:break
+            current_pair=matches[0]
+        if len(visited)!=len(topic_rows):raise recovery.Conflict('Disconnected fusion history; review required')
+        # The navigation itself was added by the same creation transaction.
+        creation_manifest=creations[0][1]
+        nav=[pair for pair in index_rows if pair[1]==creation_manifest]
+        if len(nav)!=1:raise recovery.Conflict('Missing fusion navigation proof; review required')
+        previous=previous_bytes(*nav[0])
+        if previous is None or link in previous or previous+(b'' if previous.endswith(b'\n') else b'\n')+link != index_raw:
+            raise recovery.Conflict('Fusion navigation history needs review')
+        if recovery.digest(index_raw)!=nav[0][0]['after']['fingerprint']:
+            raise recovery.Conflict('Fusion navigation drift; review required')
+        units[name] = link
+    return units
+
+
+def public_body(runtime, original, *, evidence=None):
     """Expand a closed public document graph; no return directory or index link."""
     from . import user_entries, policy_migration
     base = runtime.root
@@ -176,6 +354,7 @@ def public_body(runtime, original):
     known.update(policy_migration.legacy(n, runtime) for n in
                  ('pre_route_topic', 'topic', 'old_topic'))
     visiting, done, chunks = set(), set(), []
+    fusion_units = fusion_generated_units(runtime, original, evidence=evidence)
 
     def read(path):
         key = str(path)
@@ -211,6 +390,14 @@ def public_body(runtime, original):
                                   historical_proof=producer_index)
         if path.is_relative_to(base/'memories') and path.relative_to(base/'memories').parts[0].startswith('legacy-v0-'):
             raw=retire_legacy_product_instructions(raw,runtime)
+        if str(path) in fusion_units:
+            raw = raw[len(FUSION_GENERATED_PREFIX):]
+        if path == base/'memories/MEMORY.md':
+            # Only proven complete navigation lines lose their generated label.
+            for target, line in fusion_units.items():
+                expanded_topic = read(Path(target))
+                raw = map_text(raw,lambda part:b''.join(expanded_topic if row == line else row
+                    for row in part.splitlines(keepends=True)))
         def expand(match):
             target = unquote(match.group(2).decode().strip('<>')).split('#', 1)[0]
             if urlsplit(target).scheme or not target:
