@@ -51,7 +51,10 @@ class UninstallTests(InstallFixture):
         self.assertFalse(self.runtime.root.exists())
         self.assertFalse(self.runtime.code.exists())
         returned = self.entry.parent/'memsharing-return'
-        self.assertEqual((returned/'original/memories/MEMORY.md').read_bytes(),original)
+        self.assertFalse(returned.exists())
+        saved=json.loads((self.backup/'manifest.json').read_text())['plan']
+        state=next(c['before'] for c in saved['changes'] if c['path']==str(self.runtime.root/'memories/MEMORY.md'))
+        self.assertEqual(bytes.fromhex(state['hex']),original)
         self.assertTrue(self.entry.read_bytes().startswith(b'private\x00\r\n'))
         self.assertIn(b'private footer\r\n',self.entry.read_bytes())
         self.assertNotIn(str(self.runtime.root).encode(),self.entry.read_bytes())
@@ -107,7 +110,8 @@ class UninstallTests(InstallFixture):
         index = self.runtime.root/'memories/MEMORY.md'
         index.write_bytes(index.read_bytes()+b'\n[reference](../references/private.md)\n')
         self.apply_uninstall()
-        self.assertEqual((self.entry.parent/'memsharing-return/references/private.md').read_bytes(),reference.read_bytes() if reference.exists() else b'private reference\r\n')
+        self.assertIn(b'private reference\r\n',self.entry.read_bytes())
+        self.assertFalse((self.entry.parent/'memsharing-return').exists())
 
     def test_missing_link_blocks_deletion(self):
         index = self.runtime.root/'memories/MEMORY.md'
@@ -121,9 +125,11 @@ class UninstallTests(InstallFixture):
         index=self.runtime.root/'memories/MEMORY.md'
         index.write_bytes(index.read_bytes()+('\n[absolute](%s)\n'%reference).encode())
         plan=self.plan_uninstall()
-        target=self.entry.parent/'memsharing-return/memories/MEMORY.md'
+        target=self.entry
         raw=next(bytes.fromhex(c['after']['hex']) for c in plan['changes'] if c['path']==str(target))
-        self.assertIn(b'[absolute](../references/private.md)',raw)
+        self.assertIn(b'absolute\noriginal reference',raw)
+        self.assertNotIn(str(reference).encode(),raw)
+        self.assertFalse(any('memsharing-return' in c['path'] for c in plan['changes']))
         assets=self.runtime.code.parent/'mem-sharing-runtimes'
         assets.mkdir();(assets/'unknown-private').write_bytes(b'must preserve')
         with self.assertRaisesRegex(ValueError,'ownership/lease'):self.plan_uninstall()
@@ -139,10 +145,9 @@ class UninstallTests(InstallFixture):
         data=json.loads(journal.read_text());data['status']='applying';journal.write_text(json.dumps(data))
         with self.assertRaises(ValueError):self.plan_uninstall()
 
-    def test_new_return_child_blocks_restore_before_mutation(self):
+    def test_new_native_private_edit_blocks_restore_before_mutation(self):
         self.apply_uninstall()
-        private=self.entry.parent/'memsharing-return/new-private.md'
-        private.write_bytes(b'new content after uninstall')
+        self.entry.write_bytes(self.entry.read_bytes()+b'new content after uninstall')
         before=self.entry.read_bytes()
         with self.assertRaises(ValueError):recovery.recover(self.backup/'manifest.json')
         self.assertEqual(self.entry.read_bytes(),before)
@@ -226,20 +231,15 @@ class UninstallTests(InstallFixture):
         obj={'path':str(project/'AGENTS.md'),'marker':marker,'link_target':None}
         with self.assertRaises(ValueError):uninstall._preserve_ck(obj,[self.runtime.code],raw)
 
-    def test_empty_directories_modes_and_internal_directory_link_preserved(self):
+    def test_internal_directory_link_requires_review_without_target_writes(self):
         empty=self.runtime.root/'references/empty-dir';empty.mkdir();empty.chmod(0o500)
         link=self.runtime.root/'memories/empty-link';link.symlink_to('../references/empty-dir')
-        plan=self.plan_uninstall()
-        uninstall.execute(approval(recovery.summary(plan)),home=self.home,backup_dir=self.backup)
-        root=self.entry.parent/'memsharing-return'
-        for base in (root,root/'original'):
-            self.assertTrue((base/'references/empty-dir').is_dir())
-            self.assertEqual((base/'references/empty-dir').stat().st_mode&0o777,0o500)
-            self.assertTrue((base/'memories/empty-link').is_symlink())
-            self.assertEqual((base/'memories/empty-link').resolve(),base/'references/empty-dir')
-        preview=recovery.recover(self.backup/'manifest.json')
-        recovery.recover(self.backup/'manifest.json',approval=approval(preview['plan']))
+        before=recovery.tree(self.home)
+        with self.assertRaisesRegex(ValueError,'review'):
+            self.plan_uninstall()
+        self.assertEqual(recovery.tree(self.home),before)
         self.assertEqual(empty.stat().st_mode&0o777,0o500)
+        self.assertTrue(link.is_symlink());self.assertFalse(self.backup.exists())
 
     def test_unreadable_symlink_chains_block_before_any_write(self):
         root=self.runtime.root/'memories'
@@ -272,10 +272,14 @@ class LegacyUninstallTests(InstallFixture):
         backup=self.area/'independent-backup'
         plan=uninstall.preview(home=self.home,backup_dir=backup)
         uninstall.execute(approval(recovery.summary(plan)),home=self.home,backup_dir=backup)
-        returned=self.home/'.codex/memsharing-return'
-        legacy=returned/'memories/legacy-v0-fixture-m404'
-        self.assertEqual((legacy/'references/ops.md').read_bytes(),originals['references/ops.md'])
-        self.assertEqual((returned/'original/memories/legacy-v0-fixture-m404/memories/MEMORY.md').read_bytes(),originals['memories/MEMORY.md'])
+        entry=self.home/'.codex/AGENTS.md'
+        self.assertIn(originals['references/ops.md'],entry.read_bytes())
+        self.assertIn(b'unchanged\r\n\xff',entry.read_bytes())
+        self.assertFalse((entry.parent/'memsharing-return').exists())
+        saved=json.loads((backup/'manifest.json').read_text())['plan']
+        original_index=self.runtime.root/'memories/legacy-v0-fixture-m404/memories/MEMORY.md'
+        original_state=next(c['before'] for c in saved['changes'] if c['path']==str(original_index))
+        self.assertEqual(bytes.fromhex(original_state['hex']),originals['memories/MEMORY.md'])
         preview=recovery.recover(backup/'manifest.json')
         recovery.recover(backup/'manifest.json',approval=approval(preview['plan']))
         self.assertEqual(recovery.tree(self.home),before)
@@ -324,21 +328,21 @@ class MultiAgentUninstallTests(InstallFixture):
         with patch.object(detect,'detect_agents',side_effect=synthetic_installed):
             self.execute()
 
-    def test_six_independent_copies_and_no_current_installed_filter(self):
-        original = self.claude.read_bytes()
+    def test_six_direct_native_full_user_memory_no_installed_filter(self):
+        fact=b'public user memory complete paragraph\r\n'
+        index=self.runtime.root/'memories/MEMORY.md'
+        index.write_bytes(index.read_bytes()+b'\n'+fact)
         with patch.object(detect,'detect_agents',side_effect=AssertionError('Uninstall must not filter installed')):
-            plan = uninstall.preview(home=self.home,backup_dir=self.backup)
+            plan=uninstall.preview(home=self.home,backup_dir=self.backup)
             self.assertEqual(plan['agents'],list(paths.AGENT_ORDER))
             uninstall.execute(approval(recovery.summary(plan)),home=self.home,backup_dir=self.backup)
-        for agent, config in self.config.items():
-            entry = Path(paths.expand_path(config['user_entry'],home=str(self.home)))
-            returned = entry.parent/'memsharing-return'
-            self.assertTrue((returned/'memories/MEMORY.md').is_file(),agent)
-            self.assertTrue((returned/'original/memories/MEMORY.md').is_file(),agent)
-        raw = self.claude.read_bytes()
-        assert_opaque(self, raw, self.private, index=self.claude.parent/"memsharing-return/memories/MEMORY.md", path=self.claude)
-        self.assertEqual(raw.count(b'@'),1)
-        self.assertNotIn(str(self.runtime.root).encode(),raw)
+        for agent,config in self.config.items():
+            entry=Path(paths.expand_path(config['user_entry'],home=str(self.home)))
+            self.assertIn(fact,entry.read_bytes(),agent)
+            self.assertFalse((entry.parent/'memsharing-return').exists(),agent)
+            self.assertNotIn(str(self.runtime.root).encode(),entry.read_bytes(),agent)
+        self.assertIn(self.private,self.claude.read_bytes())
+        self.assertEqual(self.claude.read_bytes().count(b'@'),0)
 
     def test_redirect_preserves_non_token_bytes_and_rejects_ambiguity(self):
         old = self.runtime.root/'memories/MEMORY.md'

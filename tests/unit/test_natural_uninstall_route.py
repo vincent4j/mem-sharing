@@ -163,17 +163,24 @@ class NaturalUninstallRouteTests(InstallFixture):
         uninstall.execute(approval(recovery.summary(plan)),home=self.home,backup_dir=backup)
         self.assertFalse(self.runtime.code.exists())
         self.assertFalse(self.runtime.root.exists())
+        saved=json.loads((backup/'manifest.json').read_text())['plan']
+        for source,expected in ((self.topic,topic_before),(self.index,index_before)):
+            state=next(c['before'] for c in saved['changes'] if c['path']==str(source))
+            self.assertEqual(bytes.fromhex(state['hex']),expected)
+        expected_public=b'\nmy topic\n# Private\r\nmy complete topic\xff\r\nprivate tail\xff'
         for agent,config in self.config.items():
             entry=Path(paths.expand_path(config['user_entry'],home=str(self.home)))
-            returned=entry.parent/'memsharing-return'
-            topic=returned/'memories/topics/使用约定.md'
-            index=returned/'memories/MEMORY.md'
-            self.assertEqual((returned/'original/memories/topics/使用约定.md').read_bytes(),topic_before,agent)
-            self.assertEqual((returned/'original/memories/MEMORY.md').read_bytes(),index_before,agent)
-            self.assertEqual((returned/'memories/topics/private.md').read_bytes(),b'# Private\r\nmy complete topic\xff',agent)
-            for token in (b'SKILL.md',b'uninstall-machine','卸载 memSharing'.encode(),'自然语言卸载'.encode()):
-                self.assertNotIn(token,topic.read_bytes()+index.read_bytes(),agent)
-        assert_opaque(self, self.claude.read_bytes(), self.private, index=self.claude.parent/"memsharing-return/memories/MEMORY.md", path=self.claude)
+            raw=entry.read_bytes()
+            self.assertFalse((entry.parent/'memsharing-return').exists(),agent)
+            self.assertTrue(raw.endswith(expected_public),agent)
+            prefix=raw[:-len(expected_public)]
+            if agent=='claude':
+                self.assertIn(prefix,(self.private+b'\n\n',b'\n'+self.private+b'\n\n',b'\n\n'+self.private+b'\n\n'))
+                self.assertEqual(entry.stat().st_mode&0o777,self._opaque_modes[str(entry)])
+            else:self.assertEqual(prefix.strip(b'\r\n'),b'',agent)
+            for token in (b'SKILL.md',b'uninstall-machine','卸载 memSharing'.encode(),'自然语言卸载'.encode(),
+                          str(self.runtime.root).encode(),b'memsharing-return',b'<!-- mem-sharing:'):
+                self.assertNotIn(token,raw,agent)
 
     def test_actual_old_public_return_six_copies_retire_route(self):
         self.assert_actual_return('old')

@@ -159,7 +159,7 @@ def cli(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('tool-commit','paseo-cli','cli-sha256','server-id','plugin-id'):
         parser.add_argument('--'+name,required=True)
-    parser.add_argument('--redirect-dsh-reference-to-return',action='store_true')
+    parser.add_argument('--redirect-dsh-reference-to-return','--detach-dsh-reference',dest='redirect_dsh_reference_to_return',action='store_true')
     args,core=parser.parse_known_args(argv)
     try:
         if not core or core[0]!='uninstall-machine':
@@ -179,3 +179,23 @@ def cli(argv=None):
         return uninstall.cli(core,tool_identity=identity)
     except (ValueError,OSError,KeyError,TypeError,IndexError) as exc:
         print(json.dumps({'status':'failed','errors':[{'code':'independent_uninstall_conflict','message':str(exc)}]}));return 2
+
+
+def detach_dsh_reference(runtime, path, original, detached, mode):
+    """Explicit v1 conversion now retires the dependency; no return pointer."""
+    old=str(runtime.root/'memories/MEMORY.md').encode()
+    prefix='开始任务前读取并遵守 '.encode()
+    lines=[line for line in detached.splitlines(keepends=True) if old in line]
+    if len(lines)!=1 or detached.count(old)!=1 or not lines[0].strip().startswith(prefix+old):
+        raise recovery.Conflict('Missing/ambiguous explicitly approved DSH instruction')
+    from . import entries
+    ck=entries.managed_span(detached,start='<!-- context-keeper:start -->',end='<!-- context-keeper:end -->')
+    offset=detached.index(old)
+    if ck is not None and ck[0]<=offset<ck[1]:
+        raise recovery.Conflict('Context Keeper text cannot be converted')
+    suffix=lines[0].strip()[len(prefix+old):]
+    if suffix not in ('；读不到就说明。'.encode(),';读不到就说明。'.encode()):
+        raise recovery.Conflict('Unknown DSH user prose; preserve and review')
+    return detached.replace(lines[0],b'',1), {'path':str(path),'before_sha256':recovery.digest(original),
+        'before_mode':mode,'removed_instruction_sha256':recovery.digest(lines[0]),
+        'ownership_transition':'none','conversion':'explicit-dsh-direct-native-v1'}

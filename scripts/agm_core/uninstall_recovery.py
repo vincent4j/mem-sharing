@@ -4,7 +4,7 @@ No import from agm_core: the exact same file works after C and R are removed.
 All content lives in the private manifest; stdout contains hashes, never bytes.
 """
 import argparse
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 import hashlib
 import json
 import os
@@ -86,6 +86,41 @@ def write_file(path, data, mode=0o600):
             os.unlink(temp)
 
 
+def write_backup_file(path, data, mode=0o600):
+    """Necessary restore material only; no atomic temporary sibling."""
+    path=safe(path)
+    fd=os.open(path,os.O_RDWR|os.O_CREAT|getattr(os,'O_NOFOLLOW',0),mode)
+    with os.fdopen(fd,'r+b') as stream:
+        os.fchmod(stream.fileno(),mode)
+        stream.seek(0);stream.write(data);stream.truncate();stream.flush();os.fsync(stream.fileno())
+
+
+def persist_manifest(path, data):
+    writer=write_backup_file if data['plan'].get('memory_return')=='native-direct-v1' else write_file
+    writer(path,encoded(data))
+
+
+def put_direct(path, item, identity=None):
+    """Caller revalidates scene. Existing native files retain inode and mode."""
+    path=safe(path)
+    if item['kind']!='file':
+        return put(path,item)
+    before=snapshot(path)
+    if before['kind'] not in ('file','absent'):
+        raise Conflict('Nonregular direct-write target')
+    meta=path.lstat() if before['kind']=='file' else None
+    fd=os.open(path,os.O_RDWR|getattr(os,'O_NOFOLLOW',0)|(os.O_CREAT|os.O_EXCL if meta is None else 0),item['mode'])
+    with os.fdopen(fd,'r+b') as stream:
+        actual=os.fstat(stream.fileno())
+        if identity is not None and [actual.st_dev,actual.st_ino]!=identity:
+            raise Conflict('Approved native inode changed')
+        if meta and (actual.st_dev,actual.st_ino)!=(meta.st_dev,meta.st_ino):
+            raise Conflict('Native inode changed')
+        if meta and snapshot(path)!=before:raise Conflict('Direct-write scene changed')
+        stream.seek(0);stream.write(bytes.fromhex(item['hex']));stream.truncate()
+        os.fchmod(stream.fileno(),item['mode']);stream.flush();os.fsync(stream.fileno())
+
+
 def put(path, item):
     path = safe(path)
     kind = item['kind']
@@ -119,6 +154,27 @@ def verify_plan(plan):
     expected = body.pop('plan_sha256', None)
     if digest(encoded(body)) != expected or plan['schema_version'] != 1:
         raise Conflict('Plan hash/schema mismatch')
+    if 'memory_return' in plan and plan['memory_return']!='native-direct-v1':
+        raise Conflict('Unknown memory return schema')
+    if plan.get('memory_return')=='native-direct-v1':
+        identities=plan.get('native_identities')
+        if not isinstance(identities,dict) or not identities:
+            raise Conflict('Direct native identities/schema missing')
+        for name,identity in identities.items():
+            if (not isinstance(name,str) or not isinstance(identity,list) or len(identity)!=2
+                    or any(type(n) is not int or n<0 for n in identity)):
+                raise Conflict('Invalid direct native identity')
+            if not safe(name).is_relative_to(safe(plan['home'])) or plan.get('observations',{}).get(name,{}).get('kind')!='file':
+                raise Conflict('Direct native identity outside proven source scope')
+        for change in plan['changes']:
+            if change['stage']=='delete_product':
+                if change['after']!={'kind':'absent'}:raise Conflict('Invalid direct deletion target')
+            elif change['stage']=='detach':
+                if change['after']['kind']=='file':
+                    if (change['before']['kind']!='file' or change['before']['mode']!=change['after']['mode']):
+                        raise Conflict('Direct return cannot create native files/change permissions')
+                elif change['after']['kind']!='absent':raise Conflict('Direct return cannot create output paths')
+            else:raise Conflict('Legacy return stage cannot be relabelled as direct')
     home = safe(plan['home'])
     if not home.is_dir():
         raise Conflict('HOME missing')
@@ -136,6 +192,7 @@ def verify_plan(plan):
 
 def summary(plan):
     return {'schema_version': 1, 'command': plan['command'], 'home': plan['home'],
+            **({'memory_return':plan['memory_return']} if 'memory_return' in plan else {}),
             'plan_sha256': plan['plan_sha256'], 'backup_dir': plan['backup_dir'],
             'changes': [{'path': c['path'], 'before': digest(encoded(c['before'])),
                          'after': digest(encoded(c['after'])), 'stage': c['stage']}
@@ -245,6 +302,8 @@ def _evidence_scene(plan):
 
 
 def _scene(plan):
+    if plan.get('memory_return')=='native-direct-v1' and any(os.path.lexists(p) for p in lock_paths(plan['home'])):
+        raise Conflict('Writer lock present during direct native return')
     lock_state(plan['home'],plan['backup_dir'],allow_self=True)
     _evidence_scene(plan)
     for path, expected in plan.get('observations',{}).items():
@@ -270,6 +329,8 @@ def _scene(plan):
 def apply_plan(plan, *, action='resume', hook=None):
     verify_plan(plan)
     _scene(plan)  # A single bad file stops the whole operation before mutation.
+    direct=plan.get('memory_return')=='native-direct-v1'
+    apply=(lambda path,item:put_direct(path,item,plan.get('native_identities',{}).get(str(path)))) if direct else put
     changes = list(plan['changes'])
     if action == 'restore':
         changes.reverse()
@@ -279,23 +340,23 @@ def apply_plan(plan, *, action='resume', hook=None):
     delayed = []
     modes = []
     return_modes=[]
-    with locks(plan['home'], plan['backup_dir']) as (ensure_product, release_product):
+    with (nullcontext((lambda:None,lambda:None)) if direct else locks(plan['home'], plan['backup_dir'])) as (ensure_product, release_product):
         _scene(plan)
         if action=='resume':
             for change in changes:
                 if change['stage']=='delete_product' and change.get('working') and snapshot(change['path'])==change['before']:
-                    put(change['path'],change['working'])
+                    apply(change['path'],change['working'])
         else:
             for change in changes:
                 if change.get('working') and change['after']['kind']=='directory' and snapshot(change['path'])==change['after']:
-                    put(change['path'],change['working'])
+                    apply(change['path'],change['working'])
         for index, change in enumerate(changes):
             path, wanted = Path(change['path']), change[target]
             if action=='resume' and change['stage']!='return' and return_modes:
-                for previous in reversed(return_modes):put(previous['path'],previous['after'])
+                for previous in reversed(return_modes):apply(previous['path'],previous['after'])
                 return_modes=[]
             if action=='resume' and change['stage']=='return' and wanted['kind']=='directory' and change.get('working'):
-                put(path,change['working'])
+                apply(path,change['working'])
                 return_modes.append(change)
                 continue
             if snapshot(path) == wanted:
@@ -305,6 +366,11 @@ def apply_plan(plan, *, action='resume', hook=None):
                     path == Path(plan['home']) / '.mem-sharing/var'):
                 delayed.append(change)
                 continue
+            if direct:
+                _scene(plan)
+                for name,identity in plan.get('native_identities',{}).items():
+                    meta=Path(name).lstat()
+                    if [meta.st_dev,meta.st_ino]!=identity:raise Conflict('Native inode drift')
             current = snapshot(path)
             if current not in (change['before'], change['after'],change.get('working')):
                 raise Conflict('Drift before write: ' + str(path))
@@ -312,6 +378,8 @@ def apply_plan(plan, *, action='resume', hook=None):
                 hook('before_write', index, change)
                 if snapshot(path) != current:
                     raise Conflict('Drift during write: ' + str(path))
+            if direct:
+                _scene(plan)  # A new writer may appear without changing this file.
             if action=='resume' and change['stage']=='delete_product':
                 _evidence_scene(plan)
                 for earlier in plan['changes']:
@@ -321,18 +389,18 @@ def apply_plan(plan, *, action='resume', hook=None):
             if action=='restore' and change.get('working') and wanted['kind']=='directory':
                 actual_wanted = change['working']
                 modes.append(change)
-            put(path, actual_wanted)
+            apply(path, actual_wanted)
             ensure_product()
             if snapshot(path) != actual_wanted:
                 raise Conflict('Readback failed: ' + str(path))
             if hook:
                 hook('after_write', index, change)
         for change in reversed(modes):
-            put(change['path'],change[target])
+            apply(change['path'],change[target])
         release_product()
         # Keep the installer lock until the final product directories vanish.
         for change in delayed:
-            put(change['path'], change[target])
+            apply(change['path'], change[target])
     for change in plan['changes']:
         if snapshot(change['path']) != change[target]:
             raise Conflict('Final verification failed: ' + change['path'])
@@ -394,7 +462,7 @@ def recover(manifest, *, action='restore', approval=None, hook=None):
     approve(approval, view)
     apply_plan(plan, action=action, hook=hook)
     data['status'] = 'restored' if action == 'restore' else 'completed'
-    write_file(manifest, encoded(data))
+    persist_manifest(manifest,data)
     result={'status': data['status'], 'approval_required': False, 'manifest': str(manifest),
             'retained_evidence':plan.get('retained_evidence',[])}
     if action=='resume':result.update(context_keeper=ck_choice(plan['home']),**completion_metadata(plan))
@@ -784,7 +852,7 @@ def cli(argv=None):
             approve(data['approval'],summary(data['plan']))
             apply_plan(data['plan'])
             data['status']='completed'
-            write_file(args.manifest,encoded(data))
+            persist_manifest(args.manifest,data)
             output={'status':'completed','approval_required':False,'manifest':args.manifest,
                     'agents':data['plan']['agents'],'runtime_acceptance':'pending',
                     'validation':{'host_new_session':'pending','private_cpython_relocation':'pending'},

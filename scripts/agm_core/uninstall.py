@@ -19,7 +19,7 @@ from urllib.parse import unquote, urlsplit
 
 from . import entries, paths, registry, user_install, versions
 from .layout import resolve_layout
-from . import policy_migration
+from . import policy_migration, uninstall_memory
 from . import uninstall_recovery as recovery
 
 COMMAND = 'uninstall-machine'
@@ -78,7 +78,12 @@ def _preserve_ck(obj,roots,raw=None):
     keeper=(Path(obj['path']).name=='context-keeper' or obj.get('bridge_owner')=='context-keeper'
             or marker.get('start','').startswith(('<!-- context-keeper:','<!-- context-keeper:start')))
     if not keeper:return False
-    content=(obj.get('link_target') or '').encode()
+    target=obj.get('link_target') or ''
+    if target:
+        resolved=Path(os.path.normpath(str(Path(obj['path']).parent/target)))
+        if any(resolved==Path(root) or resolved.is_relative_to(root) for root in roots):
+            raise recovery.Conflict('Context Keeper depends on product; migrate it independently before uninstall: '+obj['path'])
+    content=target.encode()
     if raw is not None and marker:
         span=entries.managed_span(raw,**marker)
         if span is not None:content+=raw[span[0]:span[1]]
@@ -549,6 +554,7 @@ def _interpreter_plan(runtime,roots,backup):
 
 def _prepare_interpreter(plan):
     item=plan['recovery_runtime']
+    put=recovery.put_direct if plan.get('memory_return')=='native-direct-v1' else recovery.put
     if item['kind']=='bundled':
         source=Path(item['source']);destination=Path(item['destination'])
         snapshots=[]
@@ -566,8 +572,8 @@ def _prepare_interpreter(plan):
                 link=Path(state['target'])
                 if not link.is_relative_to(source):raise recovery.Conflict('External interpreter symlink')
                 state={'kind':'symlink','target':os.path.relpath(destination/link.relative_to(source),target.parent)}
-            recovery.put(target,state)
-        for target,state in reversed(modes):recovery.put(target,state)
+            put(target,state)
+        for target,state in reversed(modes):put(target,state)
     recovery.verify_interpreter(plan)
     # Execute the frozen recovery code with the independent interpreter before
     # any original output is changed; -I -S -B avoids user startup/site/pycache.
@@ -750,7 +756,9 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
         if root.is_symlink():
             raise recovery.Conflict('Product root symlink: ' + str(root))
     changes = {}
-    original, active = _standalone_memory(runtime)
+    original = uninstall_memory.public_sources(runtime)
+    active = None
+    public_body = uninstall_memory.public_body(runtime, original)
     _, controls, observed = policy_migration.retire_controls(ledger)
     for path, raw in controls.items():
         _change(changes,path,_file(raw,recovery.snapshot(path)['mode']),'detach')
@@ -779,43 +787,61 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
         if state['kind'] != 'file':
             raise recovery.Conflict('Connected Agent entry unavailable: ' + str(path))
         destination = path.parent / RETURN_DIR
+        # Existing legacy return packages need the exact old producer closure;
+        # a same-named user directory is never deletion permission.
+        historical_proof = False
         if os.path.lexists(destination):
-            raise recovery.Conflict('Return destination already occupied: ' + str(destination))
-        _append_directories(changes,destination,runtime.home)
-        for relative, content in active.items():
-            target = destination / relative
-            _append_directories(changes,target.parent,runtime.home)
-            _change(changes,target,content,'return')
-        # Byte-exact original tree, independently held by every recipient.
-        for source, content in original.items():
-            if content['kind'] not in ('file','symlink','directory'): continue
-            target = destination/'original'/Path(source).relative_to(runtime.root)
-            _append_directories(changes,target.parent,runtime.home)
-            _change(changes,target,content,'return')
+            if active is None:
+                legacy_original,active=_standalone_memory(runtime)
+                if legacy_original!=original:raise recovery.Conflict('Legacy source changed during inventory')
+            expected = {}
+            for relative, content in active.items():
+                expected[str(destination/relative)] = content
+            for source, content in original.items():
+                if content['kind'] != 'absent':
+                    expected[str(destination/'original'/Path(source).relative_to(runtime.root))] = content
+            wanted = set(expected)
+            for name in list(wanted):
+                parent = Path(name).parent
+                while parent.is_relative_to(destination):
+                    wanted.add(str(parent))
+                    if parent == destination: break
+                    parent = parent.parent
+            actual = recovery.tree(destination)
+            if set(actual) != wanted or any(actual.get(k) != v for k,v in expected.items()):
+                raise recovery.Conflict('Unknown/stale legacy return package; review required')
+            observations.update(actual)
+            roots.append(destination)
+            historical_proof = True
         raw = bytes.fromhex(state['hex'])
-        index = destination/'memories/MEMORY.md'
         own_units = [obj for obj in units if obj['path']==str(path)]
-        imported = [obj for obj in own_units if obj['kind']=='import']
-        if len(imported)>1:
-            raise recovery.Conflict('Multiple registered native imports')
-        if imported:
-            raw = _redirect_import(raw,imported[0],runtime.root/'memories/MEMORY.md',index)
+        imports = [obj for obj in own_units if obj['kind']=='import']
+        if len(imports)>1: raise recovery.Conflict('Multiple registered native imports')
         for obj in own_units:
-            if _preserve_ck(obj,roots,raw):continue
-            if obj['kind']!='import':
-                raw = _without_object(raw,obj)
-        redirected = False
-        if (agent=='dsh' and not imported and
+            if _preserve_ck(obj,roots,raw): continue
+            if obj['kind']=='import' and obj['ownership']=='reused':
+                if recovery.digest(bytes.fromhex(state['hex']))!=(obj.get('fingerprint') or {}).get('value'):
+                    raise recovery.Conflict('Native import whole-file fingerprint drift')
+                token=('@'+str(runtime.root/'memories/MEMORY.md')).encode()
+                if raw.count(token)!=1 or sum((line.removeprefix(b'\xef\xbb\xbf') if i==0 else line).strip()==token for i,line in enumerate(raw.splitlines()))!=1:
+                    raise recovery.Conflict('Missing/ambiguous native public import')
+                # Validate against original bytes before removing fallback units.
+                continue
+            raw = _without_object(raw,obj)
+        if imports and imports[0]['ownership']=='reused':
+            token=('@'+str(runtime.root/'memories/MEMORY.md')).encode()
+            raw=raw.replace(token,b'',1)
+        if (agent=='dsh' and not imports and
                 ((tool_identity or {}).get('user_conversions') or {}).get('dsh_reference')=='explicit-single-path-to-return-v1'):
-            from .uninstall_compat import redirect_dsh_reference
-            raw, proof = redirect_dsh_reference(runtime,path,bytes.fromhex(state['hex']),raw,
-                state['mode'],index,changes,active,own_units)
-            user_reference_redirects.append(proof);redirected=True
-        if any(value.encode() in raw for value in (str(runtime.root),str(runtime.code))):
-            raise recovery.Conflict('Unregistered/private dependency in Agent entry: ' + str(path))
-        pointer = ('' if imported or redirected else '\n@%s\n' % index if agent == 'claude' else
-                   '\n开始任务前读取并遵守 %s；按索引按需读取主题，路径不可用时说明。\n' % index)
-        _change(changes,path,_file(raw+pointer.encode(),state['mode']),'detach')
+            from .uninstall_compat import detach_dsh_reference
+            raw, proof = detach_dsh_reference(runtime,path,bytes.fromhex(state['hex']),raw,state['mode'])
+            user_reference_redirects.append(proof)
+        raw = uninstall_memory.retire_legacy_pointer(raw, path, proven=historical_proof)
+        raw = uninstall_memory.strip_generated(raw,runtime,historical_proof=historical_proof)
+        if uninstall_memory.contains_text(raw,uninstall_memory.LEGACY_GENERATED_GOVERNANCE):
+            raise recovery.Conflict('Unproven historical governance; review required')
+        uninstall_memory.require_no_product_dependency(raw,roots,home=runtime.home,document=path)
+        _change(changes,path,_file(uninstall_memory.merge_native(raw,public_body),state['mode']),'detach')
     # Retain AGENTS.md, Claude @AGENTS.md, effective WorkBuddy/CK bridges.
     # Remove only proven product-dependent project units, never entire files.
     project_roots = []
@@ -866,7 +892,9 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
     body = {'schema_version':1,'command':COMMAND,'home':str(runtime.home),
             'backup_dir':str(backup),'host_obligation':host_obligation,'installation_id':ledger['product']['installation_id'],
             'agents':ordered,'project_roots':project_roots,'delete_roots':[str(p) for p in roots],
-            'guard_roots':[str(user_paths[a].parent/RETURN_DIR) for a in ordered],
+            'memory_return':uninstall_memory.RETURN_SCHEMA,
+            'native_identities':{str(user_paths[a]):[user_paths[a].stat().st_dev,user_paths[a].stat().st_ino] for a in ordered},
+            'guard_roots':[],
             'changes':values,'recovery_sha256':recovery.digest(runner),
             'observations':observations,
             'retained_evidence':retained,
@@ -888,8 +916,8 @@ def execute(approval, *, home, backup_dir, hook=None, host_obligation=None, tool
     backup.mkdir(mode=0o700)
     manifest = backup/'manifest.json'
     try:
-        recovery.write_file(backup/'recover.py',Path(recovery.__file__).read_bytes(),0o700)
-        recovery.write_file(manifest,recovery.encoded({'plan':plan,'status':'prepared','approval':approval}))
+        recovery.write_backup_file(backup/'recover.py',Path(recovery.__file__).read_bytes(),0o600)
+        recovery.persist_manifest(manifest,{'plan':plan,'status':'prepared','approval':approval})
         _prepare_interpreter(plan)
         recovery.load_manifest(manifest)
         # Verify static syntax and all planned restore bytes before first write.
@@ -903,12 +931,12 @@ def execute(approval, *, home, backup_dir, hook=None, host_obligation=None, tool
         if plan['recovery_runtime']['kind']!='existing':
             raise recovery.Conflict('Fault hooks cannot execute inside a runtime scheduled for removal')
         recovery.apply_plan(plan,hook=hook)
-        recovery.write_file(manifest,recovery.encoded({'plan':plan,'status':'completed','approval':approval}))
+        recovery.persist_manifest(manifest,{'plan':plan,'status':'completed','approval':approval})
     except Exception:
         # Never auto-rollback over new user writes. Independent recovery previews
         # exact partial state and requires its own approval.
         if manifest.exists():
-            recovery.write_file(manifest,recovery.encoded({'plan':plan,'status':'recovery_required','approval':approval}))
+            recovery.persist_manifest(manifest,{'plan':plan,'status':'recovery_required','approval':approval})
         raise
     return {'status':'completed','approval_required':False,'manifest':str(manifest),
             'agents':plan['agents'],'runtime_acceptance':'pending',

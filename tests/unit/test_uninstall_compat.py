@@ -79,18 +79,18 @@ class DshRedirectTests(unittest.TestCase):
         from agm_core import registry,policy_migration,paths
         f=self.fixture();config=policy_migration.config();p=Path(paths.expand_path(config['dsh']['user_entry'],home=str(f.home)))
         p.parent.mkdir(parents=True,exist_ok=True)
-        raw='开始任务前读取并遵守 '.encode()+str(f.runtime.root/'memories/MEMORY.md').encode()+'；用户原文'.encode()+b'\r\n<!-- context-keeper:start -->\r\nindependent protocol\r\n<!-- context-keeper:end -->\r\nno-final-newline'
+        raw='开始任务前读取并遵守 '.encode()+str(f.runtime.root/'memories/MEMORY.md').encode()+'；读不到就说明。'.encode()+b'\r\n<!-- context-keeper:start -->\r\nindependent protocol\r\n<!-- context-keeper:end -->\r\nno-final-newline'
         p.write_bytes(raw);p.chmod(0o640)
         identity={'root':'/synthetic-reviewed-tool','commit':'a'*40,'user_conversions':{'dsh_reference':'explicit-single-path-to-return-v1'}}
         return f,p,raw,identity
     def test_engine_return_and_independent_restore_preserves_dsh(self):
         f,p,raw,identity=self.engine_fixture();before=recovery.tree(f.home)
         plan=uninstall.preview(home=f.home,backup_dir=f.backup,tool_identity=identity)
-        proof=plan['user_reference_redirects'][0];self.assertEqual(proof['agent'],'dsh')
+        proof=plan['user_reference_redirects'][0];self.assertEqual(proof['conversion'],'explicit-dsh-direct-native-v1')
         result=uninstall.execute(original.approval(recovery.summary(plan)),home=f.home,backup_dir=f.backup,tool_identity=identity)
         self.assertEqual(result['status'],'completed')
-        self.assertEqual(p.read_bytes(),raw.replace(str(f.runtime.root/'memories/MEMORY.md').encode(),proof['new_token'].encode(),1))
-        self.assertEqual(p.stat().st_mode&0o777,0o640);self.assertTrue((p.parent/'memsharing-return/memories/MEMORY.md').is_file())
+        self.assertEqual(p.read_bytes(),raw.splitlines(keepends=True)[1:][0]+b''.join(raw.splitlines(keepends=True)[2:]))
+        self.assertEqual(p.stat().st_mode&0o777,0o640);self.assertFalse((p.parent/'memsharing-return').exists())
         preview=recovery.recover(f.backup/'manifest.json');done=recovery.recover(f.backup/'manifest.json',approval=original.approval(preview['plan']))
         self.assertEqual(done['status'],'restored');self.assertEqual(recovery.tree(f.home),before)
     def test_approved_dsh_drift_zero_write(self):
