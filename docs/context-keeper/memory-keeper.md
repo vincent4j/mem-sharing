@@ -1,6 +1,7 @@
 # 项目记忆索引
 
 ## 未完成事项
+- 展示文案与命令名称真实宿主验收待办；状态：进行中（源码修改与静态核对完成，真实宿主显示待验）；触发：用户批准重新安装插件并开展真实宿主验收时；完成：真实 Paseo 加载后展示文案、macOS 说明、原理图与九个命令名称显示有证据；证据：[展示文案日志](worklogs/2026-11-03-Paseo插件展示名与README前部更新.md)、[补齐日志](worklogs/2026-11-03-Paseo插件OVERVIEW系统与原理图补齐.md)。
 - 正式发行与跨平台/新会话验证；状态：未开始；触发：用户另行批准新发行或重新安装；完成：固定发行输入、目标平台和真实客户端验收有证据；证据：[收口日志](worklogs/2026-11-03-直接归还卸载修正与主线收口.md)。本轮本机卸载、六家归还纠正及源码合入 main 已完成，不再占卸载待办。
 - Paseo 插件即装即用补齐；状态：0.1.5固定候选R生成/独立审核/source与release gate通过，当前Host真实加载及只读状态通过，产品仍0.1.4；触发：恢复截图通道及取得独立测试条件后；完成：无隐私截图、缺Python/Git新机器宿主首装/读忆及正式上架各有证据；证据：[验收](../plugin-adapters/acceptance.md)、[日志](worklogs/2026-10-31-Paseo插件单仓双入口调研.md)。候选已推送分支，未升级真实产品，Orca未动。
 - 双桌面端原生运行补证；状态：本轮交付结束，等待用户回到电脑前人工验收；0.1.3真实升级及双端接入完成、五家静态connected、586/74测试与私文/幂等通过；CUA双端绑定超时，原生验收blocked/pending；触发：用户主动恢复并人工操作；完成：两款原生新会话用户/项目规则读回、只读Skill实际加载有独立证据；证据：[交接日志](worklogs/2026-10-31-双桌面端源码固化与真实接入.md)、[人工接手说明](../acceptance/desktop-agent-contracts.md#人工接手与本轮收口)。
@@ -15,6 +16,8 @@
 - M1 整体验收补证；状态：阻断；触发：取得 WorkBuddy N1/N2 运行证据并另行安排标准无污染接力；完成：三家负向齐备及 P2/P3 流程缺口关闭；证据：[收口日志](worklogs/2026-10-29-M1负向验证与收口.md)。
 
 ## 主题摘要（按类型）
+
+- **展示名与用户文案更新：** OVERVIEW Requirements 中英已简洁写明支持 macOS，并从插件内 `assets/memory-sharing-workflow.png` 引用原理图；插件图与 docs 原图 SHA-256 相同，独立目录引用文件存在，差异检查通过，渲染未验。来源：[补齐日志](worklogs/2026-11-03-Paseo插件OVERVIEW系统与原理图补齐.md)。Paseo 插件展示名已改 Memory Sharing & Fusion（manifest 英中两名），两语 description 已按用户纠正替换为产品价值文案（「给你的每一个 AI Agent 同一份记忆。……」及对应英文），id memsharing、插件指令 memSharing 与技能 `/mem-sharing` 协议均未动；README 新增「⚙️ 工作原理」章节（紧放安装下，导航锚点已更新）：开场句+配图+三种记忆表+六家「原有用户/项目记忆入口」表（路径源出 scripts/agents.json，WorkBuddy 项目入口 `.workbuddy/memory/MEMORY.md`）+统一语义汇总（公共一份、独有原位保留、根 `AGENTS.md` 唯一来源、原生读取或引用/桥接、Paseo 插件一句）；配图 `docs/assets/memory-sharing-workflow.png`（PNG 1752×897，GPT Image 2.5 Flare 生成、主 Agent 验收）；79/81 行重复列举已收敛指向上表；README/OVERVIEW 平台实证与未验提示（中英）已删，不宣称全平台；两文件已按用户要求与 uninstall-design native-direct-v1 合同口径补「完整卸载后各 Agent 恢复原有记忆使用方式、公共记忆完整归还原生文件、独有保留、不丢失」说明（README FAQ 卸载行、OVERVIEW 文件和数据章中英段）。工作区未提交，真实宿主展示与 GitHub 渲染未验。来源：[日志](worklogs/2026-11-03-Paseo插件展示名与README前部更新.md)。
 
 - **开发源码统一候选：** 直接归还卸载修正及测试已提交 f331d07 并推送 main；精确 source gate 通过。原完整批次两 ERROR/六 FAIL 保留，两个旧断言模块纠正后补测 10+1 项通过，Node56/typecheck通过，不冒称原全量全绿。六家真实原生文件清理、用户原文与 Context Keeper 保全已由主 Agent 验收，用户确认；本次备份已删，产品安装资产及插件已卸载。无新版本/正式发行/重新安装。来源：[收口日志](worklogs/2026-11-03-直接归还卸载修正与主线收口.md)。 历史过程：[整合回归日志](worklogs/2026-11-03-开发源码候选整合与固定pin统一回归.md)。
 
@@ -66,6 +69,10 @@
 - [进化经验索引](evolution/index.md)
 
 ## 时间线（最新在前）
+
+## 2026-11-03 - Paseo插件展示名与README前部更新 `docs`
+- **任务：** 插件展示名改 Memory Sharing & Fusion（id/指令/协议不变）；README 前部补六家支持与 Paseo 插件一句话；删除 README/OVERVIEW 平台实证与未验提示（中英）。
+- **详见：** [日志](worklogs/2026-11-03-Paseo插件展示名与README前部更新.md)。
 
 ## 2026-11-03 - Paseo 0.1.6 原生界面只读验收 `acceptance`
 - **任务：** 按步骤验收新安装的 0.1.6 Paseo 插件；Paseo 运行中但 CUA 无可绑定原生窗口，本轮界面/读链 blocked，未改变现场。

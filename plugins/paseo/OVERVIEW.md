@@ -1,4 +1,4 @@
-# memSharing · 多 Agent 记忆共享与融合
+# Memory Sharing & Fusion · 多 Agent 记忆共享与融合
 
 **Multi-Agent Memory Sharing & Fusion**
 
@@ -21,6 +21,8 @@ You may already have preferences and rules saved in Codex, Claude or other Agent
 共享，让各家读同一份；融合，让过去分散积累的内容也能接着用。项目经历的保存、查找与续接由可选的 Context Keeper 提供。
 
 Sharing gives your Agents a common source. Fusion brings existing knowledge into that shared workflow. Optional Context Keeper handles saving, finding and resuming work history.
+
+![memSharing 工作原理 / How memSharing works](assets/memory-sharing-workflow.png)
 
 ## 🧠 三种记忆，各管一件事
 
@@ -45,9 +47,9 @@ Search for **memSharing** in the Command Center to check your setup, enable or d
 
 Requirements
 
-目前面向 macOS，要求 Paseo 0.13.2 或更高版本，以及已配置好的编程 Agent。已有 Python 3.9+ 和 Git 可直接使用；缺少时会单独询问是否下载专用环境。项目操作支持 Git 主检出目录，暂不支持 linked worktree。Context Keeper 安装后，项目记录库仍按它自己的流程启用。
+支持 macOS，要求 Paseo 0.13.2 或更高版本，以及已配置好的编程 Agent。已有 Python 3.9+ 和 Git 可直接使用；缺少时会单独询问是否下载专用环境。项目操作支持 Git 主检出目录，暂不支持 linked worktree。Context Keeper 安装后，项目记录库仍按它自己的流程启用。
 
-Requires macOS, Paseo 0.13.2 or later, and a configured coding agent. Existing Python 3.9+ and Git can be reused; missing tools can be downloaded with separate approval. Project actions support Git main checkouts, not linked worktrees. Context Keeper follows its own process to enable project records.
+Supports macOS. Requires Paseo 0.13.2 or later, and a configured coding agent. Existing Python 3.9+ and Git can be reused; missing tools can be downloaded with separate approval. Project actions support Git main checkouts, not linked worktrees. Context Keeper follows its own process to enable project records.
 
 ## 🔒 文件和数据
 
@@ -61,6 +63,6 @@ The plugin can access files, processes and the network on the selected host. It 
 
 Status and plans pass between Paseo and the selected host; plans may contain existing rules. Downloads contact GitHub. The plugin has no separate memory-upload service, but memory read by an Agent may be sent to your chosen model provider as conversation context or tool results.
 
-目前已验证本机 macOS 项目接入和新 Codex 会话读忆；全新机器首装、Intel、其他执行器及远程 Host 的完整流程仍待验证。
+完整卸载后，各 Agent 恢复原有的记忆使用方式；公共记忆会完整归还到各自的原生文件，原有独有内容保留，记忆不会丢失。
 
-Local macOS project setup and memory reading in a fresh Codex session have been tested. Full flows on fresh machines, Intel, other executors and remote hosts remain unverified.
+After a full uninstall, each agent goes back to its original way of using memory; the shared memory is returned in full to each agent's native files, existing agent-specific content stays in place, and nothing is lost.

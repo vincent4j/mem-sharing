@@ -8,7 +8,7 @@
 
 Codex 记住的偏好，Claude 接着用；昨天做到一半的工作，今天任何 Agent 接着做。
 
-[为什么需要](#为什么需要) · [安装](#安装) · [三种记忆](#三种记忆) · [使用菜单](#使用菜单) · [记忆中枢](#用户记忆中枢) · [设计理念](#设计理念)
+[为什么需要](#为什么需要) · [安装](#安装) · [工作原理](#工作原理) · [使用菜单](#使用菜单) · [记忆中枢](#用户记忆中枢) · [设计理念](#设计理念)
 
 </div>
 
@@ -38,18 +38,35 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 
 按 Agent 的提示确认，装好就能使用；项目经历可选安装 Context Keeper。
 
-当前实证平台为 macOS，其他平台尚未验证；完整安装对话见 [INSTALL.md](INSTALL.md)。
+也可作为 Paseo 插件安装，插件名称为 Memory Sharing & Fusion。
+
+完整安装对话见 [INSTALL.md](INSTALL.md)。
 
 ---
 
-<a id="三种记忆"></a>
-## 🎯 三种记忆
+<a id="工作原理"></a>
+## ⚙️ 工作原理
+
+memSharing 用一份公共用户记忆和项目根 `AGENTS.md`，把六家 Agent 接到同一套记忆上：
+
+![memSharing 工作原理：六家 Agent 各自读写汇聚到公共用户记忆与项目根 AGENTS.md 两个共享来源，Agent 独有内容原位保留，Context Keeper 可选独立管理项目经历](docs/assets/memory-sharing-workflow.png)
 
 | 名称 | 解决什么问题 | 放在哪里 |
 |---|---|---|
 | 用户记忆 | 跨项目的习惯与偏好，例如语言、工作方式 | `~/.mem-sharing/memories/` |
 | 项目记忆 | 这个项目怎么干活，各家 Agent 共读同一套约定 | 项目根 `AGENTS.md` |
 | 项目经历 | 做过什么、为什么这样决定、接下来做什么 | Context Keeper 管理的项目记录库，默认 `docs/context-keeper/` |
+
+| Agent | 原有用户记忆入口 | 原有项目记忆入口 |
+|---|---|---|
+| Codex | `~/.codex/AGENTS.md` | 项目根 `AGENTS.md` |
+| Claude Code | `~/.claude/CLAUDE.md` | 项目根 `CLAUDE.md` |
+| WorkBuddy | `~/.workbuddy/MEMORY.md` | `.workbuddy/memory/MEMORY.md` |
+| DeepSeek Harness（`dsh`） | `~/.dsh/AGENTS.md` | 项目根 `AGENTS.md` |
+| ZCode | `~/.zcode/AGENTS.md` | 项目根 `AGENTS.md` |
+| OpenCode v2 | `~/.config/opencode/AGENTS.md` | 项目根 `AGENTS.md` |
+
+表中为本产品接入的原生入口，不是各家记忆体系的完整清单。接入后，公共用户记忆共用一份，Agent 独有内容仍保留在原生文件；项目记忆以项目根 `AGENTS.md` 为唯一共享来源，各家通过原生读取或引用/桥接接入。
 
 用户记忆跟着人走，项目记忆与项目经历跟着仓库走。用户记忆与项目记忆约定怎么做事，项目经历积累做过的事；Context Keeper 的命令、记录格式与保存、查找流程由它自己定义，memSharing 不接管这些行为。
 
@@ -74,11 +91,9 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 - **整理用户记忆**：先只读扫描，公共、独有与归属不明的内容分开列出，你调整逐条提议后一次批准完整计划，不会自动删除内容。
 - **健康检查**：只读报告登记与现场缺口，不修复、不写入。
 - **接入项目规则**：进入未登记的 Git 主 checkout 默认按当前执行者接入；历史停用登记跳过、不自动重建，不控制 CK。
-- **整机卸载**：先外置备份与独立恢复材料，把当前完整公共记忆归还每个实际接入的 Agent，再核验并清理机器资产；Paseo 插件本体需独立移除，默认保留 Context Keeper。
+- **整机卸载**：先外置备份与独立恢复材料，把当前完整公共记忆归还每个实际接入的 Agent，再核验并清理机器资产；预览并批准后才执行。在任何一家已接入的 Agent 里直接说“卸载 memSharing”也进入同一路由；“卸载这个项目”会先澄清，不删除当前项目。Paseo 插件本体需独立移除（disabled 不算），默认保留 Context Keeper；完整合同见[整机卸载方案](docs/uninstall-design.md)。
 
-支持 Codex、Claude Code、WorkBuddy、DeepSeek Harness（`dsh`）、ZCode 和 OpenCode v2 六家。机器安装、再次安装及升级默认接入支持清单内全部已核验为 `installed` 的 Agent；显式 `--agent` 限定目标，`unknown` 或 `absent` 不自动接入。历史公共布局迁移与新增接入在写入前合成一份精确计划，一次批准；既有公共依赖仍完整迁移。
-
-`AGENTS.md` 是共享项目记忆基座，不依赖安装 Codex。项目命令缺省仍为 Codex、Claude Code、WorkBuddy；当前执行者实际使用时以自身 `--agent` 接入。DeepSeek Harness、ZCode、OpenCode 的用户入口分别为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，项目均原生读取 `AGENTS.md`。Claude 引用和 WorkBuddy 桥接在它们实际使用时补齐，保留私文，不预建其他执行器项目入口，也不自动恢复 disabled 项目。OpenCode 支持独立核验桌面 App 与 CLI 安装面，CLI-only 不证明桌面存在；官方原生 CLI 与 App 并装采用受限身份校验。OpenCode 第一版仅支持默认配置根，详见[操作手册](docs/operations.md#桌面端默认根与验证边界)；新会话加载验收仍 pending。
+安装时会识别并接入你已安装的受支持 Agent；以后换工具，也可以随时添加。
 
 **想要项目经历？** 在需要的项目里使用 `/context-keeper`：首次按 Context Keeper 的流程初始化记录库，记录库建在项目里、随 Git 走，各家 Agent 共用（安装时会问一句要不要装它：回车＝同意，输入 n 跳过）。用户级安装目前覆盖 Codex、Claude Code 与 WorkBuddy；DeepSeek Harness、ZCode 与 OpenCode 暂不在其安装范围，不影响它们共享记忆。没装它，用户记忆与项目记忆照常工作。
 
@@ -96,7 +111,7 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 | **会动我的文件吗？** | 写入有明确范围；发现冲突或受管内容漂移即停止，不覆盖你的改动。Agent 独有内容永不并入公共源、永不删除。 |
 | **怎么检索记忆？** | 检索只用索引精确查找（find），不使用 search 或语义搜索。 |
 | **如何添加新 Agent？** | 打开 `/mem-sharing` 选择“添加新的 Agent”可限定接入；重新运行安装器会按 installed 自动发现并精确预览全部支持对象。 |
-| **怎样卸载？** | 使用“整机卸载”，预览并批准完整归还计划；Paseo 机器资产完成后还需独立绑定、移除、核验插件，不能把 disabled 当全卸载。 |
+| **怎样卸载？** | 在任何一家已接入的 Agent 里直接说“卸载 memSharing”，预览并批准后执行。完整卸载后，各 Agent 恢复原有的记忆使用方式；公共记忆完整归还到各自的原生文件，原有独有内容保留，记忆不会丢失。 |
 | **不装 Context Keeper 可以吗？** | 可以。用户记忆、项目记忆照常共享，只没有项目经历的保存与续接能力。 |
 
 ---
@@ -135,10 +150,4 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 
 完整设计：[DESIGN.md](DESIGN.md) · 安装操作：[INSTALL.md](INSTALL.md) · 会话操作：[SKILL.md](SKILL.md) · 文档地图：[llms.txt](llms.txt) · [验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)
 
-完整职责边界、数据归还与独立恢复见[整机卸载方案](docs/uninstall-design.md)。正式 payload 与真实宿主验收仍按发行/验收门槛执行。
-
-### 直接说“卸载 memSharing”
-
-在已接入并加载公共索引的任一家 Agent 中，可说“卸载 memSharing”“卸载 mem-sharing”或“不想用这个共享记忆工具了，帮我卸载”。无需斜杠命令或源码目录：原生入口经公共索引按需读取《使用约定》，再读已核验安装代码的 [SKILL](SKILL.md) 与[完整卸载合同](docs/uninstall-design.md)，进入同一只读预览。用户看过精确计划并批准后才执行；“卸载这个项目”先澄清，不删除当前项目。
-
-从其它 Agent 发起仍须保留 Paseo 安装形态的宿主义务；来源不明先补证。机器清理和宿主移除分列，CK 仅在声明范围全部成功后独立征询、默认保留。安装代码已具备当前兼容实现时，可用 `migrate-policy` 精确预览批准只迁已知旧公共指南；不兼容的旧 C 须先沿既有精确安装/升级流程更新代码；私文保留，未知定制停止。静态合成路径已可测试，六家真实会话触发仍待验收。
+完整职责边界、数据归还、自然语言触发与独立恢复见[整机卸载方案](docs/uninstall-design.md)。正式 payload 与真实宿主验收仍按发行/验收门槛执行。

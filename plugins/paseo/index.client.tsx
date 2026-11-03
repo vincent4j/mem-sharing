@@ -14,7 +14,7 @@ export default function contribute(client: PluginClientContext) {
 
   client.addCommandCenterItem({
     id: "ms-status",
-    title: "memSharing：接入状态",
+    title: "memSharing：查看共享状态",
     icon: "BookOpen",
     context: "global",
     onSelect({ openScreen }) {
@@ -24,7 +24,7 @@ export default function contribute(client: PluginClientContext) {
 
   client.addCommandCenterItem({
     id: "ms-onboard",
-    title: "memSharing：接入本机（首次或继续）",
+    title: "memSharing：设置记忆共享",
     icon: "Rocket",
     context: "global",
     keywords: ["install", "setup", "memory"],
@@ -35,7 +35,7 @@ export default function contribute(client: PluginClientContext) {
 
   client.addCommandCenterItem({
     id: "ms-project-check",
-    title: "memSharing：检查当前项目",
+    title: "memSharing：检查当前项目记忆",
     icon: "Stethoscope",
     context: "workspace",
     keywords: ["check", "memory"],
@@ -46,7 +46,7 @@ export default function contribute(client: PluginClientContext) {
 
   client.addCommandCenterItem({
     id: "ms-project-enable",
-    title: "memSharing：启用当前项目",
+    title: "memSharing：为当前项目启用共享",
     icon: "BookOpenCheck",
     context: "workspace",
     keywords: ["enable", "memory"],
@@ -57,7 +57,7 @@ export default function contribute(client: PluginClientContext) {
 
   client.addCommandCenterItem({
     id: "ms-uninstall",
-    title: "memSharing：整机卸载",
+    title: "memSharing：卸载记忆共享",
     icon: "BookX",
     context: "global",
     keywords: ["uninstall", "memory"],
@@ -68,7 +68,7 @@ export default function contribute(client: PluginClientContext) {
 
   client.addCommandCenterItem({
     id: "ms-ck",
-    title: "memSharing：可选安装 Context Keeper",
+    title: "memSharing：安装 Context Keeper（可选）",
     icon: "NotebookPen",
     context: "global",
     keywords: ["context-keeper", "ck", "optional"],
@@ -79,7 +79,7 @@ export default function contribute(client: PluginClientContext) {
 
   client.addCommandCenterItem({
     id: "ms-recover",
-    title: "memSharing：恢复未完成操作",
+    title: "memSharing：高级：处理未完成的操作",
     icon: "Undo2",
     context: "global",
     keywords: ["recover", "journal", "rollback"],
@@ -89,8 +89,8 @@ export default function contribute(client: PluginClientContext) {
   });
 
   for (const item of [
-    { id: "ms-staging-cleanup", title: "memSharing：外置清理宿主暂存", flow: "stagingCleanup" },
-    { id: "ms-uninstall-recover", title: "memSharing：恢复整机卸载", flow: "uninstallRecover" },
+    { id: "ms-staging-cleanup", title: "memSharing：高级：清理安装暂存文件", flow: "stagingCleanup" },
+    { id: "ms-uninstall-recover", title: "memSharing：高级：处理未完成的卸载", flow: "uninstallRecover" },
   ]) client.addCommandCenterItem({ id: item.id, title: item.title, icon: "Undo2", context: "global", keywords: ["memsharing", "recover"], onSelect({ openScreen }) { openScreen({ screenId: "ms-flow", params: { flow: item.flow } }); } });
   return () => {};
 }
