@@ -206,7 +206,7 @@ class Transaction:
     production. Stages: before_write, after_write, before_readback,
     before_restore, before_restore_readback. Registry receives the same checks.
     """
-    def __init__(self, *, lock_path, backup_root, allowed_roots, operation="enable-memory", hook=None):
+    def __init__(self, *, lock_path, backup_root, allowed_roots, operation="enable-memory", hook=None, operation_metadata=None):
         self.lock_path = _safe_path(lock_path)
         self.backup_root = _safe_path(backup_root)
         if self.backup_root.is_symlink():
@@ -218,6 +218,11 @@ class Transaction:
         self.directory = self.backup_root / (stamp + "-" + uuid.uuid4().hex)
         self.manifest_path = self.directory / "manifest.json"
         self.operation = operation
+        # Optional caller-owned relation data (e.g. memory share provenance).
+        # Persisted complete with the manifest's first save; recovery ignores it.
+        if operation_metadata is not None and not isinstance(operation_metadata, dict):
+            raise TransactionError("operation_metadata must be a JSON object")
+        self.operation_metadata = operation_metadata
         self.hook = hook or (lambda event, path: None)
         self.manifest = None
 
@@ -242,7 +247,7 @@ class Transaction:
 
     def run(self, changes, *, registry_change=None, registry_authoritative=False, phased_writes=False):
         changes = list(changes)
-        if phased_writes and (self.operation != 'organize-user-rules' or registry_change is not None or registry_authoritative):
+        if phased_writes and (self.operation not in ('organize-user-rules', 'share-user-memory') or registry_change is not None or registry_authoritative):
             raise TransactionError('phased writes are restricted to explicit memory fusion without registry changes')
         if registry_change is not None:
             changes.append(registry_change)
@@ -271,6 +276,8 @@ class Transaction:
             self.manifest = {"schema_version": 1, "operation": self.operation,
                              "status": "prepared", "registry_path": str(registry_change.path) if registry_change else None,
                              "created_directories": [], "entries": [], "error": None}
+            if self.operation_metadata is not None:
+                self.manifest["operation_metadata"] = self.operation_metadata
             if phased_writes:
                 self.manifest['phased_writes'] = True
             try:
@@ -403,7 +410,7 @@ class Transaction:
 def _recovery_entries(transaction, manifest_path, manifest):
     """Validate every backup and complete per-path chain before any restore."""
     phased = manifest.get('phased_writes', False)
-    if type(phased) is not bool or (phased and (manifest.get('operation') != 'organize-user-rules' or manifest.get('registry_path') is not None)):
+    if type(phased) is not bool or (phased and (manifest.get('operation') not in ('organize-user-rules', 'share-user-memory') or manifest.get('registry_path') is not None)):
         raise TransactionError('invalid phased recovery scope')
     chains = {}; unattempted = False
     for entry in manifest['entries']:
