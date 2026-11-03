@@ -156,32 +156,20 @@ class ClaudeNativeTests(DetectFixture):
         return exe
 
     def test_native_identity_is_verified_without_launch_or_filename_version(self):
-        exe = self.native()
-        calls = []
+        self.native();calls=[]
+        def runner(command):calls.append(command);raise AssertionError('signature backend must not be used')
+        report=self.detect(['claude'],runner=runner)['agents']['claude']
+        self.assertEqual(report['status'],'installed');self.assertEqual(calls,[])
+        native=next(x for x in report['evidence'] if x['result']=='verified')
+        self.assertEqual(native['type'],'macos_native_executable');self.assertNotIn('version',native)
+        self.assertEqual(native['signature_policy'],'not_required')
 
-        def runner(command):
-            calls.append(command)
-            self.assertEqual(command[:5], ['codesign', '--verify', '--strict', '-R',
-                                          detect._CLAUDE_NATIVE_REQUIREMENT])
-            self.assertEqual(command[-1], str(exe))
-            return SimpleNamespace(returncode=0)
-
-        report = self.detect(['claude'], runner=runner)['agents']['claude']
-        self.assertEqual(report['status'], 'installed')
-        self.assertEqual(len(calls), 1)
-        native = next(x for x in report['evidence'] if x['result'] == 'verified')
-        self.assertEqual(native['type'], 'macos_native_executable')
-        self.assertNotIn('version', native)
-        self.assertIn('anchor apple generic', calls[0][4])
-        self.assertIn('Q6L2SF6YDW', calls[0][4])
-        self.assertIn('com.anthropic.claude-code', calls[0][4])
-
-    def test_invalid_identity_and_unavailable_backend_remain_unknown(self):
+    def test_signature_identity_and_backend_are_not_installation_gates(self):
         self.native()
-        for result in (None, SimpleNamespace(returncode=1)):
+        for result in (None,SimpleNamespace(returncode=1)):
             with self.subTest(result=result):
-                r = self.detect(['claude'], runner=lambda command: result)
-                self.assertEqual(r['agents']['claude']['status'], 'unknown')
+                r=self.detect(['claude'],runner=lambda command:result)
+                self.assertEqual(r['agents']['claude']['status'],'installed')
 
     def test_native_verification_does_not_mask_other_broken_candidates(self):
         self.native()
@@ -213,14 +201,12 @@ class AppBundleTests(DetectFixture):
         self.assertEqual(verified[0]["type"], "app_bundle")
         self.assertEqual(verified[0]["name"], "com.example.fixture")
 
-    def test_workbuddy_requires_version_and_identifier_match(self):
-        self.app_bundle(self.apps, "WorkBuddy.app", product="WorkBuddy", version="1.0",
-                        bundle_id="com.example.workbuddy")
-        good = self.detect(runner=fake_codesign(identifier="com.example.workbuddy"))
-        self.assertEqual(good["agents"]["workbuddy"]["status"], "installed")
-        wrong = self.detect(runner=fake_codesign(identifier="com.other.component"))
-        self.assertEqual(wrong["agents"]["workbuddy"]["status"], "unknown")
-        self.assertIn("identifier", wrong["agents"]["workbuddy"]["summary"])
+    def test_workbuddy_metadata_suffices_without_signature_identifier_match(self):
+        self.app_bundle(self.apps,'WorkBuddy.app',product='WorkBuddy',version='1.0',bundle_id='com.example.workbuddy')
+        for runner in (fake_codesign(identifier='com.example.workbuddy'),fake_codesign(identifier='com.other.component'),fake_codesign(verify_rc=3)):
+            report=self.detect(runner=runner)
+            self.assertEqual(report['agents']['workbuddy']['status'],'installed')
+            self.assertEqual(runner.calls,[])
 
     def test_workbuddy_without_version_is_unknown(self):
         self.app_bundle(self.apps, "WorkBuddy.app", product="WorkBuddy", version=None)
@@ -233,15 +219,16 @@ class AppBundleTests(DetectFixture):
         report = self.detect(runner=fake_codesign())
         self.assertEqual(report["agents"]["codex"]["status"], "unknown")
 
-    def test_missing_signature_backend_is_unknown_not_absent(self):
-        self.app_bundle(self.apps, "Codex.app", product="Codex")
-        report = self.detect(runner=lambda command: None)
-        self.assertEqual(report["agents"]["codex"]["status"], "unknown")
+    def test_missing_signature_backend_does_not_block_real_app(self):
+        self.app_bundle(self.apps,'Codex.app',product='Codex')
+        report=self.detect(runner=lambda command:None)
+        self.assertEqual(report['agents']['codex']['status'],'installed')
 
-    def test_failing_signature_is_unknown(self):
-        self.app_bundle(self.apps, "Codex.app", product="Codex")
-        report = self.detect(runner=fake_codesign(verify_rc=3))
-        self.assertEqual(report["agents"]["codex"]["status"], "unknown")
+    def test_failing_signature_does_not_block_real_app(self):
+        self.app_bundle(self.apps,'Codex.app',product='Codex')
+        runner=fake_codesign(verify_rc=3)
+        report=self.detect(runner=runner)
+        self.assertEqual(report['agents']['codex']['status'],'installed');self.assertEqual(runner.calls,[])
 
     def test_user_provided_bundle_path_extends_probing(self):
         elsewhere = self.area / "opt"
@@ -252,18 +239,11 @@ class AppBundleTests(DetectFixture):
                              user_candidates={"workbuddy": [{"kind": "macos_app_bundle", "path": str(bundle)}]})
         self.assertEqual(report["agents"]["workbuddy"]["status"], "installed")
 
-    def test_real_codesign_adhoc_bundle_verifies(self):
-        if shutil.which("codesign") is None:
-            self.skipTest("codesign unavailable on this host")
-        bundle = self.app_bundle(self.apps, "Codex.app", product="Codex",
-                                 bundle_id="com.agm.fixture.codex")
-        result = subprocess.run(["codesign", "--sign", "-", "--identifier",
-                                 "com.agm.fixture.codex", str(bundle)],
-                                capture_output=True, text=True)
-        if result.returncode != 0:
-            self.skipTest("host cannot ad-hoc sign: %s" % result.stderr.strip())
-        report = self.detect()
-        self.assertEqual(report["agents"]["codex"]["status"], "installed", report["agents"]["codex"]["summary"])
+    def test_discovery_never_invokes_codesign(self):
+        self.app_bundle(self.apps,'Codex.app',product='Codex',bundle_id='com.agm.fixture.codex')
+        def forbidden(command):raise AssertionError('No signing, launching or backend probing is required')
+        before=self.tree();result=self.detect(runner=forbidden)
+        self.assertEqual(result['agents']['codex']['status'],'installed');self.assertEqual(self.tree(),before)
 
 
 class ReceiptTests(DetectFixture):

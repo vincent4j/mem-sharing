@@ -42,12 +42,8 @@ class OpenCodeDesktopTests(DetectFixture):
         self.assertEqual(result['surfaces']['cli']['status'], 'unverified')
         record = next(r for r in result['evidence'] if r['result'] == 'verified')
         self.assertEqual((record['name'], record['version']), ('ai.opencode.desktop', '2.2.5'))
-        command = next(c for c in signer.calls if '--verify' in c)
-        self.assertIn('--deep', command); self.assertIn('--strict', command)
-        requirement = command[command.index('-R') + 1]
-        self.assertIn('identifier "ai.opencode.desktop"', requirement)
-        self.assertIn('anchor apple generic', requirement)
-        self.assertIn('certificate leaf[subject.OU] = "5NZ4Q7NXJ4"', requirement)
+        self.assertEqual(signer.calls,[])
+        self.assertEqual(record['signature_policy'],'not_required')
         self.assertEqual(before, {str(p): (p.stat().st_mtime_ns, p.read_bytes() if p.is_file() else None)
                                  for p in self.area.rglob('*')})
 
@@ -64,7 +60,8 @@ class OpenCodeDesktopTests(DetectFixture):
         self.cli(); self.desktop()
         result = self.result()
         self.assertEqual(result['status'], 'installed')
-        self.assertEqual(result['summary'], '官方 OpenCode CLI 与桌面 App 并装；各安装面身份已独立核验；规则加载兼容性未由本次检测验证')
+        self.assertIn('CLI 与桌面 App 并装',result['summary'])
+        self.assertIn('未校验发布者签名',result['summary'])
         self.assertEqual({s['status'] for s in result['surfaces'].values()}, {'verified'})
         self.assertEqual(len([r for r in result['evidence'] if r['result'] == 'verified']), 2)
 
@@ -83,15 +80,15 @@ class OpenCodeDesktopTests(DetectFixture):
                 self.desktop(**changes)
                 self.assertEqual(self.result()['status'], 'unknown')
 
-    def test_wrong_signature_or_identifier_does_not_join_valid_cli(self):
+    def test_signature_failure_does_not_block_app_cli_coexistence(self):
         self.cli(); self.desktop()
         signer = fake_codesign(identifier='ai.opencode.desktop')
         def failed_app(command):
             if '--verify' in command and command[-1].endswith('.app'):
                 return SimpleNamespace(returncode=1, stdout='', stderr='bad publisher')
             return signer(command)
-        self.assertEqual(self.result(runner=failed_app)['status'], 'unknown')
-        self.assertEqual(self.result(runner=fake_codesign(identifier='wrong.id'))['status'], 'unknown')
+        self.assertEqual(self.result(runner=failed_app)['status'], 'installed')
+        self.assertEqual(self.result(runner=fake_codesign(identifier='wrong.id'))['status'], 'installed')
 
     def test_failed_cli_does_not_join_valid_app(self):
         self.cli(); self.desktop()
@@ -100,7 +97,7 @@ class OpenCodeDesktopTests(DetectFixture):
             if '--verify' in command and not command[-1].endswith('.app'):
                 return SimpleNamespace(returncode=1, stdout='', stderr='bad publisher')
             return signer(command)
-        self.assertEqual(self.result(runner=failed_cli)['status'], 'unknown')
+        self.assertEqual(self.result(runner=failed_cli)['status'], 'installed')
 
     def test_additional_verified_cli_is_a_real_conflict(self):
         self.cli(); self.desktop()
@@ -114,7 +111,7 @@ class OpenCodeDesktopTests(DetectFixture):
         self.desktop(self.home / 'Applications')
         self.assertEqual(self.result()['status'], 'unknown')
 
-    def test_npm_cli_and_app_do_not_get_native_pair_exception(self):
+    def test_supported_npm_cli_and_app_can_coexist_without_signature_gate(self):
         self.desktop()
         package = self.npm_package('@opencode/cli')
         (package / 'package.json').write_text(json.dumps({'name': '@opencode/cli', 'version': '2.2.5', 'bin': {'opencode': 'bin/cli'}}))
@@ -122,5 +119,5 @@ class OpenCodeDesktopTests(DetectFixture):
         link.symlink_to(package / 'bin/cli')
         (self.bin_dir / 'cli').unlink()
         result = self.result()
-        self.assertEqual(result['status'], 'unknown')
+        self.assertEqual(result['status'], 'installed')
         self.assertEqual(len([r for r in result['evidence'] if r['result'] == 'verified']), 2)

@@ -150,9 +150,11 @@ check 只报告登记与现场缺口，不写锁、不备份、不修复、不�
 
 DeepSeek Harness（`dsh`）用户入口为 `~/.dsh/AGENTS.md`，ZCode（`zcode`）为 `~/.zcode/AGENTS.md`；均共用公共记忆索引，保留各自私文，项目原生读取根 `AGENTS.md`，无需额外桥接。默认项目接入仍由当前实际执行者显式使用自身 ID，不预建其他执行器入口，也不恢复 disabled。
 
-OpenCode v2 用户入口为 `~/.config/opencode/AGENTS.md`，项目原生读取 `AGENTS.md`，不预建专属项目私文。第一版只支持默认配置根：`XDG_CONFIG_HOME` 与 `OPENCODE_CONFIG_DIR` 可未设置、为空白，或分别为规范化后等于 `<home>/.config`、`<home>/.config/opencode` 的绝对路径；相对路径、字面 `~` 与其他根均拒绝。`OPENCODE_CONFIG` 非空即拒绝。拒绝时整单零写，不回显变量原值。原生签名匹配可核验 installed，但没有静态版本证据仍如实标记版本 unknown。大文件不套用 Codex 的 32KiB 提醒，不代表客户端没有其他限制。
+OpenCode v2 用户入口为 `~/.config/opencode/AGENTS.md`，项目原生读取 `AGENTS.md`，不预建专属项目私文。第一版只支持默认配置根：`XDG_CONFIG_HOME` 与 `OPENCODE_CONFIG_DIR` 可未设置、为空白，或分别为规范化后等于 `<home>/.config`、`<home>/.config/opencode` 的绝对路径；相对路径、字面 `~` 与其他根均拒绝。`OPENCODE_CONFIG` 非空即拒绝。拒绝时整单零写，不回显变量原值。受支持的本地原生命令结构可作为安装证据，没有静态版本证据时仍如实标记版本 unknown。大文件不套用 Codex 的 32KiB 提醒，不代表客户端没有其他限制。
 
-OpenCode 检测分别报告 CLI 与桌面 App 安装面。桌面核验 `OpenCode.app` 的固定产品名、`ai.opencode.desktop` 标识、`OpenCode` 可执行入口、非空且一致的 bundle 版本，以及 Apple 证书链与团队 `5NZ4Q7NXJ4` 签名。CLI-only 不表示桌面已安装；只有一个官方原生 CLI 与一个官方桌面 App 均通过、且无失败候选时允许并装，额外来源仍为 unknown。CLI 没有静态版本证据时保持版本 unknown。
+OpenCode 检测分别报告 CLI 与桌面 App 安装面。桌面核对 `OpenCode.app` 的产品名、`ai.opencode.desktop` 标识、可读可执行的 `OpenCode` 入口与非空且一致的 bundle 版本，不要求 Apple 证书链、团队或签名标识核验。CLI-only 不表示桌面已安装；恰好一个支持的 CLI 候选与一个支持的桌面 App 均满足静态证据、且无失败候选时允许并装，额外来源仍为 unknown。CLI 没有静态版本证据时保持版本 unknown；本地安装证据不代表发布者身份可信或新会话运行成功。
+
+自动发现与显式 `--agent` 均不调用 `codesign`，不因 Agent 签名失败、签名标识不同或签名后端缺失而拒绝。有效 App 元数据与可读可执行入口、支持的 CLI 包或原生结构、显式哈希收据可作为静态证据；空残留配置目录仍仅为 hint/unknown。坏链接、不可读文件、产品元数据不符或候选歧义仍为 unknown；只有全部支持候选均可检查且无候选、无 hint 才为 absent。接入仍只处理 installed，不增加 force，不放宽合法原生路径、原文备份、漂移与恢复保护，也不改变产品固定 S/R 来源完整性校验。CLI 参数不变；新策略目前仅在开发源码，尚未进入已生成的 0.1.7 载荷。同一 Agent 恰好一个受支持的 CLI 候选加一个 App 候选、且没有任何本地失败证据时可判 installed；两 CLI、两 App、更多候选或坏候选仍为 unknown，仅证明本地安装面，不证明模型登录、发布者可信或运行加载。
 
 章教授已交付桌面 2.2.5 安装、签名与默认规则读取逻辑的静态证据；本轮未重复操作真实环境。静态检测和临时 HOME 测试不能证明真实新会话已加载规则；memSharing 真实接入、新会话与模型调用验收由用户延后统一进行，均 pending。验收分层见[OpenCode 验证记录](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/opencode-adapter/verification.md)。
 

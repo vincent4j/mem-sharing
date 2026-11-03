@@ -44,7 +44,7 @@ class DesktopDetectionTests(DetectFixture):
         for agent in DESKTOP:
             self.assertIn(str(self.home / ('.'+agent) / 'AGENTS.md'), allowed)
 
-    def test_desktop_signature_version_and_hint_fail_closed(self):
+    def test_desktop_signature_does_not_block_but_version_and_hint_remain_checked(self):
         for agent in DESKTOP:
             with self.subTest(agent=agent):
                 (self.home / ('.'+agent)).mkdir()
@@ -52,9 +52,9 @@ class DesktopDetectionTests(DetectFixture):
                 signal = self.config[agent]['installation_signals'][1]
                 self.app_bundle(self.apps, signal['bundle_name'], product=signal['product_name'], version='1.0')
                 bad = self.detect([agent], runner=fake_codesign(identifier='wrong'))
-                self.assertEqual(bad['agents'][agent]['status'], 'unknown')
+                self.assertEqual(bad['agents'][agent]['status'], 'installed')
                 bad = self.detect([agent], runner=fake_codesign(identifier='com.example.fixture', verify_rc=1))
-                self.assertEqual(bad['agents'][agent]['status'], 'unknown')
+                self.assertEqual(bad['agents'][agent]['status'], 'installed')
                 info = self.apps / signal['bundle_name'] / 'Contents/Info.plist'
                 import plistlib
                 data = plistlib.loads(info.read_bytes()); data.pop('CFBundleShortVersionString')

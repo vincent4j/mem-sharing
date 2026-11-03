@@ -60,13 +60,15 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 
 ## 支持的执行器
 
-OpenCode 桌面 App 与 CLI 分面核验，CLI-only 不证明桌面存在；官方原生 CLI 与 App 并装采用受限身份校验，详见[操作手册](docs/operations.md#桌面端默认根与验证边界)。真实新会话验收由用户延后统一进行。
+OpenCode 桌面 App 与 CLI 分面核验，CLI-only 不证明桌面存在；支持的原生 CLI 与 App 按各自本地静态证据识别，不要求 Agent 应用签名，详见[操作手册](docs/operations.md#桌面端默认根与验证边界)。真实新会话验收由用户延后统一进行。
 
 支持 Codex、Claude Code、WorkBuddy、DeepSeek Harness（`dsh`）、ZCode（`zcode`）、OpenCode v2（`opencode`）六家。机器安装、再次安装与升级缺省接入支持对象中全部已核验 installed 者，显式重复 `--agent` 限定范围。后三家用户入口为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，项目均原生读取 `AGENTS.md`，不新增隐藏桥接或 Skill 投影。共用公共记忆索引，各自私文保留。项目命令缺省仍三家；当前实际执行者使用时显式指定自身 ID，不预建其他执行器入口，disabled 不恢复。
 
 两家均仅有默认根的静态支持；DSH 限本次默认 coding `cordis` preset，非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根，检查不回传变量值。自定义配置未验证；`ZCODE_HOME` 不是 ZCode 规则根。Skill 发现及验收边界见[操作手册](docs/operations.md#桌面端默认根与验证边界)。
 
-Claude Code 的 macOS 原生 CLI 通过 Mach-O 文件类型及 Apple 证书链、Anthropic 团队与产品签名共同核验，不启动二进制，也不把目录名作为产品版本。npm 安装仍按包名与入口核验。默认 PATH 中的断链或失败候选仍使结果为 `unknown`；已核清活动安装时，可在精确请求中显式限定 `search_paths` 与 `user_candidates`，保留原有 PATH 和文件。
+Claude Code 的 macOS 原生 CLI 根据受支持的命令入口名、可读可执行文件与 Mach-O 结构记录本地安装事实，不启动二进制，也不把目录名作为产品版本。npm 安装仍按包名与入口核验。自动发现和显式 `--agent` 不调用 `codesign`，不因签名失败、签名标识不同或后端不可用拒绝；这不表示已验证发布者可信或运行成功。空残留配置目录仍仅为 hint，不判 installed；默认 PATH 中的断链、不可读、产品元数据不符或活动来源不明仍为 `unknown`。已核清活动安装时，可在精确请求中显式限定 `search_paths` 与 `user_candidates`，保留原有 PATH 和文件。
+
+本次取消的是 Agent 应用签名硬门槛，CLI 参数不变；合法原生路径、原文与备份保全、精确批准、漂移和恢复保护，以及产品固定 S/R 的来源与内容完整性校验均保留。此处描述当前开发源码，尚未进入已生成的 0.1.7 载荷，不代表已安装版本已更新。
 
 ## 给执行 Agent 的命令与批准合同
 

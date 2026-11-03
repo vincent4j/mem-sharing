@@ -1,25 +1,12 @@
-"""M4-05: executor installation facts as three states (installed/absent/unknown).
+"""Read-only local installation evidence; Agent signatures are not a gate.
 
-Contract: docs/plan/decisions-m4.md §7.1. Detection observes only local static
-facts: the current PATH, the standard application directories (/Applications and
-<home>/Applications) and explicitly user-provided executable/app/receipt paths.
-It never launches an application, never makes network or model requests and
-never reads credentials, sessions or cookies. The only subprocess it may run is
-the system static signature verifier (codesign); when that read-only backend is
-unavailable the affected candidate fails, which yields unknown, not absent.
-
-Aggregation rules (§7.1, frozen):
-- exactly one fully verified candidate and no failed candidate ⇒ installed;
-- a candidate that exists but fails verification (unknown wrapper script, bare
-  binary without a package identity, broken link, name/product mismatch,
-  signature or permission failure), or several verified candidates with an
-  undeterminable active source ⇒ unknown;
-- a hint (residual directory) without a strong signal ⇒ unknown;
-- every supported candidate checkable, none present, and no hint ⇒ absent.
-
-Every verified fact records absolute path, type, package/bundle identity,
-version and executable hash; the detection result carries the observation time
-and rules version. Detection itself performs zero writes.
+Application metadata and readable executable files, supported CLI/package
+layouts and explicit hashed receipts establish installation facts. Empty or
+residual configuration directories remain hints only. Broken paths, missing
+executables, unrelated product metadata and ambiguous candidates remain
+unknown. Detection never launches an Agent, calls codesign, writes files,
+reads credentials or contacts a model. Product source S/R integrity is handled
+independently and is not relaxed by this Agent-discovery policy.
 """
 
 from __future__ import annotations
@@ -30,35 +17,17 @@ import os
 import plistlib
 import re
 import stat as stat_module
-import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
 from . import paths as agm_paths
 from .paths import PathsError
 
-DETECT_RULES_VERSION = "m4-05/2"
+DETECT_RULES_VERSION = "m4-05/3"
 STANDARD_APP_DIRECTORIES = ("/Applications",)
 
-_CODESIGN_VERIFY = ("codesign", "--verify")
-_CODESIGN_DISPLAY = ("codesign", "-d", "--verbose=2")
-_IDENTIFIER_RE = re.compile(r"^Identifier=(.+)$", re.MULTILINE)
 _RECEIPT_SCHEMA_VERSION = 1
-# Walking up from a resolved CLI entry to the nearest package.json is bounded by
-# the filesystem root; this cap keeps pathological deep trees from long loops.
 _MAX_PACKAGE_WALK = 64
-_CLAUDE_NATIVE_REQUIREMENT = (
-    '=identifier "com.anthropic.claude-code" and anchor apple generic '
-    'and certificate leaf[subject.OU] = "Q6L2SF6YDW"'
-)
-# OpenCode v2 原生二进制的发布者身份(2026-11-01 本机 codesign 只读核验):
-# identifier "opencode",Developer ID Application: Anomaly Innovations, Inc.,
-# TeamIdentifier 5NZ4Q7NXJ4。签名可证发布者身份,但不证明 v2 release 的精确
-# 字节;版本无经认证的静态元数据,检测不记录版本、不伪造。
-_OPENCODE_NATIVE_REQUIREMENT = (
-    '=identifier "opencode" and anchor apple generic '
-    'and certificate leaf[subject.OU] = "5NZ4Q7NXJ4"'
-)
 _MACHO_MAGIC = {bytes.fromhex(value) for value in (
     'feedface', 'cefaedfe', 'feedfacf', 'cffaedfe',
     'cafebabe', 'bebafeca', 'cafebabf', 'bfbafeca')}
@@ -85,11 +54,8 @@ def _sha256_file(path):
 
 
 def _default_runner(command):
-    """Run the system static verifier; None means no read-only backend."""
-    try:
-        return subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    except OSError:
-        return None
+    """Compatibility injection point; discovery no longer invokes codesign."""
+    return None
 
 
 def _record(kind, candidate, result, detail, **facts):
@@ -131,56 +97,28 @@ def _nearest_package_json(start_dir):
     return None
 
 
-def _check_claude_native(path, real, *, runner):
-    """Verify the native CLI without executing it or trusting its file name.
-
-    The Apple certificate anchor and pinned Anthropic team/identifier reject
-    ad-hoc signatures and signatures from other products. Version is unknown:
-    a directory name is not authenticated product version metadata.
-    """
+def _check_native(path, real, product, executable):
+    """Observe supported local command structure, without publisher claims."""
+    if Path(path).name != executable:
+        return _record('path_executable',path,'failed','原生命令入口名不符',path=real)
     try:
-        with open(real, 'rb') as handle:
-            if handle.read(4) not in _MACHO_MAGIC:
-                return None
+        with open(real,'rb') as handle:
+            if handle.read(4) not in _MACHO_MAGIC: return None
+        digest = _sha256_file(real)
     except OSError:
-        return _record('path_executable', path, 'failed',
-                       'Claude 原生入口不可读', path=real)
-    result = runner(['codesign', '--verify', '--strict', '-R',
-                     _CLAUDE_NATIVE_REQUIREMENT, real])
-    if result is None or result.returncode != 0:
-        return _record('path_executable', path, 'failed',
-                       'Claude 原生二进制签名/Anthropic 身份未通过核验', path=real,
-                       type='macos_native_executable')
-    return _record('path_executable', path, 'verified',
-                   'Claude Code 原生 Mach-O 入口与 Anthropic 签名身份一致',
-                   path=real, type='macos_native_executable', name='Claude Code',
-                   executable_path=real, sha256=_sha256_file(real))
+        return _record('path_executable',path,'failed','原生入口不可读',path=real)
+    return _record('path_executable',path,'verified',
+        product+' 本地原生命令可读且可执行；不以应用签名作为接入门槛',
+        path=real,type='macos_native_executable',name=product,
+        executable_path=real,sha256=digest,signature_policy='not_required')
+
+
+def _check_claude_native(path, real, *, runner):
+    return _check_native(path,real,'Claude Code','claude')
 
 
 def _check_opencode_native(path, real, *, runner):
-    """Verify the OpenCode native binary without executing it or trusting its name.
-
-    与 Claude native 同口径:Mach-O 魔数前置,codesign -R 固定发布者要求
-    (identifier + Apple 锚 + Anomaly Innovations 团队 OU),拒绝 ad-hoc 签名与
-    其他产品的同名二进制。版本未知:安装目录名不是经认证的产品版本元数据。
-    """
-    try:
-        with open(real, 'rb') as handle:
-            if handle.read(4) not in _MACHO_MAGIC:
-                return None
-    except OSError:
-        return _record('path_executable', path, 'failed',
-                       'OpenCode 原生入口不可读', path=real)
-    result = runner(['codesign', '--verify', '--strict', '-R',
-                     _OPENCODE_NATIVE_REQUIREMENT, real])
-    if result is None or result.returncode != 0:
-        return _record('path_executable', path, 'failed',
-                       'OpenCode 原生二进制签名/发布者身份未通过核验', path=real,
-                       type='macos_native_executable')
-    return _record('path_executable', path, 'verified',
-                   'OpenCode 原生 Mach-O 入口与 Anomaly Innovations 签名身份一致',
-                   path=real, type='macos_native_executable', name='OpenCode',
-                   executable_path=real, sha256=_sha256_file(real))
+    return _check_native(path,real,'OpenCode','opencode')
 
 
 def _check_path_executable(signal, path, *, runner=None):
@@ -190,11 +128,7 @@ def _check_path_executable(signal, path, *, runner=None):
             return _record("path_executable", path, "not_found", "该路径不存在命令")
         return _record("path_executable", path, "failed", problem)
     if signal['package_name'] == '@opencode/cli':
-        # OpenCode v2 官方安装器把原生二进制装在 ~/.opencode/bin/ 下,同目录树的
-        # 父级 ~/.opencode/package.json 无 name/version(2026-11-01 本机复现:按
-        # npm 元数据先判会把真实安装误判为"包名不符"unknown)。先做 Mach-O 签名
-        # native 识别:非 Mach-O(如 npm 包装脚本)返回 None 落回 npm 身份门禁;
-        # Mach-O 但签名/发布者不匹配直接 failed,不回落、不因包名假装可信。
+        # Native installer layouts can lack npm name/version metadata.
         native = _check_opencode_native(path, real, runner=runner or _default_runner)
         if native is not None:
             return native
@@ -274,10 +208,14 @@ def _check_app_bundle(signal, path, *, runner):
     if opencode and (bundle_id != "ai.opencode.desktop" or executable_name != "OpenCode"
                      or info.get("CFBundleDisplayName") != "OpenCode"):
         return _record("macos_app_bundle", path, "failed", "OpenCode 固定 bundle identity 不符")
+    if Path(executable_name).name != executable_name or executable_name in ('.','..'):
+        return _record('macos_app_bundle',path,'failed','应用可执行文件名含路径跳转')
     executable = os.path.join(path, "Contents", "MacOS", executable_name)
     real, problem = _resolve_active_entry(executable)
     if real is None:
         return _record("macos_app_bundle", path, "failed", "可执行文件不可用: %s" % problem, name=bundle_id)
+    if not Path(real).is_relative_to(Path(path).resolve()):
+        return _record('macos_app_bundle',path,'failed','应用可执行文件落点越出原生目录')
     version = info.get("CFBundleShortVersionString") or info.get("CFBundleVersion")
     if signal.get("require_bundle_version") and (not isinstance(version, str) or not version):
         return _record("macos_app_bundle", path, "failed", "bundle 版本为空(要求非空)", name=bundle_id)
@@ -286,41 +224,12 @@ def _check_app_bundle(signal, path, *, runner):
                 or info.get("CFBundleVersion") != version
                 or info.get("CFBundleShortVersionString") != version):
             return _record("macos_app_bundle", path, "failed", "OpenCode bundle 版本缺失或不一致")
-        requirement = ('=identifier "ai.opencode.desktop" and anchor apple generic '
-                       'and certificate leaf[subject.OU] = "5NZ4Q7NXJ4"')
-        verified = runner(['codesign', '--verify', '--deep', '--strict', '-R', requirement, path])
-    else:
-        verified = runner(list(_CODESIGN_VERIFY) + [path])
-    if verified is None:
-        return _record(
-            "macos_app_bundle", path, "failed",
-            "无只读签名校验后端(codesign 不可用)", name=bundle_id,
-        )
-    if verified.returncode != 0:
-        lines = (verified.stderr or "").strip().splitlines()
-        return _record(
-            "macos_app_bundle", path, "failed",
-            "静态签名校验未通过: %s" % (lines[-1] if lines else "rc=%s" % verified.returncode),
-            name=bundle_id,
-        )
-    if signal.get("require_signature_identifier_match"):
-        displayed = runner(list(_CODESIGN_DISPLAY) + [path])
-        if displayed is None:
-            return _record("macos_app_bundle", path, "failed", "无只读签名后端可读 identifier", name=bundle_id)
-        match = _IDENTIFIER_RE.search(displayed.stderr or "") or _IDENTIFIER_RE.search(displayed.stdout or "")
-        identifier = match.group(1).strip() if match else None
-        if identifier != bundle_id:
-            return _record(
-                "macos_app_bundle", path, "failed",
-                "签名 identifier(%r)与 plist bundle 标识(%r)不一致" % (identifier, bundle_id),
-                name=bundle_id,
-            )
     return _record(
         "macos_app_bundle", path, "verified",
-        "Info.plist 产品名/可执行/静态签名核验通过",
+        "Info.plist 产品名与本地可执行文件已核验；应用签名不作为接入门槛",
         path=str(Path(path).absolute()), type="app_bundle", name=bundle_id,
         version=version if isinstance(version, str) and version else None,
-        executable_path=real, sha256=_sha256_file(real),
+        executable_path=real, sha256=_sha256_file(real), signature_policy="not_required",
     )
 
 
@@ -472,17 +381,14 @@ def _detect_one(agent, entry, *, home, search_paths, user_candidates, runner, ap
                 verified.append(record)
         elif record["result"] == "failed":
             failed.append(record)
-    # Coalesce only the two independently verified official installation
-    # surfaces. This static detection does not verify rule-loading compatibility.
-    # Extra candidates, receipts, npm wrappers and any failed check remain ambiguous.
-    coexist = (agent == "opencode" and len(verified) == 2 and not failed
-               and sum(r.get("type") == "macos_native_executable" and r.get("name") == "OpenCode"
-                       for r in verified) == 1
-               and sum(r.get("type") == "app_bundle" and r.get("name") == "ai.opencode.desktop"
-                       for r in verified) == 1)
+    # One CLI plus one application are two supported surfaces of one Agent.
+    # Multiple CLIs/apps or any failed local evidence remain ambiguous.
+    coexist = (len(verified)==2 and not failed
+               and sum(r['kind']=='path_executable' for r in verified)==1
+               and sum(r['kind']=='macos_app_bundle' for r in verified)==1)
     if coexist:
         status = "installed"
-        summary = "官方 OpenCode CLI 与桌面 App 并装；各安装面身份已独立核验；规则加载兼容性未由本次检测验证"
+        summary = "CLI 与桌面 App 并装；本地安装元数据已独立核验，未校验发布者签名；规则加载兼容性未验证"
     elif len(verified) > 1:
         status = "unknown"
         summary = "多个可核验候选,无法确定活动来源: " + "; ".join(
@@ -526,7 +432,7 @@ def detect_agents(platform_config, agents=None, *, home, search_paths=None,
     search_paths defaults to the real PATH and app_directories to /Applications;
     tests inject synthetic values. user_candidates maps agent -> [{kind, path}]
     for explicitly provided executable/app/receipt paths. runner(command)
-    substitutes the signature verification backend. Raises DetectionError only
+    remains accepted for compatibility; discovery does not invoke it. Raises DetectionError only
     for malformed input, never for what the machine actually looks like.
     """
     if not isinstance(home, str) or not os.path.isabs(home):

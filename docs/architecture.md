@@ -123,7 +123,8 @@ OpenCode v2（`opencode`）使用 `~/.config/opencode/AGENTS.md`。机器安装�
 
 检测结果为 `installed`、`absent`、`unknown`。
 残留目录只算弱提示，不能据此判定 installed。
-CLI 包身份、应用包身份等强信号必须完成静态核验。
+有效 App 元数据与可读可执行入口、支持的 CLI 包或原生结构、显式哈希收据作为安装证据，不能由空配置目录替代。自动与显式接入均不调用 `codesign`；签名失败、签名标识不同或后端缺失不再是接入拒绝条件。坏链接、不可读、产品元数据不符及来源歧义仍为 unknown，全部可检查且无候选、无 hint 才为 absent。同一 Agent 恰好一个受支持的 CLI 候选加一个 App 候选、且没有任何本地失败证据时可判 installed；两 CLI、两 App、更多候选或坏候选仍为 unknown，仅证明本地安装面，不证明模型登录、发布者可信或运行加载。
+此项简化不证明发布者可信，也不放宽产品固定 S/R 来源完整性、合法原生路径、原文备份、精确批准、漂移与恢复门禁。CLI 不变，新策略尚未进入已生成的 0.1.7 载荷。
 检测不启动应用，不读取登录态，也不执行模型请求。
 安装事实、入口静态状态、新会话运行验收分别记录。
 WorkBuddy 桥接已配置也不能直接宣布运行时加载成功。
@@ -144,9 +145,9 @@ WorkBuddy 仅在 `.workbuddy/memory/` 原生目录已存在时补规则指针。
 
 DeepSeek Harness 本次合同限默认 coding `cordis` preset 与默认根；非默认 `DSH_HOME` 拒绝默认入口接入，`DSH_AGENTS_HOME` 影响共享根，检查不回传变量值，自定义配置未验证。`ZCODE_HOME` 不是 ZCode 规则根。两家静态支持 `~/.agents/skills` 及各自用户 Skill 根，不创建投影，不代表实际加载。详见[操作手册](operations.md#桌面端默认根与验证边界)。
 
-OpenCode 检测分别报告 CLI 与桌面 App 安装面。桌面核验 `OpenCode.app` 的固定产品名、`ai.opencode.desktop` 标识、`OpenCode` 可执行入口、非空且一致的 bundle 版本，以及 Apple 证书链与团队 `5NZ4Q7NXJ4` 签名。CLI-only 不表示桌面已安装；只有一个官方原生 CLI 与一个官方桌面 App 均通过、且无失败候选时允许并装，额外来源仍为 unknown。CLI 没有静态版本证据时保持版本 unknown。
+OpenCode 检测分别报告 CLI 与桌面 App 安装面。桌面核对 `OpenCode.app` 的产品名、`ai.opencode.desktop` 标识、可读可执行的 `OpenCode` 入口与非空且一致的 bundle 版本，不要求 Apple 证书链、团队或签名标识核验。CLI-only 不表示桌面已安装；恰好一个支持的 CLI 候选与一个支持的桌面 App 均满足静态证据、且无失败候选时允许并装，额外来源仍为 unknown。CLI 没有静态版本证据时保持版本 unknown；本地安装证据不代表发布者身份可信或新会话运行成功。
 
-OpenCode 原生 Mach-O 入口优先以 Apple 签名要求核验标识 `opencode` 与团队 `5NZ4Q7NXJ4`，父级无 name 的 package.json 不阻断识别；原生签名失败不会回落 npm 包名放行。非 Mach-O 包装入口核验 `@opencode/cli` 包身份，文件名或目录 hint 不构成 installed。版本没有静态证据时保持 unknown。规则根仅支持默认绝对路径；`XDG_CONFIG_HOME`、`OPENCODE_CONFIG_DIR` 的相对值、字面 `~` 或非默认值及非空 `OPENCODE_CONFIG` 均拒绝，不回显原值。
+OpenCode 原生入口根据受支持的命令名 `opencode`、可读可执行文件与 Mach-O 结构记录安装事实，父级无 name 的 package.json 不阻断识别；不要求应用签名。非 Mach-O 包装入口仍核对 `@opencode/cli` 包名与实际入口，文件名或目录 hint 本身不构成 installed。版本没有静态证据时保持 unknown。规则根仅支持默认绝对路径；`XDG_CONFIG_HOME`、`OPENCODE_CONFIG_DIR` 的相对值、字面 `~` 或非默认值及非空 `OPENCODE_CONFIG` 均拒绝，不回显原值。
 
 为什么这样设计：机器安装清单不代表每个项目都使用每个执行器。
 

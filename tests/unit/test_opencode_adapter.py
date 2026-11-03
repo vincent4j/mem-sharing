@@ -1,7 +1,7 @@
 """OpenCode v2 adapter contract tests; synthetic HOME/binary only, no real session.
 
-覆盖(2026-11-01 接入裁定):原生 Mach-O 签名识别(先于 npm 元数据,父
-package.json 无 name 不阻断;错误签名不因包名放行)、npm 包装脚本仍走包名
+覆盖(2026-11-01 接入裁定):原生 Mach-O 本地入口识别(先于 npm 元数据,父
+package.json 无 name 不阻断;Agent签名不作为接入门槛)、npm 包装脚本仍走包名
 门禁、不依赖文件名、配置根三变量 default-root-only 重定向整单零写且不回显
 原值、私文保留/幂等零写、unknown/absent 零写、显式未装整单拒绝、check/
 remove/disabled、迁移未登记读者扫描、大文件不误套 Codex 32KiB 预算、项目层
@@ -86,28 +86,19 @@ class OpenCodeDetectionTests(DetectFixture):
         result = self.detect(['opencode'], runner=fake_codesign())
         self.assertEqual(result['agents']['opencode']['status'], 'installed')
 
-    def test_native_verification_binds_product_and_team_requirement(self):
-        self.macho_binary(self.bin_dir / 'opencode')
-        calls = []
-        signer = fake_codesign()
+    def test_native_installation_does_not_require_publisher_signature(self):
+        self.macho_binary(self.bin_dir/'opencode');calls=[]
+        def runner(argv):calls.append(argv);raise AssertionError('Agent signature verification retired')
+        self.assertEqual(self.detect(['opencode'],runner=runner)['agents']['opencode']['status'],'installed')
+        self.assertEqual(calls,[])
 
-        def runner(argv):
-            calls.append(argv)
-            return signer(argv)
-
-        self.assertEqual(self.detect(['opencode'], runner=runner)['agents']['opencode']['status'], 'installed')
-        verify = next(argv for argv in calls if '--verify' in argv)
-        requirement = verify[verify.index('-R') + 1]
-        self.assertIn('identifier "opencode"', requirement)
-        self.assertIn('anchor apple generic', requirement)
-        self.assertIn('certificate leaf[subject.OU] = "5NZ4Q7NXJ4"', requirement)
-
-    def test_wrong_signature_is_not_trusted_by_package_name(self):
-        # Mach-O 且父 package.json 包名正确,但签名核验失败:直接 failed,不回落
-        # npm 门禁假装可信。
+    def test_signature_failure_does_not_block_real_native_entry(self):
+        # 本地真实原生入口不因签名失败被排除；不声明发布者可信。
         self.scoped_opencode_package(macho=True)
-        result = self.detect(['opencode'], runner=fake_codesign(verify_rc=1))
-        self.assertEqual(result['agents']['opencode']['status'], 'unknown')
+        signer=fake_codesign(verify_rc=1)
+        result=self.detect(['opencode'],runner=signer)
+        self.assertEqual(result['agents']['opencode']['status'],'installed')
+        self.assertEqual(signer.calls,[])
 
     def test_npm_wrapper_script_still_requires_package_identity(self):
         self.scoped_opencode_package(macho=False)
@@ -274,37 +265,47 @@ class OpenCodeOrganizeClassificationTests(unittest.TestCase):
     """Review P2 回归:OpenCode 专属句不被通用词改判公共(默认 move 会挪私文)。"""
 
     def test_opencode_sentences_stay_specific_even_with_common_words(self):
+        from test_m408_organize import OrganizeTests
         from agm_core import user_rules_organize as org
-        label, reason, _ = org._classify('OpenCode 每次运行测试前先确认模型。', [])
-        self.assertEqual(label, '独有')
-        self.assertIn('执行器', reason)
-        # 混合通用词(提交/简体中文)与专属名:专属优先,不因通用词改判公共。
-        label, _, _ = org._classify('OpenCode 提交信息请使用简体中文。', [])
-        self.assertEqual(label, '独有')
-        # 专属路径/落点形态同样独有。
-        label, _, _ = org._classify('配置在 ~/.config/opencode/AGENTS.md。', [])
-        self.assertEqual(label, '独有')
-        # 纯通用句仍公共:分类器既有语义不变。
-        label, _, _ = org._classify('提交信息请使用简体中文。', [])
-        self.assertEqual(label, '公共')
+        fixture=OrganizeTests('runTest');fixture.setUp();self.addCleanup(fixture.doCleanups)
+        path=Path(paths.expand_path(fixture.config['opencode']['user_entry'],home=str(fixture.home)))
+        path.parent.mkdir(parents=True)
+        private=('OpenCode 每次运行测试前先确认模型。\n\n'
+                 'OpenCode 提交信息请使用简体中文。\n\n'
+                 '配置在 ~/.config/opencode/AGENTS.md。\n\n').encode()
+        generic='提交信息请使用简体中文。\n'.encode()
+        original=private+generic;path.write_bytes(original)
+        fixture.request['agents']=['opencode']
+        result=org.plan_organize(fixture.request);plan=result['approval_plan']
+        self.assertEqual(path.read_bytes(),original)
+        self.assertEqual(plan['default_numbers'],[])  # Single participant is never default shared.
+        self.assertEqual(len(plan['items']),1)
+        item=plan['items'][0]
+        self.assertEqual(item['text'].encode(),generic)
+        self.assertEqual(original[item['start']:item['end']],generic)
+        self.assertFalse(any('OpenCode' in i['text'] or '~/.config' in i['text'] for i in plan['items']))
 
     def test_organize_execution_keeps_opencode_private_sentence(self):
         from test_m408_organize import OrganizeTests
         from agm_core import user_rules_organize as org
-        fixture = OrganizeTests('runTest')
-        self.addCleanup(fixture.doCleanups)
-        fixture.setUp()
-        path = Path(paths.expand_path(fixture.config['opencode']['user_entry'], home=str(fixture.home)))
+        fixture=OrganizeTests('runTest');fixture.setUp();self.addCleanup(fixture.doCleanups)
+        path=Path(paths.expand_path(fixture.config['opencode']['user_entry'],home=str(fixture.home)))
         path.parent.mkdir(parents=True)
-        private = 'OpenCode 偏好使用本地模型。\n'.encode()
-        path.write_bytes(private + '\n提交信息请使用简体中文。\n'.encode())
-        fixture.request['agents'] = ['opencode']
-        plan = fixture.preview()
-        specific = next(i for i in plan['items'] if 'OpenCode' in i['text'])
-        self.assertEqual((specific['classification'], specific['action']), ('独有', 'keep'))
-        org.execute_organize(plan, fixture.approve(plan))
-        self.assertIn(private, path.read_bytes())
-        self.assertNotIn(private, (fixture.memories / 'user-rules.md').read_bytes())
+        private='OpenCode 偏好使用本地模型。\n'.encode()
+        original=private+'\n提交信息请使用简体中文。\n'.encode();path.write_bytes(original)
+        fixture.request['agents']=['opencode']
+        plan=fixture.preview()  # Existing fixture explicitly selects single-source content.
+        self.assertFalse(any('OpenCode' in i['text'] for i in plan['items']))
+        item=plan['items'][0];self.assertEqual(item['source'],str(path))
+        self.assertEqual(original[item['start']:item['end']],item['text'].encode())
+        done=org.execute_organize(plan,fixture.approve(plan));self.assertEqual(done['status'],'completed',done)
+        self.assertEqual(path.read_bytes(),original[:item['start']]+original[item['end']:])
+        self.assertIn(private,path.read_bytes())
+        public=(fixture.memories/'user-rules.md').read_bytes()
+        self.assertNotIn(private,public);self.assertIn(item['text'].encode(),public)
+        manifest=json.loads(Path(done['manifest']).read_bytes())
+        source=next(e for e in manifest['entries'] if e['path']==str(path))
+        self.assertEqual((Path(done['manifest']).parent/source['before']['backup']).read_bytes(),original)
 
 
 class OpenCodeProjectTests(EnableFixture):
@@ -351,7 +352,8 @@ class OpenCodeProjectTests(EnableFixture):
         # 项目命令缺省仍三家:机器安装全量默认不得改变项目实际使用入口策略。
         self.request['agents'] = None
         result = enable.run(dict(self.request))
-        self.assertEqual(result['status'], 'gaps', result)  # 合成 HOME 无三家 installed
+        self.assertEqual(result['status'], 'approval_required', result)  # 合成HOME的WorkBuddy已有真实App静态证据，不再卡签名
+        self.assertEqual(result['installation']['effective'], ['workbuddy'])
         self.assertEqual(result['installation']['requested'], ['codex', 'claude', 'workbuddy'])
 
 from entry_opaque_fixture import assert_opaque, remember_mode
