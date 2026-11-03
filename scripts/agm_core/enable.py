@@ -312,7 +312,11 @@ def run(request):
         result["runtime_layout"] = runtime.describe()
         if runtime.lock.exists():
             raise TransactionError("writer lock exists; do not steal a stale lock", code="lock_conflict")
-        return _run_locked(request, runtime, result, locked=False)
+        result = _run_locked(request, runtime, result, locked=False)
+        if result['status'] == 'completed' and 'fusion' not in result:
+            from .user_rules_organize import continuation
+            result['fusion'] = continuation(request, scope='project', project_path=project.resolve_project(request.get('project')).checkout)
+        return result
     except (ValueError, OSError, EOFError, SyntaxError) as exc:
         result["status"] = getattr(exc, "status", "recovery_required" if getattr(exc, "code", None) == "recovery_required" else "failed")
         result["approval_required"] = result["status"] == "approval_required"
@@ -480,6 +484,8 @@ def _run_locked(request, runtime, result, *, locked=True):
     tx.hook=hook
     registry.commit_registry(registry_path,data,transaction=tx,expected=expected_registry,changes=plan.changes(),
         allowed_user_paths=allowed,previous=previous_registry,rebuild=rebuild,rebuild_confirmation=confirmation)
+    from .user_rules_organize import continuation
+    result['fusion'] = continuation(request, scope='project', project_path=root)
     result['status']='completed'
     result['changes']=[dict(item,ownership=_change_ownership(plan,item['path']),applied=True) for item in plan.description()]
     result['warnings'].append('Runtime acceptance pending; CK installation and record data are retained and not inspected.')

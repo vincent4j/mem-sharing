@@ -15,20 +15,21 @@ Python CLI 本身只诊断，不负责自动安装 Python/Git。
 包管理器缺失、权限受阻或依赖安装失败时停止，说明实际阻塞。
 
 用户可直接说“安装 memSharing”，安装后可用 `/mem-sharing` 菜单或自然语言。
-六个菜单入口为：添加新的 Agent、批量接入项目规则、整理用户记忆、健康检查、接入项目规则、整机卸载。
+六个菜单入口为：添加新的 Agent、批量接入项目记忆、整理用户记忆、健康检查、接入项目记忆、整机卸载。
 菜单由公共指南 `~/.mem-sharing/memories/topics/使用约定.md` 承载，各执行器用户文件只保留公共指针与自身规则，不要求安装 memSharing Skill；触发菜单或默认项目接入前先读指南。链接解析分两个根：索引 `MEMORY.md` 中的指南/主题相对链接以 `MEMORY.md` 所在目录解析；指南内部的链接以指南所在目录解析，或直接使用 C 内绝对路径（例如已安装产品脚本）；两个解析根不能混同。指南缺失时停止相关操作。
 下文项目示例从源码根运行；已安装后可改用 C 中的脚本绝对路径。
 C 为 `~/.local/share/mem-sharing`，R 为 `~/.mem-sharing`。
 
 为什么这样设计：使用者表达意图，Agent 翻译为受控命令，不要求用户维护执行器差异。
 
-## 2. 安装：五拍剧本与命令
+## 2. 安装：六拍剧本与命令
 
 1. 接收安装请求，说明先检查运行环境和本机 Agent。
 2. 汇总 Python、Git、验证为已安装的 Agent 与待准备依赖，一次确认，回车开始。
 3. 确认后静默获取、核验和安装；完成只报用户记忆中枢与实际接入名单。
 4. 紧接着正向询问是否安装用户级 Context Keeper，回车同意，n 跳过。
-5. 安装后提醒在所需项目使用 `/context-keeper`，首次按 Context Keeper 流程激活。
+5. Context Keeper 实际安装完成后提醒在所需项目使用 `/context-keeper`，首次按其流程激活；跳过时不声称已安装。
+6. 自动展示用户记忆融合预览，继续编号选择与最终清单确认；用户可拒绝，安装成功不等于融合完成。
 
 unknown 或仅有残留目录不列为已安装。
 成功简报不罗列内部路径，不添加未安装 Agent 或新会话自检提示。
@@ -72,14 +73,15 @@ python3 scripts/agm.py enable-memory --project /absolute/path/project --agent <�
 ```
 
 新项目建立 `AGENTS.md` 骨架；已有规则正文保留，只补所需协议。
-`AGENTS.md` 是共享项目规则基座，不依赖安装 Codex；只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立。
+`AGENTS.md` 是共享项目记忆基座，不依赖安装 Codex；只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立。
 不带 `--agent` 的通用 enable 完全不触碰 `CLAUDE.md`，包括已有文件；Claude 自身实际使用时按 `--agent claude` 精确接入，可幂等补 `@AGENTS.md` 引用（兜底规则在 Claude 自身用户文件）；其它执行者默认流程不预建。Codex 原生读取无需兜底。
 有意接入 Claude 时可显式执行 `enable-memory --project ... --agent claude`。
 WorkBuddy 只在 `.workbuddy/memory/` 原生目录存在时补规则指针，不预建目录。
 原生目录缺失表示待实际使用；静态桥接不等于运行时加载通过。
+接入完成后，外层执行 Agent 自动进入当前项目的只读融合预览并展示“默认共享”与“由你选择是否共享”两块，明确本次融合尚未修改记忆内容；完整交互合同见 [SKILL](../SKILL.md) 的“项目记忆融合”。
 
 启用不调用 Context Keeper 安装器、不安装项目级 Skill、不创建其记录库。
-未装 Context Keeper 仍可使用用户记忆与项目规则，只是没有项目经历能力。
+未装 Context Keeper 仍可使用用户记忆与项目记忆，只是没有项目经历能力。
 若需精确非交互批准，先查看预览，再加 `--approval-file /absolute/enable-approval.json`。
 项目启用 `--agent codex claude` 或 `--agent dsh zcode` 可一次选择多个唯一值；未显式选择时仍只在默认旧三家中按已安装事实处理。
 
@@ -158,18 +160,34 @@ DSH 本次限默认 coding `cordis` preset 与默认根。接入规划自动检�
 
 静态读取逻辑支持 DSH 的 `~/.dsh/skills`、ZCode 的 `~/.zcode/skills`，以及两者共用的 `~/.agents/skills`；项目侧也有各自隐藏目录与 `.agents/skills` 发现逻辑。memSharing 不创建、复制或投影这些 Skill。静态发现与符号链接支持不等于桌面实际加载通过。
 
-原生入口证据见[桌面合同（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/desktop-agent-contracts.md)。原生入口静态证据不代表运行时加载通过；两款桌面端新会话的用户规则、项目规则和 Skill 加载验收均为 pending。
+原生入口证据见[桌面合同（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/desktop-agent-contracts.md)。原生入口静态证据不代表运行时加载通过；两款桌面端新会话的用户记忆、项目记忆和 Skill 加载验收均为 pending。
 
 ## 7. 用户记忆整理与 Context Keeper 激活
 
-“整理用户记忆”由 Agent 调用 `user_rules_organize.py` 的预览与执行 API。
-当前 `agm.py` 没有整理子命令，不使用虚构的 organize CLI。
-向导把公共候选、重复规则、执行器独有内容和归属不明内容分开展示。
+“整理用户记忆”运行 `python3 scripts/agm.py organize-user-memory`；当前项目运行 `python3 scripts/agm.py organize-project-memory --project /absolute/path/project`。
+使用 `--selection` 传入 `3、4`、`不共享 2`、`共享 3、4，不共享 2`、`按默认方案` 或 `查看 3`；`--decline` 拒绝本次融合。
+最终执行用 `--approval-file` 提交完整 `approval_plan` 加真实 `confirmed_at/reference`，不得混入新的 `--selection`、`--agent`、`--decline` 或 `--retention-file` 参数。
+项目公共项排除后的保留位置先逐条询问，使用 `--retention-file` 传 JSON（如 `{"1":"CLAUDE.md"}`）纳入预览，仅允许已参与项目原生文件；同一原生文件兼作保留位置与去重来源时，使用完整计划内的 `phased_writes/steps` 在同一 Transaction manifest 中分阶段执行；原批准须包含全部步骤，不能删减或改写。核心执行者已回报临时 HOME 的逐阶段异常回滚、子进程中断后原 manifest 恢复与外部新写保全测试通过，真实宿主未验收。
+向导先只读分析，按“默认共享”与“由你选择是否共享”两块展示；编号全局连续且在同一份有效计划内稳定，`查看 n` 只读展示完整原文与来源，不选择、不执行。
 分类只是建议，独有与归属不明内容锁定保留，不能并入公共源或删除。
-一次确认完整逐条计划，原文指纹逐项绑定；批准前候选可改判保留。
+选定后先展示完整修改清单，一次确认完整逐条计划，原文指纹逐项绑定；批准前候选可改判保留。
+确认执行时共享内容按完整原文迁入公共目标，核实公共内容完整与各家入口正确之后，才删除原生来源中对应的准确片段，不按关键词粗删。
 公共内容与入口编辑使用可恢复事务，整理不修改活动台账 V。
 
 为什么这样设计：公共规则需要人工语义判断，不能用自动分类扩大共享范围。
+
+融合中断的恢复使用独立命令，不能重用安装恢复或原融合批准：
+
+```bash
+python3 scripts/agm.py recover-memory-fusion --manifest /absolute/HOME/.mem-sharing/backups/<tx>/manifest.json
+python3 scripts/agm.py recover-memory-fusion --manifest /absolute/HOME/.mem-sharing/backups/<tx>/manifest.json --approval-file /absolute/fusion-recovery-approval.json
+```
+
+项目融合事务在预览和执行时均加 `--project /absolute/path/project`，指向原事务所属的当前项目根。manifest 必须是当前 HOME 的 `~/.mem-sharing/backups/<tx>/manifest.json`，且属于中断的融合事务；不是任意备份文件。默认只读返回 `status=approval_required`、`approval_plan`、`manifest` 与对象类型的 `next_action`。核对完整恢复计划后，将完整 `approval_plan` 对象加真实 `confirmed_at/reference` 保存为批准文件，再用同一 manifest、项目参数与 `--approval-file` 执行；不使用占位确认、不沿用旧批准。
+
+本接口恢复到事务执行前的状态，成功返回 `status=completed`、`recovery_status=rolled_back`，不表示继续完成融合。冲突返回 `status=recovery_required`、`manifest` 与 `errors`；保留现场和备份，停止普通融合，不自动抢锁、删锁或覆盖漂移。核心执行者已回报临时 HOME 的恢复 CLI 4 项测试通过，包含真实子进程 `os._exit(73)` 中断后按原 manifest 恢复；真实宿主恢复尚未验收。本轮文档更新未重复运行测试。同文件转存与去重也沿同一 manifest 恢复，不另建恢复日志。
+
+Paseo 插件源码已接线安装或项目接入后的融合预览、查看原文、编号选择、保留现状及完整计划确认；服务端保管计划，确认时不混入新选择。类型检查与临时 HOME 的真实 CLI 桥接测试通过，真实 Paseo UI 与宿主交互尚未验收。
 
 Context Keeper 是独立可选引擎，主安装完成后才产生独立批准封皮。
 独立路由示例：
@@ -219,7 +237,7 @@ python3 /absolute/verified-source/scripts/install.py --recover /absolute/journal
 
 此专用通道只接受 `workbuddy-public-index-v1`，旧版本必须为 0.1.0、结构版本1/schema3，旧来源必须与代码中的 `WORKBUDDY_PREDECESSOR` 完全一致；新版本固定0.1.1。`agents.json` 固定不变，`user_entries.py` 仅允许审定的前后 SHA256。调用必须显式 `--agent workbuddy`，目标 commit/tree 通过外部精确 conversion 与完整批准绑定。不允许把任意合同变更写成 `entries=preserve` 放行，也不支持该转换的成功发行降级。公共记忆分层引起的 `user_entries.py` 指纹变化不适用本通道，另见 [INSTALL](../INSTALL.md) 的公共记忆分层发行转换边界（0.1.3 候选，接口与恢复命令已回填）。
 
-下面是外部 request 清单的生成方式。`<干净来源>` 必须是修复已提交后的干净 checkout；`<完整SHA>` 为该提交，不能用未提交工作树配旧SHA。清单写到独立暂存目录，不修改用户规则或安装态。生成过程中只有读取与输出JSON；仍需随后预览、核对并批准完整安装计划。
+下面是外部 request 清单的生成方式。`<干净来源>` 必须是修复已提交后的干净 checkout；`<完整SHA>` 为该提交，不能用未提交工作树配旧SHA。清单写到独立暂存目录，不修改用户记忆或安装态。生成过程中只有读取与输出JSON；仍需随后预览、核对并批准完整安装计划。
 
 ```sh
 umask 077
@@ -356,7 +374,7 @@ Context Keeper 内引用、非精确行前缀、未完整规划归还副本、�
 ### 六家用户入口统一顶部布局（未发行源码）
 
 六家入口只在文件逻辑顶部（UTF-8 BOM 后）放 memSharing 单元，正文完全保留。
-Codex、DeepSeek Harness、ZCode、OpenCode 使用 `mem-sharing:rules` 块：公共索引读取指令紧邻当前 Agent 项目规则说明。WorkBuddy 使用同一块加自身原生项目目录条件；Claude 使用真实 `@公共索引绝对路径` 行，下一行紧邻既有 `mem-sharing:claude-fallback` 块。其他五家不复制 Claude import 机制。公共规则全文仍只在公共库，项目根 AGENTS.md 仍为共享基座。
+Codex、DeepSeek Harness、ZCode、OpenCode 使用 `mem-sharing:rules` 块：公共索引读取指令紧邻当前 Agent 项目记忆说明。WorkBuddy 使用同一块加自身原生项目目录条件；Claude 使用真实 `@公共索引绝对路径` 行，下一行紧邻既有 `mem-sharing:claude-fallback` 块。其他五家不复制 Claude import 机制。公共规则全文仍只在公共库，项目根 AGENTS.md 仍为共享基座。
 
 新装、追加接入、同源同版接入和升级的入口阶段共用同一装配器。顶部已经一致则不改字节；已登记、创建归属及指纹可证明的产品块才可移位。Claude 引用必须匹配登记整文件基线，只移其唯一精确行 token，不取得正文删除权。未知/未登记/共享用户所有块、缺失或漂移不自动收编；共享整文件只引用保留，仍不冒充机器已接入。Context Keeper 与标题、注释、任意私文一样是不透明字节，不查找其 marker、不重新分节或排序。除已认领单元外所有片段、原有空白和相对顺序保留；产品顶部与正文间新加的必要分隔行不算正文整理。
 
@@ -365,3 +383,5 @@ Codex、DeepSeek Harness、ZCode、OpenCode 使用 `mem-sharing:rules` 块：公
 0.1.6 的旧布局升级需要独立 `unified-user-entry-layout-v1` 精确 conversion：只接受冻结 0.1.6 来源与入口前身，外部转换绑定实际目标源身份，目标必须与执行代码相同。旧 SOURCE/TARGET 常量不变，不允许借 preserve 绕过入口合同门禁。当前源码不是已安装 0.1.6 的替换件；版本/S/R 与真实迁移由发行阶段另行冻结和批准。只运行未安装 checkout 的新命令会被活动 C 能力/内容核验拒绝。
 
 结构示意：五家为 `[公共指针＋自身项目说明的产品块] → [全部原正文]`；Claude 为 `[@公共索引] → [Claude 自身说明块] → [全部原正文]`。旧正文中产品单元移走后留下的非产品空白原样保留。卸载归还继续仅处理原产品单元和自身副本指针，外置恢复保存完整原文件；不删除 Context Keeper 或其他正文，不把归还副本自动导回新公共库。
+
+机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`：包含 `status`、`automatic_continue:true`、`can_decline:true`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常预览为 `fusion.status=pending_selection`，外层 Agent 自动展示 `fusion.preview.prompt` 并继续选择交互，不能仅返回命令后结束；若为 `blocked`，展示 `fusion.preview.errors` 并停止融合，不能当作可执行计划。入口接入可能已写入文件，提示须限定为“本次融合尚未修改记忆内容”。安装或启用成功与融合完成分别报告，不能复用安装或启用的批准执行融合。

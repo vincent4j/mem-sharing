@@ -341,7 +341,7 @@ def _host_staging_receipt(runtime, root, backup):
     rows=receipt['terminal_evidence']
     if not isinstance(rows,list):raise recovery.Conflict('Host terminal evidence must be a list')
     terminal={'completed','failed','rejected','approval_required','gaps','recovered'}
-    flows={'dependency','bootstrap','machine','enable','remove','ck','recover','uninstall','ck-uninstall'}
+    flows={'dependency','bootstrap','machine','enable','remove','ck','recover','uninstall','ck-uninstall','fusion'}
     known={'operation.json','release-request.json'}|{flow+'-approval.json' for flow in flows}
     # Reject unknown names/types before reading any artifact bytes.
     for directory in external.iterdir():
@@ -385,10 +385,14 @@ def _host_staging_receipt(runtime, root, backup):
         phase_terminal=terminal|({'already_prepared','identity_missing','payload_missing'}
             if operation['phase']=='preview' else {'stale_plan','no_pending_plan'} if operation['phase']=='execute' else set())
         if operation['flow']=='bootstrap' and operation['phase']=='execute':phase_terminal|={'acquired'}
+        if operation['flow']=='fusion':
+            phase_terminal = {'completed','failed'} if operation['phase']=='preview' else {'completed','failed','rejected','stale_plan','no_pending_plan'}
         journal=operation.get('journal')
+        if operation['flow']=='fusion' and journal is not None:
+            raise recovery.Conflict('Fusion journal-bearing operation requires explicit recovery')
         # Preserve the original running/unknown record bytes. Only a separately
         # verified original terminal journal can establish derived recovery.
-        recovered=(row['record_state']=='recovered' and journal is not None and
+        recovered=(operation['flow']!='fusion' and row['record_state']=='recovered' and journal is not None and
                    operation['state'] in phase_terminal|{'running','unknown'})
         direct=(operation['state'] in phase_terminal and row['record_state']==operation['state'])
         if (not isinstance(operation['id'],str) or not operation['id'] or operation['flow'] not in flows or

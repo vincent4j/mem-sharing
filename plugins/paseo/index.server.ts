@@ -11,6 +11,7 @@ import { CORE_RELEASE_MANIFEST_SHA256 } from "./server/shared/release-identity";
 import type { PluginRpcContract } from "@getpaseo/plugin";
 import type { ZodType, input as ZodInput, output as ZodOutput } from "zod";
 import {
+  fusionPreviewRpc, fusionConfirmRpc,
   dependencyPreviewRpc,
   dependencyConfirmRpc,
   operationStatusRpc,
@@ -40,7 +41,7 @@ import {
 export default function contribute(server: PluginServerContext) {
   let active: Orchestrator | undefined;
   const cancelAll = () => {
-    for (const flow of ["dependency", "bootstrap", "machine", "enable", "uninstall", "stagingCleanup", "ck", "recover", "ckUninstall"] as const) active?.cancel(flow);
+    for (const flow of ["dependency", "bootstrap", "machine", "enable", "uninstall", "stagingCleanup", "ck", "recover", "ckUninstall", "fusion"] as const) active?.cancel(flow);
   };
   const binding = new HostPayloadBinding(CORE_RELEASE_MANIFEST_SHA256, (resolution) => {
     active = new Orchestrator({ runner: realRunner(homedir()), home: homedir(),
@@ -98,6 +99,9 @@ export default function contribute(server: PluginServerContext) {
   handle(dependencyPreviewRpc, async (orchestrator) => orchestrator.dependencyPreview());
   handle(dependencyConfirmRpc, async (orchestrator, input) => orchestrator.dependencyConfirm(input));
   handle(bootstrapConfirmRpc, async (orchestrator, input) => orchestrator.bootstrapConfirm(input));
+
+  handle(fusionPreviewRpc, (orchestrator, input) => orchestrator.fusionPreview(input));
+  handle(fusionConfirmRpc, (orchestrator, input) => orchestrator.fusionConfirm(input));
 
   handle(machinePreviewRpc, async (orchestrator, input) => orchestrator.machinePreview(input.agents));
   handle(machineConfirmRpc, async (orchestrator, input) => orchestrator.machineConfirm(input));

@@ -20,7 +20,7 @@ from .layout import RuntimeLayout
 from .transaction import write_lock
 
 COMMAND = 'retire-legacy-staging'
-FLOWS = {'dependency', 'bootstrap', 'machine', 'enable', 'remove', 'ck', 'recover'}
+FLOWS = {'dependency', 'bootstrap', 'machine', 'enable', 'remove', 'ck', 'recover', 'fusion'}
 SHA = re.compile(r'[0-9a-f]{64}')
 
 
@@ -215,6 +215,62 @@ def _enable_history(data, rt, ledger):
     return evidence
 
 
+def _fusion_history(data,rt):
+    """Recognize an exact approved fusion only with its terminal producer tx."""
+    from . import user_rules_organize as fusion
+    from .transaction import Transaction, _recovery_entries
+    if not isinstance(data,dict): raise recovery.Conflict('Invalid fusion approval')
+    registry._evidence({k:data[k] for k in ('confirmed_at','reference')})
+    plan={k:v for k,v in data.items() if k not in ('confirmed_at','reference')}
+    digest=plan.pop('plan_sha256',None)
+    _keys(plan,'schema_version command layout request declined scope project agents agent_facts groups default_numbers optional_numbers single_numbers selected_numbers view unknown_sources items blocked_entries protected_units observations public_listing changes phased_writes steps retention_paths public_paths registry_policy')
+    if digest != entries.sha256(fusion._encoded(plan)): raise recovery.Conflict('Fusion approval digest mismatch')
+    if (plan.get('schema_version')!=2 or plan.get('command')!='organize-user-rules'
+        or plan.get('layout')!=rt.describe() or plan.get('scope') not in ('user','project')
+        or plan.get('request',{}).get('home')!=str(rt.home)
+        or plan['request'].get('platform_config')!=policy_migration.config()):
+        raise recovery.Conflict('Unknown fusion producer identity')
+    if type(plan['phased_writes']) is not bool or plan['request'].get('scope','user') != plan['scope']:
+        raise recovery.Conflict('Unknown fusion approval scope')
+    if plan['scope']=='project' and str(recovery.safe(plan['request'].get('project',''))) != plan['project']:
+        raise recovery.Conflict('Fusion project identity mismatch')
+    ordered=plan.get('steps') if plan.get('phased_writes') else plan.get('changes')
+    if not isinstance(ordered,list) or not ordered: raise recovery.Conflict('No fusion execution proof')
+    candidates=list(rt.backups.glob('*/manifest.json'))
+    if len(candidates)>256: raise recovery.Conflict('Bounded fusion history exhausted')
+    confirmed=datetime.fromisoformat(data['confirmed_at'].replace('Z','+00:00'))
+    for manifest in candidates:
+        txdata=strict(manifest.read_bytes())
+        if (txdata.get('operation')!='organize-user-rules' or txdata.get('status') not in ('committed','rolled_back')
+            or txdata.get('registry_path') is not None or len(txdata.get('entries',[]))!=len(ordered)
+            or bool(txdata.get('phased_writes'))!=bool(plan.get('phased_writes'))): continue
+        rows=txdata['entries']
+        if any(row['path']!=step['path'] or row['before']['kind']!=step['before']['kind']
+            or row['before']['fingerprint']!=step['before']['sha256']
+            or row['before']['mode']!=step['before']['mode']
+            or row['after']['fingerprint']!=step['after_sha256']
+            or entries.sha256(bytes.fromhex(step['after_hex']))!=step['after_sha256']
+            for row,step in zip(rows,ordered)): continue
+        if not re.fullmatch(r'[0-9]{8}T[0-9]{6}Z-[0-9a-f]{32}',manifest.parent.name):
+            raise recovery.Conflict('Invalid fusion transaction identity')
+        started=datetime.strptime(manifest.parent.name.split('-')[0],'%Y%m%dT%H%M%SZ').replace(tzinfo=timezone.utc)
+        if not 0 <= (started-confirmed).total_seconds() <= 600: continue
+        roots=[rt.home,rt.root]+([recovery.safe(plan['project'])] if plan.get('project') else [])
+        tx=Transaction(lock_path=rt.transaction_lock,backup_root=rt.backups,allowed_roots=roots,operation='recover')
+        _recovery_entries(tx,manifest,txdata)
+        evidence={}
+        def fact(path,kind='file',mode=0o600):evidence[str(path)]=_node(path,kind,mode)
+        fact(manifest.parent,'directory',0o700);fact(manifest)
+        expected={'manifest.json'}
+        for row in rows:
+            if row['before']['kind']=='file':
+                name=row['before']['backup'];expected.add(name);fact(manifest.parent/name)
+        if {p.name for p in manifest.parent.iterdir()}!=expected:
+            raise recovery.Conflict('Fusion transaction closure incomplete')
+        return evidence
+    raise recovery.Conflict('No terminal transaction matches this exact fusion approval')
+
+
 def _artifact(path, rt, ledger, now):
     meta = _node(path, 'file', 0o600)
     data = strict(path.read_bytes())
@@ -230,10 +286,15 @@ def _artifact(path, rt, ledger, now):
         if data['phase'] == 'preview': terminal |= {'already_prepared', 'identity_missing', 'payload_missing'}
         else: terminal |= {'stale_plan', 'no_pending_plan'}
         if data['flow'] == 'bootstrap' and data['phase'] == 'execute': terminal.add('acquired')
+        if data['flow'] == 'fusion':
+            terminal = {'completed','failed'} if data['phase']=='preview' else {'completed','failed','rejected','stale_plan','no_pending_plan'}
         # Narrow initial producer: journal-based recovery is deliberately not inferred.
         if not isinstance(data['state'], str) or data['state'] not in terminal or data.get('journal') is not None:
             raise recovery.Conflict('Active, unknown or journal-bearing operation')
         record = data['state']
+    elif path.name == 'fusion-approval.json':
+        meta['history'] = _fusion_history(data,rt)
+        record = 'no_operation_record'
     elif path.name == 'enable-approval.json':
         _keys(data, 'schema_version command main_checkout checkout git_common_dir agents memory_policy changes installation native_pending confirmed_at reference')
         if type(data['schema_version']) is not int or data['schema_version'] != 1 or data['command'] != 'enable-memory':

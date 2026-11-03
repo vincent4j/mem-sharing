@@ -46,6 +46,10 @@ WRITE_COMMANDS = ("enable-memory", "enable-memory-batch")
 # the new core modules implement their own JSON/approval handling; this shell
 # only forwards the complete argv (command included) and propagates the int.
 CORE_COMMAND_ROUTES = {
+    "recover-memory-fusion": "agm_core.fusion_recovery",
+    "organize-user-memory": "agm_core.user_rules_organize",
+    "organize-project-memory": "agm_core.user_rules_organize",
+    "organize-user-rules": "agm_core.user_rules_organize",
     "uninstall-machine": "agm_core.uninstall",
     "recover-uninstall": "agm_core.uninstall",
     "migrate-policy": "agm_core.policy_migration",
@@ -222,6 +226,9 @@ def build_parser():
     reconcile = sub.add_parser("reconcile-legacy-import", help="仅历史证据证明CK块独立变化时的Claude旧引用精确协调；默认只读预览")
     reconcile.add_argument("--approval-file", metavar="JSON", help="精确预览加真实确认凭据")
     reconcile.add_argument("--json", action="store_true")
+    sub.add_parser('recover-memory-fusion', help='按原事务manifest预览并批准恢复记忆融合；--manifest必需，项目恢复指定--project')
+    for name in ('organize-user-memory', 'organize-project-memory', 'organize-user-rules'):
+        sub.add_parser(name, help='记忆共享与融合：只读两块建议，编号选择后完整计划批准；支持暂不整理')
     return parser
 
 

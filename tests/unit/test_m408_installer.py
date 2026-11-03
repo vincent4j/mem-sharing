@@ -74,6 +74,10 @@ class InstallerTests(InstallFixture):
         plan = cli.plan_machine(self.request)
         done = cli.execute_machine(plan, approved(plan), request=self.request)
         self.assertEqual(done['agents']['connected'], ['codex'])
+        self.assertEqual(done['fusion']['status'], 'pending_selection')
+        self.assertTrue(done['fusion']['automatic_continue'])
+        self.assertTrue(done['fusion']['can_decline'])
+        self.assertIn('本次融合尚未修改记忆内容', done['fusion']['preview']['prompt'])
         self.assertEqual(done['entry_status']['codex']['runtime_acceptance'], 'pending')
         entry = self.home/'.codex/AGENTS.md'
         raw = entry.read_bytes()

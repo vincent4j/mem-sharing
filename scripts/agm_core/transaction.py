@@ -240,19 +240,22 @@ class Transaction:
         if read_snapshot(path) != expected:
             raise TransactionError("readback mismatch: " + str(path))
 
-    def run(self, changes, *, registry_change=None, registry_authoritative=False):
+    def run(self, changes, *, registry_change=None, registry_authoritative=False, phased_writes=False):
         changes = list(changes)
+        if phased_writes and (self.operation != 'organize-user-rules' or registry_change is not None or registry_authoritative):
+            raise TransactionError('phased writes are restricted to explicit memory fusion without registry changes')
         if registry_change is not None:
             changes.append(registry_change)
         with write_lock(self.lock_path):
-            seen = set()
+            seen = {}
             for change in changes:
                 path = self._scope(change.path)
-                if path in seen:
+                if path in seen and not phased_writes:
                     raise TransactionError("duplicate transaction output")
-                seen.add(path)
-                if read_snapshot(path) != change.expected:
+                actual = seen[path] if path in seen else read_snapshot(path)
+                if actual != change.expected:
                     raise TransactionError("output drifted before transaction: " + str(change.path), code="drift")
+                seen[path] = change.after
                 if change.after.kind == "file" and change.expected.kind == "symlink":
                     raise TransactionError("file/link conflict", code="path_conflict")
                 if change.after.kind == "symlink" and change.expected.kind not in ("absent", "symlink"):
@@ -268,6 +271,8 @@ class Transaction:
             self.manifest = {"schema_version": 1, "operation": self.operation,
                              "status": "prepared", "registry_path": str(registry_change.path) if registry_change else None,
                              "created_directories": [], "entries": [], "error": None}
+            if phased_writes:
+                self.manifest['phased_writes'] = True
             try:
                 self.directory.mkdir(parents=True, mode=0o700)
                 if registry_authoritative:
@@ -325,7 +330,8 @@ class Transaction:
                     self._verify(change.path, change.after)
                 # Recheck every config before committing/returning. Registry is
                 # appended last, and prior outputs were individually read back.
-                for change in active:
+                final_outputs = {change.path: change for change in active}
+                for change in final_outputs.values():
                     self._verify(change.path, change.after)
                 self.manifest["status"] = "committed"
                 self._save()
@@ -394,6 +400,68 @@ class Transaction:
                     "changed": [str(c.path) for c in active]}
 
 
+def _recovery_entries(transaction, manifest_path, manifest):
+    """Validate every backup and complete per-path chain before any restore."""
+    phased = manifest.get('phased_writes', False)
+    if type(phased) is not bool or (phased and (manifest.get('operation') != 'organize-user-rules' or manifest.get('registry_path') is not None)):
+        raise TransactionError('invalid phased recovery scope')
+    chains = {}; unattempted = False
+    for entry in manifest['entries']:
+        path = transaction._scope(Path(entry['path']))
+        if path in chains and not phased:
+            raise TransactionError('duplicate recovery output')
+        meta = entry['before']; data = None
+        if meta['kind'] == 'file':
+            backup = meta['backup']
+            if not isinstance(backup,str) or Path(backup).name != backup:
+                raise TransactionError('invalid backup path')
+            backup_path = manifest_path.parent/backup
+            if backup_path.is_symlink(): raise TransactionError('backup is symlink')
+            data = backup_path.read_bytes()
+            if _hash(data) != meta['fingerprint']: raise TransactionError('backup fingerprint mismatch')
+        before = Snapshot(meta['kind'],data,meta['mode'],meta['link_target'])
+        key = dict(meta,backup=None)
+        after = dict(entry['after'],backup=None)
+        if phased and (before.kind not in ('file','absent') or after['kind'] != 'file'):
+            raise TransactionError('phased fusion only supports regular memory files')
+        if path not in chains:
+            chains[path] = {'before':before,'entry':entry,'last':key,'states':[key],'attempted':False}
+        chain = chains[path]
+        if key != chain['last']: raise TransactionError('broken phased before/after chain')
+        if type(entry['attempted']) is not bool: raise TransactionError('invalid attempted flag')
+        if entry['attempted']:
+            if phased and unattempted: raise TransactionError('phased attempt sequence is not a prefix')
+            chain['states'].append(after); chain['attempted'] = True
+        else:
+            unattempted = True
+            if not phased: chain['states'].append(after)
+        chain['last'] = after
+    planned = []
+    for path,chain in chains.items():
+        current = read_snapshot(path)
+        actual = _metadata(current,path=path)
+        if actual not in chain['states']:
+            raise TransactionError('recovery output drifted: '+str(path),code='recovery_required',manifest=manifest_path)
+        if chain['attempted']:
+            planned.append((path,chain['before'],chain['entry'],current))
+    for raw in manifest['created_directories']:
+        transaction._scope(Path(raw))
+    return planned
+
+
+def inspect_recovery(manifest_path, *, allowed_roots):
+    """Read-only validation shared by fusion recovery preview and rollback."""
+    manifest_path = _safe_path(manifest_path)
+    if manifest_path.is_symlink(): raise TransactionError('recovery manifest is a symlink')
+    manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    if manifest.get('schema_version') != 1 or manifest.get('status') not in ('prepared','applying','recovery_required'):
+        raise TransactionError('manifest is not eligible for recovery')
+    transaction = Transaction(lock_path=manifest_path.parent/'inspection-lock',backup_root=manifest_path.parent.parent,
+                              allowed_roots=allowed_roots,operation='recover')
+    _recovery_entries(transaction,manifest_path,manifest)
+    return manifest
+
+
 def _recover_manifest(manifest_path, *, lock_path, allowed_roots, hook=None):
     """Explicit crash rollback under a fresh writer lock; never steals stale locks.
 
@@ -411,35 +479,7 @@ def _recover_manifest(manifest_path, *, lock_path, allowed_roots, hook=None):
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if manifest.get("schema_version") != 1 or manifest.get("status") not in ("prepared", "applying", "recovery_required"):
             raise TransactionError("manifest is not eligible for recovery")
-        planned = []
-        seen = set()
-        for entry in manifest["entries"]:
-            path = transaction._scope(Path(entry["path"]))
-            if path in seen:
-                raise TransactionError("duplicate recovery output")
-            seen.add(path)
-            meta = entry["before"]
-            data = None
-            if meta["kind"] == "file":
-                backup = meta["backup"]
-                if not isinstance(backup, str) or Path(backup).name != backup:
-                    raise TransactionError("invalid backup path")
-                backup_path = manifest_path.parent / backup
-                if backup_path.is_symlink():
-                    raise TransactionError("backup is symlink")
-                data = backup_path.read_bytes()
-                if _hash(data) != meta["fingerprint"]:
-                    raise TransactionError("backup fingerprint mismatch")
-            before = Snapshot(meta["kind"], data, meta["mode"], meta["link_target"])
-            current = read_snapshot(path)
-            actual = _metadata(current, path=path)
-            after = dict(entry["after"], backup=None)
-            if current != before and actual != after:
-                raise TransactionError("recovery output drifted: " + str(path), code="recovery_required", manifest=manifest_path)
-            if entry["attempted"]:
-                planned.append((path, before, entry, current))
-        for raw in manifest["created_directories"]:
-            transaction._scope(Path(raw))
+        planned = _recovery_entries(transaction, manifest_path, manifest)
         errors = []
         for path, before, entry, expected in reversed(planned):
             try:
@@ -449,6 +489,9 @@ def _recover_manifest(manifest_path, *, lock_path, allowed_roots, hook=None):
                 if read_snapshot(path) != before:
                     raise TransactionError("recovery readback mismatch")
                 entry["restoration"] = "restored"
+                if manifest.get('phased_writes'):
+                    for sibling in manifest['entries']:
+                        if sibling['path'] == str(path): sibling['restoration'] = 'restored'
             except Exception as exc:
                 entry["restoration"] = "failed: " + str(exc)
                 errors.append(str(path) + ": " + str(exc))

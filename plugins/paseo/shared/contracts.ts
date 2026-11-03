@@ -199,7 +199,7 @@ export const recoverConfirmRpc = defineRpc({
 
 export const cancelPendingRpc = defineRpc({
   name: "memsharing.pending.cancel",
-  input: z.object({ flow: z.enum(["dependency", "bootstrap", "machine", "enable", "uninstall", "ck", "recover", "ckUninstall", "stagingCleanup"]) }).strict(),
+  input: z.object({ flow: z.enum(["dependency", "bootstrap", "machine", "enable", "uninstall", "ck", "recover", "ckUninstall", "stagingCleanup", "fusion"]) }).strict(),
   output: z.object({ status: z.enum(["cancel_requested", "cleared", "none"]) }),
 });
 
@@ -329,3 +329,14 @@ export const ckUninstallConfirmRpc = defineRpc({
   input: confirmAction.strict(),
   output: confirmStatus,
 });
+
+// Selection is read-only; approval contents remain server-owned.
+export const fusionPreviewRpc = defineRpc({
+  name: "memsharing.fusion.preview",
+  input: z.object({ scope: z.enum(["user", "project"]), projectRoot: z.string().optional(),
+    selection: z.string().optional(), decline: z.boolean().optional(),
+    contextToken: z.string().optional(), retentions: z.record(z.string(), z.string()).optional() }).strict(),
+  output: z.object({ status: z.enum(["completed", "failed"]), envelope: jsonObject,
+    contextToken: z.string().optional(), approval: previewStatus.optional() }),
+});
+export const fusionConfirmRpc = defineRpc({ name: "memsharing.fusion.confirm", input: confirmAction.strict(), output: confirmStatus });

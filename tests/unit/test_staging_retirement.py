@@ -42,6 +42,33 @@ class RetirementTests(unittest.TestCase):
         self.assertEqual(result['status'],'completed');self.assertEqual(set(x.name for x in self.root.iterdir()),{'host-receipt.json'})
         self.assertEqual((Path(result['backup_root'])/'op-abc/operation.json').read_bytes(),before)
         self.assertEqual((Path(result['backup_root'])/'op-abc/operation.json').stat().st_mtime_ns,1000000000000000000)
+    def test_fusion_exact_producer_terminals_and_active_unknown_stay_blocked(self):
+        for phase,states in [('preview',['completed','failed']),('execute',['completed','failed','rejected','stale_plan','no_pending_plan'])]:
+            for state in states:
+                self.add('op-abc','operation.json',dict(self.operation,flow='fusion',phase=phase,state=state))
+                plan=self.preview();self.assertEqual(plan['terminal_evidence'][0]['record_state'],state)
+        for state in ('running','unknown','approval_required','recovered','gaps'):
+            self.add('op-abc','operation.json',dict(self.operation,flow='fusion',phase='preview',state=state))
+            with self.assertRaises(ValueError):self.preview()
+        self.add('op-abc','operation.json',dict(self.operation,flow='fusion',state='completed',journal='/any/manifest.json'))
+        with self.assertRaises(ValueError):self.preview()
+
+    def test_fusion_approval_requires_exact_terminal_transaction_proof(self):
+        import test_fusion_phases as phase_fixture
+        from agm_core import user_rules_organize as fusion
+        fixture=phase_fixture.PhaseTests('runTest');fixture.setUp();self.addCleanup(fixture.doCleanups)
+        approval=dict(fixture.plan,confirmed_at=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),reference='Synthetic real fusion producer approval')
+        artifact=fixture.f.home/'fusion-approval.json';artifact.write_text(json.dumps(approval));artifact.chmod(0o600)
+        os.utime(artifact,(1000000000,1000000000))
+        now=datetime.now(timezone.utc)
+        with self.assertRaises(ValueError):s._artifact(artifact,fixture.f.rt,{},now)
+        result=fusion.execute_organize(fixture.plan,approval);self.assertEqual(result['status'],'completed',result)
+        meta,state=s._artifact(artifact,fixture.f.rt,{},now)
+        self.assertEqual(state,'no_operation_record');self.assertTrue(meta['history'])
+        manifest=Path(result['manifest']);saved=manifest.read_bytes()
+        tx=json.loads(saved);tx['status']='applying';manifest.write_text(json.dumps(tx))
+        with self.assertRaises(ValueError):s._artifact(artifact,fixture.f.rt,{},now)
+
     def test_running_blocks(self):
         self.operation['state']='running';self.add('op-abc','operation.json',self.operation)
         with self.assertRaises(ValueError):self.preview()

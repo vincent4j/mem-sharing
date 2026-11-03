@@ -12,6 +12,7 @@ import type { PluginTheme } from "@getpaseo/plugin";
 import { useRpc } from "@getpaseo/plugin/client";
 import { Modal } from "@getpaseo/plugin/client/ui";
 import {
+  fusionPreviewRpc, fusionConfirmRpc,
   dependencyConfirmRpc,
   cancelPendingRpc,
   operationStatusRpc,
@@ -30,12 +31,14 @@ import {
   uninstallRecoverPreviewRpc, uninstallRecoverConfirmRpc,
 } from "../shared/contracts";
 
+import { fusionGroups, fusionResult, record } from "./fusion";
 import { uninstallResult, externalSteps, publicPlan } from "./uninstall-result";
 
 type Phase =
+  | { kind: "fusion"; envelope: Record<string, unknown>; original?: string }
   | { kind: "form" }
   | { kind: "loading" }
-  | { kind: "preview"; flow: "dependency" | "onboard" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "uninstallRecover" | "ck" | "recover"; planKind: string; digest: string; confirmationToken: string; summary: { label: string; value: string }[]; planText: string }
+  | { kind: "preview"; flow: "fusion" | "dependency" | "onboard" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "uninstallRecover" | "ck" | "recover"; planKind: string; digest: string; confirmationToken: string; summary: { label: string; value: string }[]; planText: string }
   | { kind: "gate"; message: string }
   | { kind: "busy"; message: string }
   | { kind: "result"; ok: boolean; message: string; detail?: string; continuation?: string; rows?: { label: string; value: string }[] };
@@ -75,6 +78,12 @@ function titleFor(flow: string): string {
 }
 
 export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
+  const fusionPreview = useRpc(fusionPreviewRpc);
+  const fusionConfirm = useRpc(fusionConfirmRpc);
+  const [fusionScope, setFusionScope] = useState<"user" | "project">("user");
+  const [fusionToken, setFusionToken] = useState<string>();
+  const [selection, setSelection] = useState("按默认方案");
+  const [retentions, setRetentions] = useState("");
   const flow = params.flow ?? "onboard";
   const projectRoot = params.projectRoot ?? "";
   const bootstrapPreview = useRpc(bootstrapPreviewRpc);
@@ -106,7 +115,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
   const [agents, setAgents] = useState<AgentName[]>(["codex", "claude", "workbuddy"]);
   const cancelPending = useRpc(cancelPendingRpc);
   const operations = useRpc(operationStatusRpc);
-  const currentFlow = useRef<"dependency" | "bootstrap" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "ck" | "recover">("bootstrap");
+  const currentFlow = useRef<"fusion" | "dependency" | "bootstrap" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "ck" | "recover">("bootstrap");
   const [journalPath, setJournalPath] = useState("");
   const [recoverAction, setRecoverAction] = useState<"continue" | "rollback">("continue");
 
@@ -130,6 +139,41 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
     }),
     [theme, layout.compact],
   );
+
+  async function startFusion(envelope: Record<string, unknown>, scope: "user" | "project") {
+    const stage = record(envelope.fusion);
+    if (stage?.status === "blocked") {
+      setPhase({ kind: "result", ok: false, message: "接入已完成；记忆融合预览受阻。", detail: JSON.stringify(stage.preview, null, 2) }); return;
+    }
+    if (!stage || stage.automatic_continue !== true) {
+      setPhase({ kind: "result", ok: true, message: "接入完成；当前内核未提供自动融合阶段。", detail: JSON.stringify(envelope, null, 2) }); return;
+    }
+    setFusionScope(scope); setFusionToken(undefined); setSelection("按默认方案"); setRetentions("");
+    currentFlow.current = "fusion";
+    const next = await fusionPreview({ scope, ...(scope === "project" ? { projectRoot } : {}) });
+    setFusionToken(next.contextToken);
+    setPhase(next.status === "completed" ? { kind: "fusion", envelope: next.envelope } : { kind: "result", ok: false, message: "融合预览受阻；接入结果保留。", detail: JSON.stringify(next.envelope, null, 2) });
+  }
+
+  async function chooseFusion(choice?: string, decline = false) {
+    setPhase({ kind: "loading" }); currentFlow.current = "fusion";
+    try {
+      const locations = !decline && !(choice ?? selection).trim().startsWith("查看") && retentions.trim() ? JSON.parse(retentions) : undefined;
+      const next = await fusionPreview({ scope: fusionScope, ...(fusionScope === "project" ? { projectRoot } : {}),
+        contextToken: fusionToken, ...(decline ? { decline: true } : { selection: choice ?? selection }),
+        ...(locations && !decline && !(choice ?? selection).trim().startsWith("查看") ? { retentions: locations } : {}) });
+      if (next.status === "failed") { setPhase({ kind: "result", ok: false, message: "融合选择未执行；请保留现场并重新预览。", detail: JSON.stringify(next.envelope, null, 2) }); return; }
+      setFusionToken(next.contextToken);
+      if (decline || next.envelope.fusion_status === "unchanged") { setPhase({ kind: "result", ok: true, message: fusionResult(next.envelope) }); return; }
+      if (next.approval?.status === "approval_required") {
+        adoptPreview("fusion", "memory-fusion", next.approval, setPhase, setShowPlan);
+      } else {
+        const plan = record(next.envelope.approval_plan);
+        const viewed = typeof plan?.view === "number" ? fusionGroups(next.envelope).find(g => g.number === plan.view) : undefined;
+        setPhase({ kind: "fusion", envelope: next.envelope, original: viewed?.original });
+      }
+    } catch (error) { setPhase({ kind: "result", ok: false, message: "融合请求未能确认结果；请重新预览并核对现场。", detail: String(error) }); }
+  }
 
   async function runPreview(): Promise<void> {
     currentFlow.current = flow === "onboard" ? "bootstrap" : flow === "check" ? "enable" : flow === "uninstallRecover" ? "recover" : flow as typeof currentFlow.current;
@@ -162,7 +206,8 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
       }
       if (flow === "enable") {
         const result = await enablePreview({ projectRoot, agents });
-        adoptPreview("enable", "enable-memory", result, setPhase, setShowPlan);
+        if (result.status === "completed") await startFusion(result.envelope, "project");
+        else adoptPreview("enable", "enable-memory", result, setPhase, setShowPlan);
         return;
       }
       if (flow === "ck") {
@@ -180,6 +225,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
       if (result.status === "already_prepared") {
         currentFlow.current = "machine";
         const machine = await machinePreview({ agents });
+        if (machine.status === "completed") { await startFusion(machine.envelope, "user"); return; }
         adoptPreview("machine", machine.status === "approval_required" ? machine.planKind : "install-machine", machine, setPhase, setShowPlan);
         if (machine.status !== "approval_required") {
           setPhase({ kind: "gate", message: describe(machine.status, "message" in machine ? machine.message : "detail" in machine ? machine.detail : undefined) });
@@ -199,7 +245,8 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
     try {
       const input = { action, confirmationToken: phase.confirmationToken };
       let outcome;
-      if (phase.flow === "dependency") outcome = await dependencyConfirm(input);
+      if (phase.flow === "fusion") outcome = await fusionConfirm(input);
+      else if (phase.flow === "dependency") outcome = await dependencyConfirm(input);
       else if (phase.flow === "onboard") outcome = await bootstrapConfirm(input);
       else if (phase.flow === "machine") outcome = await machineConfirm(input);
       else if (phase.flow === "enable") outcome = await enableConfirm(input);
@@ -220,7 +267,11 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
           detail: JSON.stringify(outcome.envelope, null, 2),
         });
       } else if (outcome.status === "completed") {
-        if (phase.flow === "uninstall" || (phase.flow === "uninstallRecover" && outcome.envelope.status === "completed")) {
+        if (phase.flow === "fusion") {
+          setPhase({ kind: "result", ok: true, message: fusionResult(outcome.envelope), detail: JSON.stringify(outcome.envelope, null, 2) });
+        } else if (phase.flow === "machine" || phase.flow === "enable") {
+          await startFusion(outcome.envelope, phase.flow === "enable" ? "project" : "user");
+        } else if (phase.flow === "uninstall" || (phase.flow === "uninstallRecover" && outcome.envelope.status === "completed")) {
           const shown = uninstallResult(outcome.envelope);
           setPhase({ kind: "result", ...shown, continuation: externalSteps(outcome.envelope, JSON.parse(phase.planText)), detail: JSON.stringify(outcome.envelope, null, 2) });
         } else if (phase.flow === "stagingCleanup") {
@@ -316,6 +367,18 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
         </View>
       ) : null}
 
+      {phase.kind === "fusion" ? <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 12 }}>
+        <Text style={styles.detail}>{typeof phase.envelope.prompt === "string" ? phase.envelope.prompt : fusionResult(phase.envelope)}</Text>
+        <Text style={styles.label}>{fusionResult(phase.envelope)}</Text>
+        {fusionGroups(phase.envelope).map(group => <Pressable key={group.number} accessibilityRole="button" onPress={() => void chooseFusion(`查看 ${group.number}`)}><Text style={{ color: theme.colors.accent }}>查看 {group.number} 完整原文与来源</Text></Pressable>)}
+        {phase.original ? <JsonBlock theme={theme} text={phase.original} /> : null}
+        <Text style={styles.label}>共享编号或组合输入，例如 3、4 / 不共享 2 / 共享 3、4，不共享 2 / 按默认方案</Text>
+        <TextInput style={inputStyle} value={selection} onChangeText={setSelection} />
+        {fusionScope === "project" ? <><Text style={styles.label}>排除已有公共项时，先逐条确认保留位置（编号到已参与原生文件的 JSON，例如 {`{"1":"CLAUDE.md"}`}）</Text><TextInput style={inputStyle} value={retentions} onChangeText={setRetentions} /></> : null}
+        <Pressable style={styles.button} onPress={() => void chooseFusion()}><Text style={styles.buttonText}>生成完整修改清单</Text></Pressable>
+        <Pressable style={styles.button} onPress={() => void chooseFusion(undefined, true)}><Text style={styles.buttonText}>保留现状，暂不融合</Text></Pressable>
+      </ScrollView> : null}
+
       {phase.kind === "loading" ? <Text style={styles.detail}>正在生成精确预览…</Text> : null}
       {phase.kind === "busy" ? <View style={{ gap: 8 }}><Text style={styles.detail}>{phase.message}</Text>
         <Pressable style={styles.button} onPress={() => { void cancelPending({ flow: currentFlow.current }); }}><Text style={styles.buttonText}>取消运行（完成前结果未知）</Text></Pressable>
@@ -342,7 +405,12 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
           <Pressable accessibilityRole="button" onPress={() => setShowPlan(!showPlan)}>
             <Text style={{ color: theme.colors.accent, fontSize: 13 }}>{showPlan ? "收起完整计划" : "展开完整计划 JSON"}</Text>
           </Pressable>
+          {phase.flow === "fusion" ? <View style={{ gap: 8 }}>
+            <Text style={styles.detail}>完整修改清单：参与范围、选中编号、原文、来源、目标与逐阶段变化如下；确认后才修改。</Text>
+            {fusionGroups({ approval_plan: JSON.parse(phase.planText) }).map(group => <View key={group.number}><Text style={styles.label}>{group.number}. {group.summary}</Text><JsonBlock theme={theme} text={group.original} /></View>)}
+          </View> : null}
           {showPlan ? <JsonBlock theme={theme} text={phase.planText} /> : null}
+          {phase.flow === "fusion" ? <Pressable onPress={() => { void startFusion({ fusion: { automatic_continue: true } }, fusionScope); }}><Text style={{ color: theme.colors.accent }}>返回选择（旧批准作废）</Text></Pressable> : null}
           <Text style={styles.label}>确认即按此精确计划执行；计划摘要 {phase.digest.slice(0, 16)}…</Text>
           <Pressable accessibilityRole="button" style={styles.button} onPress={() => setModalOpen(true)}>
             <Text style={styles.buttonText}>确认执行…</Text>
@@ -351,6 +419,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
       ) : null}
 
       {phase.kind === "result" && (flow === "onboard" || (flow === "uninstall" && !phase.continuation)) ? <Pressable style={styles.button} onPress={() => void runPreview()}><Text style={styles.buttonText}>{flow === "uninstall" ? "继续卸载预览" : "继续接入预览"}</Text></Pressable> : null}
+      {phase.kind === "result" && currentFlow.current === "fusion" && !phase.ok ? <Pressable style={styles.button} onPress={() => { void startFusion({ fusion: { automatic_continue: true } }, fusionScope).catch(error => setPhase({ kind: "result", ok: false, message: "融合预览中断，请保留现场。", detail: String(error) })); }}><Text style={styles.buttonText}>重新预览融合（旧计划作废）</Text></Pressable> : null}
       {phase.kind === "result" ? (
         <View style={{ gap: 8 }}>
           <Text style={{ color: phase.ok ? theme.colors.statusSuccess : theme.colors.statusDanger, fontSize: 15 }}>{phase.message}</Text>
@@ -401,7 +470,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
 type AdoptResult = { status: string; message?: string; detail?: string; continuation?: string; rows?: { label: string; value: string }[] };
 
 function adoptPreview(
-  flow: "onboard" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "uninstallRecover" | "ck" | "recover",
+  flow: "fusion" | "onboard" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "uninstallRecover" | "ck" | "recover",
   planKind: string,
   result: { status: string; planKind?: string; digest?: string; confirmationToken?: string; summary?: { label: string; value: string }[]; plan?: Record<string, unknown>; message?: string; detail?: string },
   setPhase: (phase: Phase) => void,
@@ -416,7 +485,7 @@ function adoptPreview(
       digest: result.digest,
       confirmationToken: result.confirmationToken,
       summary: result.summary ?? [],
-      planText: JSON.stringify(publicPlan(result.plan), null, 2),
+      planText: JSON.stringify(flow === "fusion" ? result.plan : publicPlan(result.plan), null, 2),
     });
   } else {
     setPhase({ kind: "gate", message: describe(result.status, "message" in result ? result.message : "detail" in result ? result.detail : undefined) });

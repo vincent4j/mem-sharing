@@ -228,7 +228,9 @@ def _report(plan, status, *, result=None, entries=None, project=None):
     connected = [a for a, fact in static.items() if fact['status'] == 'connected']
     if status == 'completed' and any(f['status'] != 'connected' for f in static.values()):
         status = 'partial'
-    return {'schema_version': 1, 'command': 'install-machine', 'status': status,
+    from agm_core.user_rules_organize import continuation
+    fusion = continuation(plan['request']) if status == 'completed' else None
+    return {'fusion': fusion, 'schema_version': 1, 'command': 'install-machine', 'status': status,
         'layout': plan['layout'], 'versions': plan['versions'], 'source': plan['source'],
         'operation_id': plan['operation_id'],
         'recovery': None if plan['plan'].get('noop') else plan['plan']['journal'],

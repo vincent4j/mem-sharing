@@ -40,6 +40,23 @@ class HostStagingTests(unittest.TestCase):
 
     def plan(self):return uninstall.preview(home=self.home,backup_dir=self.fixture.backup)
 
+    def test_fusion_production_terminal_records_only(self):
+        for phase,states in [('preview',('completed','failed')),('execute',('completed','failed','rejected','stale_plan','no_pending_plan'))]:
+            for state in states:
+                self.document.update(flow='fusion',phase=phase,state=state,journal=None)
+                self.write(self.operation/'operation.json',self.document)
+                self.row.update(record_state=state,journal_status=None)
+                self.row['artifacts'][0]['sha256']=recovery.digest((self.operation/'operation.json').read_bytes())
+                self.receipt['backup_tree_sha256']=uninstall._runtime_digest(self.external);self.save_receipt()
+                uninstall._host_staging_receipt(self.fixture.runtime,self.root,self.fixture.backup)
+        for state in ('running','unknown','recovered','approval_required','gaps'):
+            self.document.update(flow='fusion',phase='preview',state=state,journal=None)
+            self.write(self.operation/'operation.json',self.document)
+            self.row.update(record_state=state,journal_status=None)
+            self.row['artifacts'][0]['sha256']=recovery.digest((self.operation/'operation.json').read_bytes())
+            self.receipt['backup_tree_sha256']=uninstall._runtime_digest(self.external);self.save_receipt()
+            with self.assertRaises(ValueError):uninstall._host_staging_receipt(self.fixture.runtime,self.root,self.fixture.backup)
+
     def test_exact_receipt_preview_and_removal_preserve_external_evidence(self):
         before=recovery.tree(self.home);external=recovery.tree(self.external)
         plan=self.plan()

@@ -8,18 +8,22 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 
 本页供未安装产品的 Agent 直接使用，无须先有产品 Skill、v0 工具、Context Keeper 或项目配置。依据 [DESIGN](DESIGN.md) 与[系统架构](docs/architecture.md)。本页描述目标流程，执行状态以实际结果为准；M4-09 的本地范围与阻断项见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)，真机项归 M4-10。
 
-## 用户看到的安装对话（五拍）
+## 用户看到的安装对话（六拍）
 
-第一拍：用户发出上面的一句安装请求。Agent 回复：“我来安装 memSharing，先检查运行环境和本机 Agent。”随后第二拍检查汇总与回车确认，第三拍静默安装并给结论，第四拍正向询问 Context Keeper，第五拍只提醒它的用法。具体如下。
+用户发出上面的一句安装请求后，Agent 按以下六拍执行：第一拍检查汇总与集中确认，第二拍静默安装，第三拍简报结论，第四拍正向询问 Context Keeper，第五拍提醒其用法，第六拍自动进入用户记忆融合预览。具体如下。
 
 1. **先检查，集中确认。** 检查 Python、Git、本机已适配 Agent，汇总哪些环境就绪、哪些依赖待安装、检测到哪些 Agent，并明确将为这些 Agent 安装入口。一次确认，回车即开始；不把 unknown 或残留目录列为已安装。
 2. **确认后静默执行。** 准备依赖、获取固定来源、核验、安装和接入正常情况下不逐步播报、不重复询问。冲突、漂移、v0 身份不明或实际权限阻塞时停止，说明具体现场与所需处置；一次确认不授权覆盖未知内容。
 3. **完成后极简报告。** 例如：“已创建用户记忆中枢，已为 Codex、Claude Code 启用用户记忆入口。”名单必须来自实际结果。不报产品代码路径，不提未安装执行器，不加新会话自检提示，也不加“将来新装 Agent”提示句。后装接入说明在 [README](README.md)。失败或 partial 不套用成功句式。
 4. **紧接着询问 Context Keeper。** 使用以下固定正向话术，回车同意，输入 n 跳过：
 
-> 最后：为了让你的所有项目都能记住并续接工作经历，我们将为已接入且受支持的 Agent（Codex、Claude Code、WorkBuddy）安装项目经历引擎 Context Keeper（用户级）——它与本产品出自同一作者。同意吗？
+> 最后：为了让你的所有项目都能记住并续接项目经历，我们将为已接入且受支持的 Agent（Codex、Claude Code、WorkBuddy）安装项目经历引擎 Context Keeper（用户级）——它与本产品出自同一作者。同意吗？
 
-同意后由安装器编排 Context Keeper 自有安装器，为**已接入的 Codex、Claude Code、WorkBuddy**完成用户级安装，Skill 落位由 Context Keeper 负责。只有明确的交互回车才算同意；无响应、非交互 EOF 不等于同意。装后只提醒：“在任意需要的项目里使用 `/context-keeper`。首次使用按它的流程创建项目记录库，记录库随 Git 走，各家 Agent 共用。”到此结束。
+同意后由安装器编排 Context Keeper 自有安装器，为**已接入的 Codex、Claude Code、WorkBuddy**完成用户级安装，Skill 落位由 Context Keeper 负责。只有明确的交互回车才算同意；无响应、非交互 EOF 不等于同意。装后只提醒：“在任意需要的项目里使用 `/context-keeper`。首次使用按它的流程创建项目记录库，记录库随 Git 走，各家 Agent 共用。”
+
+5. **提醒 Context Keeper 用法。** 同意安装且实际完成后，使用上一拍的固定提醒；跳过时不声称已安装。
+
+6. **接入完成后自动进入用户记忆融合预览。** 安装与各入口安全接入后，只读对比各接入 Agent 的用户记忆，按“默认共享”与“由你选择是否共享”两块展示，明确“本次融合尚未修改记忆内容”；不能仅给一个可选后续命令就结束。用户可输入待选编号（如 `3、4`）、`不共享 2`、组合输入或 `按默认方案`；`查看 3` 只读展示完整原文与来源，不选择、不执行。也可明确选择保留现状。选定后展示完整修改清单，用户确认最终清单后才执行：把选中内容完整原文迁入公共记忆，再精确删除各原生文件中对应的重复片段；独有与未选内容保留。选择保留现状或暂不处理不阻塞安装成功，但安装完成不冒称融合完成。两块编号全局连续且在同一份有效计划内稳定；完整交互合同见 [SKILL](SKILL.md) 的“用户记忆治理与融合”。
 
 固定 pin 的 Context Keeper 安装器仅支持旧三家的 flags；DeepSeek Harness（`dsh`）、ZCode（`zcode`）与 OpenCode（`opencode`）跳过用户级 CK 安装（`reason=upstream_unsupported`）。混合接入时旧三家仍可安装，不影响它们的 memSharing 接入；不可报告为 CK 已安装。
 
@@ -82,7 +86,7 @@ python3 -B scripts/install.py --approval-file /absolute/path/install-approval.js
 
 `--operation-id` 可绑定操作，重复 `--agent` 限定目标，不豁免安装事实；`--request-file` 承载 conversions、legacy_registries、legacy_source_commits、evidence_files、legacy_identity；隔离演练还可显式传入 search_paths、app_directories、user_candidates，不能把合成探测结果当作本机安装事实。批准 envelope 绑定来源、三版本、现场指纹、精确 changes、R/C/V、请求与有效执行器、恢复路径及旧证据映射。
 
-独立获取为 `--acquire --staging <绝对且不存在目录> --commit <完整SHA> --version <SemVer>`，先预览，批准后加 `--approval-file` 执行；不与普通安装或恢复参数混用。`acquired` 只表示获取完成，不表示产品安装完成。批量启用与 Context Keeper 独立入口见下文；整理向导目前提供模块 API，不得自造 CLI 子命令。
+独立获取为 `--acquire --staging <绝对且不存在目录> --commit <完整SHA> --version <SemVer>`，先预览，批准后加 `--approval-file` 执行；不与普通安装或恢复参数混用。`acquired` 只表示获取完成，不表示产品安装完成。批量启用与 Context Keeper 独立入口见下文；整理使用 `organize-user-memory`，当前项目融合使用 `organize-project-memory --project <绝对路径>`，选择与批准合同见 [SKILL](SKILL.md)。
 
 ## Context Keeper 独立尾步
 
@@ -107,7 +111,7 @@ python3 -B scripts/install.py --context-keeper --approval-file /absolute/ck-appr
 
 ## 项目使用
 
-进入未登记的 Git 主 checkout 时，用户级规则与公共指南默认接入项目规则，保留原正文，只建立所需骨架与协议；非 Git 与 linked worktree 不触发。默认接入由当前实际执行者按指南以 `--agent <当前执行者>` 执行，避免不带 agent 参数时按安装事实顺带补齐其他执行器已存在的原生目录；用户显式要求全体或批量接入时仍按现行命令默认，不改 CLI 语义。机器探测到某执行器已安装或其原生目录存在，不等于该执行者当前实际使用。人工入口为 `/mem-sharing` 的“接入项目规则”，底层示例使用实际项目根：
+进入未登记的 Git 主 checkout 时，用户级规则与公共指南默认接入项目记忆，保留原正文，只建立所需骨架与协议；非 Git 与 linked worktree 不触发。默认接入由当前实际执行者按指南以 `--agent <当前执行者>` 执行，避免不带 agent 参数时按安装事实顺带补齐其他执行器已存在的原生目录；用户显式要求全体或批量接入时仍按现行命令默认，不改 CLI 语义。机器探测到某执行器已安装或其原生目录存在，不等于该执行者当前实际使用。人工入口为 `/mem-sharing` 的“接入项目记忆”，底层示例使用实际项目根：
 
 ```bash
 python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" enable-memory --project /absolute/path/to/project --agent <当前执行者>
@@ -115,7 +119,11 @@ python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" enable-memory --proje
 python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" check-memory --project /absolute/path/to/project
 ```
 
-默认启用不初始化 Context Keeper 记录库、不调用其安装器、不安装项目级 Skill。项目经历初始化由首次 `/context-keeper` 流程负责。不带 `--agent` 的通用 enable 不触碰 `CLAUDE.md`，包括已有文件；Claude 自身实际使用时按 `--agent claude` 精确接入，可幂等补 `@AGENTS.md` 引用；其它执行者默认流程不预建，不因机器已装执行器而创建。该兜底规则位于 Claude 自身用户文件、不放公共索引。WorkBuddy 仅在原生目录存在时补桥接，不预建目录。`AGENTS.md` 是共享项目规则基座，不依赖安装 Codex；只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立，缺失的执行器用户目录不预建。
+默认启用不初始化 Context Keeper 记录库、不调用其安装器、不安装项目级 Skill。项目经历初始化由首次 `/context-keeper` 流程负责。
+
+接入完成后，外层执行 Agent 自动进入当前项目的只读融合预览并展示两块（“默认共享”与“由你选择是否共享”），明确“本次融合尚未修改记忆内容”，不能仅给一个可选后续命令就结束。以独立来源文件去重计票，同一 `AGENTS.md` 被多家读取只算一个来源；已有 `AGENTS.md` 条目归默认保留，排除时先逐条询问保留位置；用户选择共享的内容迁到根 `AGENTS.md`，对其他文件仅删除已完整迁移且入口核验后的对应片段。完整交互合同见 [SKILL](SKILL.md) 的“项目记忆融合”。
+
+不带 `--agent` 的通用 enable 不触碰 `CLAUDE.md`，包括已有文件；Claude 自身实际使用时按 `--agent claude` 精确接入，可幂等补 `@AGENTS.md` 引用；其它执行者默认流程不预建，不因机器已装执行器而创建。该兜底规则位于 Claude 自身用户文件、不放公共索引。WorkBuddy 仅在原生目录存在时补桥接，不预建目录。`AGENTS.md` 是共享项目记忆基座，不依赖安装 Codex；只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立，缺失的执行器用户目录不预建。
 
 旧 `remove-memory`、`--memory`、`--no-memory` 已退役，新请求零写拒绝。历史 disabled 只作规则接入 tombstone，默认跳过、不重建；它不否决 Context Keeper 的自动规则，不表示 CK 已停用或入口已删除。使用 `migrate-policy [--project ABS]` 精确预览并批准后，仅退役产品自有且指纹匹配的旧控制与已知旧模板，保留私文、CK 设置和历史数据，不替用户启用 CK。
 
@@ -129,6 +137,8 @@ python3 -B scripts/agm.py enable-memory-batch --directory /absolute/projects --a
 递归扫描含目录自身，不跟随目录符号链接，排除 linked worktree；已启用项目跳过，disabled 项目保持停用，须单独恢复。批准绑定目录、完整扫描清单、台账哈希和每项目精确计划；执行前重新核验。某项目失败即停止后续，已完成项目保留，不提供跨项目整体回滚。
 
 ## 故障恢复
+
+以下是安装事务恢复。安装后记忆融合中断使用独立的 `recover-memory-fusion --manifest <当前HOME/.mem-sharing/backups/<tx>/manifest.json>`；项目事务加 `--project <当前项目根>`，先预览完整恢复计划，再加 `--approval-file` 精确批准回滚。接口与状态见操作手册第 7 节，核心执行者已回报临时 HOME 恢复测试通过，真实宿主恢复尚未验收；不复用安装批准，不把回滚当作融合完成。
 
 中断现场停止普通安装，保留 journal、锁和材料，不自动删锁，不回到首装。独立预览和获批执行：
 
@@ -192,3 +202,5 @@ CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调�
 用户无需进入源码目录：已接入的 Agent 读到公共 L0 后，明确的“卸载 memSharing / 卸载 mem-sharing / 不想用这个共享记忆工具了，帮我卸载”会按公共《使用约定》读取已核验 C 的 `SKILL.md` 与[完整卸载合同](docs/uninstall-design.md)，直接预览。路径与命令由安装时按 C 生成，使用 `python3 -B`；不凭路径存在信任代码，也不在预览创建备份目录。含糊的“卸载这个项目”先澄清，明确卸载请求也不替代看过精确计划后的批准。
 
 不能因换 Agent 发起而省略 Paseo 宿主义务；沿现有来源与参数合同补齐，未知先停止。已卸载或代码缺失不自动重装。安装代码已具备当前兼容实现时，旧公共指南通过 `migrate-policy` 的精确模板迁移接入新路由；旧 C 不兼容时零写拒绝，须先按现有精确安装/升级流程更新代码（预览、批准、私文保留、未知定制拒绝、重复零写）；生成指南在真正归还时退休，original 原文保全，active 不再指向被删代码。六家真实模型触发仍 pending。
+
+机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`：包含 `status`、`automatic_continue:true`、`can_decline:true`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常预览为 `fusion.status=pending_selection`，外层 Agent 自动展示 `fusion.preview.prompt` 并继续选择交互，不能仅返回命令后结束；若为 `blocked`，展示 `fusion.preview.errors` 并停止融合，不能当作可执行计划。入口接入可能已写入文件，提示须限定为“本次融合尚未修改记忆内容”。安装或启用成功与融合完成分别报告，不能复用安装或启用的批准执行融合。

@@ -23,7 +23,7 @@ import { probeGitEnvironment } from "./shared/common/git";
 import { PRODUCTION_TOOL_ASSETS } from "./shared/common/production-assets";
 import { assetScene, assetDestination, prepareToolAsset, toolEnvironment, toolTreeDigest, type ToolAsset } from "./shared/common/tool-assets";
 
-export type FlowKind = "dependency" | "bootstrap" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "ck" | "recover" | "ckUninstall";
+export type FlowKind = "dependency" | "bootstrap" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "ck" | "recover" | "ckUninstall" | "fusion";
 
 export interface CliRunOutcome {
   kind: "completed" | "timeout" | "canceled" | "spawn_error";
@@ -258,7 +258,8 @@ export class Orchestrator {
       save();
       const result = await work(controller.signal);
       const out = result as Record<string, unknown>;
-      entry.state = phase === "execute" && (controller.signal.aborted || String(out.code).match(/cli_(timeout|canceled|spawn_error|stdout_invalid)/)) ? "unknown" : String(out.status);
+      if (flow === "fusion" && jsonRecord(out.envelope)?.status === "recovery_required" && typeof jsonRecord(out.envelope)?.manifest === "string") entry.journal = jsonRecord(out.envelope)!.manifest;
+      entry.state = phase === "execute" && (controller.signal.aborted || (flow === "fusion" && jsonRecord(out.envelope)?.status === "recovery_required") || String(out.code).match(/cli_(timeout|canceled|spawn_error|stdout_invalid)/)) ? "unknown" : String(out.status);
       save();
       return result;
     } catch (error) {
@@ -1409,6 +1410,68 @@ export class Orchestrator {
       message: `recover confirm failed: ${JSON.stringify(parsed.errors ?? parsed.status)}`,
       envelope: parsed,
     };
+  }
+
+  private fusionContext?: { token: string; identity: string; scope: string; project?: string };
+
+  async fusionPreview(input: { scope: "user" | "project"; projectRoot?: string; selection?: string;
+    decline?: boolean; contextToken?: string; retentions?: Record<string, string> }, signal?: AbortSignal): Promise<{
+      status: "completed" | "failed"; envelope: Record<string, unknown>; contextToken?: string; approval?: PreviewOutcome }> {
+    return this.operate("fusion", "preview", signal, async owned => {
+      const fail = (code: string, envelope: Record<string, unknown> = {}) => ({ status: "failed" as const, envelope: { ...envelope, errors: [{ code, message: code }] } });
+      if (input.scope === "project" && (!input.projectRoot || !path.isAbsolute(input.projectRoot))) return fail("project_required");
+      if (input.contextToken && (this.fusionContext?.token !== input.contextToken || this.fusionContext.scope !== input.scope || this.fusionContext.project !== input.projectRoot)) return fail("stale_fusion_context");
+      // Numbered commands must refer to a previously displayed scene.
+      if (!input.contextToken && (input.selection || input.decline || input.retentions)) return fail("fusion_preview_required");
+      const python = await this.requirePython(); const agm = this.activeKernelAgm();
+      if (!python.ok || !agm) return fail("kernel_or_python_missing");
+      const base = [python.pythonPath, "-B", agm, input.scope === "project" ? "organize-project-memory" : "organize-user-memory"];
+      if (input.scope === "project") base.push("--project", input.projectRoot!);
+      const argv = [...base];
+      if (input.decline) argv.push("--decline");
+      else if (input.selection) argv.push("--selection", input.selection);
+      let retentionDirectory: string | undefined;
+      if (input.retentions) {
+        retentionDirectory = fs.mkdtempSync(path.join(tmpdir(), "memsharing-fusion-input-"));
+        fs.chmodSync(retentionDirectory, 0o700);
+        const file = path.join(retentionDirectory, "retentions.json");
+        fs.writeFileSync(file, JSON.stringify(input.retentions), { mode: 0o600, flag: "wx" });
+        argv.push("--retention-file", file);
+      }
+      let result: Awaited<ReturnType<typeof this.runJson<PreviewOutcome>>>;
+      try { result = await this.runJson<PreviewOutcome>(argv, { signal: owned }); }
+      finally { if (retentionDirectory) { fs.unlinkSync(path.join(retentionDirectory, "retentions.json")); fs.rmdirSync(retentionDirectory); } }
+      if ("failure" in result) return fail(result.failure.status === "failed" ? result.failure.code : "cli_failed");
+      const { parsed, exitKind } = result; const plan = jsonRecord(parsed.approval_plan);
+      if (exitKind === "failed" || !plan || !["approval_required", "viewed", "completed"].includes(String(parsed.status))) return { status: "failed", envelope: parsed };
+      const identity = planDigest({ observations: plan.observations, groups: plan.groups, scope: plan.scope, project: plan.project });
+      if (input.contextToken && this.fusionContext?.identity !== identity) {
+        this.fusionContext = undefined; return fail("fusion_scene_changed_preview_again", parsed);
+      }
+      const token = input.contextToken ?? randomUUID();
+      this.fusionContext = { token, identity, scope: input.scope, project: input.projectRoot };
+      // Initial preview and 查看 never create an executable pending plan.
+      let approval: PreviewOutcome | undefined;
+      if (input.selection && !plan.view && !input.decline && parsed.status === "approval_required" && exitKind === "approval_required") {
+        const stored = this.storePending("fusion", plan, "plan-plus-evidence", base);
+        approval = { status: "approval_required", planKind: "memory-fusion", ...stored, plan };
+      }
+      return { status: "completed", envelope: parsed, contextToken: token, approval };
+    });
+  }
+
+  async fusionConfirm(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<PlanConfirmOutcome> {
+    return this.operate("fusion", "execute", signal, async owned => {
+      if (input.action === "reject") { this.pending.delete("fusion"); return { status: "rejected" }; }
+      const popped = this.popPending("fusion", input.confirmationToken);
+      if (!popped.ok) return popped.outcome as PlanConfirmOutcome;
+      const file = this.buildApprovalFile(popped.pending);
+      const result = await this.runJson<PlanConfirmOutcome>(this.confirmArgv(popped.pending, file), { signal: owned });
+      if ("failure" in result) return result.failure;
+      this.fusionContext = undefined;
+      if (result.exitKind === "completed" && result.parsed.status === "completed" && result.parsed.fusion_status === "completed") return { status: "completed", envelope: result.parsed };
+      return { status: "failed", code: "fusion_not_completed", message: "融合未完成；保留现场，按错误与 manifest 恢复。", envelope: result.parsed };
+    });
   }
 
   async bootstrapPreview(signal?: AbortSignal): Promise<PreviewOutcome> {
