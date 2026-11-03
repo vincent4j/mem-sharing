@@ -1,0 +1,232 @@
+{
+  "files": [
+    {
+      "mode": 420,
+      "path": "DESIGN.md",
+      "sha256": "231bd0152d6844ee32de2719ebe33a8f4377dfdddd7df7536160e5d95f51d779"
+    },
+    {
+      "mode": 420,
+      "path": "INSTALL.md",
+      "sha256": "4630f0be9f548ffdeb3c9b2c0090f3d93ac6881338cbe8fad8e66dfeaf750e2b"
+    },
+    {
+      "mode": 420,
+      "path": "README.md",
+      "sha256": "40914e4488855cd119ba01b3f9570d1f52b7a0cd53b9c9b5fdb299f3ab908caf"
+    },
+    {
+      "mode": 420,
+      "path": "SKILL.md",
+      "sha256": "08cc642ffc4339bff260be7578b9b8989d2a4eeb78773a12b64d076c3a735c7f"
+    },
+    {
+      "mode": 420,
+      "path": "docs/architecture.md",
+      "sha256": "759b5e6fd747029a9996c0ff499deb0d80b2aa87155202eb833a75c48c5ecae4"
+    },
+    {
+      "mode": 420,
+      "path": "docs/operations.md",
+      "sha256": "be1c579eac8c290f5d4e48174a9775e788194fe4ea6f0f2e7dbb06f914553b93"
+    },
+    {
+      "mode": 420,
+      "path": "docs/uninstall-design.md",
+      "sha256": "ca031ad309b5a0ae3f9505289b925960943412fe5c2e2463dc5fa5ea431c13e9"
+    },
+    {
+      "mode": 420,
+      "path": "llms.txt",
+      "sha256": "ca9a07c3531f8baad457a681255fe4d8c4ba6c67147420cb1cfb42d3b6b3c594"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agents.json",
+      "sha256": "aa9a28a27f3c9bea6ca603dfa2cc24560a9feda3e5085a65d26960790fea9b24"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm.py",
+      "sha256": "d0feed0080771253db9ff04687b1e078776d6d3ae62f4ac9e3067a4614aff4ac"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/batch_enable.py",
+      "sha256": "bea5b0cd369af1ca290c5570ac751258e61078d80bccd4a8b567282f2c0a6596"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/check.py",
+      "sha256": "bf62cebeb68182b240a9d01735ecbef9d2d80d6b378201f39ea8af79c3f569f7"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/ck_install.py",
+      "sha256": "8fe9ca9917648e3b73f1d8f60cdbc51ff3149b3f68cbd3c2fd10523ed88a44d2"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/detect.py",
+      "sha256": "02a7213d5705e6306a6ae47688d5cb584a916e65073cae78695fffa81001fb19"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/enable.py",
+      "sha256": "c6c4da75aea81476f94f4aff0aa119fcc18f5fdff1e10f73a86ad7f490d5b2b2"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/entries.py",
+      "sha256": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/entry_layout.py",
+      "sha256": "347c4c83cbda932c0a8eeb153708673948316b4e6bd344643acc524bad09f50f"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/fusion_recovery.py",
+      "sha256": "db882d4f31d4b70f2c64644b3e5efd782bfc1c2cca0d09ef1a29f5821eee6fd7"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/layout.py",
+      "sha256": "254f28dca67b0277480eb2001ec98f52102989cdaa4ee97a0d7e2540333ecb44"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/legacy_import.py",
+      "sha256": "cf77248dbe8c2fd844a29a8c95c99dfaa772e31408d32b68f0ae9ff3adaad73c"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/legacy_reconcile.py",
+      "sha256": "ad85e085e73a65b007b90ca50b1eef9bdee4b28425d1b683f30723c203a188d2"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/migrate.py",
+      "sha256": "e8d6685897bf47603666ef31fea0d1fd0593a0845362efc8b32722aa0af7c46b"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/paths.py",
+      "sha256": "9619a87b83be18fc9397dd45215954336864211328d87c9337f05047cc4f93fa"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/plugin_release.py",
+      "sha256": "676a01693dd370e29968b0846b1f45f7dc314dc17a40fc1935720f86fa0749b1"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/policy_migration.py",
+      "sha256": "7c0aac5b1c033472424e3665f0f3a24b587c520d48a1727027117f6225752408"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/project.py",
+      "sha256": "cd532670de9931f8948743814107db78f4eb7e8dc368c129b4a37a4b338bf705"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/public_layout.py",
+      "sha256": "61277d0bb247bdfd1187ade9f19ff9e23d13975365cbf02cf2ce6222c51fadb3"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/registry.py",
+      "sha256": "e8de457851d36533eb76f4dfa1d79b1b975dfc6865baf6ee5c867e627752c1cc"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/staging_retirement.py",
+      "sha256": "658edaf52872deb309d4e8371378feb671367dbe8e7f876e508336bfbd2a595c"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/transaction.py",
+      "sha256": "ca28d7ef70ffd3111c0085bed20e3bdce4de0827bde64a24ca595dcaaf99444d"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/uninstall.py",
+      "sha256": "d0a0abbae752d2e0f0a6d44bbf58c373b38b9e03cd9ee51a9201f2d106fd07d5"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/uninstall_compat.py",
+      "sha256": "aa97451d7a2fb240b5644650af2ee6ce84e199f44615cc39d9c62dacf0993293"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/uninstall_memory.py",
+      "sha256": "6a3b89e37d4d79941f152bd4c33b9536ca496221568a1e3295b3f5657cc26d2d"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/uninstall_recovery.py",
+      "sha256": "338c72fcadb744833482595d3696aa69f2cd463a4c2e7accca2a1d8caa3d3c2c"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/upgrade.py",
+      "sha256": "a6fed01c285698fd056c280f3a93d5bfc4612f8a73819860c1d5a3475c3a86af"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/user_entries.py",
+      "sha256": "8e22f8876c8437a806ecd1cdc0fa8308c05c317a348e01166a3a0a37b95c62d4"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/user_entry_layout.py",
+      "sha256": "2c77e72163edb7fdecb33acc371bff91efc2b5ee958b4bde5509bbb98b4b2abc"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/user_install.py",
+      "sha256": "5605cd92d4ed3de660e05f3e6cfb0b1a90d56847a0350826d35a9623353bb11f"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/user_rules_organize.py",
+      "sha256": "4eb667af72c673a91dc06269b495033905d53b08161fbf99a628ea5118c67eaf"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/agm_core/versions.py",
+      "sha256": "74b611283e393450dd77a10afeab76b415144d0ba49d296b4e0a92a637bcbe7b"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/install.py",
+      "sha256": "a82ee65dd611be1338f92219bda7aa12b878591fa7c10c23ed9248c7b5520903"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/retire_staging.py",
+      "sha256": "b9791876bf6a86c6d3906a6b655fdd8530b9154c41b68905a8599b1bb7191ce2"
+    },
+    {
+      "mode": 420,
+      "path": "scripts/uninstall_compat.py",
+      "sha256": "bf8b6ea2ae8c944b372abeda313337dea4953e77b7bc6ff4d6455d19aca58c71"
+    }
+  ],
+  "product_id": "mem-sharing",
+  "schema_version": 1,
+  "source": {
+    "commit": "c562aaf4a1e8bb535497471ede4e035524fd2e42",
+    "tree_sha256": "19087c3c47b388925b2a67346f1112cad7ea515d17b705c71104afa7c5174428",
+    "url": "https://github.com/vincent4j/mem-sharing",
+    "version": "0.1.7"
+  }
+}
