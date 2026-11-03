@@ -432,8 +432,132 @@ def public_body(runtime, original, *, evidence=None):
     return b'\n\n'.join(chunk for chunk in chunks if chunk.strip())
 
 
-def merge_native(opaque, body):
+def _scoped_layout(raw):
+    """Byte-preserving Markdown sections and items outside opaque CK spans."""
+    from .user_rules_organize import _segments
+    protected=[];offset=0
+    for opaque,data in protected_parts(raw,assembled=True):
+        if opaque:protected.append((offset,offset+len(data)))
+        offset+=len(data)
+    sections=[{'scope':(), 'headers':(), 'end':len(raw)}];stack=[];offset=0;fence=None;covered=list(protected);heading_spans=[]
+    for line in raw.splitlines(keepends=True):
+        start=offset;offset+=len(line)
+        if any(start<b and offset>a for a,b in protected):continue
+        stripped=line.lstrip();mark=re.match(rb'(```+|~~~+)',stripped)
+        if mark:
+            token=mark[1][:3]
+            if fence is None:fence=token
+            elif fence==token:fence=None
+            continue
+        if fence:continue
+        match=re.match(rb'^(#{1,6})[ \t]+(.+?)\r?\n?$',line.removeprefix(b'\xef\xbb\xbf') if start==0 else line)
+        if match:
+            covered.append((start,offset));heading_spans.append((start,offset))
+            depth=len(match[1]);title=match[2].rstrip(b'\r\n')
+            stack=[entry for entry in stack if entry[0]<depth]+[(depth,title,line)]
+            sections[-1]['end']=start
+            sections.append({'scope':tuple(t for _,t,_ in stack),'headers':tuple(h for _,_,h in stack),'end':len(raw),'start':offset})
+    items=[];section=0
+    for left,right in _segments(raw,protected):
+        # The item splitter deliberately has a smaller heading grammar. A BOM
+        # heading can therefore also occur in an item span: subtract the already
+        # classified exact heading bytes instead of duplicating them as prose.
+        ranges=[(left,right)]
+        for a,b in heading_spans:
+            ranges=[piece for lo,hi in ranges for piece in
+                    ([(lo,min(a,hi))] if lo<a else [])+([(max(b,lo),hi)] if hi>b else [])]
+        for left,right in ranges:
+            if left>=right or not raw[left:right].strip():continue
+            covered.append((left,right))
+            while section+1<len(sections) and left>=sections[section]['end']:section+=1
+            sections[section].setdefault('items',[]).append(raw[left:right])
+            items.append((sections[section]['scope'],raw[left:right],sections[section]['headers']))
+    cursor=0
+    for left,right in sorted(covered):
+        if left>cursor and raw[cursor:left].strip():raise recovery.Conflict('Unclassified Markdown content; review required')
+        cursor=max(cursor,right)
+    if raw[cursor:].strip():raise recovery.Conflict('Unclassified Markdown content; review required')
+    return sections,items,protected
+
+
+def _merge_scoped_native(opaque, body):
+    sections,items,protected=_scoped_layout(opaque)
+    incoming_sections,_,incoming_ck=_scoped_layout(body)
+    def key(scope,text):return scope,text.replace(b'\r\n',b'\n').rstrip(b'\r\n')
+    present={key(scope,text) for scope,text,_ in items}
+    positions={section['scope']:section['end'] for section in sections}
+    occurrences={}
+    for section in sections:occurrences[section['scope']]=occurrences.get(section['scope'],0)+1
+    streams={};known=set(positions);inserted=set();introduced_scopes=set()
+
+    def destination(scope):
+        candidates=[prefix for prefix in positions if prefix and scope[:len(prefix)]==prefix]
+        ancestor=max(candidates,key=len) if candidates else ()
+        if scope==():ancestor=()
+        if ancestor or scope==():
+            if occurrences[ancestor]!=1:raise recovery.Conflict('Ambiguous repeated native scope; review required')
+            position=positions[ancestor];context=ancestor
+        else:
+            position=len(opaque);context=sections[-1]['scope']
+        if any(a<position<b for a,b in protected):raise recovery.Conflict('Insertion inside Context Keeper forbidden')
+        stream=streams.setdefault(position,{'scope':context,'chunks':[]})
+        return stream
+
+    def emit(stream,kind,raw):
+        if not raw:return
+        chunks=stream['chunks']
+        if kind=='header' and chunks and chunks[-1][0]=='header':
+            chunks[-1]=('header',chunks[-1][1]+raw)
+        else:chunks.append((kind,raw))
+
+    # Process each source section once in source order, including empty parents.
+    # A stream records its current hierarchy so siblings reuse only their common
+    # prefix; a child can never cause its parent heading to be emitted twice.
+    for section in incoming_sections:
+        scope=section['scope'];headers=section['headers']
+        pending=[]
+        for text in section.get('items',[]):
+            identity=key(scope,text)
+            if identity not in present:pending.append(text);present.add(identity)
+        if not pending and (not scope or scope in known):continue
+        stream=destination(scope);current=stream['scope']
+        common=0
+        while common<min(len(scope),len(current)) and scope[common]==current[common]:common+=1
+        if common==len(scope) and len(current)>len(scope):
+            if not scope:raise recovery.Conflict('Cannot reset unscoped content; review required')
+            common-=1  # Reopen an ancestor only when content actually returns to it.
+        emit(stream,'header',b''.join(headers[common:]))
+        if scope not in positions:introduced_scopes.add(scope)
+        stream['scope']=scope
+        known.update(scope[:depth] for depth in range(1,len(scope)+1))
+        for text in pending:
+            emit(stream,'item',text);inserted.add(key(scope,text))
+    keeper={opaque[a:b] for a,b in protected}
+    for a,b in incoming_ck:
+        chunk=body[a:b]
+        if chunk not in keeper:
+            stream=streams.setdefault(len(opaque),{'scope':sections[-1]['scope'],'chunks':[]})
+            emit(stream,'opaque',chunk);keeper.add(chunk)
+    result=opaque
+    for position,stream in sorted(streams.items(),reverse=True):
+        chunks=[raw for _,raw in stream['chunks']]
+        if not chunks:continue
+        payload=b'\n\n'.join(chunks)
+        left=result[:position];right=result[position:]
+        result=left+(b'' if not left or left.endswith(b'\n\n') else b'\n' if left.endswith(b'\n') else b'\n\n')+payload+(b'' if payload.endswith(b'\n\n') else b'\n' if payload.endswith(b'\n') else b'\n\n')+right
+    # Raw heading levels can differ from the inferred title path. Refuse rather
+    # than silently place original text under a different scope.
+    final_sections,final_items,_=_scoped_layout(result)
+    if not introduced_scopes.issubset({section['scope'] for section in final_sections}):
+        raise recovery.Conflict('Inserted heading hierarchy cannot be preserved; review required')
+    if not inserted.issubset({key(scope,text) for scope,text,_ in final_items}):
+        raise recovery.Conflict('Inserted scope cannot be preserved; review required')
+    return result
+
+
+def merge_native(opaque, body, *, scoped=False):
     """Protected spans are complete dedup units; paragraph logic never sees them."""
+    if scoped:return _merge_scoped_native(opaque,body)
     old_parts=protected_parts(opaque,assembled=True)
     new_parts=protected_parts(body,assembled=True)
     if not body.strip() or body in opaque:return opaque

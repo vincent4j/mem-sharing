@@ -763,6 +763,7 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
     original = uninstall_memory.public_sources(runtime)
     active = None
     public_body = uninstall_memory.public_body(runtime, original)
+    fusion_scoped_return = bool(uninstall_memory.fusion_generated_units(runtime, original))
     _, controls, observed = policy_migration.retire_controls(ledger)
     for path, raw in controls.items():
         _change(changes,path,_file(raw,recovery.snapshot(path)['mode']),'detach')
@@ -845,7 +846,7 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
         if uninstall_memory.contains_text(raw,uninstall_memory.LEGACY_GENERATED_GOVERNANCE):
             raise recovery.Conflict('Unproven historical governance; review required')
         uninstall_memory.require_no_product_dependency(raw,roots,home=runtime.home,document=path)
-        _change(changes,path,_file(uninstall_memory.merge_native(raw,public_body),state['mode']),'detach')
+        _change(changes,path,_file(uninstall_memory.merge_native(raw,public_body,scoped=fusion_scoped_return),state['mode']),'detach')
     # Retain AGENTS.md, Claude @AGENTS.md, effective WorkBuddy/CK bridges.
     # Remove only proven product-dependent project units, never entire files.
     project_roots = []
