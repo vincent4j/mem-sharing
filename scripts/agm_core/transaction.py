@@ -247,7 +247,7 @@ class Transaction:
 
     def run(self, changes, *, registry_change=None, registry_authoritative=False, phased_writes=False):
         changes = list(changes)
-        if phased_writes and (self.operation not in ('organize-user-rules', 'share-user-memory') or registry_change is not None or registry_authoritative):
+        if phased_writes and (self.operation not in ('organize-user-rules', 'share-user-memory', 'share-project-memory') or registry_change is not None or registry_authoritative):
             raise TransactionError('phased writes are restricted to explicit memory fusion without registry changes')
         if registry_change is not None:
             changes.append(registry_change)

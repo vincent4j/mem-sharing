@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import re
 from pathlib import Path
 
@@ -67,6 +68,47 @@ def _runtime(request):
     return runtime
 
 
+def _dsh_home_redirected(home):
+    """DSH_HOME 是否把 DSH 用户规则根重定向到非默认位置（纯布尔，不回显原值）。
+
+    语义与 agm_core.user_entries 的冻结合同一致，测试锁定两处行为相同；核心
+    不 import 安装层模块，避免反向依赖。空白视为未设置；~/ 与 ~\\ 前缀按给定
+    home 展开后仅转换此前缀的分隔符，再绝对规范化；规范化后等于 <home>/.dsh
+    不算重定向。DSH_AGENTS_HOME 只影响 Skill 根，不进入本判断，也不得据此
+    阻断仍有效的用户入口。
+    """
+    value = os.environ.get('DSH_HOME')
+    if value is None or not value.strip():
+        return False
+    root = value
+    if root.startswith('~'):
+        rest = root[1:]
+        if not rest:
+            root = str(home)
+        elif rest.startswith(('/', '\\')):
+            root = str(home) + '/' + rest[1:]
+    return os.path.abspath(root) != os.path.abspath(os.path.join(str(home), '.dsh'))
+
+
+def _opencode_config_redirected(home):
+    """OpenCode 配置根是否被环境变量重定向/覆盖（纯布尔，不回显原值，fail closed）。
+
+    语义与 agm_core.user_entries 的冻结合同一致，测试锁定两处行为相同：
+    XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR 仅在绝对且等于默认落点时放行；
+    OPENCODE_CONFIG 值域未证实，任何非空取值即视为重定向。
+    """
+    for name, default in (('XDG_CONFIG_HOME', '.config'),
+                          ('OPENCODE_CONFIG_DIR', os.path.join('.config', 'opencode'))):
+        value = os.environ.get(name)
+        if value is None or not value.strip():
+            continue
+        if not os.path.isabs(value) or os.path.abspath(value) != \
+                os.path.abspath(os.path.join(str(home), default)):
+            return True
+    override = os.environ.get('OPENCODE_CONFIG')
+    return bool(override is not None and override.strip())
+
+
 def _native_paths(request, runtime):
     config = request['platform_config']
     agents = request.get('agents') or []
@@ -77,12 +119,29 @@ def _native_paths(request, runtime):
     for agent in agents:
         if agent not in config or 'user_entry' not in config[agent]:
             _fail('invalid_request', '本切片不支持的 Agent：' + str(agent))
+    # ZCode 规则根只由 HOME/USERPROFILE 后备 homedir 决定（CLI 经 --home 或
+    # Path.home()），ZCODE_HOME 不是规则根：既不据此寻址，也不据此阻断。
+    if 'dsh' in agents and _dsh_home_redirected(runtime.home):
+        _fail('dsh_home_redirected',
+              'DSH_HOME 已重定向 DSH 用户规则根，默认入口 <home>/.dsh/AGENTS.md 的'
+              '读取无法确认，拒绝本次共享/归还（DSH_AGENTS_HOME 只影响 Skill 根，'
+              '不影响本判断）')
+    if 'opencode' in agents and _opencode_config_redirected(runtime.home):
+        _fail('opencode_config_redirected',
+              'OpenCode 配置根被 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/OPENCODE_CONFIG'
+              ' 重定向或覆盖，默认入口 <home>/.config/opencode/AGENTS.md 的读取'
+              '无法确认，拒绝本次共享/归还')
     return {a: paths.expand_path(config[a]['user_entry'], home=str(runtime.home))
             for a in agents}
 
 
 def _entry_kind(agent):
-    return {'claude': 'at_import', 'codex': 'memory_index_block'}.get(agent)
+    # workbuddy/dsh/zcode/opencode 均为各自原生用户文件（MEMORY.md/AGENTS.md）
+    # 的整文件读取者：入口是文件内的受管指针块，与 codex 同一机制；只有 claude
+    # 的原生读取机制是 @ 引用行，不得把 @ 泛化到其他执行器。
+    return {'claude': 'at_import', 'codex': 'memory_index_block',
+            'workbuddy': 'memory_index_block', 'dsh': 'memory_index_block',
+            'zcode': 'memory_index_block', 'opencode': 'memory_index_block'}.get(agent)
 
 
 def _entry_bytes(agent, runtime):
@@ -110,7 +169,7 @@ def _entry_state(agent, data, runtime):
     ends = data.count(ENTRY_MARKER['end'])
     if starts or ends:
         if starts != 1 or ends != 1 or data.count(expected) != 1:
-            _fail('entry_conflict', 'Codex 公共入口目标或完整块漂移')
+            _fail('entry_conflict', '%s 公共入口目标或完整块漂移' % agent)
         return 1
     return 0
 
@@ -535,7 +594,8 @@ def build_share_plan(request, proposal, selection):
 
 
 def present(plan):
-    names = {'codex': 'Codex', 'claude': 'Claude Code'}
+    names = {'codex': 'Codex', 'claude': 'Claude Code', 'workbuddy': 'WorkBuddy',
+             'dsh': 'DeepSeek Harness', 'zcode': 'ZCode', 'opencode': 'OpenCode'}
     lines = ['已找到 %d 个参与者，本次共享尚未修改任何文件。'
              % len(plan['request'].get('agents', []))]
     for label, key in (('默认共享', 'default_numbers'),

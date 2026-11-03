@@ -18,7 +18,7 @@
 
 ## 主题摘要（按类型）
 
-- **融合提示反馈与真机接管（当前）：** GLM主体实现后1302限流，GPT呱唧按既定次序修复并13:40:09 UTC冻结；本次续行10分44秒非总重做时间。两家共享/二次共享/编辑归还/部分归还依赖/失败恢复合成链及普通CLI通过，48个不同用例。主负责人六文件hash一致、diff/关键归还核验通过；SKILL已接薄CLI。六家、项目新主线及真实对话/新会话待验，无发行/真实HOME操作。实现已按用户要求提交b61f2826并推送origin同名分支，建议新会话接剩余任务，不合并main/发行。来源：[验收](../acceptance/skill-first-two-agent-chain.md)、[续接](../acceptance/skill-first-next-session.md)、[日志](worklogs/2026-11-03-新空间Skill简化重做.md)。
+- **融合提示反馈与真机接管（当前）：** ff645ffb基线的新分支refactor/skill-first-remaining已由原GLM扩六家用户链与当前项目链；主核最终hash及定向反例后，本次已确认五项阻断与返修边界关闭，源码/临时项目合成切片通过。项目20项、用户链22项为最新GLM证据，受影响事务回归54项证据保留，不累计重跑为新用例。最后项目源码62d6042d；15:12主复验关闭，源码冻结，未提交推送、未动真实HOME。真实Skill/六家原生新会话、旧安装兼容、项目硬崩溃独立fixture及外围仍pending，正在准备最小隔离验收计划。两次到时审核均修改方案并交原GLM完成，历史与暂停分别保留。CK压缩用户已批准且工具判定15条无需压缩。来源：[当前日志](worklogs/2026-11-03-Skill剩余新会话接续.md)、[项目验收](../acceptance/skill-first-project-chain.md)、[四家验收](../acceptance/skill-first-four-agent-chain.md)、[两家验收](../acceptance/skill-first-two-agent-chain.md)。
 
 - **Agent安装检测简化（当前源码）：** 用户已纠正取消Agent应用签名硬门槛；自动与显式接入以有效App/CLI或显式哈希收据等静态证据判installed，空配置目录仍hint/unknown，坏链接/元数据不符/歧义仍拒绝。CLI不变，原文备份/漂移/恢复与产品S/R完整性保留。五份普通文档已对齐；核心回报临时HOME五App安装链5项、基础检测40项、两组桌面各10项、OpenCode adapter18项及源hash/锁单项通过，同一Agent单CLI+单App无失败可并装，两同类或坏候选仍unknown；旧融合用例接口断言与App执行链接越界拒绝均已通过；主Agent确认85个独立用例通过，核心16:20:56冻结，主Agent仅diff核对、未重跑，本执行者亦未重跑。签名不作为接入门槛；实际安装来源与原生运行结果分别核验，不以文档或源码检查代替真实运行。来源：[本轮纠正与文档证据](worklogs/2026-11-03-Agent安装检测取消签名硬门槛文档对齐.md)。
 
