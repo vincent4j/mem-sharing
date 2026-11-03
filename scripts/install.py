@@ -111,6 +111,25 @@ def checkout_source(root, commit, version):
     return source
 
 
+def active_source(home):
+    """Resolve only this verified active C/V pair to its receipted durable source."""
+    config = paths.select_platform(paths.load_agents_table(), sys.platform)
+    runtime = user_install._runtime({'home': home})
+    if Path(__file__).resolve() != runtime.code / 'scripts/install.py':
+        raise InstallError('No explicit source: invoke the verified active installer or provide --source-manifest')
+    allowed = paths.allowed_user_paths(config, None, home=home)
+    data = registry.require_installed(registry.load_registry(runtime.registry, allowed_user_paths=allowed))
+    product = data['product']
+    user_install._code_matches(runtime, product)
+    destination = runtime.home/'.local/share/mem-sharing-sources'/product['product_code_version']/product['source']['tree_sha256']
+    user_install._real_chain(destination, runtime.home)
+    manifest = plugin_release._read_manifest(destination/'release.json')
+    if (manifest['source']['version'] != product['product_code_version'] or
+            {k: manifest['source'][k] for k in ('url','commit','tree_sha256')} != product['source']):
+        raise InstallError('Active and durable source identity differ', 'source_drift')
+    return plugin_release._export_source(destination, manifest)
+
+
 def _evidence(approval):
     for key in ('confirmed_at', 'reference'):
         value = approval.get(key)
@@ -472,7 +491,9 @@ def run(args):
         if args.source or args.commit or args.version or (args.request_file and 'source' in inputs):
             raise InstallError('--source-manifest cannot mix with source identity arguments')
         inputs['source'] = _json(args.source_manifest)
-    elif args.source or args.commit or args.version or 'source' not in inputs:
+    elif not (args.source or args.commit or args.version) and 'source' not in inputs:
+        inputs['source'] = active_source(home)
+    elif args.source or args.commit or args.version:
         if not args.version:
             raise InstallError('--version is required with a checkout; alternatively provide --source-manifest')
         root = args.source or str(Path(__file__).resolve().parents[1])
@@ -497,9 +518,14 @@ def run(args):
     plan = plan_machine(request)
     if approval is not None:
         return ck_install.tail(execute_machine(plan, approval, request=request, project=args.project), request)
+    if plan['plan'].get('noop') and plan['entry_plan'] is None and not plan['changes']:
+        report = _report(plan, 'completed', project=args.project)
+        if report['status'] == 'completed' and not report['connection_pending']:
+            report.update(approval_required=False, approval_plan=None)
+            return report
     report = _report(plan, 'approval_required', project=args.project)
     report.update(approval_required=True, approval_plan=plan)
-    # Read-only same-version/no-entry-difference remains a plan, never applies.
+    # Pending/unknown connections and actual entry changes retain exact approval.
     return report
 
 

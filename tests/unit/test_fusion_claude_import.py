@@ -102,6 +102,21 @@ class ClaudeFusionTests(unittest.TestCase):
         for text in ('默认共享','由你选择是否共享','暂无','3、4','不共享 2','按默认方案','查看 3','本次融合尚未修改记忆内容'):
             self.assertIn(text,prompt)
 
+    def test_presentation_projection_keeps_plan_and_full_sources_unchanged(self):
+        plan=fusion.plan_organize(self.req)['approval_plan']
+        before=copy.deepcopy(plan)
+        number=plan['default_numbers'][0]
+        prompt=fusion.present(plan)
+        self.assertIn('记忆条目 %d' % number,prompt)
+        self.assertIn('Claude Code',prompt);self.assertIn('Codex',prompt)
+        self.assertNotIn(str(self.f.home),prompt)
+        semantic=fusion.present(plan,summaries={number:'提交信息使用中文。'})
+        self.assertIn('提交信息使用中文。',semantic)
+        for text in ('默认共享','由你选择是否共享','暂无','3、4','不共享 2','查看 3','确认后才执行'):
+            self.assertIn(text,semantic)
+        self.assertEqual(plan,before)
+        self.assertTrue(all('source' in i and 'text' in i for i in plan['items']))
+
     def test_unknown_whole_file_records_block_during_preview_not_final_execute(self):
         data=copy.deepcopy(self.ledger);obj=data['machine']['objects'][self.import_id]
         obj['kind']='file'

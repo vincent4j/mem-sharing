@@ -601,14 +601,24 @@ def run_organize(request):
 run=run_organize
 
 
-def present(plan):
+def present(plan, *, summaries=None):
+    """Display projection only; caller captions never enter the approved plan.
+
+    An outer Agent must read full sources.text and supply a semantic sentence per
+    number, preserving both groups and the complete interaction instructions.
+    Without an Agent, use an honest placeholder rather than a raw first line.
+    """
+    summaries = summaries or {}
     lines = ['已找到 %d 个参与者/独立来源，本次融合尚未修改记忆内容。' % (len({i['source'] for i in plan['items']}) if plan['scope']=='project' else len(plan['agents']))]
     for label, numbers in [('默认共享', plan['default_numbers']), ('由你选择是否共享', plan['optional_numbers'])]:
         lines += ['', label]
         if not numbers: lines.append('暂无。')
         for group in plan['groups']:
             if group['number'] in numbers:
-                lines.append('%d. %s（%s）' % (group['number'], group['summary'], '、'.join(sorted({i['source'] for i in group['sources']}))))
+                caption = summaries.get(group['number'], '记忆条目 %d（查看 %d 可读完整原文）' % (group['number'], group['number']))
+                names = {'codex':'Codex','claude':'Claude Code','workbuddy':'WorkBuddy','dsh':'DSH','zcode':'ZCode','opencode':'OpenCode'}
+                agents = sorted({a for item in group['sources'] for a in item['agents']})
+                lines.append('%d. %s（%s）' % (group['number'], caption, '、'.join(names.get(a,a) for a in agents)))
     lines += ['', '请告诉我你的选择（以下序号仅为输入示例，以本次实际编号为准）：',
               '- 3、4：保留默认项，并共享待选项 3、4。',
               '- 不共享 2：排除默认项 2。',

@@ -66,6 +66,8 @@ python3 scripts/install.py --source-manifest /absolute/path/source.json --agent 
 
 ## 3. 给单个项目启用记忆
 
+从已核验的活动 C 再次接入时，`scripts/install.py --agent <名字>` 不新增参数；仅在 C/V 与固定持久 export 收据、bytes、mode 全部校验通过时推导自身来源，缺失或漂移拒绝。只有 no-op、`entry_plan=null`、`changes=[]` 且真实静态连接均成立才只读返回 `completed/approval_required=false/approval_plan=null` 并续接 fusion；明确新增或其他变更仍须完整计划批准。
+
 进入未登记的 Git 主 checkout 时，用户级规则与公共指南驱动默认启用，由当前实际执行者以 `--agent <当前执行者>` 执行；不带 agent 参数按已安装事实处理，可能顺带补齐其他执行器已存在的原生目录，仅用于用户显式要求全体或批量接入，不改 CLI 语义。机器探测到执行器安装或原生目录存在，不等于当前执行者实际使用。这不是后台监听；非 Git 目录与 linked worktree 不触发。
 
 ```bash
@@ -170,7 +172,7 @@ DSH 本次限默认 coding `cordis` preset 与默认根。接入规划自动检�
 使用 `--selection` 传入 `3、4`、`不共享 2`、`共享 3、4，不共享 2`、`按默认方案` 或 `查看 3`；`--decline` 拒绝本次融合。
 最终执行用 `--approval-file` 提交完整 `approval_plan` 加真实 `confirmed_at/reference`，不得混入新的 `--selection`、`--agent`、`--decline` 或 `--retention-file` 参数。
 项目公共项排除后的保留位置先逐条询问，使用 `--retention-file` 传 JSON（如 `{"1":"CLAUDE.md"}`）纳入预览，仅允许已参与项目原生文件；同一原生文件兼作保留位置与去重来源时，使用完整计划内的 `phased_writes/steps` 在同一 Transaction manifest 中分阶段执行；原批准须包含全部步骤，不能删减或改写。核心执行者已回报临时 HOME 的逐阶段异常回滚、子进程中断后原 manifest 恢复与外部新写保全测试通过，真实宿主未验收。
-向导先只读分析，按“默认共享”与“由你选择是否共享”两块展示；编号全局连续且在同一份有效计划内稳定，`查看 n` 只读展示完整原文与来源，不选择、不执行。外层完整展示实际 `fusion.preview.prompt`，不能以单表摘要替代；两块均保留，空块显示“暂无”，编号输入与最终确认说明不省略，不伪造候选项。
+向导先只读分析，按“默认共享”与“由你选择是否共享”两块展示；编号全局连续且在同一份有效计划内稳定，`查看 n` 只读展示完整原文与来源，不选择、不执行。外层保留 `fusion.preview.prompt` 的完整骨架，不缩为单表：两块／暂无、稳定编号、查看、五类输入和最终说明不省略；可从 sources 完整原文生成一句忠实条目摘要，不写回原计划。预览可显示 Agent 名称，完整路径只在查看或最终清单展示；无模型 CLI 使用诚实条目占位，不伪造摘要或候选项。
 分类只是建议，独有与归属不明内容锁定保留，不能并入公共源或删除。
 选定后先展示完整修改清单，一次确认完整逐条计划，原文指纹逐项绑定；批准前候选可改判保留。
 确认执行时共享内容按完整原文迁入公共目标，核实公共内容完整与各家入口正确之后，才删除原生来源中对应的准确片段，不按关键词粗删。
@@ -386,4 +388,4 @@ Codex、DeepSeek Harness、ZCode、OpenCode 使用 `mem-sharing:rules` 块：公
 
 结构示意：五家为 `[公共指针＋自身项目说明的产品块] → [全部原正文]`；Claude 为 `[@公共索引] → [Claude 自身说明块] → [全部原正文]`。旧正文中产品单元移走后留下的非产品空白原样保留。卸载归还继续仅处理原产品单元和自身副本指针，外置恢复保存完整原文件；不删除 Context Keeper 或其他正文，不把归还副本自动导回新公共库。
 
-机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`，包含 `status`、`automatic_continue`、`can_decline`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常 `pending_selection` 时 `automatic_continue:true/can_decline:true`，外层完整展示 `fusion.preview.prompt` 后继续选择，不以单表摘要或命令替代。`blocked` 时 `automatic_continue:false/can_decline:true`，明确报告实际阻塞原因、`preview.errors/blocked_entries` 和 `preview.next_action` 的下一步；`prompt/approval_plan` 仅供只读诊断，不称可继续选择或已融合、不执行修改。用户可保留现状并另起 `--decline` 预览，不伪造治理命令。入口接入可能已写入文件，提示限定为“本次融合尚未修改记忆内容”；安装或启用成功与融合完成分别报告，不复用接入批准执行融合。
+机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`，包含 `status`、`automatic_continue`、`can_decline`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常 `pending_selection` 时 `automatic_continue:true/can_decline:true`，外层按 `fusion.preview.prompt` 保留完整展示骨架后继续选择，不以单表或命令替代；条目摘要不得写回原计划。`blocked` 时 `automatic_continue:false/can_decline:true`，明确报告实际阻塞原因、`preview.errors/blocked_entries` 和 `preview.next_action` 的下一步；`prompt/approval_plan` 仅供只读诊断，不称可继续选择或已融合、不执行修改。用户可保留现状并另起 `--decline` 预览，不伪造治理命令。入口接入可能已写入文件，提示限定为“本次融合尚未修改记忆内容”；安装或启用成功与融合完成分别报告，不复用接入批准执行融合。

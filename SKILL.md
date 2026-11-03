@@ -48,7 +48,7 @@ description: memSharing，多 Agent 记忆共享与融合。提供公共用户�
 
 融合先只读分析，再选择，最终按完整修改清单批准后执行；推荐、选择、最终确认与实际修改分开，本次融合在最终确认前不修改记忆内容。参与集合仅含本次实际接入且核验安装的受支持 Agent，未参与者不计入分母，不以六家固定作为覆盖门槛。文件缺失或内容为空记为无内容；读取失败、权限不足或截断记为未知，不能当作无内容，也不能据此推定全覆盖。
 
-正常待选时，外层执行 Agent 必须完整展示实际返回的 `fusion.preview.prompt`，保留两块标题、稳定编号、原文查看入口、输入选择说明和最终确认提示；不能改写成只有默认共享的单表摘要。空块显示“暂无”，不照抄示例项、不伪造部分覆盖候选。提示结构以[用户 PRD 第 6 节的两套完整简洁示例](docs/memory-sharing-fusion-prd.md#6-完整用户提示语示例)为合同，实际内容与编号以当前预览为准。
+正常待选时，外层按 `fusion.preview.prompt` 完整保留展示骨架：两块标题、空块“暂无”、稳定编号、原文查看入口、五类输入说明和最终确认提示，不能缩为默认共享单表。外层须依据 `sources.text` 的完整原文提供一句忠实语义摘要，仅替换条目显示文字，不写回原计划；预览可显示 Agent 名称，完整路径只在查看或最终清单展示。无模型的纯 CLI 诚实使用条目占位，外层不能把占位当最终 Agent 提示，不冒充语义摘要，不照抄示例项或伪造部分覆盖候选。提示结构以[用户 PRD 第 6 节的两套完整简洁示例](docs/memory-sharing-fusion-prd.md#6-完整用户提示语示例)为合同，实际内容与编号以当前预览为准。
 
 分析结果分两块展示：
 
@@ -136,4 +136,4 @@ python3 scripts/agm.py organize-user-memory --approval-file /absolute/fusion-app
 
 CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调用范围；Paseo 为 `machine_and_paseo`，机器 completed 但插件仍在时 overall=partial。必须在插件移除前经外置入口独立绑定真实安装 ID/来源/CLI/daemon/live serverId，再用户 remove、同目标 full-list check 证实缺席，最后才可另选卸载 CK。disabled、查询错误、能力/版本错误均不算 removed；默认保留 CK，尾步另行精确批准。正式 payload 待干净提交与版本授权后生成，本轮源码/合成验证不等于实际宿主卸载或六家新会话加载验收。
 
-机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`，包含 `status`、`automatic_continue`、`can_decline`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常 `pending_selection` 时 `automatic_continue:true/can_decline:true`，外层完整展示 `fusion.preview.prompt` 后继续选择，不以单表摘要或命令替代。`blocked` 时 `automatic_continue:false/can_decline:true`，明确报告实际阻塞原因、`preview.errors/blocked_entries` 和 `preview.next_action` 的下一步；`prompt/approval_plan` 仅供只读诊断，不称可继续选择或已融合、不执行修改。用户可保留现状并另起 `--decline` 预览，不伪造治理命令。入口接入可能已写入文件，提示限定为“本次融合尚未修改记忆内容”；安装或启用成功与融合完成分别报告，不复用接入批准执行融合。
+机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`，包含 `status`、`automatic_continue`、`can_decline`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常 `pending_selection` 时 `automatic_continue:true/can_decline:true`，外层按 `fusion.preview.prompt` 保留完整展示骨架后继续选择，不以单表或命令替代；条目摘要不得写回原计划。`blocked` 时 `automatic_continue:false/can_decline:true`，明确报告实际阻塞原因、`preview.errors/blocked_entries` 和 `preview.next_action` 的下一步；`prompt/approval_plan` 仅供只读诊断，不称可继续选择或已融合、不执行修改。用户可保留现状并另起 `--decline` 预览，不伪造治理命令。入口接入可能已写入文件，提示限定为“本次融合尚未修改记忆内容”；安装或启用成功与融合完成分别报告，不复用接入批准执行融合。
