@@ -26,7 +26,7 @@ description: memSharing，多 Agent 记忆共享与融合。提供公共用户�
 
 支持 `codex`、`claude`、`workbuddy`、`dsh`、`zcode`、`opencode` 六家。机器安装、再次安装与升级缺省接入全部已核验 `installed` 的支持对象，`unknown/absent` 只报告；显式重复 `--agent` 限定机器目标，指定对象未核验为 installed 时整单拒绝。升级中的公共布局迁移与新增接入在同一外层精确计划内预览并一次批准，不推迟到执行后再确认。项目命令缺省仍为前三家，当前执行者使用时显式选择自身；项目启用 `--agent dsh zcode opencode` 为一次多值。后三家用户入口为 `~/.dsh/AGENTS.md`、`~/.zcode/AGENTS.md`、`~/.config/opencode/AGENTS.md`，均保留私文且原生读取项目 `AGENTS.md`。OpenCode 支持独立核验桌面 App 与 CLI 安装面，CLI-only 不证明桌面存在；支持的原生 CLI 与 App 按各自本地静态证据识别，不以 Agent 应用签名作为接入条件。OpenCode v2 第一版 default-root-only，环境重定向整单停写，错误不回显原值；详见[操作手册](docs/operations.md#桌面端默认根与验证边界)。真实新会话加载仍待验收。
 
-后装 Agent 可通过“添加新的 Agent”限定接入；重新运行机器安装器也会按当前安装事实发现并预览全部支持对象。名字、残留目录、hint 或历史台账不能代替当前 installed；absent 不创建入口，unknown 只报告不写。自动发现与显式 `--agent` 均不调用 `codesign`，不因签名失败、签名标识不同或签名后端缺失而拒绝；有效 App 元数据与可执行入口、CLI 安装结构或显式哈希收据仍须成立。坏链接、不可读或产品元数据不符仍为 unknown。合法原生路径、原文保留、备份、漂移和恢复门禁不变，产品固定 S/R 来源完整性校验保留。此为当前源码策略，尚未进入已生成的 0.1.7 载荷，不代表已安装版本已更新。
+后装 Agent 可通过“添加新的 Agent”限定接入；重新运行机器安装器也会按当前安装事实发现并预览全部支持对象。名字、残留目录、hint 或历史台账不能代替当前 installed；absent 不创建入口，unknown 只报告不写。自动发现与显式 `--agent` 均不调用 `codesign`，不因签名失败、签名标识不同或签名后端缺失而拒绝；有效 App 元数据与可执行入口、CLI 安装结构或显式哈希收据仍须成立。坏链接、不可读或产品元数据不符仍为 unknown。合法原生路径、原文保留、备份、漂移和恢复门禁不变，产品固定 S/R 来源完整性校验保留。
 
 ## 自然语言卸载入口
 
@@ -47,6 +47,8 @@ description: memSharing，多 Agent 记忆共享与融合。提供公共用户�
 ## 用户记忆治理与融合
 
 融合先只读分析，再选择，最终按完整修改清单批准后执行；推荐、选择、最终确认与实际修改分开，本次融合在最终确认前不修改记忆内容。参与集合仅含本次实际接入且核验安装的受支持 Agent，未参与者不计入分母，不以六家固定作为覆盖门槛。文件缺失或内容为空记为无内容；读取失败、权限不足或截断记为未知，不能当作无内容，也不能据此推定全覆盖。
+
+正常待选时，外层执行 Agent 必须完整展示实际返回的 `fusion.preview.prompt`，保留两块标题、稳定编号、原文查看入口、输入选择说明和最终确认提示；不能改写成只有默认共享的单表摘要。空块显示“暂无”，不照抄示例项、不伪造部分覆盖候选。提示结构以[用户 PRD 第 6 节的两套完整简洁示例](docs/memory-sharing-fusion-prd.md#6-完整用户提示语示例)为合同，实际内容与编号以当前预览为准。
 
 分析结果分两块展示：
 
@@ -134,4 +136,4 @@ python3 scripts/agm.py organize-user-memory --approval-file /absolute/fusion-app
 
 CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调用范围；Paseo 为 `machine_and_paseo`，机器 completed 但插件仍在时 overall=partial。必须在插件移除前经外置入口独立绑定真实安装 ID/来源/CLI/daemon/live serverId，再用户 remove、同目标 full-list check 证实缺席，最后才可另选卸载 CK。disabled、查询错误、能力/版本错误均不算 removed；默认保留 CK，尾步另行精确批准。正式 payload 待干净提交与版本授权后生成，本轮源码/合成验证不等于实际宿主卸载或六家新会话加载验收。
 
-机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`：包含 `status`、`automatic_continue:true`、`can_decline:true`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常预览为 `fusion.status=pending_selection`，外层 Agent 自动展示 `fusion.preview.prompt` 并继续选择交互，不能仅返回命令后结束；若为 `blocked`，展示 `fusion.preview.errors` 并停止融合，不能当作可执行计划。入口接入可能已写入文件，提示须限定为“本次融合尚未修改记忆内容”。安装或启用成功与融合完成分别报告，不能复用安装或启用的批准执行融合。
+机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`，包含 `status`、`automatic_continue`、`can_decline`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常 `pending_selection` 时 `automatic_continue:true/can_decline:true`，外层完整展示 `fusion.preview.prompt` 后继续选择，不以单表摘要或命令替代。`blocked` 时 `automatic_continue:false/can_decline:true`，明确报告实际阻塞原因、`preview.errors/blocked_entries` 和 `preview.next_action` 的下一步；`prompt/approval_plan` 仅供只读诊断，不称可继续选择或已融合、不执行修改。用户可保留现状并另起 `--decline` 预览，不伪造治理命令。入口接入可能已写入文件，提示限定为“本次融合尚未修改记忆内容”；安装或启用成功与融合完成分别报告，不复用接入批准执行融合。

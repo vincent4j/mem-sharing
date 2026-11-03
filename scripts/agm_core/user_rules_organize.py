@@ -1,7 +1,8 @@
 """Optional, explicit user-rule organization; classifications are suggestions.
 
 No imports trigger IO. Public memories are content, not V-managed objects.
-One recoverable transaction edits entries and content; V is never modified.
+One transaction edits content; only a verified reused Claude import's
+observational whole-file fingerprint may be rebound, without ownership changes.
 The cooperative machine lock serializes AGM writers, not arbitrary editors.
 """
 from __future__ import annotations
@@ -183,6 +184,50 @@ def _participants(request, runtime, ledger):
     return selected, {a: detect.detection_fingerprint(facts['agents'][a]) for a in requested}
 
 
+def _modern_claude_reference(obj, name, request, runtime, ledger):
+    """A reused machine @index reference is not ownership of its whole body."""
+    if (request.get('scope','user') != 'user' or obj.get('kind') != 'import'
+        or obj.get('scope') != 'machine' or obj.get('ownership') != 'reused'
+        or obj.get('marker') is not None or obj.get('agents') != ['claude']
+        or obj.get('original_existed') is not True or obj.get('backup_manifest') is not None
+        or obj.get('consumers') != []): return False
+    expected = paths.expand_path(request['platform_config']['claude']['user_entry'],home=str(runtime.home))
+    if name != expected: return False
+    if (obj.get('fingerprint') or {}).get('value') != read_snapshot(name).fingerprint: return False
+    state = user_entries.connection_status(runtime,request['platform_config'],ledger,['claude'])
+    return state.get('claude',{}).get('status') == 'connected'
+
+
+def validate_reference_rebinding(old_raw, new_raw, source_before, source_after, home):
+    """Only the current reused Claude import observation may change in V."""
+    config = paths.select_platform(paths.load_agents_table(),'darwin')
+    runtime = layout.resolve_layout(Path(home))
+    allowed = paths.allowed_user_paths(config,None,home=home)
+    old = registry.validate_registry(json.loads(old_raw,object_pairs_hook=registry._no_duplicates),allowed_user_paths=allowed)
+    new = registry.validate_registry(json.loads(new_raw,object_pairs_hook=registry._no_duplicates),allowed_user_paths=allowed)
+    expected = copy.deepcopy(old)
+    native = paths.expand_path(config['claude']['user_entry'],home=home)
+    matched=[]
+    for oid,obj in old['machine']['objects'].items():
+        if (obj['path'] != native or obj['kind'] != 'import' or obj['scope'] != 'machine'
+            or obj['ownership'] != 'reused' or obj['marker'] is not None or obj['agents'] != ['claude']
+            or obj['original_existed'] is not True or obj['backup_manifest'] is not None or obj['consumers'] != []):continue
+        if obj['fingerprint'] != {'algorithm':'sha256','basis':'file_bytes','value':source_before.fingerprint}:
+            _fail('drift','Claude引用观察基线不等于本次批准before')
+        expected['machine']['objects'][oid]['fingerprint']['value'] = source_after.fingerprint
+        matched.append(oid)
+    if len(matched)!=1 or expected!=new: _fail('ownership_conflict','只允许精确Claude reused import观察指纹重绑')
+    line = ('@'+str(runtime.root/'memories/MEMORY.md')).encode()
+    for snap in (source_before,source_after):
+        if snap.kind!='file' or sum(l.strip()==line for l in snap.data.splitlines())!=1:
+            _fail('entry_conflict','Claude公共引用必须完整唯一保留')
+    for marker in (user_entries.CLAUDE_FALLBACK_MARKER,):
+        a=entries.managed_span(source_before.data,**marker);b=entries.managed_span(source_after.data,**marker)
+        if a is None or b is None or source_before.data[a[0]:a[1]]!=source_after.data[b[0]:b[1]]:
+            _fail('entry_conflict','Claude兜底协议必须逐字节保留')
+    return matched
+
+
 def _build(request):
     import sys
     trusted = paths.select_platform(paths.load_agents_table(), 'darwin' if sys.platform == 'darwin' else sys.platform)
@@ -239,7 +284,8 @@ def _build(request):
         spans = _protected(snap.data, Path(name), runtime, objects)
         protected_report.extend({'path': name, 'start': a, 'end': b} for a,b in spans)
         if any(o['path'] == name and o['kind'] in ('file', 'import')
-               and not (root and entries.free_project_rules(o)) for o in objects):
+               and not (root and entries.free_project_rules(o))
+               and not _modern_claude_reference(o,name,request,runtime,ledger) for o in objects):
             blocked.append({'path': name, 'reason': '旧整文件受管入口须先转换，融合不改归属台账。'})
         for left,right in _segments(snap.data, spans):
             text = snap.data[left:right].decode()
@@ -375,6 +421,21 @@ def _build(request):
         for name in dict.fromkeys(retention_paths+sorted(removals)):
             if name in outputs: step(name,outputs[name],'native_commit')
         step(str(topic),content,'public_remove')
+    rebindings=[]
+    if mode=='user':
+        native=paths.expand_path(request['platform_config']['claude']['user_entry'],home=str(runtime.home))
+        if native in outputs and outputs[native]!=snapshots[native].data:
+            candidates=[(oid,o) for oid,o in ledger['machine']['objects'].items()
+                        if o['path']==native and _modern_claude_reference(o,native,request,runtime,ledger)]
+            if candidates:
+                updated=copy.deepcopy(ledger)
+                for oid,obj in candidates:
+                    updated['machine']['objects'][oid]['fingerprint']['value']=entries.sha256(outputs[native])
+                raw=registry.serialize_registry(updated,allowed_user_paths=paths.allowed_user_paths(request['platform_config'],None,home=str(runtime.home)))
+                after=Snapshot('file',outputs[native],snapshots[native].mode)
+                ids=validate_reference_rebinding(vsnap.data,raw,snapshots[native],after,str(runtime.home))
+                rebindings=[{'object_id':oid,'path':native,'before':snapshots[native].fingerprint,'after':after.fingerprint} for oid in ids]
+                changes.append({'path':str(runtime.registry),'before':_meta(vsnap),'after_hex':raw.hex(),'after_sha256':entries.sha256(raw)})
     saved = {k:copy.deepcopy(request[k]) for k in ('home','platform_config','agents','topic','scope','project','selection',
         'search_paths','app_directories','user_candidates','retentions') if k in request}
     saved['home'] = str(runtime.home)
@@ -386,7 +447,7 @@ def _build(request):
         'unknown_sources': unknown, 'items': items, 'blocked_entries': blocked, 'protected_units': protected_report,
         'observations': observations, 'public_listing': public_listing, 'changes': changes,
         'phased_writes': phased, 'steps': steps, 'retention_paths': retention_paths, 'public_paths': list(dict.fromkeys([str(topic),str(index)])),
-        'registry_policy': 'unchanged; ownership and consumers preserved'}
+        'reference_rebindings':rebindings, 'registry_policy':'only verified reused import fingerprint; ownership and consumers preserved'}
     plan['plan_sha256'] = entries.sha256(_encoded(plan))
     return plan, snapshots
 
@@ -419,6 +480,12 @@ def plan_organize(request):
     """Read-only request→result; full plan contains unredacted user text locally."""
     try:
         plan,_=_build(request)
+        editing = {c['path'] for c in plan['changes']}
+        blocked = [b for b in plan['blocked_entries'] if b['path'] in editing]
+        if blocked:
+            return _result(status='failed',fusion_status='blocked',approval_plan=plan,prompt=present(plan).split('\n\n请告诉我')[0]+'\n当前被阻断，仅供只读诊断，不选择、不执行；可暂不整理。',
+                blocked_entries=blocked,errors=[{'code':'ownership_conflict','message':'未知整文件受管入口不能进入融合修改，原文保留。'}],
+                next_action='先核对 blocked_entries 的归属证据并另起精确治理；可选择暂不整理以保留现状。')
         if not plan['changes']:
             return _result(status='viewed' if plan.get('view') else 'completed',fusion_status='declined' if plan['declined'] else 'pending_selection' if plan['groups'] else 'unchanged',prompt=present(plan),approval_plan=plan,blocked_entries=plan['blocked_entries'])
         preview=dict(plan,confirmed_at='<UTC timestamp>',reference='<real user confirmation>')
@@ -511,9 +578,12 @@ def execute_organize(plan,approval,*,request=None,hook=None):
                             elif _meta(snap) != plan['observations'][name]:
                                 _fail('drift', '公共记忆发生变化：'+name)
             tx.hook=guarded
-            result=tx.run(changes,phased_writes=plan.get('phased_writes',False))
+            metadata = next((c for c in changes if c.path==runtime.registry),None)
+            if metadata and (not plan.get('reference_rebindings') or plan.get('phased_writes')):
+                _fail('ownership_conflict','不允许通用或分阶段registry改写')
+            result=tx.run([c for c in changes if c is not metadata],registry_change=metadata,phased_writes=plan.get('phased_writes',False))
         return _result(status='completed',fusion_status='completed',changes=plan['changes'],manifest=result['manifest'],
-                       blocked_entries=plan['blocked_entries'],provenance='exact source spans in approved plan and transaction manifest; V unchanged')
+                       blocked_entries=plan['blocked_entries'],provenance='exact approved source spans and restricted reference observation; transaction manifest')
     except (ValueError,OSError,KeyError,TypeError) as exc:
         return _result(status='recovery_required' if getattr(exc,'code',None)=='recovery_required' else 'failed',
                        errors=[{'code':getattr(exc,'code','organize_failed'),'message':str(exc),
@@ -535,11 +605,17 @@ def present(plan):
     lines = ['已找到 %d 个参与者/独立来源，本次融合尚未修改记忆内容。' % (len({i['source'] for i in plan['items']}) if plan['scope']=='project' else len(plan['agents']))]
     for label, numbers in [('默认共享', plan['default_numbers']), ('由你选择是否共享', plan['optional_numbers'])]:
         lines += ['', label]
+        if not numbers: lines.append('暂无。')
         for group in plan['groups']:
             if group['number'] in numbers:
                 lines.append('%d. %s（%s）' % (group['number'], group['summary'], '、'.join(sorted({i['source'] for i in group['sources']}))))
-    lines += ['', '输入 3、4 / 不共享 2 / 共享 3、4，不共享 2 / 按默认方案 / 查看 3；也可暂不整理。',
-              '选定后展示最终清单，确认后才执行。独有和未选内容保留。']
+    lines += ['', '请告诉我你的选择（以下序号仅为输入示例，以本次实际编号为准）：',
+              '- 3、4：保留默认项，并共享待选项 3、4。',
+              '- 不共享 2：排除默认项 2。',
+              '- 共享 3、4，不共享 2：增加待选 3、4，并排除默认项 2。',
+              '- 按默认方案：只选默认项，不增加待选项。',
+              '- 查看 3：只读查看完整原文及来源，不选择、不修改。',
+              '也可暂不整理。选定后展示最终修改清单，确认后才执行。独有和未选内容保留。']
     if plan['single_numbers']: lines.append('单家内容默认留原处，可查看或明确指定共享：'+str(plan['single_numbers']))
     return '\n'.join(lines)
 
@@ -551,7 +627,7 @@ def continuation(request, *, scope='user', project_path=None):
     if project_path: req['project'] = str(project_path)
     stage = plan_organize(req)
     return {'status': 'pending_selection' if stage['status'] != 'failed' else 'blocked',
-            'automatic_continue': True, 'can_decline': True,
+            'automatic_continue': stage['status'] != 'failed', 'can_decline': True,
             'command': 'organize-project-memory' if scope=='project' else 'organize-user-memory',
             'project': str(project_path) if project_path else None, 'preview': stage}
 

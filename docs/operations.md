@@ -154,7 +154,7 @@ OpenCode v2 用户入口为 `~/.config/opencode/AGENTS.md`，项目原生读取 
 
 OpenCode 检测分别报告 CLI 与桌面 App 安装面。桌面核对 `OpenCode.app` 的产品名、`ai.opencode.desktop` 标识、可读可执行的 `OpenCode` 入口与非空且一致的 bundle 版本，不要求 Apple 证书链、团队或签名标识核验。CLI-only 不表示桌面已安装；恰好一个支持的 CLI 候选与一个支持的桌面 App 均满足静态证据、且无失败候选时允许并装，额外来源仍为 unknown。CLI 没有静态版本证据时保持版本 unknown；本地安装证据不代表发布者身份可信或新会话运行成功。
 
-自动发现与显式 `--agent` 均不调用 `codesign`，不因 Agent 签名失败、签名标识不同或签名后端缺失而拒绝。有效 App 元数据与可读可执行入口、支持的 CLI 包或原生结构、显式哈希收据可作为静态证据；空残留配置目录仍仅为 hint/unknown。坏链接、不可读文件、产品元数据不符或候选歧义仍为 unknown；只有全部支持候选均可检查且无候选、无 hint 才为 absent。接入仍只处理 installed，不增加 force，不放宽合法原生路径、原文备份、漂移与恢复保护，也不改变产品固定 S/R 来源完整性校验。CLI 参数不变；新策略目前仅在开发源码，尚未进入已生成的 0.1.7 载荷。同一 Agent 恰好一个受支持的 CLI 候选加一个 App 候选、且没有任何本地失败证据时可判 installed；两 CLI、两 App、更多候选或坏候选仍为 unknown，仅证明本地安装面，不证明模型登录、发布者可信或运行加载。
+自动发现与显式 `--agent` 均不调用 `codesign`，不因 Agent 签名失败、签名标识不同或签名后端缺失而拒绝。有效 App 元数据与可读可执行入口、支持的 CLI 包或原生结构、显式哈希收据可作为静态证据；空残留配置目录仍仅为 hint/unknown。坏链接、不可读文件、产品元数据不符或候选歧义仍为 unknown；只有全部支持候选均可检查且无候选、无 hint 才为 absent。接入仍只处理 installed，不增加 force，不放宽合法原生路径、原文备份、漂移与恢复保护，也不改变产品固定 S/R 来源完整性校验。CLI 参数不变。同一 Agent 恰好一个受支持的 CLI 候选加一个 App 候选、且没有任何本地失败证据时可判 installed；两 CLI、两 App、更多候选或坏候选仍为 unknown，仅证明本地安装面，不证明模型登录、发布者可信或运行加载。
 
 章教授已交付桌面 2.2.5 安装、签名与默认规则读取逻辑的静态证据；本轮未重复操作真实环境。静态检测和临时 HOME 测试不能证明真实新会话已加载规则；memSharing 真实接入、新会话与模型调用验收由用户延后统一进行，均 pending。验收分层见[OpenCode 验证记录](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/opencode-adapter/verification.md)。
 
@@ -170,11 +170,11 @@ DSH 本次限默认 coding `cordis` preset 与默认根。接入规划自动检�
 使用 `--selection` 传入 `3、4`、`不共享 2`、`共享 3、4，不共享 2`、`按默认方案` 或 `查看 3`；`--decline` 拒绝本次融合。
 最终执行用 `--approval-file` 提交完整 `approval_plan` 加真实 `confirmed_at/reference`，不得混入新的 `--selection`、`--agent`、`--decline` 或 `--retention-file` 参数。
 项目公共项排除后的保留位置先逐条询问，使用 `--retention-file` 传 JSON（如 `{"1":"CLAUDE.md"}`）纳入预览，仅允许已参与项目原生文件；同一原生文件兼作保留位置与去重来源时，使用完整计划内的 `phased_writes/steps` 在同一 Transaction manifest 中分阶段执行；原批准须包含全部步骤，不能删减或改写。核心执行者已回报临时 HOME 的逐阶段异常回滚、子进程中断后原 manifest 恢复与外部新写保全测试通过，真实宿主未验收。
-向导先只读分析，按“默认共享”与“由你选择是否共享”两块展示；编号全局连续且在同一份有效计划内稳定，`查看 n` 只读展示完整原文与来源，不选择、不执行。
+向导先只读分析，按“默认共享”与“由你选择是否共享”两块展示；编号全局连续且在同一份有效计划内稳定，`查看 n` 只读展示完整原文与来源，不选择、不执行。外层完整展示实际 `fusion.preview.prompt`，不能以单表摘要替代；两块均保留，空块显示“暂无”，编号输入与最终确认说明不省略，不伪造候选项。
 分类只是建议，独有与归属不明内容锁定保留，不能并入公共源或删除。
 选定后先展示完整修改清单，一次确认完整逐条计划，原文指纹逐项绑定；批准前候选可改判保留。
 确认执行时共享内容按完整原文迁入公共目标，核实公共内容完整与各家入口正确之后，才删除原生来源中对应的准确片段，不按关键词粗删。
-公共内容与入口编辑使用可恢复事务，整理不修改活动台账 V。
+公共内容与入口编辑使用可恢复事务；计划中的 `reference_rebindings` 仅允许重绑已验证 Claude reused import 的观察指纹，台账 before/after 列为 `changes` 末项并随完整计划批准，ownership/consumers 不变，其余台账不改。
 
 为什么这样设计：公共规则需要人工语义判断，不能用自动分类扩大共享范围。
 
@@ -386,4 +386,4 @@ Codex、DeepSeek Harness、ZCode、OpenCode 使用 `mem-sharing:rules` 块：公
 
 结构示意：五家为 `[公共指针＋自身项目说明的产品块] → [全部原正文]`；Claude 为 `[@公共索引] → [Claude 自身说明块] → [全部原正文]`。旧正文中产品单元移走后留下的非产品空白原样保留。卸载归还继续仅处理原产品单元和自身副本指针，外置恢复保存完整原文件；不删除 Context Keeper 或其他正文，不把归还副本自动导回新公共库。
 
-机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`：包含 `status`、`automatic_continue:true`、`can_decline:true`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常预览为 `fusion.status=pending_selection`，外层 Agent 自动展示 `fusion.preview.prompt` 并继续选择交互，不能仅返回命令后结束；若为 `blocked`，展示 `fusion.preview.errors` 并停止融合，不能当作可执行计划。入口接入可能已写入文件，提示须限定为“本次融合尚未修改记忆内容”。安装或启用成功与融合完成分别报告，不能复用安装或启用的批准执行融合。
+机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`，包含 `status`、`automatic_continue`、`can_decline`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常 `pending_selection` 时 `automatic_continue:true/can_decline:true`，外层完整展示 `fusion.preview.prompt` 后继续选择，不以单表摘要或命令替代。`blocked` 时 `automatic_continue:false/can_decline:true`，明确报告实际阻塞原因、`preview.errors/blocked_entries` 和 `preview.next_action` 的下一步；`prompt/approval_plan` 仅供只读诊断，不称可继续选择或已融合、不执行修改。用户可保留现状并另起 `--decline` 预览，不伪造治理命令。入口接入可能已写入文件，提示限定为“本次融合尚未修改记忆内容”；安装或启用成功与融合完成分别报告，不复用接入批准执行融合。

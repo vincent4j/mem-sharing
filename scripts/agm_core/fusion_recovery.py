@@ -1,11 +1,12 @@
 """Exact-approved CLI wrapper for the existing fusion Transaction rollback."""
 import argparse
+import copy
 import json
 from pathlib import Path
 import sys
 
 from . import entries, layout, paths, project, registry
-from .transaction import Snapshot, read_snapshot, recover_manifest, write_lock, inspect_recovery
+from .transaction import Snapshot, read_snapshot, recover_manifest, write_lock, inspect_recovery, Transaction, _recovery_entries
 
 COMMAND = 'recover-memory-fusion'
 
@@ -19,7 +20,7 @@ def _observe(path):
     return {'kind':snap.kind,'sha256':snap.fingerprint,'mode':snap.mode,'target':snap.target}
 
 
-def build(request):
+def build(request, *, terminal_proof=False):
     runtime=layout.from_request(request)
     manifest=Path(request['manifest'])
     if not manifest.is_absolute() or manifest.parent.parent != runtime.backups or manifest.name!='manifest.json':
@@ -28,8 +29,8 @@ def build(request):
     if snap.kind!='file':raise ValueError('Expected regular recovery manifest')
     data=json.loads(snap.data,object_pairs_hook=registry._no_duplicates)
     if (data.get('schema_version')!=1 or data.get('operation')!='organize-user-rules'
-            or data.get('status') not in ('prepared','applying','recovery_required')
-            or data.get('registry_path') is not None):
+            or data.get('status') not in (('committed','rolled_back') if terminal_proof else ('prepared','applying','recovery_required'))
+            or data.get('registry_path') not in (None,str(runtime.registry))):
         raise ValueError('Not an interrupted memory fusion transaction')
     config=paths.select_platform(paths.load_agents_table(),sys.platform)
     allowed=set(paths.allowed_user_paths(config,None,home=str(runtime.home)))
@@ -40,6 +41,31 @@ def build(request):
             for key in ('project_rule_entry','project_bridge_entry'):
                 allowed.add(paths.expand_path(conf[key],home=str(runtime.home),project=str(root)))
     memories=runtime.root/'memories'
+    if data.get('registry_path') is not None:
+        if data.get('phased_writes'):raise ValueError('Phased fusion cannot update registry')
+        rows=data['entries'];vrows=[r for r in rows if r['path']==str(runtime.registry)]
+        native=paths.expand_path(config['claude']['user_entry'],home=str(runtime.home))
+        sources=[r for r in rows if r['path']==native]
+        if len(vrows)!=1 or rows[-1] is not vrows[0] or len(sources)!=1:
+            raise ValueError('Registry recovery must bind one final Claude reference observation')
+        vr=vrows[0];sr=sources[0]
+        if vr['before']['kind']!='file' or sr['before']['kind']!='file':raise ValueError('Missing reference before evidence')
+        name=vr['before']['backup']
+        if not isinstance(name,str) or Path(name).name!=name:raise ValueError('Invalid registry backup')
+        backup_snapshot=read_snapshot(manifest.parent/name)
+        if backup_snapshot.kind!='file':raise ValueError('Registry backup must be a regular file')
+        old=registry.validate_registry(json.loads(backup_snapshot.data,object_pairs_hook=registry._no_duplicates),allowed_user_paths=allowed)
+        expected=copy.deepcopy(old);ids=[]
+        for oid,obj in old['machine']['objects'].items():
+            if (obj['path']==native and obj['kind']=='import' and obj['scope']=='machine' and obj['ownership']=='reused'
+                and obj['marker'] is None and obj['agents']==['claude'] and obj['original_existed'] is True
+                and obj['backup_manifest'] is None and obj['consumers']==[]
+                and obj['fingerprint']=={'algorithm':'sha256','basis':'file_bytes','value':sr['before']['fingerprint']}):
+                expected['machine']['objects'][oid]['fingerprint']['value']=sr['after']['fingerprint'];ids.append(oid)
+        raw=registry.serialize_registry(expected,allowed_user_paths=allowed)
+        if len(ids)!=1 or entries.sha256(raw)!=vr['after']['fingerprint']:
+            raise ValueError('Recovery would change more than the approved Claude import observation')
+        allowed.add(str(runtime.registry))
     observations={str(manifest):_observe(manifest)}
     for item in data['entries']:
         name=item['path']; path=Path(name)
@@ -63,7 +89,12 @@ def build(request):
         path=Path(name)
         if not path.is_relative_to(memories) and not any(Path(a).is_relative_to(path) for a in allowed):
             raise ValueError('Unexpected recovery directory')
-    inspect_recovery(manifest,allowed_roots=[runtime.home,runtime.root]+([root] if root else []))
+    roots=[runtime.home,runtime.root]+([root] if root else [])
+    if terminal_proof:
+        tx=Transaction(lock_path=runtime.transaction_lock,backup_root=runtime.backups,allowed_roots=roots,operation='recover')
+        _recovery_entries(tx,manifest,data)
+    else:
+        inspect_recovery(manifest,allowed_roots=roots)
     plan={'schema_version':1,'command':COMMAND,'home':str(runtime.home),'manifest':str(manifest),
           'project':str(root) if root else None,'manifest_status':data['status'],
           'observations':observations,'action':'restore'}

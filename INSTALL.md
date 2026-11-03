@@ -23,7 +23,7 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 
 5. **提醒 Context Keeper 用法。** 同意安装且实际完成后，使用上一拍的固定提醒；跳过时不声称已安装。
 
-6. **接入完成后自动进入用户记忆融合预览。** 安装与各入口安全接入后，只读对比各接入 Agent 的用户记忆，按“默认共享”与“由你选择是否共享”两块展示，明确“本次融合尚未修改记忆内容”；不能仅给一个可选后续命令就结束。用户可输入待选编号（如 `3、4`）、`不共享 2`、组合输入或 `按默认方案`；`查看 3` 只读展示完整原文与来源，不选择、不执行。也可明确选择保留现状。选定后展示完整修改清单，用户确认最终清单后才执行：把选中内容完整原文迁入公共记忆，再精确删除各原生文件中对应的重复片段；独有与未选内容保留。选择保留现状或暂不处理不阻塞安装成功，但安装完成不冒称融合完成。两块编号全局连续且在同一份有效计划内稳定；完整交互合同见 [SKILL](SKILL.md) 的“用户记忆治理与融合”。
+6. **接入完成后自动进入用户记忆融合预览。** 安装与各入口安全接入后，正常待选时只读对比各接入 Agent 的用户记忆，按“默认共享”与“由你选择是否共享”两块展示，明确“本次融合尚未修改记忆内容”；不能仅给一个可选后续命令就结束。用户可输入待选编号（如 `3、4`）、`不共享 2`、组合输入或 `按默认方案`；`查看 3` 只读展示完整原文与来源，不选择、不执行。也可明确选择保留现状。选定后展示完整修改清单，用户确认最终清单后才执行：把选中内容完整原文迁入公共记忆，再精确删除各原生文件中对应的重复片段；独有与未选内容保留。选择保留现状或暂不处理不阻塞安装成功，但安装完成不冒称融合完成。外层须完整展示实际 `fusion.preview.prompt`，不能缩为单表摘要或省略编号输入说明；空块显示“暂无”，不伪造部分覆盖项。两块编号全局连续且在同一份有效计划内稳定；完整交互合同见 [SKILL](SKILL.md) 的“用户记忆治理与融合”。
 
 固定 pin 的 Context Keeper 安装器仅支持旧三家的 flags；DeepSeek Harness（`dsh`）、ZCode（`zcode`）与 OpenCode（`opencode`）跳过用户级 CK 安装（`reason=upstream_unsupported`）。混合接入时旧三家仍可安装，不影响它们的 memSharing 接入；不可报告为 CK 已安装。
 
@@ -68,7 +68,7 @@ OpenCode 桌面 App 与 CLI 分面核验，CLI-only 不证明桌面存在；支�
 
 Claude Code 的 macOS 原生 CLI 根据受支持的命令入口名、可读可执行文件与 Mach-O 结构记录本地安装事实，不启动二进制，也不把目录名作为产品版本。npm 安装仍按包名与入口核验。自动发现和显式 `--agent` 不调用 `codesign`，不因签名失败、签名标识不同或后端不可用拒绝；这不表示已验证发布者可信或运行成功。空残留配置目录仍仅为 hint，不判 installed；默认 PATH 中的断链、不可读、产品元数据不符或活动来源不明仍为 `unknown`。已核清活动安装时，可在精确请求中显式限定 `search_paths` 与 `user_candidates`，保留原有 PATH 和文件。
 
-本次取消的是 Agent 应用签名硬门槛，CLI 参数不变；合法原生路径、原文与备份保全、精确批准、漂移和恢复保护，以及产品固定 S/R 的来源与内容完整性校验均保留。此处描述当前开发源码，尚未进入已生成的 0.1.7 载荷，不代表已安装版本已更新。
+本次取消的是 Agent 应用签名硬门槛，CLI 参数不变；合法原生路径、原文与备份保全、精确批准、漂移和恢复保护，以及产品固定 S/R 的来源与内容完整性校验均保留。
 
 ## 给执行 Agent 的命令与批准合同
 
@@ -205,4 +205,4 @@ CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调�
 
 不能因换 Agent 发起而省略 Paseo 宿主义务；沿现有来源与参数合同补齐，未知先停止。已卸载或代码缺失不自动重装。安装代码已具备当前兼容实现时，旧公共指南通过 `migrate-policy` 的精确模板迁移接入新路由；旧 C 不兼容时零写拒绝，须先按现有精确安装/升级流程更新代码（预览、批准、私文保留、未知定制拒绝、重复零写）；生成指南在真正归还时退休，original 原文保全，active 不再指向被删代码。六家真实模型触发仍 pending。
 
-机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`：包含 `status`、`automatic_continue:true`、`can_decline:true`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常预览为 `fusion.status=pending_selection`，外层 Agent 自动展示 `fusion.preview.prompt` 并继续选择交互，不能仅返回命令后结束；若为 `blocked`，展示 `fusion.preview.errors` 并停止融合，不能当作可执行计划。入口接入可能已写入文件，提示须限定为“本次融合尚未修改记忆内容”。安装或启用成功与融合完成分别报告，不能复用安装或启用的批准执行融合。
+机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`，包含 `status`、`automatic_continue`、`can_decline`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常 `pending_selection` 时 `automatic_continue:true/can_decline:true`，外层完整展示 `fusion.preview.prompt` 后继续选择，不以单表摘要或命令替代。`blocked` 时 `automatic_continue:false/can_decline:true`，明确报告实际阻塞原因、`preview.errors/blocked_entries` 和 `preview.next_action` 的下一步；`prompt/approval_plan` 仅供只读诊断，不称可继续选择或已融合、不执行修改。用户可保留现状并另起 `--decline` 预览，不伪造治理命令。入口接入可能已写入文件，提示限定为“本次融合尚未修改记忆内容”；安装或启用成功与融合完成分别报告，不复用接入批准执行融合。

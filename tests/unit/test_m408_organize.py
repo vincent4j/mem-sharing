@@ -158,7 +158,8 @@ class OrganizeTests(unittest.TestCase):
             'agents':['codex'],'ownership':'reused','marker':None,'fingerprint':{'algorithm':'sha256','basis':'file_bytes',
             'value':entries.sha256(self.files['codex'].read_bytes())},'original_existed':True,'link_target':None,'backup_manifest':None,'consumers':[]}
         self.runtime.registry.write_bytes(registry.serialize_registry(data,allowed_user_paths=paths.allowed_user_paths(self.config,None,home=str(self.home))))
-        plan=self.preview();blocked=plan['blocked_entries'];self.assertEqual(len(blocked),1)
+        preview=org.plan_organize(self.request);self.assertEqual(preview['status'],'failed',preview)
+        plan=preview['approval_plan'];blocked=plan['blocked_entries'];self.assertEqual(len(blocked),1)
         self.assertEqual(blocked[0]['path'],str(self.files['codex']));self.assertIn('受管入口',blocked[0]['reason']);before=self.snapshot()
         result=org.execute_organize(plan,self.approve(plan))
         self.assertEqual(result['errors'][0]['code'],'ownership_conflict');self.assertEqual(result['blocked_entries'],blocked)

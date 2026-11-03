@@ -223,7 +223,7 @@ def _fusion_history(data,rt):
     registry._evidence({k:data[k] for k in ('confirmed_at','reference')})
     plan={k:v for k,v in data.items() if k not in ('confirmed_at','reference')}
     digest=plan.pop('plan_sha256',None)
-    _keys(plan,'schema_version command layout request declined scope project agents agent_facts groups default_numbers optional_numbers single_numbers selected_numbers view unknown_sources items blocked_entries protected_units observations public_listing changes phased_writes steps retention_paths public_paths registry_policy')
+    _keys(plan,'schema_version command layout request declined scope project agents agent_facts groups default_numbers optional_numbers single_numbers selected_numbers view unknown_sources items blocked_entries protected_units observations public_listing changes phased_writes steps retention_paths public_paths registry_policy'+(' reference_rebindings' if 'reference_rebindings' in plan else ''))
     if digest != entries.sha256(fusion._encoded(plan)): raise recovery.Conflict('Fusion approval digest mismatch')
     if (plan.get('schema_version')!=2 or plan.get('command')!='organize-user-rules'
         or plan.get('layout')!=rt.describe() or plan.get('scope') not in ('user','project')
@@ -242,8 +242,9 @@ def _fusion_history(data,rt):
     for manifest in candidates:
         txdata=strict(manifest.read_bytes())
         if (txdata.get('operation')!='organize-user-rules' or txdata.get('status') not in ('committed','rolled_back')
-            or txdata.get('registry_path') is not None or len(txdata.get('entries',[]))!=len(ordered)
+            or txdata.get('registry_path') not in (None,str(rt.registry)) or len(txdata.get('entries',[]))!=len(ordered)
             or bool(txdata.get('phased_writes'))!=bool(plan.get('phased_writes'))): continue
+        if bool(plan.get('reference_rebindings')) != (txdata.get('registry_path')==str(rt.registry)): continue
         rows=txdata['entries']
         if any(row['path']!=step['path'] or row['before']['kind']!=step['before']['kind']
             or row['before']['fingerprint']!=step['before']['sha256']
@@ -257,6 +258,9 @@ def _fusion_history(data,rt):
         if not 0 <= (started-confirmed).total_seconds() <= 600: continue
         roots=[rt.home,rt.root]+([recovery.safe(plan['project'])] if plan.get('project') else [])
         tx=Transaction(lock_path=rt.transaction_lock,backup_root=rt.backups,allowed_roots=roots,operation='recover')
+        if txdata.get('registry_path') is not None:
+            from . import fusion_recovery
+            fusion_recovery.build({'home':str(rt.home),'manifest':str(manifest)},terminal_proof=True)
         _recovery_entries(tx,manifest,txdata)
         evidence={}
         def fact(path,kind='file',mode=0o600):evidence[str(path)]=_node(path,kind,mode)
