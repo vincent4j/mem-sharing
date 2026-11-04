@@ -155,17 +155,8 @@ def _context(request, *, allow_active=False):
 
 
 def _scope(data, start, protected=()):
-    headings = []; offset = 0
-    for raw in data[:start].splitlines(keepends=True):
-        left = offset; offset += len(raw)
-        if any(left < end and offset > begin for begin,end in protected): continue
-        line = raw.decode().rstrip('\r\n')
-        match = re.match(r"^(#{1,6})\s+(.+)$", line)
-        if match:
-            depth = len(match[1])
-            headings = [(d, t) for d, t in headings if d < depth]
-            headings.append((depth, match[2].strip()))
-    return [title for _, title in headings]
+    from .memory_share import _heading_context
+    return _heading_context(data, start, protected)[0]
 
 
 def _identity(text):
@@ -230,6 +221,7 @@ def validate_reference_rebinding(old_raw, new_raw, source_before, source_after, 
 
 def _build(request):
     import sys
+    from .memory_share import _heading_context
     trusted = paths.select_platform(paths.load_agents_table(), 'darwin' if sys.platform == 'darwin' else sys.platform)
     if request.get('platform_config') != trusted:
         _fail('untrusted_platform_config', '路径配置必须来自当前受信任平台表，批准不能替换')
@@ -295,19 +287,28 @@ def _build(request):
             if any(_SPECIFIC.search(h) for h in scope): continue
             raw = snap.data[left:right]
             items.append({'source': name, 'agents': agents, 'start': left, 'end': right,
-                'text': text, 'sha256': entries.sha256(raw), 'scope': scope})
+                'text': text, 'sha256': entries.sha256(raw), 'scope': scope, 'context': _heading_context(snap.data, left, spans)[1]})
     for path in (topic, index):
         if str(path) not in snapshots:
             snap = _file(path, optional=True); snapshots[str(path)] = snap; observations[str(path)] = _meta(snap)
+    public_copies = {}
+    if mode == 'user':
+        from .memory_share import _available_migrations
+        public_raw = snapshots[str(topic)].data or b''
+        for record in _available_migrations(runtime).values():
+            raw = bytes.fromhex(record['text_hex'])
+            left, right = record['public_offset'], record['public_end']
+            if record.get('topic') == str(topic) and public_raw[left:right] == raw:
+                public_copies.setdefault((json.dumps(record.get('context', record['scope'])), raw), (left, right))
     groups = {}
     for item in items:
-        key = _encoded([_identity(item['text']), item['scope']]).decode()
+        key = _encoded([_identity(item['text']), item['scope'], item['context']]).decode()
         groups.setdefault(key, []).append(item)
     defaults = []; optional = []; single = []
     n = len(sources) if root else len(selected)
     for key, members in sorted(groups.items()):
         coverage = len({i['source'] for i in members})
-        existing = bool(root and any(i['source'] == str(topic) for i in members))
+        existing = bool(root and any(i['source'] == str(topic) for i in members) or mode == 'user' and any((json.dumps(i['context']), i['text'].encode()) in public_copies for i in members))
         all_present = n >= 2 and coverage == n and not unknown
         group = {'group_id': entries.sha256(key.encode()), 'summary': members[0]['text'].strip().splitlines()[0],
             'sources': members, 'existing_public': existing, 'default': existing or all_present}
@@ -331,7 +332,7 @@ def _build(request):
             else: chosen |= nums
     if view and int(view[1]) not in {g['number'] for g in numbered}:
         _fail('invalid_selection', 'Unknown item number')
-    excluded_public = [g['number'] for g in defaults if g['existing_public'] and g['number'] not in chosen]
+    excluded_public = [g['number'] for g in defaults if root and g['existing_public'] and g['number'] not in chosen]
     retentions = request.get('retentions', {})
     if not isinstance(retentions, dict): _fail('invalid_request', 'retentions must map item numbers to native paths')
     if set(retentions) - {str(n) for n in excluded_public}:
@@ -343,9 +344,7 @@ def _build(request):
     content = snapshots[str(topic)].data or b''
     if mode == 'user' and any(g['number'] in chosen for g in numbered) and not view and not declined:
         if not content:
-            content = '# 用户记忆\n\n## L1 概要\n\n当前有效结论：以下记忆经完整清单确认后共享；独有与未选内容保留。\n待办：记忆变化后更新概要和索引。\n\n## L2 原文与来源\n'.encode()
-        elif not re.search(rb'^## L1 ',content,re.M):
-            _fail('content_conflict','现有主题缺少L1概要，请保留内容并选择其他主题')
+            content = '# 用户规则\n'.encode()
     public_removals = []
     if not declined and not view:
         for number in excluded_public:
@@ -369,16 +368,28 @@ def _build(request):
             content = content[:item['start']] + content[item['end']:]
 
     public_added = b''
+    migrations = []
     for group in numbered:
         if view or group['number'] not in chosen: continue
-        if not group['existing_public']:
+        if mode == 'user' or not group['existing_public']:
+            copies = dict(public_copies) if mode == 'user' else {}
             for item in group['sources']:
                 raw = item['text'].encode()
-                context = ('\n'+'\n'.join('#'*(level+1)+' '+title for level,title in enumerate(item['scope']))+'\n').encode() if item['scope'] else '\n# 用户记忆\n'.encode() if mode == 'user' else '\n# 项目记忆\n'.encode()
-                chunk = context + b'\n' + raw
-                content += chunk
-                public_added += chunk
+                key = (json.dumps(item['context']), raw)
+                if key not in copies:
+                    context = ('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate(item['scope']))+'\n').encode() if item['scope'] else b'\n'
+                    chunk = context + b'\n' + raw
+                    offset = len(content) + len(context) + 1
+                    content += chunk
+                    public_added += chunk
+                    copies[key] = (offset, offset + len(raw))
+                offset, end = copies[key]
                 migrated.append(item)
+                for agent in item['agents']:
+                    migrations.append({'group': group['number'], 'summary': group['summary'],
+                        'agent': agent, 'path': item['source'], 'start': item['start'], 'end': item['end'],
+                        'scope': item['scope'], 'context': item['context'], 'text_hex': raw.hex(), 'text_sha256': entries.sha256(raw),
+                        'public_offset': offset, 'public_end': end})
         for item in group['sources']:
             if item['source'] != str(topic): removals.setdefault(item['source'], []).append(item)
     phased = bool(set(retention_paths) & set(removals))
@@ -386,7 +397,7 @@ def _build(request):
     if mode == 'user' and migrated:
         raw = snapshots[str(index)].data or '# 用户记忆\n'.encode()
         link = ('- 用户记忆：['+topic.name+']('+topic.name+')\n').encode()
-        existing = [line for line in raw.splitlines(keepends=True) if ('('+topic.name+')').encode() in line]
+        existing = [line for line in raw.splitlines(keepends=True) if line.startswith(b'- ') and ('('+topic.name+')').encode() in line]
         if existing and existing != [link]:
             _fail('content_conflict','已有主题链接含其他结论，保留原文并选择新主题')
         if not existing:
@@ -447,6 +458,10 @@ def _build(request):
         'unknown_sources': unknown, 'items': items, 'blocked_entries': blocked, 'protected_units': protected_report,
         'observations': observations, 'public_listing': public_listing, 'changes': changes,
         'phased_writes': phased, 'steps': steps, 'retention_paths': retention_paths, 'public_paths': list(dict.fromkeys([str(topic),str(index)])),
+        'operation_metadata': {'share_user_memory': {'topic': str(topic),
+            'topic_after_sha256': entries.sha256(content), 'migrations': migrations,
+            'entries_created': [], 'source_after': {name: entries.sha256(outputs[name]) for name in removals if name in outputs},
+            'request_agents': selected}} if migrations and mode == 'user' and not phased else None,
         'reference_rebindings':rebindings, 'registry_policy':'only verified reused import fingerprint; ownership and consumers preserved'}
     plan['plan_sha256'] = entries.sha256(_encoded(plan))
     return plan, snapshots
@@ -529,7 +544,7 @@ def execute_organize(plan,approval,*,request=None,hook=None):
             step_index = [0]
 
             tx=Transaction(lock_path=runtime.transaction_lock,backup_root=runtime.backups,
-                           allowed_roots=[runtime.home,runtime.root]+([Path(plan['project'])] if plan.get('project') else []),operation=COMMAND,hook=hook)
+                           allowed_roots=[runtime.home,runtime.root]+([Path(plan['project'])] if plan.get('project') else []),operation=COMMAND,hook=hook,operation_metadata=plan.get('operation_metadata'))
             def guarded(event,path):
                 if hook:hook(event,path)
                 # V and all untouched evidence stay bound through the final write.

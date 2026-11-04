@@ -280,18 +280,23 @@ def _segments(data, protected):
     return result
 
 
-def _scope_titles(data, start, protected):
-    titles = []
-    offset = 0
+def _heading_context(data, start, protected):
+    stack = []; counts = {}; offset = 0
     for raw in data[:start].splitlines(keepends=True):
-        left = offset
-        offset += len(raw)
-        if any(left < end and offset > begin for begin, end in protected):
-            continue
+        left = offset; offset += len(raw)
+        if any(left < end and offset > begin for begin, end in protected): continue
         match = re.match(r'^(#{1,6})\s+(.+)$', raw.decode().rstrip('\r\n'))
         if match:
-            titles.append(match.group(2).strip())
-    return titles
+            depth, title = len(match[1]), match[2].strip()
+            stack = [h for h in stack if h[0] < depth]
+            key = tuple((h[0], h[1], h[2]) for h in stack) + ((depth, title),)
+            counts[key] = counts.get(key, 0) + 1
+            stack.append((depth, title, counts[key]))
+    return [h[1] for h in stack], [list(h) for h in stack]
+
+
+def _scope_titles(data, start, protected):
+    return _heading_context(data, start, protected)[0]
 
 
 def _identity(text):
@@ -333,7 +338,7 @@ def _collect(request):
             segments.append({'source': name, 'agent': info['agent'],
                              'start': start, 'end': end,
                              'text': raw.decode(), 'sha256': entries.sha256(raw),
-                             'scope': _scope_titles(snapshot.data, start, protected)})
+                             'scope': _scope_titles(snapshot.data, start, protected), 'context': _heading_context(snapshot.data, start, protected)[1]})
     basis = {name: _meta(info['snapshot'])['sha256'] for name, info in sources.items()
              if info['snapshot'] is not None}
     return runtime, sources, segments, basis
@@ -380,7 +385,7 @@ def _validate_proposal(request, proposal):
                 by_span[key] = {'source': name, 'agent': element['agent'],
                                 'start': start, 'end': end, 'text': text,
                                 'sha256': entries.sha256(data[start:end]),
-                                'scope': _scope_titles(data, start, protected)}
+                                'scope': _scope_titles(data, start, protected), 'context': _heading_context(data, start, protected)[1]}
             if any(name == n and key[1] < e and key[2] > a for n, a, e in seen):
                 _fail('invalid_proposal', '来源范围重叠')
             if key in seen:
@@ -389,7 +394,7 @@ def _validate_proposal(request, proposal):
             item = dict(by_span[key])
             items.append(item)
         identity = len({_identity(i['text']) for i in items}) == 1
-        same_scope = len({tuple(i['scope']) for i in items}) == 1
+        same_scope = len({_encoded(i['context']) for i in items}) == 1
         validated.append({'summary': raw['summary'].strip(), 'items': items,
                           'proposed_same': raw['same_content'],
                           'identity_match': identity, 'same_scope': same_scope,
@@ -489,20 +494,20 @@ def build_share_plan(request, proposal, selection):
             variants = []
             for member in members:
                 raw = member['text'].encode()
-                if raw not in [v[0] for v in variants]:
+                if (raw, member['context']) not in [(v[0], v[1]['context']) for v in variants]:
                     variants.append((raw, member))
             for raw, first_member in variants:
                 offset = len(public)
                 public += _separator(public) + raw
                 span = (offset + len(_separator(public[:offset])), len(public))
                 for member in members:
-                    if member['text'].encode() != raw:
+                    if member['text'].encode() != raw or member['context'] != first_member['context']:
                         continue
                     migrations.append({
                         'group': group['number'], 'summary': group['summary'],
                         'agent': member['agent'], 'path': member['source'],
                         'start': member['start'], 'end': member['end'],
-                        'scope': member['scope'],
+                        'scope': member['scope'], 'context': member['context'],
                         'text_hex': raw.hex(), 'text_sha256': entries.sha256(raw),
                         'public_offset': span[0], 'public_end': span[1]})
         link = ('- 用户记忆：[%s](%s)\n' % (TOPIC_NAME, TOPIC_NAME)).encode()
@@ -807,7 +812,7 @@ def _manifests(runtime):
         if snap.kind != 'file':
             _fail('path_conflict', '事务清单异常：' + str(manifest))
         data = json.loads(snap.data)
-        if data.get('operation') not in (COMMAND, RETURN_COMMAND):
+        if data.get('operation') not in (COMMAND, RETURN_COMMAND, 'organize-user-rules'):
             continue
         found.append((manifest.parent.name, manifest, data))
     return found
@@ -832,7 +837,7 @@ def _available_migrations(runtime):
         if not share or data.get('status') != 'committed':
             continue
         for position, record in enumerate(share['migrations']):
-            available[(name, position)] = dict(record, manifest=name,
+            available[(name, position)] = dict(record, topic=share['topic'], manifest=name,
                                                manifest_path=str(manifest),
                                                position=position)
     return available
@@ -1027,6 +1032,27 @@ def build_return_plan(request, agent_plan):
         'additions_moved': [{'path': m['path'],
                              'text_sha256': entries.sha256(m['text'])}
                             for m in addition_moves]}}
+    # Installed compatibility: atomically rebind only Claude's reused import observation.
+    if runtime.registry.is_file():
+        from . import registry
+        from .user_rules_organize import validate_reference_rebinding
+        before_v = read_snapshot(runtime.registry)
+        allowed = paths.allowed_user_paths(request['platform_config'], None, home=str(runtime.home))
+        ledger = registry.load_registry(runtime.registry, allowed_user_paths=allowed)
+        claude = str(native.get('claude', ''))
+        if claude in outputs and claude in states and not remove_entries:
+            updated = copy.deepcopy(ledger)
+            touched = []
+            for oid,obj in updated['machine']['objects'].items():
+                if obj['path']==claude and obj['kind']=='import':
+                    obj['fingerprint']['value']=entries.sha256(outputs[claude]);touched.append(oid)
+            if touched:
+                after_v = registry.serialize_registry(updated, allowed_user_paths=allowed)
+                validate_reference_rebinding(before_v.data, after_v, states[claude],
+                    Snapshot('file',outputs[claude],states[claude].mode), str(runtime.home))
+                observations[str(runtime.registry)] = _meta(before_v)
+                changes.append({'path':str(runtime.registry),'before':_meta(before_v),
+                    'after_sha256':entries.sha256(after_v),'after_hex':after_v.hex()})
     plan = {'schema_version': 1, 'command': RETURN_COMMAND, 'home': str(runtime.home),
             'request': {k: request[k] for k in ('home', 'platform_config', 'agents')
                         if k in request},
@@ -1098,9 +1124,10 @@ def run_return(request):
             transaction = Transaction(lock_path=runtime.transaction_lock,
                                       backup_root=runtime.backups,
                                       allowed_roots=[runtime.home],
-                                      operation=RETURN_COMMAND,
+                                      operation=RETURN_COMMAND, hook=request.get('hook'),
                                       operation_metadata=plan['operation_metadata'])
-            result = transaction.run(tx_changes)
+            metadata = next((c for c in tx_changes if c.path==runtime.registry),None)
+            result = transaction.run([c for c in tx_changes if c is not metadata], registry_change=metadata)
         return {'command': RETURN_COMMAND, 'status': 'completed',
                 'changes': plan['changes'], 'manifest': result['manifest']}
     except (ValueError, OSError, KeyError, TypeError) as exc:
@@ -1110,6 +1137,37 @@ def run_return(request):
                 'errors': [{'code': getattr(exc, 'code', 'return_failed'),
                             'message': str(exc),
                             'manifest': getattr(exc, 'manifest', None)}]}
+
+
+def _verify_return_registry(runtime, manifest, data):
+    if data.get('registry_path') is None:
+        return
+    if data.get('operation') != RETURN_COMMAND or data['registry_path'] != str(runtime.registry):
+        _fail('invalid_request', '未知 registry 恢复范围')
+    from . import registry
+    config = paths.select_platform(paths.load_agents_table(), os.sys.platform)
+    allowed = paths.allowed_user_paths(config, None, home=str(runtime.home))
+    native = paths.expand_path(config['claude']['user_entry'],home=str(runtime.home))
+    rows=data['entries'];vrows=[r for r in rows if r['path']==str(runtime.registry)]
+    sources=[r for r in rows if r['path']==native]
+    if len(vrows)!=1 or rows[-1] is not vrows[0] or len(sources)!=1:
+        _fail('invalid_request','registry 恢复须绑定最终 Claude 引用观察')
+    vr,sr=vrows[0],sources[0]
+    name=vr['before'].get('backup')
+    if not isinstance(name,str) or Path(name).name!=name:
+        _fail('invalid_request','registry 备份路径无效')
+    raw=read_snapshot(manifest.parent/name)
+    if raw.kind!='file' or raw.fingerprint!=vr['before']['fingerprint']:
+        _fail('drift','registry 备份漂移')
+    old=registry.validate_registry(json.loads(raw.data),allowed_user_paths=allowed)
+    expected=copy.deepcopy(old);matched=[]
+    for oid,obj in expected['machine']['objects'].items():
+        if obj['path']==native and obj['kind']=='import' and obj['ownership']=='reused' and obj['agents']==['claude'] and obj.get('marker') is None:
+            if obj['fingerprint']['value']!=sr['before']['fingerprint']:
+                _fail('drift','Claude 引用原观察不匹配')
+            obj['fingerprint']['value']=sr['after']['fingerprint'];matched.append(oid)
+    if len(matched)!=1 or entries.sha256(registry.serialize_registry(expected,allowed_user_paths=allowed))!=vr['after']['fingerprint']:
+        _fail('invalid_request','registry 恢复超出窄重绑范围')
 
 
 def run_recover(request):
@@ -1124,6 +1182,7 @@ def run_recover(request):
             raise ShareError('invalid_request', '不是共享/归还的事务清单')
         roots = [runtime.home, runtime.root]
         inspected = inspect_recovery(manifest, allowed_roots=roots)
+        _verify_return_registry(runtime,manifest,data)
         recovery_plan = {'command': RECOVER_COMMAND, 'manifest': str(manifest),
                          'manifest_sha256': entries.sha256(read_snapshot(manifest).data),
                          'observations': {entry['path']: _meta(read_snapshot(Path(entry['path'])))

@@ -157,7 +157,9 @@ def _scene(request, main_operation_id):
             if target.is_symlink() or not target.is_file():
                 _fail('Connected agent entry is missing or drifted', 'ck_main_incomplete')
             raw = target.read_bytes()
-            if obj['kind'] == 'import':
+            if obj['kind'] == 'file' and str(target).endswith('/skills/mem-sharing/SKILL.md'):
+                intact = obj['ownership'] == 'created' and legacy.digest(raw) == obj['fingerprint']['value']
+            elif obj['kind'] == 'import':
                 # Machine Claude imports the public memory index. Its historic
                 # whole-file baseline is not ownership of later user/CK text.
                 line = ('@'+str(runtime.root/'memories/MEMORY.md')).encode()

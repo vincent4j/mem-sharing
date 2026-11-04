@@ -248,10 +248,13 @@ def _report(plan, status, *, result=None, entries=None, project=None):
     if status == 'completed' and any(f['status'] != 'connected' for f in static.values()):
         status = 'partial'
     from agm_core.user_rules_organize import continuation
-    fusion = continuation(plan['request']) if status == 'completed' else None
+    unchanged = bool(plan['plan'].get('noop') and not plan['changes'])
+    fusion = continuation(plan['request']) if status == 'completed' and not unchanged else None
     return {'fusion': fusion, 'schema_version': 1, 'command': 'install-machine', 'status': status,
         'layout': plan['layout'], 'versions': plan['versions'], 'source': plan['source'],
         'operation_id': plan['operation_id'],
+        'message': ('已安装，已接入。' if unchanged and status == 'completed' else
+                    '已安装，已补充接入。' if plan['plan'].get('noop') and status == 'completed' else status),
         'recovery': None if plan['plan'].get('noop') else plan['plan']['journal'],
         'metadata_scopes': plan['metadata_scopes'],
         'agents': {'connected': connected,

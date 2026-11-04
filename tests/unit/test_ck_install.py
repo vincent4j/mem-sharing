@@ -303,7 +303,7 @@ class CKInstallTests(InstallFixture):
                 self.assertEqual(stopped.exception.code,'machine_upgrade_pending')
                 self.assertEqual(before,self.snapshot())
                 self.assertFalse((self.runtime.var/('ck-install-'+self.op+'.json')).exists())
-                self.assertFalse((self.home/'.codex/skills').exists())
+                self.assertFalse((self.home/'.codex/skills/context-keeper').exists())
                 marker.unlink()
 
     def test_unfinished_main_journal_blocks_even_when_v_is_complete(self):
@@ -368,7 +368,7 @@ class CKInstallTests(InstallFixture):
             return SimpleNamespace(returncode=0,stdout='{"scope":"project"}')
         result=self.apply(plan,runner=runner)
         self.assertEqual(result['status'],'unknown')
-        self.assertFalse((self.home/'.codex/skills').exists())
+        self.assertFalse((self.home/'.codex/skills/context-keeper').exists())
         self.assertTrue(self.runtime.registry.exists())
         with self.assertRaises(ck.CKError):self.plan_ck()
 
@@ -378,7 +378,7 @@ class CKInstallTests(InstallFixture):
         result=self.apply(plan,runner=runner)
         self.assertEqual(result['status'],'approval_required')
         self.assertTrue(result['approval_required'])
-        self.assertFalse((self.home/'.codex/skills').exists())
+        self.assertFalse((self.home/'.codex/skills/context-keeper').exists())
 
     def test_non_json_timeout_and_nonzero_are_unknown_with_preserved_journal(self):
         plan=self.plan_ck()

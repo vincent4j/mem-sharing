@@ -116,16 +116,13 @@ CLAUDE_FALLBACK_TEXT = (
     "已有正文必须完整保留，仅追加缺失的 @AGENTS.md 引用行，重复执行不改字节。"
 )
 WORKBUDDY_FALLBACK_TEXT = "仅 WorkBuddy 在本项目实际使用产生原生 .workbuddy/memory 目录，且项目已启用（历史停用登记项目跳过）时，补顶部 AGENTS.md 指针；保留已有正文字节，不预建原生目录。"
-CODEX_FALLBACK_TEXT = "Codex 原生读取共享项目规则基座 AGENTS.md，自身无额外专属项目入口；该基座默认建立遵公共治理条款，历史停用登记项目不自动重建。"
+CODEX_FALLBACK_TEXT = ""
 # 桌面双端(2026-10-31 冻结合同):dsh=DeepSeek Harness、zcode=ZCode 均原生读取
 # 项目根 AGENTS.md(rule_mode=native),用户入口分别是 ~/.dsh/AGENTS.md 与
 # ~/.zcode/AGENTS.md。兜底文本各写自身执行器称谓,不复用 CODEX_FALLBACK_TEXT,
 # 迁移/连接校验按块内语义精确区分执行器。
-DSH_FALLBACK_TEXT = ("DeepSeek Harness 原生读取共享项目规则基座 AGENTS.md，自身无额外专属项目入口；"
-                     "该基座默认建立遵公共治理条款，历史停用登记项目不自动重建。"
-                     "用户入口仅支持默认根 ~/.dsh/AGENTS.md，DSH_HOME 重定向时不接入。")
-ZCODE_FALLBACK_TEXT = ("ZCode 原生读取共享项目规则基座 AGENTS.md 与用户级 ~/.zcode/AGENTS.md，自身无额外专属项目入口；"
-                       "该基座默认建立遵公共治理条款，历史停用登记项目不自动重建。")
+DSH_FALLBACK_TEXT = "DSH_HOME 重定向用户规则根时停止接入；不回显环境变量值。"
+ZCODE_FALLBACK_TEXT = ""
 # OpenCode v2(2026-11-01 接入):v2 只识别 AGENTS.md(不再回退 CLAUDE.md),默认
 # 配置根 ~/.config/opencode。规则加载受 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/
 # OPENCODE_CONFIG 影响的完整语义未获源码证实,第一版 default-root-only:配置根
@@ -163,21 +160,12 @@ def agent_group_menu_text(code):
     )
 
 
-def public_memory_contract_text():
-    """公共 MEMORY 头部契约:读取契约、预算、公共治理与按需操作指南指针。
-
-    公共治理全文留在此处;菜单/绝对命令/L0L1L2 维护规则由《使用约定》主题承载,
-    指南不回指菜单;相对链接以 MEMORY 所在目录解析,指南缺失时停止相关操作。
-    """
+def public_memory_contract_text(code=None):
+    """Minimal reading instructions; no menu or automatic project mutation."""
+    skill = str(Path(code) / 'SKILL.md') if code else '~/.local/share/mem-sharing/SKILL.md'
     return (
-        "读取契约：L0 恒读本索引 → 需要该主题时读其 L1 概要段 → 仍不足才读 L2 全文；"
-        "相对链接以本文件所在目录解析，指向的内容缺失时停止相关操作。\n"
-        "预算：L0 一主题一行：主题名 + 一句话当前结论 + 链接；索引 ≤200 行 / 25KB；"
-        "增加主题文件，不加长索引；摘要在记忆整理时手写，不自动生成。\n"
-        + GOVERNANCE_RULES_TEXT + "\n"
-        "按需操作指南：/mem-sharing 菜单、绝对命令与公共记忆维护规则由主题《使用约定》承载"
-        "（[使用约定](topics/使用约定.md)）；仅在用户明确 /mem-sharing、提出同义自然语言操作"
-        "或默认项目接入前读取；用户明确说“卸载 memSharing / 卸载 mem-sharing”或“不想用这个共享记忆工具了，帮我卸载”时，立即按需读取该主题完整卸载路由，无须斜杠命令或源码目录；目标含糊先澄清；该指南不回指其他菜单。\n"
+        "开始任务前读取并遵守本目录的 user-rules.md（存在时）；其他主题按需读取。相关文件无法读取时说明，不猜测其内容。\n"
+        "用户要求操作或卸载 memSharing 时，先读取 <%s>，再按相应流程执行。\n" % skill
     )
 
 
@@ -208,37 +196,16 @@ def natural_language_uninstall_text(code):
 
 
 def usage_convention_topic_text(code):
-    """新装主题《使用约定》:操作指南本体,承接六项菜单、绝对命令与 L0/L1/L2 维护。
-
-    指南不循环回指菜单;本指南内相对链接以指南自身目录(topics/)解析,
-    受管产品命令与 Skill 路径用安装代码 C 的绝对路径。规则驱动的默认项目
-    接入由当前实际执行器带 --agent 发起(先查历史停用登记并跳过),
-    不让当前会话无参数顺带改动其他执行器入口;经历开关已退役,恢复接入
-    不经由任何迁移命令自动完成。
-    """
-    cli = "python3 %s/scripts/agm.py" % code
+    """On-demand operations route; preserve project and CK safety boundaries."""
+    code = Path(code)
     return (
         "# 使用约定\n\n"
-        "## L1 概要\n\n"
-        "当前有效结论：公共记忆采用索引与主题文件，摘要由 Agent 手写，不自动生成。\n"
-        "本主题即操作指南：/mem-sharing 菜单、绝对命令与公共记忆 L0/L1/L2 维护规则都在本文件正文，不回指其他菜单。\n"
-        "待办：有新事实且获准记录时，更新对应主题结论与索引行。\n\n"
-        "## L2 正文\n\n"
-        "### /mem-sharing 菜单\n\n"
-        + agent_group_menu_text(code) + "\n"
-        "### 公共记忆维护（L0/L1/L2）\n\n"
-        "L0 索引一主题一行：主题名 + 一句话当前结论 + 链接，≤200 行 / 25KB；增加主题文件，不加长索引。\n"
-        "L1 位于主题文件开头，简列当前有效结论与待办；L2 为全文及 references/ 手册，仅在概要不足时读取。\n"
-        "摘要在记忆整理时手写，不自动生成。本指南内相对链接以本文件所在目录（topics/）解析；"
-        "受管产品命令与 Skill 路径使用安装代码的绝对路径。\n\n"
-        "### 项目接入约定\n\n"
-        "规则驱动的默认接入由当前实际执行者发起：%s enable-memory --project <项目绝对路径> --agent <当前执行器>；"
-        "执行前先检查项目政策，历史停用登记（disabled）项目跳过、不由本路径恢复"
-        "（历史停用登记不代表 Context Keeper 停用，也不宣称入口已移除；migrate-policy 仅清理产品自有的停用控制，不恢复接入；重新接入需用户明确的重新接入计划）；"
-        "各 Agent 专属项目入口按当前执行器自身用户文件中的规则维护，公共指南不承载执行器专属细节。\n"
-        "当前会话不得无参数顺带改动其他执行器的入口。"
-        "用户显式授权的全体接入或批量启用沿用现有命令语义，本约定不改变任何命令默认。\n" % cli
-        + "\n" + natural_language_uninstall_text(code)
+        "安装、添加 Agent、整理记忆、检查、接入项目或卸载 memSharing：先读本机已核验的 [Skill](<%s>)，按相应操作路由执行。机器共用一套公共记忆和安装；已接入者重复安装应零写返回，新增 Agent 只补入口，显式 --agent 限定范围。\n\n"
+        "公共记忆只存获准共享的原文；独有与未选内容留原处。索引一主题一行，最多 200 行 / 25KB；概要由 Agent 按事实维护，原文按需读，不自动摘要替换。\n\n"
+        "项目：仅 Git 主 checkout 的未登记项目默认接入，保留已有正文；非 Git 和 linked worktree 跳过。当前执行器带 --agent 接入，只补自身入口，不替其他 Agent 预建。历史 disabled 项目跳过且不重建；重新接入须用户明确计划，不把历史停用当作入口已移除。\n\n"
+        "Context Keeper 独立管理项目经历。默认接入不创建记录库、不安装或初始化 Context Keeper；首次使用与保存按其 Skill 确认。memSharing 不设置或撤销其开关，disabled 不代表 Context Keeper 停用。\n\n"
+        "卸载：用户说‘卸载 memSharing’即进入 [完整卸载合同](<%s>) 的只读预览；目标含糊先澄清。先核来源与宿主义务，完整展示归还、外置备份和删除计划，精确批准后再执行；未知、漂移或恢复未闭合则停止。公共记忆归还当前正文。机器、宿主和整体分别报告；宿主仍在则整体未完成。Context Keeper 默认保留，另行预览批准。\n"
+        % (code / "SKILL.md", code / "docs/uninstall-design.md")
     )
 
 
@@ -383,6 +350,24 @@ class _Planner:
             return None, UserEntryError("entry_conflict", "公共源/约定块标记异常: %s" % exc)
 
     # ---- per-mode entry planning ------------------------------------------
+
+    def native_skill(self, agent):
+        path = self.runtime.home / ('.codex' if agent == 'codex' else '.claude') / 'skills/mem-sharing/SKILL.md'
+        _require_real_parents(path, self.runtime.home)
+        snap = self.snapshot(path)
+        raw = ("---\nname: mem-sharing\ndescription: 共享用户记忆，管理 memSharing 安装、接入与卸载。\n---\n\n"
+               "先读取并遵守 <%s>，按用户意图进入对应流程；读不到则停止并说明。\n" % (self.runtime.code / 'SKILL.md')).encode()
+        oid = str(path) + '#native-skill'
+        existing = self.units.get((str(path), None))
+        if existing:
+            if existing['kind'] != 'file' or snap.kind != 'file' or snap.fingerprint != existing['fingerprint']['value'] or snap.data != raw:
+                raise UserEntryError('entry_conflict', '原生 Skill 入口漂移，保留并停止：' + str(path))
+            self._adopt_existing(oid, existing, agent=agent)
+            return
+        if snap.kind != 'absent':
+            raise UserEntryError('entry_conflict', 'Unregistered user unit: 已有未登记 Skill，保留并停止：' + str(path))
+        self.after[path] = Snapshot('file', raw, 0o600)
+        self.objects[oid] = self._new_object(oid, 'file', path, agent, 'created', value=sha256(raw))
 
     def marker_block(self, agent, path, block, oid_suffix, *, append_to_unblocked, note_label, update_registered=False):
         """Plan one BASE_MARKER managed block (codex public-source / workbuddy convention)."""
@@ -694,8 +679,8 @@ def native_public_source_block(agent, memory_index):
     codex 分支与既有内联构造字节一致(公共布局迁移幂等依赖该字节);dsh/zcode
     是 2026-10-31 新增桌面端,首版即新模板,无历史旧模板。
     """
-    return _wrap_block(BASE_MARKER, "\n".join(
-        [public_read_text(memory_index), NATIVE_FALLBACK_TEXTS[agent]]))
+    return _wrap_block(BASE_MARKER, "\n".join(filter(None,
+        [public_read_text(memory_index), NATIVE_FALLBACK_TEXTS[agent]])))
 
 
 def dsh_home_redirected(home):
@@ -922,6 +907,8 @@ def _plan(request, runtime, detection, effective, *, transaction):
             "整单停止,零写入。")
     for agent in effective:
         entry = config[agent]
+        if agent in ('codex', 'claude'):
+            planner.native_skill(agent)
         user_path = Path(agm_paths.expand_path(entry["user_entry"], home=home))
         _require_real_parents(user_path, runtime.home)
         if entry["rule_mode"] == "user_convention":
@@ -1129,3 +1116,41 @@ def run_user_entries(request):
         result["errors"].append({"code": getattr(exc, "code", "user_entries_failed"), "path": None,
                                  "message": str(exc), "recovery": None})
         return result
+
+
+# Frozen shipped templates: recognition only; never generated for fresh installs.
+LEGACY_RUNTIME_CONTRACT = '读取契约：L0 恒读本索引 → 需要该主题时读其 L1 概要段 → 仍不足才读 L2 全文；相对链接以本文件所在目录解析，指向的内容缺失时停止相关操作。\n预算：L0 一主题一行：主题名 + 一句话当前结论 + 链接；索引 ≤200 行 / 25KB；增加主题文件，不加长索引；摘要在记忆整理时手写，不自动生成。\n用户规则治理：公共内容只写公共指定文件（R/memories），Agent 独有内容保留于各自用户文件，永不并入公共或自动删除。进入 Git 主 checkout 时，未登记项目默认启用项目规则：创建缺失的 AGENTS.md 骨架并追加项目经历短协议，已有全文保留。默认启用不创建 Context Keeper 记录库、不调用 Context Keeper 安装或初始化；首次 /context-keeper 进入 Context Keeper 流程，首次保存按其流程确认位置。项目经历由 Context Keeper 独立管理，本工具不设经历开关，不撤销、不禁用也不否决 Context Keeper。历史停用登记（disabled）项目默认流程跳过、不重建，也不宣称入口已移除；该状态不代表 Context Keeper 停用，重新接入需用户明确的重新接入计划。各 Agent 只维护自身专属项目入口（Claude 的 CLAUDE.md、WorkBuddy 的原生 memory 指针），由各自实际使用时补齐，其他执行器不得预建；AGENTS.md 是共享项目规则基座，不依赖 Codex，无 Codex 的机器同样成立，其默认建立遵本治理条款；非 Git 目录和 linked worktree 不触发。\n按需操作指南：/mem-sharing 菜单、绝对命令与公共记忆维护规则由主题《使用约定》承载（[使用约定](topics/使用约定.md)）；仅在用户明确 /mem-sharing、提出同义自然语言操作或默认项目接入前读取；用户明确说“卸载 memSharing / 卸载 mem-sharing”或“不想用这个共享记忆工具了，帮我卸载”时，立即按需读取该主题完整卸载路由，无须斜杠命令或源码目录；目标含糊先澄清；该指南不回指其他菜单。\n'
+
+def legacy_usage_convention_topic_text(code):
+    """新装主题《使用约定》:操作指南本体,承接六项菜单、绝对命令与 L0/L1/L2 维护。
+
+    指南不循环回指菜单;本指南内相对链接以指南自身目录(topics/)解析,
+    受管产品命令与 Skill 路径用安装代码 C 的绝对路径。规则驱动的默认项目
+    接入由当前实际执行器带 --agent 发起(先查历史停用登记并跳过),
+    不让当前会话无参数顺带改动其他执行器入口;经历开关已退役,恢复接入
+    不经由任何迁移命令自动完成。
+    """
+    cli = "python3 %s/scripts/agm.py" % code
+    return (
+        "# 使用约定\n\n"
+        "## L1 概要\n\n"
+        "当前有效结论：公共记忆采用索引与主题文件，摘要由 Agent 手写，不自动生成。\n"
+        "本主题即操作指南：/mem-sharing 菜单、绝对命令与公共记忆 L0/L1/L2 维护规则都在本文件正文，不回指其他菜单。\n"
+        "待办：有新事实且获准记录时，更新对应主题结论与索引行。\n\n"
+        "## L2 正文\n\n"
+        "### /mem-sharing 菜单\n\n"
+        + agent_group_menu_text(code) + "\n"
+        "### 公共记忆维护（L0/L1/L2）\n\n"
+        "L0 索引一主题一行：主题名 + 一句话当前结论 + 链接，≤200 行 / 25KB；增加主题文件，不加长索引。\n"
+        "L1 位于主题文件开头，简列当前有效结论与待办；L2 为全文及 references/ 手册，仅在概要不足时读取。\n"
+        "摘要在记忆整理时手写，不自动生成。本指南内相对链接以本文件所在目录（topics/）解析；"
+        "受管产品命令与 Skill 路径使用安装代码的绝对路径。\n\n"
+        "### 项目接入约定\n\n"
+        "规则驱动的默认接入由当前实际执行者发起：%s enable-memory --project <项目绝对路径> --agent <当前执行器>；"
+        "执行前先检查项目政策，历史停用登记（disabled）项目跳过、不由本路径恢复"
+        "（历史停用登记不代表 Context Keeper 停用，也不宣称入口已移除；migrate-policy 仅清理产品自有的停用控制，不恢复接入；重新接入需用户明确的重新接入计划）；"
+        "各 Agent 专属项目入口按当前执行器自身用户文件中的规则维护，公共指南不承载执行器专属细节。\n"
+        "当前会话不得无参数顺带改动其他执行器的入口。"
+        "用户显式授权的全体接入或批量启用沿用现有命令语义，本约定不改变任何命令默认。\n" % cli
+        + "\n" + natural_language_uninstall_text(code)
+    )

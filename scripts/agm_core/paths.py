@@ -21,6 +21,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 # 全量支持清单(2026-10-31 桌面双端适配;2026-11-01 OpenCode v2 接入):dsh=
 # DeepSeek Harness 桌面端,zcode=ZCode 桌面端,opencode=OpenCode v2 终端执行器,
@@ -356,7 +357,7 @@ def allowed_user_paths(platform_config, agents, *, home):
 
     M2-02 内核合同:凡涉及 user/machine 对象的 registry load/validate/serialize/commit
     必须传该列表,不在表内的用户级路径一律拒绝;CLI 层不得自行放宽。v1.11(2026-10-30
-    裁定)起列表仅含用户级入口文件——产品自身 Skill 投影取消,不再包含任何 Skill 位。
+    裁定)起保留用户级入口；当前另为 Codex/Claude 枚举原生 mem-sharing Skill 文件。
     agents=None 表示"全部支持执行器"(六家全集):台账加载/校验必须覆盖已登记的
     dsh/zcode/opencode 用户对象,否则显式接入后 check/remove/升级会误判越界;缺省
     接入三家的语义由调用方经 resolve_agents 表达,不在本函数重复。
@@ -366,4 +367,6 @@ def allowed_user_paths(platform_config, agents, *, home):
         expanded = expand_path(platform_config[agent]["user_entry"], home=home)
         if expanded not in collected:
             collected.append(expanded)
+        if agent in ('codex', 'claude'):
+            collected.append(str(Path(home) / ('.codex' if agent == 'codex' else '.claude') / 'skills/mem-sharing/SKILL.md'))
     return collected

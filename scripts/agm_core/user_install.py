@@ -374,21 +374,13 @@ def plan_install(request):
             output(Path(item['target']),after,origin='v0:'+item['path'])
         index=bytes.fromhex(imported['index_hex'])
     else:
-        index=('# 公共记忆\n\n'
-               '- 使用约定：中枢已初始化，主题结论由 Agent 经确认后手写维护。'
-               '[概要与全文](topics/使用约定.md)\n').encode()
-    # 公共分层(2026-10-31 裁定):新装与 v0 导入都建《使用约定》指南主题,
-    # 索引头部只保留读取契约、预算、公共治理与指南指针。
-    topic=user_entries.usage_convention_topic_text(runtime.code).encode()
-    output(runtime.root/'memories/topics/使用约定.md',
-           {'kind':'file','sha256':legacy.digest(topic),'mode':0o600},content=topic)
-    contract=user_entries.public_memory_contract_text()+'\n'
+        index='# 公共记忆\n\n'.encode()
+    contract=user_entries.public_memory_contract_text(runtime.code)+'\n'
     if imported:
         # Keep legacy bytes and relative targets intact; only the new index is ours.
         index=index.replace(b'- [v0 ', '- v0 原文：历史字节已保存在只读阅读包，按需深读。 [v0 '.encode(),1)
         # v0 旧占位主题目录整行删除,索引只保留真实主题行,不留说明性占位行。
         index=index.replace('- [主题目录](topics/)\n'.encode(), b'')
-        index=index+'- 使用约定：操作指南与维护规则。[概要与全文](topics/使用约定.md)\n'.encode()
     index=index.replace('# 公共记忆\n\n'.encode(),('# 公共记忆\n\n'+contract).encode(),1)
     if imported:
         imported['index_hex']=index.hex()
@@ -396,7 +388,7 @@ def plan_install(request):
     index_path=runtime.root/'memories/MEMORY.md'
     output(index_path,{'kind':'file','sha256':legacy.digest(index),'mode':0o600},content=index)
     # v1.11(2026-10-30 裁定):R 不建 skills/、mcp/,首装结构仅内容两目录+台账+备份。
-    directories={str(runtime.root/n) for n in ('memories','memories/topics','references','backups','var')}
+    directories={str(runtime.root/n) for n in ('memories','references','backups','var')}
     if imported:
         directories.add(imported['package'])
         for item in imported['items']:

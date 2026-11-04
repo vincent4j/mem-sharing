@@ -102,7 +102,7 @@ def _strip_generated_text(raw, runtime, *, public=False, historical_proof=False)
             raise recovery.Conflict('Duplicate historical generated governance; review required')
         raw = raw.replace(LEGACY_GENERATED_GOVERNANCE, b'', 1)
     if public:
-        templates = {user_entries.public_memory_contract_text().encode()}
+        templates = {user_entries.public_memory_contract_text(runtime.code).encode(), user_entries.public_memory_contract_text().encode(), user_entries.LEGACY_RUNTIME_CONTRACT.encode()}
         for name in ('contract', 'old_contract', 'pre_route_contract'):
             templates.add(policy_migration.legacy(name, runtime))
         # Header/index ownership follows a recognized complete producer unit.
@@ -119,6 +119,7 @@ def _strip_generated_text(raw, runtime, *, public=False, historical_proof=False)
             prefix='# 公共记忆\n\n'.encode()
             if raw.startswith(prefix):raw=raw[len(prefix):]
             known_indexes=(
+                '- 使用约定：操作与项目接入前读取。[概要与全文](topics/使用约定.md)\n'.encode(),
                 '- 使用约定：中枢已初始化，主题结论由 Agent 经确认后手写维护。[概要与全文](topics/使用约定.md)\n'.encode(),
                 '- 使用约定：操作指南与维护规则。[概要与全文](topics/使用约定.md)\n'.encode())
             for line in known_indexes:raw=raw.replace(line,b'')
@@ -350,7 +351,7 @@ def public_body(runtime, original, *, evidence=None):
     from . import user_entries, policy_migration
     base = runtime.root
     topic = base/'memories/topics/使用约定.md'
-    known = {user_entries.usage_convention_topic_text(runtime.code).encode()}
+    known = {user_entries.usage_convention_topic_text(runtime.code).encode(), user_entries.legacy_usage_convention_topic_text(runtime.code).encode()}
     known.update(policy_migration.legacy(n, runtime) for n in
                  ('pre_route_topic', 'topic', 'old_topic'))
     visiting, done, chunks = set(), set(), []
@@ -601,3 +602,77 @@ def _retire_legacy_pointer_text(raw, native_path, *, proven):
     if len(hits)!=1 or hits[0].strip() not in known:
         raise recovery.Conflict('Unknown legacy return instruction; review required')
     return raw.replace(hits[0],b'',1)
+
+
+def source_returns(runtime, original, native_paths):
+    """Plan exact outstanding source-count restoration inside machine uninstall."""
+    from . import memory_share as share
+    import copy
+    available = share._available_migrations(runtime)
+    consumed = share._consumed_index(runtime)
+    records = {ref: r for ref, r in available.items() if ref not in consumed}
+    restored = {}; residual = copy.deepcopy(original); spans = {}
+    by_manifest = {}
+    for ref, record in records.items():
+        if record['path'] not in native_paths or record.get('topic') not in original:
+            raise recovery.Conflict('Unknown source return target')
+        topic = record['topic']; state = original[topic]
+        raw = bytes.fromhex(state['hex']) if state['kind']=='file' else b''
+        left, right = record['public_offset'], record['public_end']
+        text = bytes.fromhex(record['text_hex'])
+        if raw[left:right] != text or recovery.digest(text) != record['text_sha256']:
+            raise recovery.Conflict('Public source span drift; explicit current-byte return plan required')
+        spans.setdefault(topic,set()).add((left,right))
+        by_manifest.setdefault(record['manifest'],{}).setdefault(record['path'],[]).append(record)
+    for manifest, paths in sorted(by_manifest.items(), reverse=True):
+        for path, members in paths.items():
+            state = recovery.snapshot(path)
+            raw = restored.get(path, bytes.fromhex(state['hex']) if state['kind']=='file' else b'')
+            if recovery.digest(raw) != share._after_sha(runtime,members[0]):
+                # Later approved shares may append content. Prove the old after
+                # prefix from its own backed-up before bytes, never from prose.
+                import json
+                manifest_path=Path(members[0]['manifest_path'])
+                producer=json.loads(manifest_path.read_bytes())
+                row=next((r for r in producer['entries'] if r['path']==path),None)
+                saved=row['before'].get('backup') if row else None
+                if not isinstance(saved,str) or Path(saved).name!=saved:
+                    raise recovery.Conflict('Native source drift; missing prefix proof: '+path)
+                prior=(manifest_path.parent/saved).read_bytes()
+                if recovery.digest(prior)!=row['before']['fingerprint']:
+                    raise recovery.Conflict('Native source drift; backup mismatch: '+path)
+                all_members=[r for r in producer['operation_metadata']['share_user_memory']['migrations'] if r['path']==path]
+                for r in sorted(all_members,key=lambda r:r['start'],reverse=True):
+                    if prior[r['start']:r['end']]!=bytes.fromhex(r['text_hex']):
+                        raise recovery.Conflict('Native source drift; invalid source proof: '+path)
+                    prior=prior[:r['start']]+prior[r['end']:]
+                if recovery.digest(prior)!=share._after_sha(runtime,members[0]) or not raw.startswith(prior):
+                    raise recovery.Conflict('Native source drift; explicit current-byte return plan required: '+path)
+            ordered = sorted(members,key=lambda r:r['start'])
+            inserts=[];removed=0
+            for record in ordered:
+                inserts.append((record['start']-removed,bytes.fromhex(record['text_hex'])))
+                removed += record['end']-record['start']
+            for offset,text in reversed(inserts):
+                if not 0 <= offset <= len(raw):raise recovery.Conflict('Invalid original source offset')
+                raw=raw[:offset]+text+raw[offset:]
+            restored[path]=raw
+    for topic, positions in spans.items():
+        raw=bytes.fromhex(residual[topic]['hex'])
+        positions=sorted(positions)
+        if any(c<b for (a,b),(c,d) in zip(positions,positions[1:])):
+            raise recovery.Conflict('Overlapping source public spans')
+        for left,right in reversed(positions):raw=raw[:left]+raw[right:]
+        # Retire only the exact wrapper emitted by the known legacy producer.
+        expected='# 用户规则\n'.encode()
+        by_span={}
+        for record in records.values():
+            if record['topic']==topic:
+                by_span.setdefault((record['public_offset'],record['public_end']),record)
+        for _,record in sorted(by_span.items()):
+            context=('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate(record['scope']))+'\n').encode() if record['scope'] else b'\n'
+            expected += context+b'\n'+bytes.fromhex(record['text_hex'])
+        if bytes.fromhex(original[topic]['hex'])==expected:
+            raw=b''
+        residual[topic]['hex']=raw.hex()
+    return restored,residual

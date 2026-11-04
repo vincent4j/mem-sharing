@@ -52,7 +52,7 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 | 受管标记前缀 | `mem-sharing:*` |
 | v0 历史源 | `~/.agents-group`，只读来源，原地保留 |
 
-中枢只包含 memories、references、backups、var，不建 skills/mcp，不创建 memSharing Skill 投影；菜单 `/mem-sharing` 由用户级规则块承载。旧标记与现网文件不能因改名被自动接管，按漂移处理，真实重建留 M4-10。运行中的本地 checkout 不在本次操作中改目录名。
+中枢只包含 memories、references、backups、var，不建 skills/mcp，Codex 与 Claude Code 按所选范围安装各自原生 `skills/mem-sharing/SKILL.md` 薄入口，指向持久安装核心，不占用公共 Skills 目录；其他四家原生 Skill 分发未在本轮实现。旧标记与现网文件不能因改名被自动接管，按漂移处理，真实重建留 M4-10。运行中的本地 checkout 不在本次操作中改目录名。
 
 四通道仍为：全新、确认的 v0 内容复制、有效产品升级（同版幂等）、异常停止。v0 从历史源复制到新 R，只纳入 memories/references；skills、mcp、旧脚本与状态原地保留，不运行、不接管。源目标天然分离，不改写旧源索引；旧索引作为原文与链接上下文保留，新索引只索引它。保留清单、恢复材料、逐字节验证与一次导入约束；同路径夹具的快照语义不等于真机必须改写旧源。
 
@@ -208,3 +208,11 @@ CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调�
 不能因换 Agent 发起而省略 Paseo 宿主义务；沿现有来源与参数合同补齐，未知先停止。已卸载或代码缺失不自动重装。安装代码已具备当前兼容实现时，旧公共指南通过 `migrate-policy` 的精确模板迁移接入新路由；旧 C 不兼容时零写拒绝，须先按现有精确安装/升级流程更新代码（预览、批准、私文保留、未知定制拒绝、重复零写）；生成指南在真正归还时退休，original 原文保全，active 不再指向被删代码。六家真实模型触发仍 pending。
 
 机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`，包含 `status`、`automatic_continue`、`can_decline`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常 `pending_selection` 时 `automatic_continue:true/can_decline:true`，外层按 `fusion.preview.prompt` 保留完整展示骨架后继续选择，不以单表或命令替代；条目摘要不得写回原计划。`blocked` 时 `automatic_continue:false/can_decline:true`，明确报告实际阻塞原因、`preview.errors/blocked_entries` 和 `preview.next_action` 的下一步；`prompt/approval_plan` 仅供只读诊断，不称可继续选择或已融合、不执行修改。用户可保留现状并另起 `--decline` 预览，不伪造治理命令。入口接入可能已写入文件，提示限定为“本次融合尚未修改记忆内容”；安装或启用成功与融合完成分别报告，不复用接入批准执行融合。
+
+### 逐 Agent 接入与全机卸载
+
+显式 `--agent codex` 只安装 Codex 的记忆引用和原生 Skill，不预建 Claude 入口；之后 `--agent claude` 补接入 Claude，复用同一套 R/C/V。入口安装阶段不改公共 memories 文件集或正文。新 Agent 既有私文完整保留，随后提供单独批准的增量整理预览；同语境同字节的已有公共正文复用，各来源位置与次数分别记录。独有、未选、差异和冲突内容不静默搬移或覆盖。已接入 Agent 同版重复安装返回“已安装，已接入”，零写且不再次整理。
+
+从任意 Agent 发起卸载均走同一 `uninstall-machine` 全机核心，按受管台账移除全部已安装 native Skill 与引用，归还当前公共正文；保护用户自建同名 Skill、其他 Skill 与私文。删除前仍须外置备份、零写预览、精确批准和宿主义务核验。原生目录布局证据不代表真实 `/mem-sharing` 调用通过。
+
+新装公共索引只提示读取存在的用户规则与按需 Skill，不生成《使用约定》及索引条目，不硬编码用户个人规则。进入项目不自动写 AGENTS.md 或经历协议。旧安装的指南仅按原台账与来源兼容处理，不由新安装无批准删除。

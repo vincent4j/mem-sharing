@@ -196,7 +196,7 @@ def new_topic_bytes(code):
 
 def new_codex_block(memory_index):
     return user_entries._wrap_block(user_entries.BASE_MARKER, "\n".join(
-        [user_entries.public_read_text(memory_index), user_entries.CODEX_FALLBACK_TEXT]))
+        filter(None, [user_entries.public_read_text(memory_index), user_entries.CODEX_FALLBACK_TEXT])))
 
 
 def new_workbuddy_block(memory_index):

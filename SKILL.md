@@ -39,7 +39,7 @@ description: memSharing，多 Agent 记忆共享与融合。提供公共用户�
    python3 -B scripts/memory_share.py share-user-memory --approval-file /绝对路径/approval.json
    ```
 
-   执行批准时不混入 `--agent`、`--selection`、`--proposal-file`；HOME、来源、公共正文和入口漂移均使旧批准失效。顺序为公共完整原文→全部原生入口→核验→精确删源，复用同一 Transaction 备份/恢复。完全同字节的同组来源可共用一份公共正文，每处来源、位置和次数仍在 manifest 顶层可选 `operation_metadata` 中逐处记录；格式变体逐份保留。原文不摘要替换。条目之间只补足一个空行，原生剩余字节不重排。
+   执行批准时不混入 `--agent`、`--selection`、`--proposal-file`；HOME、来源、公共正文和入口漂移均使旧批准失效。顺序为公共完整原文→全部原生入口→核验→精确删源，复用同一 Transaction 备份/恢复。同语境且完全同字节的同组来源可共用一份公共正文，每处来源、位置和次数仍在 manifest 顶层可选 `operation_metadata` 中逐处记录；格式变体逐份保留。原文不摘要替换。条目之间只补足一个空行，原生剩余字节不重排。
 
 脚本输出 JSON；退出码 0 为本命令完成/只读查看，5 为待最终批准，2 为失败或需恢复。`--home /绝对临时HOME` 仅用于隔离合成验证，不能把真实用户操作悄悄转到别处。静态入口核验与真实新会话读取分别报告。
 
@@ -74,3 +74,11 @@ python3 -B scripts/memory_share.py recover-memory-share --manifest /当前HOME/.
 | 旧迁移、staging、旧卸载恢复 | 按[模块去向评审](docs/retrospectives/2026-11-03-module-disposition-review.md)读取对应兼容文档；不删除未知备份或绕过恢复门禁。 |
 
 项目经历由 Context Keeper 独立管理，记录库、协议及上游源码不参与本流程。AGENTS 项目基座和有效原生项目桥接按既有治理保留。未经单独授权，不提交、推送、安装、卸载或修改真实宿主。
+
+## 原生入口与增量接入
+
+Codex、Claude Code 的原生 `skills/mem-sharing/SKILL.md` 由安装器按选择补齐，读取持久安装核心；记忆引用本身不等于 Skill 可发现。新增 Agent 先补入口且保留其原文，再独立预览并批准增量整理；已有公共同语境同字节正文复用，不重复搬入旧 Agent 内容。已接入 Agent 重装零写，不再提示融合。任意入口提出卸载均走同一全机卸载核心，处理全部受管 Agent；不存在仅卸载当前 Agent 的产品分支。
+
+## 项目接入触发
+
+仅用户明确要求接入项目时执行项目接入流程；进入 Git 目录本身不授权创建 AGENTS.md、项目经历协议或其他入口。历史 disabled 登记不自动恢复，按执行合同预览并确认重新接入计划。新装公共记忆不生成菜单或《使用约定》主题；操作与卸载只按本 Skill 和按需合同执行。

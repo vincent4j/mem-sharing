@@ -284,7 +284,9 @@ def _verify_backups(runtime, ledger):
         if recovery.snapshot(manifest)['kind']!='file':
             raise recovery.Conflict('Unknown backup directory: '+str(directory))
         receipt = json.loads(manifest.read_text())
-        registry._keys(receipt,'schema_version operation status registry_path created_directories entries error','transaction backup')
+        registry._keys(receipt,'schema_version operation status registry_path created_directories entries error'+(' operation_metadata' if 'operation_metadata' in receipt else '')+(' phased_writes' if 'phased_writes' in receipt else ''),'transaction backup')
+        if 'operation_metadata' in receipt and not isinstance(receipt['operation_metadata'], dict):
+            raise recovery.Conflict('Invalid transaction metadata')
         if receipt['schema_version']!=1 or receipt['status'] not in ('committed','rolled_back'):
             raise recovery.Conflict('Pending/unknown transaction backup')
         expected = {'manifest.json'}
@@ -762,12 +764,25 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
     changes = {}
     original = uninstall_memory.public_sources(runtime)
     active = None
-    public_body = uninstall_memory.public_body(runtime, original)
+    native_targets = {paths.expand_path(data['user_entry'],home=str(runtime.home)) for data in config.values()}
+    source_restored, residual_public = uninstall_memory.source_returns(runtime, original, native_targets)
+    public_body = uninstall_memory.public_body(runtime, residual_public)
     fusion_scoped_return = bool(uninstall_memory.fusion_generated_units(runtime, original))
     _, controls, observed = policy_migration.retire_controls(ledger)
     for path, raw in controls.items():
         _change(changes,path,_file(raw,recovery.snapshot(path)['mode']),'detach')
     units = list(ledger['machine']['objects'].values()) + list(ledger['shared_objects'].values())
+    # Native Skill launchers are exact owned files, distinct from user prose.
+    for oid, obj in ledger['machine']['objects'].items():
+        if not oid.endswith('#native-skill'):
+            continue
+        path = Path(obj['path'])
+        expected = runtime.home / ('.codex' if obj['agents'] == ['codex'] else '.claude') / 'skills/mem-sharing/SKILL.md'
+        state = recovery.snapshot(path)
+        if (path != expected or obj['kind'] != 'file' or obj['ownership'] != 'created'
+                or state['kind'] != 'file' or recovery.digest(bytes.fromhex(state['hex'])) != obj['fingerprint']['value']):
+            raise recovery.Conflict('Native Skill ownership/drift: ' + str(path))
+        _change(changes, path, {'kind': 'absent'}, 'detach')
     connected = set()
     user_paths = {agent: Path(paths.expand_path(data['user_entry'],home=str(runtime.home))) for agent,data in config.items()}
     observations = dict(extras)
@@ -833,6 +848,13 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
                 # Validate against original bytes before removing fallback units.
                 continue
             raw = _without_object(raw,obj)
+        if str(path) in source_restored:
+            restored_raw = source_restored[str(path)]
+            # Strip the same verified pointer units from the restored composition.
+            for obj in own_units:
+                if obj['kind'] != 'import' and not _preserve_ck(obj,roots,restored_raw):
+                    restored_raw = _without_object(restored_raw,obj)
+            raw = restored_raw
         if imports and imports[0]['ownership']=='reused':
             token=('@'+str(runtime.root/'memories/MEMORY.md')).encode()
             raw=raw.replace(token,b'',1)

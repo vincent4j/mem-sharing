@@ -182,7 +182,8 @@ class MemoryShareChainTests(unittest.TestCase):
                                   '\n- 修改后运行相关测试。\n'
                                   '\n* 修改后运行相关测试。\n'
                                   '\n'
-                                  '- 提交信息使用中文。\n').encode())
+                                  '- 提交信息使用中文。\n'
+                                  '\n- 提交信息使用中文。\n').encode())
         # 每处来源→公共段可逐字节回验；同字节一份、格式变体逐份
         records = share['migrations']
         self.assertEqual(len(records), 7)
@@ -304,14 +305,17 @@ class MemoryShareChainTests(unittest.TestCase):
         second_alt = self.codex.read_text().index('# 备选', 10)
         anchor = codex_now.index('- 只走空运。\n'.encode()) + len('- 只走空运。\n'.encode())
         first_alt_anchor = codex_now.index('- 只走海运。\n'.encode()) + len('- 只走海运。\n'.encode())
+        alt_first_span = span('- 提交信息使用中文。\n')
+        alt_second_start = public_bytes.index('- 提交信息使用中文。\n'.encode(), alt_first_span['end'])
+        alt_second_span = dict(alt_first_span, start=alt_second_start, end=alt_second_start + len('- 提交信息使用中文。\n'.encode()))
         items += [
             {'ref': Path(outcome['manifest']).parent.name,
              'migration': records.index(alt_records[1]),
-             'public_span': span('- 提交信息使用中文。\n'),
+             'public_span': alt_second_span,
              'target': {'path': str(self.codex), 'mode': 'insert_at', 'insert_at': anchor}},
             {'ref': Path(outcome['manifest']).parent.name,
              'migration': records.index(alt_records[2]),
-             'public_span': span('- 提交信息使用中文。\n'),
+             'public_span': alt_second_span,
              'target': {'path': str(self.codex), 'mode': 'insert_at', 'insert_at': anchor}},
             {'ref': Path(outcome['manifest']).parent.name,
              'migration': records.index(alt_records[0]),
@@ -369,7 +373,7 @@ class MemoryShareChainTests(unittest.TestCase):
         self.assertNotIn(b'\n@', claude_final)
         self.assertFalse(claude_final.strip().startswith(b'@'))
         # 公共只剩保留项
-        self.assertEqual(self.topic.read_bytes(), '# 用户记忆\n\n\n\n\n'.encode())
+        self.assertEqual(self.topic.read_bytes(), '# 用户记忆\n\n\n\n\n\n'.encode())
         # 双重归还被拒；未迁移的独有内容没有归还记录可引用
         agent_plan['basis'] = {str(self.topic): ms.entries.sha256(self.topic.read_bytes())}
         again = ms.run_return(dict(self.req, return_plan=agent_plan))

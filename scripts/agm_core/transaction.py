@@ -410,7 +410,7 @@ class Transaction:
 def _recovery_entries(transaction, manifest_path, manifest):
     """Validate every backup and complete per-path chain before any restore."""
     phased = manifest.get('phased_writes', False)
-    if type(phased) is not bool or (phased and (manifest.get('operation') not in ('organize-user-rules', 'share-user-memory') or manifest.get('registry_path') is not None)):
+    if type(phased) is not bool or (phased and (manifest.get('operation') not in ('organize-user-rules', 'share-user-memory', 'share-project-memory') or manifest.get('registry_path') is not None)):
         raise TransactionError('invalid phased recovery scope')
     chains = {}; unattempted = False
     for entry in manifest['entries']:

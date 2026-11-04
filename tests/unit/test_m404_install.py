@@ -79,7 +79,7 @@ class InstallTests(InstallFixture):
 
     def test_fresh_structure_code_C_and_no_fake_project_consumers(self):
         result=self.execute();self.assertEqual(result['status'],'completed')
-        for rel in ('memories/topics','references','backups','var'):
+        for rel in ('memories','references','backups','var'):
             self.assertTrue((self.runtime.root/rel).is_dir(),rel)
         # v1.11:R 不建 skills/、mcp/。
         for rel in ('skills','mcp'):
@@ -105,7 +105,7 @@ class InstallTests(InstallFixture):
         self.assertIn(user_entries.CODEX_FALLBACK_TEXT,body)
         self.assertNotIn(user_entries.GOVERNANCE_RULES_TEXT,body)
         self.assertNotIn('/mem-sharing 菜单',body)
-        self.assertFalse((self.home/'.codex/skills').exists())
+        self.assertTrue((self.home/'.codex/skills/mem-sharing/SKILL.md').is_file())
         self.assertFalse((self.home/'.claude').exists());self.assertFalse((self.home/'.workbuddy').exists())
         data=registry.load_registry(self.runtime.registry,allowed_user_paths=paths.allowed_user_paths(self.config,None,home=str(self.home)))
         self.assertTrue(data['machine']['objects'])

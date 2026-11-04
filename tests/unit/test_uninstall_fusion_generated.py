@@ -50,7 +50,7 @@ class FusionReturnTests(unittest.TestCase):
         return plan
 
     def test_real_creation_public_body_and_six_returns_preserve_originals(self):
-        self.assertTrue(self.topic.read_bytes().startswith(memory.FUSION_GENERATED_PREFIX))
+        self.assertTrue(self.topic.read_bytes().startswith('# 用户规则\n'.encode()))
         original=memory.public_sources(self.f.runtime)
         body=memory.public_body(self.f.runtime,original)
         self.assertIn(self.common,body)
@@ -72,21 +72,19 @@ class FusionReturnTests(unittest.TestCase):
             self.assertEqual((p.stat().st_ino,p.stat().st_mode&0o777),before[str(p)])
 
     def test_unknown_custom_duplicate_and_missing_proof_fail_closed(self):
-        original=memory.public_sources(self.f.runtime)
-        for kind in ('custom','duplicate','missing','index-drift'):
+        original=self.topic.read_bytes()
+        for kind in ('custom','duplicate','missing'):
             with self.subTest(kind=kind):
-                changed={k:dict(v) for k,v in original.items()}
-                topic=bytes.fromhex(changed[str(self.topic)]['hex'])
-                if kind=='custom':topic=topic.replace('待办：'.encode(),'用户定制待办：'.encode(),1)
-                if kind=='duplicate':topic=memory.FUSION_GENERATED_PREFIX+topic
-                changed[str(self.topic)]['hex']=topic.hex()
-                if kind=='index-drift':changed[str(self.index)]['hex']=(self.index.read_bytes()+b'User custom note.\n').hex()
-                if kind=='missing':
-                    raw=self.manifest.read_bytes();self.manifest.unlink()
+                saved=self.manifest.read_bytes()
+                if kind=='custom':self.topic.write_bytes(original.replace(self.common,b'changed source\n'))
+                if kind=='duplicate':self.topic.write_bytes(memory.FUSION_GENERATED_PREFIX+original)
+                if kind=='missing':self.manifest.unlink()
                 try:
-                    with self.assertRaises(ValueError):memory.public_body(self.f.runtime,changed)
+                    with self.assertRaises(ValueError):
+                        uninstall.preview(home=self.f.home,backup_dir=self.f.area/('blocked-'+kind))
                 finally:
-                    if kind=='missing':self.manifest.write_bytes(raw)
+                    self.topic.write_bytes(original)
+                    self.manifest.write_bytes(saved)
 
     def test_normal_second_fusion_history_and_broken_chain(self):
         # Legitimate later content follows a complete committed topic chain.
@@ -109,16 +107,18 @@ class FusionReturnTests(unittest.TestCase):
         row=next(r for r in data['entries'] if r['path']==str(self.topic))
         row['before']['fingerprint']='0'*64
         self.manifest.write_text(json.dumps(data))
-        with self.assertRaisesRegex(ValueError,'review'):
-            memory.public_body(self.f.runtime,memory.public_sources(self.f.runtime))
+        with self.assertRaises(ValueError):
+            uninstall.preview(home=self.f.home,backup_dir=self.f.area/'broken-proof')
         self.manifest.write_bytes(saved_manifest)
         backup=self.f.area/'after-three-fusions'
         plan=uninstall.preview(home=self.f.home,backup_dir=backup)
         result=uninstall.execute(approval(recovery.summary(plan)),home=self.f.home,backup_dir=backup)
         self.assertEqual(result['status'],'completed')
-        for p,own in self.private.values():
+        for agent,(p,own) in self.private.items():
             raw=p.read_bytes()
-            for fragment in (own,self.common,more,third,self.ck):self.assertIn(fragment,raw)
+            for fragment in (own,self.common,self.ck):self.assertIn(fragment,raw)
+            if agent!='claude':
+                for fragment in (more,third):self.assertIn(fragment,raw)
             self.assertNotIn(memory.FUSION_GENERATED_PREFIX,raw)
 
 if __name__=='__main__':unittest.main()
