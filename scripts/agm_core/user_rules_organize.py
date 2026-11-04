@@ -619,21 +619,24 @@ run=run_organize
 def present(plan, *, summaries=None):
     """Display projection only; caller captions never enter the approved plan.
 
-    An outer Agent must read full sources.text and supply a semantic sentence per
-    number, preserving both groups and the complete interaction instructions.
-    Without an Agent, use an honest placeholder rather than a raw first line.
+    An outer Agent supplies semantic summaries after reading full sources.text.
+    The CLI fallback is explicitly a faithful source excerpt, never an invented
+    semantic decision; full text remains available through read-only view.
     """
     summaries = summaries or {}
     lines = ['已找到 %d 个参与者/独立来源，本次融合尚未修改记忆内容。' % (len({i['source'] for i in plan['items']}) if plan['scope']=='project' else len(plan['agents']))]
-    for label, numbers in [('默认共享', plan['default_numbers']), ('由你选择是否共享', plan['optional_numbers'])]:
+    pending = set(plan['optional_numbers']) | set(plan['single_numbers'])
+    for label, numbers in [('默认共享', plan['default_numbers']), ('由你选择是否共享', pending)]:
         lines += ['', label]
         if not numbers: lines.append('暂无。')
         for group in plan['groups']:
             if group['number'] in numbers:
-                caption = summaries.get(group['number'], '记忆条目 %d（查看 %d 可读完整原文）' % (group['number'], group['number']))
+                excerpt = ' '.join(group['sources'][0]['text'].split())
+                caption = summaries.get(group['number']) or ('原文摘录：'+excerpt[:160]+('…' if len(excerpt)>160 else ''))
                 names = {'codex':'Codex','claude':'Claude Code','workbuddy':'WorkBuddy','dsh':'DSH','zcode':'ZCode','opencode':'OpenCode'}
                 agents = sorted({a for item in group['sources'] for a in item['agents']})
-                lines.append('%d. %s（%s）' % (group['number'], caption, '、'.join(names.get(a,a) for a in agents)))
+                suffix = '；单家内容，默认不共享' if group['number'] in plan['single_numbers'] else ''
+                lines.append('%d. %s（%s%s）' % (group['number'], caption, '、'.join(names.get(a,a) for a in agents), suffix))
     lines += ['', '请告诉我你的选择（以下序号仅为输入示例，以本次实际编号为准）：',
               '- 3、4：保留默认项，并共享待选项 3、4。',
               '- 不共享 2：排除默认项 2。',
@@ -641,7 +644,6 @@ def present(plan, *, summaries=None):
               '- 按默认方案：只选默认项，不增加待选项。',
               '- 查看 3：只读查看完整原文及来源，不选择、不修改。',
               '也可暂不整理。选定后展示最终修改清单，确认后才执行。独有和未选内容保留。']
-    if plan['single_numbers']: lines.append('单家内容默认留原处，可查看或明确指定共享：'+str(plan['single_numbers']))
     return '\n'.join(lines)
 
 

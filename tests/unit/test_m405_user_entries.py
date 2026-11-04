@@ -328,6 +328,15 @@ class UserEntryFixture(unittest.TestCase):
         self.assertIn('L0 恒读本索引',user_entries.LEGACY_RUNTIME_CONTRACT)
         self.assertIn('/mem-sharing 菜单',user_entries.legacy_usage_convention_topic_text('/opt/code'))
         self.assertEqual(user_entries.CODEX_FALLBACK_TEXT,'')
+        self.assertEqual(user_entries.DSH_FALLBACK_TEXT,'')
+        self.assertEqual(user_entries.OPENCODE_FALLBACK_TEXT,'')
+        skill = (REPO/'SKILL.md').read_text()
+        self.assertIn('DSH_HOME 重定向 DSH 用户规则根时拒绝', skill)
+        self.assertIn('XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/OPENCODE_CONFIG', skill)
+        for agent in ('codex', 'dsh', 'zcode', 'opencode'):
+            self.assertEqual(user_entries.native_public_source_block(agent, '/shared/MEMORY.md'),
+                             user_entries._wrap_block(user_entries.BASE_MARKER,
+                                                      user_entries.public_read_text('/shared/MEMORY.md')))
 
     def test_claude_project_details_live_in_skill_not_user_fallback(self):
         skill = (REPO/'SKILL.md').read_text()

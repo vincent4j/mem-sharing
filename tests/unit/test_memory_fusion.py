@@ -66,6 +66,22 @@ class FusionTests(unittest.TestCase):
         self.files[2].write_bytes(b'\xff')
         p=self.plan(); self.assertTrue(p['unknown_sources']);self.assertEqual(p['default_numbers'],[])
 
+    def test_single_items_visible_under_pending_with_stable_numbers_and_view_zero_write(self):
+        self.agents[:] = ['codex']
+        self.files[0].write_text('# 约定\n\n- 忠实的单家偏好。\n')
+        plan = self.plan()
+        text = org.present(plan)
+        self.assertIn('由你选择是否共享\n1.', text)
+        self.assertIn('原文摘录：- 忠实的单家偏好。', text)
+        self.assertIn('单家内容，默认不共享', text)
+        self.assertEqual(plan['selected_numbers'], [])
+        before = {str(p): (p.read_bytes(), p.stat().st_mtime_ns) for p in self.home.rglob('*') if p.is_file()}
+        viewed = org.plan_organize(dict(self.req, selection='查看 1'))
+        self.assertEqual(viewed['status'], 'viewed')
+        self.assertEqual(viewed['changes'], [])
+        self.assertEqual(viewed['approval_plan']['groups'], plan['groups'])
+        self.assertEqual({str(p): (p.read_bytes(), p.stat().st_mtime_ns) for p in self.home.rglob('*') if p.is_file()}, before)
+
     def test_scope_punctuation_and_exclusive_protection(self):
         self.files[1].write_text('# 不同范围\n- 提交信息使用中文。\n')
         self.files[2].write_text('# 约定\n- 提交信息不使用中文。\n')

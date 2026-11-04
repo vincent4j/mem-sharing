@@ -23,7 +23,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agm_core import detect, legacy_import as legacy, migrate, paths, registry
-from agm_core import upgrade, user_entries, user_install, ck_install, public_layout, plugin_release
+from agm_core import upgrade, user_entries, user_install, ck_install, public_layout, plugin_release, versions
 
 OFFICIAL = 'https://github.com/vincent4j/mem-sharing'
 LEGACY_OFFICIAL = 'https://github.com/vincent4j/agent-group-memory'  # 远程改名前的旧 URL,仍视作官方来源
@@ -123,6 +123,21 @@ def active_source(home):
     user_install._code_matches(runtime, product)
     destination = runtime.home/'.local/share/mem-sharing-sources'/product['product_code_version']/product['source']['tree_sha256']
     user_install._real_chain(destination, runtime.home)
+    if not os.path.lexists(destination):
+        # Direct-checkout installs already retain a sealed version inventory.
+        # Reuse verified active bytes; never invent a plugin export receipt.
+        marker = _json(runtime.code/'.agm-code-manifest.json')
+        source = dict(root=str(runtime.code), url=product['source']['url'],
+                      commit=product['source']['commit'], version=product['product_code_version'],
+                      files={item['path']: item['sha256'] for item in marker['files']})
+        checked, files = user_install._source({'source': source})
+        if {k: checked[k] for k in ('url', 'commit', 'tree_sha256')} != product['source']:
+            raise InstallError('Active source differs from registered fixed identity', 'source_drift')
+        try:
+            versions.verify(runtime, versions.descriptor(runtime, checked, files))
+        except ValueError as exc:
+            raise InstallError('Registered source inventory unavailable or drifted: '+str(exc), 'source_drift') from None
+        return source
     manifest = plugin_release._read_manifest(destination/'release.json')
     if (manifest['source']['version'] != product['product_code_version'] or
             {k: manifest['source'][k] for k in ('url','commit','tree_sha256')} != product['source']):

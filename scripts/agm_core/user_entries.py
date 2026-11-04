@@ -120,13 +120,13 @@ CODEX_FALLBACK_TEXT = ""
 # 项目根 AGENTS.md(rule_mode=native),用户入口分别是 ~/.dsh/AGENTS.md 与
 # ~/.zcode/AGENTS.md。兜底文本各写自身执行器称谓,不复用 CODEX_FALLBACK_TEXT,
 # 迁移/连接校验按块内语义精确区分执行器。
-DSH_FALLBACK_TEXT = "DSH_HOME 重定向用户规则根时停止接入；不回显环境变量值。"
+DSH_FALLBACK_TEXT = ""
 ZCODE_FALLBACK_TEXT = ""
 # OpenCode v2(2026-11-01 接入):v2 只识别 AGENTS.md(不再回退 CLAUDE.md),默认
 # 配置根 ~/.config/opencode。规则加载受 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/
 # OPENCODE_CONFIG 影响的完整语义未获源码证实,第一版 default-root-only:配置根
 # 被重定向或覆盖时不接入(见 opencode_config_redirected)。
-OPENCODE_FALLBACK_TEXT = "配置被 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/OPENCODE_CONFIG 重定向或覆盖时停止接入；不回显环境变量值。"
+OPENCODE_FALLBACK_TEXT = ""
 
 NATIVE_FALLBACK_TEXTS = {"codex": CODEX_FALLBACK_TEXT, "dsh": DSH_FALLBACK_TEXT,
                          "zcode": ZCODE_FALLBACK_TEXT, "opencode": OPENCODE_FALLBACK_TEXT}

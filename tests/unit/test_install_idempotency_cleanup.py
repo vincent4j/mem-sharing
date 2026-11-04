@@ -1,10 +1,14 @@
 """Selected native Skill distribution and six-source dedup; isolated HOME only."""
 import json
+import os
+import shutil
+import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import patch
 from test_m404_install import InstallFixture, approved
 from test_m408_installer import cli
-from runtime_fixture import seed_project_executors
+from runtime_fixture import seed_project_executors, CLI_DETECTION_BOOTSTRAP
 from agm_core import detect, paths, user_rules_organize as fusion, memory_share as share
 from agm_core import uninstall, uninstall_recovery as recovery, user_entries
 from test_uninstall import approval
@@ -14,6 +18,59 @@ class InstallCleanupTests(InstallFixture):
     def tree(self, root):
         return {str(p.relative_to(root)): (p.read_bytes(), p.stat().st_mtime_ns)
                 for p in root.rglob('*') if p.is_file()}
+
+    def test_direct_source_installed_noargs_reuses_verified_inventory(self):
+        self.request.update(seed_project_executors(self.home))
+        (Path(self.request['search_paths'][0])/'claude').unlink()
+        shutil.rmtree(self.home/'Applications')
+        self.request['agents'] = ['codex']
+        self.execute()
+        env = dict(os.environ, HOME=str(self.home), PATH=self.request['search_paths'][0])
+        command = [sys.executable, '-B', '-c', CLI_DETECTION_BOOTSTRAP, str(self.runtime.code/'scripts/install.py')]
+        before = self.tree(self.home)
+        run = subprocess.run(command, env=env, capture_output=True, text=True)
+        result = json.loads(run.stdout)
+        self.assertEqual(run.returncode, 0, result)
+        self.assertEqual(result['message'], '已安装，已接入。')
+        self.assertEqual(result['changes'], [])
+        self.assertEqual(self.tree(self.home), before)
+        self.assertFalse((self.home/'.claude/skills/mem-sharing/SKILL.md').exists())
+        # The retained inventory is actual provenance, not a forged export.
+        self.assertFalse((self.home/'.local/share/mem-sharing-sources').exists())
+        from agm_core import versions
+        slot = versions.root(self.runtime)
+        receipt = next(slot.rglob('complete.json'))
+        original_receipt = receipt.read_bytes()
+        receipt.chmod(0o600); receipt.write_text('{}')
+        before = self.tree(self.home)
+        run = subprocess.run(command, env=env, capture_output=True, text=True)
+        self.assertEqual(run.returncode, 2)
+        self.assertIn('inventory', json.loads(run.stdout)['errors'][0]['message'])
+        self.assertEqual(self.tree(self.home), before)
+        receipt.write_bytes(original_receipt); receipt.chmod(0o400)
+        # A present broken export must never silently fall back to C/inventory.
+        product = json.loads(self.runtime.registry.read_text())['product']
+        export = self.home/'.local/share/mem-sharing-sources'/product['product_code_version']/product['source']['tree_sha256']
+        export.mkdir(parents=True)
+        before = self.tree(self.home)
+        run = subprocess.run(command, env=env, capture_output=True, text=True)
+        self.assertEqual(run.returncode, 2)
+        self.assertEqual(json.loads(run.stdout)['errors'][0]['code'], 'release_invalid')
+        self.assertEqual(self.tree(self.home), before)
+        export.rmdir()
+        # Reusing C is never permission to use it as a different release target.
+        from agm_core import upgrade
+        target = dict(self.request['source'], root=str(self.runtime.code), version='0.4.1')
+        before = self.tree(self.home)
+        with self.assertRaisesRegex(ValueError, 'identical installed release'):
+            upgrade.plan_upgrade(dict(self.request, source=target))
+        self.assertEqual(self.tree(self.home), before)
+        code_file = self.runtime.code/'SKILL.md'
+        code_file.write_bytes(code_file.read_bytes()+b'\ndrift\n')
+        before = self.tree(self.home)
+        run = subprocess.run(command, env=env, capture_output=True, text=True)
+        self.assertEqual(run.returncode, 2)
+        self.assertEqual(self.tree(self.home), before)
 
     def test_short_claude_route_repeat_and_uninstall_preview(self):
         self.request.update(seed_project_executors(self.home))

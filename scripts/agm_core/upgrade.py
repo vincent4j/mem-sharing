@@ -325,7 +325,8 @@ def _plan(request, *, allow_marker=False):
         if saved.get('product_id')!=PRODUCT or saved.get('status') not in ('committed','rolled_back'):
             _fail('Pending operation requires explicit recovery','recovery_required')
     source, files = _source(request, runtime)
-    if Path(source['root']).is_relative_to(runtime.code) or Path(source['root']).is_relative_to(runtime.root):
+    active_source = Path(source['root']) == runtime.code
+    if not active_source and (Path(source['root']).is_relative_to(runtime.code) or Path(source['root']).is_relative_to(runtime.root)):
         _fail('Source overlaps managed runtime')
     target = versions.descriptor(runtime, source, files)
     allowed = paths.allowed_user_paths(request['platform_config'], None, home=str(runtime.home))
@@ -348,6 +349,10 @@ def _plan(request, *, allow_marker=False):
         old_source = dict(old_product['source'], version=old_product['product_code_version'])
         old_inventory = versions.descriptor(runtime, old_source, meta['files'])
         noop = old_inventory == target
+        if active_source:
+            if not noop:
+                _fail('Active code can only be reused for the identical installed release')
+            versions.verify(runtime, target)
         if direction == 'rollback' and noop: _fail('Already at requested rollback version')
         if direction == 'rollback' and not versions.installed_before(runtime, target):
             _fail('Rollback target has no verified successful installation receipt')
