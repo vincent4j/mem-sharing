@@ -3,6 +3,7 @@ import copy
 import io
 import json
 import os
+import plistlib
 import subprocess
 import sys
 from pathlib import Path
@@ -85,7 +86,27 @@ class CKInstallTests(InstallFixture):
         plan=plan or self.plan_ck()
         return ck.execute_context_keeper(plan,approved(plan),request=self.request,**kwargs)
 
+    def installed_evidence(self, agents):
+        for agent in agents:
+            signal = next((s for s in self.config[agent]['installation_signals'] if s['kind']=='macos_app_bundle'), None)
+            if signal is None:
+                signal = next(s for s in self.config[agent]['installation_signals'] if s['kind']=='path_executable')
+                package = self.area/('installed-'+agent); (package/'bin').mkdir(parents=True,exist_ok=True)
+                executable = package/'bin'/signal['executable']; executable.write_text('#!/bin/sh\n'); executable.chmod(0o755)
+                (package/'package.json').write_text(json.dumps({'name':signal['package_name'],'version':'1.0.0','bin':{agent:'bin/'+agent}}))
+                self.request['search_paths'].append(str(package/'bin'))
+                continue
+            bundle = self.home/'Applications'/signal['bundle_name']
+            exe = signal['bundle_name'][:-4]
+            (bundle/'Contents/MacOS').mkdir(parents=True, exist_ok=True)
+            (bundle/'Contents/Info.plist').write_bytes(plistlib.dumps({
+                'CFBundleName':signal['product_name'], 'CFBundleDisplayName':signal['product_name'], 'CFBundleExecutable':exe,
+                'CFBundleIdentifier':'ai.opencode.desktop' if agent=='opencode' else 'fixture.'+agent,
+                'CFBundleShortVersionString':'1.0.0', 'CFBundleVersion':'1.0.0'}))
+            path=bundle/'Contents/MacOS'/exe; path.write_text('#!/bin/sh\n'); path.chmod(0o755)
+
     def connect_desktops(self):
+        self.installed_evidence(('dsh','zcode','opencode'))
         facts = detect.detect_agents(self.config, None, home=str(self.home),
             search_paths=self.request['search_paths'], app_directories=[])
         for agent in ('dsh', 'zcode', 'opencode'):
@@ -115,10 +136,13 @@ class CKInstallTests(InstallFixture):
         self.assertEqual(result['skipped_upstream_agents'], skipped)
         for a, raw in private.items():
             self.assertEqual((Path(paths.expand_path(self.config[a]['user_entry'], home=str(self.home)))).read_bytes(), raw)
-            self.assertFalse((self.home/('.'+a)/'skills').exists())
+            self.assertFalse((self.home/('.'+a)/'skills/context-keeper').exists())
 
     def test_desktop_only_ck_skip_never_invokes_upstream_or_changes_product(self):
         self.connect_desktops()
+        (Path(self.request['search_paths'][0])/'codex').unlink()
+        import shutil
+        (Path(self.request['search_paths'][0])/'git').symlink_to(shutil.which('git'))
         data = json.loads(self.runtime.registry.read_bytes())
         data['machine']['agents'].pop('codex')
         data['machine']['objects'] = {k:v for k,v in data['machine']['objects'].items() if 'codex' not in v['agents']}
@@ -130,7 +154,7 @@ class CKInstallTests(InstallFixture):
         self.assertEqual(stopped.exception.code, 'ck_no_supported_agents')
         self.assertEqual(self.snapshot(), before)
         output = io.StringIO()
-        result = ck.tail({'status': 'completed'}, self.request, stdin=TTY('\n'), stderr=output)
+        result = ck.tail({'status': 'completed'}, self.request, stdin=TTY('安装\n'), stderr=output)
         self.assertEqual(result['status'], 'completed')
         self.assertEqual(result['context_keeper']['status'], 'skipped')
         self.assertEqual(result['context_keeper']['reason'], 'upstream_unsupported')
@@ -141,16 +165,17 @@ class CKInstallTests(InstallFixture):
         from test_m408_installer import cli
         from contextlib import redirect_stdout
         output = io.StringIO()
-        with patch.dict(os.environ, HOME=str(self.home)), redirect_stdout(output):
+        with patch.dict(os.environ, HOME=str(self.home), PATH=os.pathsep.join(self.request['search_paths'])), patch.object(detect,'STANDARD_APP_DIRECTORIES',()), redirect_stdout(output):
             code = cli.main(['--context-keeper'])
-        self.assertEqual(code, 0)
+        self.assertEqual(code, 0, output.getvalue())
         result = json.loads(output.getvalue())
         self.assertEqual(result['status'], 'skipped')
         self.assertEqual(result['reason'], 'upstream_unsupported')
         self.assertEqual([x['agent'] for x in result['skipped_upstream_agents']], ['dsh', 'zcode', 'opencode'])
         self.assertEqual(self.snapshot(), before)
 
-    def test_no_connected_agent_keeps_missing_agent_error(self):
+    def test_no_installed_agent_keeps_missing_agent_error(self):
+        (Path(self.request['search_paths'][0])/'codex').unlink()
         data = json.loads(self.runtime.registry.read_bytes())
         data['machine'] = {'agents': {}, 'objects': {}}
         self.runtime.registry.write_bytes(registry.serialize_registry(data,
@@ -207,6 +232,7 @@ class CKInstallTests(InstallFixture):
         private = b"my private rules\r\n"
         entry.write_bytes(private)
         remember_mode(self, entry)
+        self.installed_evidence(('claude','workbuddy'))
         facts=detect.detect_agents(self.config,None,home=str(self.home),
             search_paths=self.request['search_paths'],app_directories=[])
         for agent in ('claude','workbuddy'):
@@ -425,10 +451,10 @@ class CKInstallTests(InstallFixture):
 
     def test_missing_source_still_has_positive_question_and_safe_next_action(self):
         out=io.StringIO();before=self.snapshot()
-        result=ck.tail({'status':'completed'},self.request,stdin=TTY('\n'),stderr=out)
+        result=ck.tail({'status':'completed'},self.request,stdin=TTY('安装\n'),stderr=out)
         self.assertEqual(result['status'],'completed')
         self.assertEqual(result['context_keeper']['status'],'unavailable')
-        self.assertIn('与本产品出自同一作者',out.getvalue())
+        self.assertNotIn('同一作者',out.getvalue())
         self.assertIn('--context-keeper --ck-source',result['context_keeper']['next_action'])
         self.assertEqual(before,self.snapshot())
 
@@ -441,7 +467,7 @@ class CKInstallTests(InstallFixture):
         entry=(self.home/'.codex/AGENTS.md').read_bytes()
         with patch.object(ck,'discover_source',return_value=str(self.cksource)),patch.object(
                 ck,'execute_context_keeper',side_effect=lambda p,a,**kw:original(p,a,runner=runner,**kw)):
-            result=ck.tail({'status':'completed'},self.request,stdin=TTY('\n'),stderr=io.StringIO())
+            result=ck.tail({'status':'completed'},self.request,stdin=TTY('安装\n'),stderr=io.StringIO())
         self.assertEqual(result['status'],'completed')
         self.assertEqual(result['context_keeper']['status'],'unknown')
         self.assertEqual(raw,self.runtime.registry.read_bytes())
@@ -486,24 +512,24 @@ class CKInstallTests(InstallFixture):
         self.assertEqual(result['status'],'unknown',result)
         self.assertTrue(self.runtime.registry.exists())
 
-    def test_tty_eof_spaces_n_skip_and_only_newline_consents(self):
+    def test_tty_eof_spaces_skip_and_only_install_consents(self):
         plan=self.plan_ck()
-        for value in ('','n\n',' \n','yes\n'):
+        for value in ('','n\n',' \n','yes\n','\n','跳过\n'):
             with self.subTest(value=value),patch.object(ck,'plan_context_keeper',return_value=plan),patch.object(ck,'execute_context_keeper',side_effect=AssertionError('must not write')):
                 result=ck.tail({'status':'completed'},self.request,stdin=TTY(value),stderr=io.StringIO())
                 self.assertEqual(result['context_keeper']['status'],'skipped')
-        for value in ('\n','\r\n'):
+        for value in ('安装\n','安装\r\n'):
             with self.subTest(value=value),patch.object(ck,'plan_context_keeper',return_value=plan),patch.object(ck,'execute_context_keeper',return_value={'status':'configured'}) as execute:
                 err=io.StringIO();result=ck.tail({'status':'completed'},self.request,stdin=TTY(value),stderr=err)
                 self.assertEqual(result['context_keeper']['status'],'configured')
-                self.assertIn('与本产品出自同一作者',err.getvalue());execute.assert_called_once()
-                self.assertLess(err.getvalue().index('已创建用户记忆中枢'),err.getvalue().index(ck.PROMPT))
+                self.assertNotIn('同一作者',err.getvalue());execute.assert_called_once()
+                self.assertLess(err.getvalue().index('公共用户记忆流程已结束'),err.getvalue().index('为了让 Agent'))
                 self.assertIn('Codex',err.getvalue())
         with patch.object(ck,'plan_context_keeper',side_effect=AssertionError('non TTY is zero work')):
             result=ck.tail({'status':'completed'},self.request,stdin=io.StringIO('\n'),stderr=io.StringIO())
             self.assertEqual(result['context_keeper']['reason'],'non_interactive')
         with patch.object(ck,'plan_context_keeper',side_effect=AssertionError('main is incomplete')):
-            self.assertNotIn('context_keeper',ck.tail({'status':'partial'},self.request,stdin=TTY('\n')))
+            self.assertNotIn('context_keeper',ck.tail({'status':'partial'},self.request,stdin=TTY('安装\n')))
 
     def test_rule_verifier_handles_existing_blocks_and_workbuddy_relocation(self):
         for agent in ('codex','claude','workbuddy'):

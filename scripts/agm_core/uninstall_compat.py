@@ -104,57 +104,6 @@ def verify_upgrade_backup(runtime, directory):
 
 
 
-def redirect_dsh_reference(runtime, path, original, detached, mode, index, changes, active, own_units):
-    """Explicit user-text conversion, never an ownership/import inference.
-
-    Only one exact path token on the existing standalone read-contract line;
-    retain every other byte after normal proven-unit detachment.
-    """
-    from . import entries
-    old=str(runtime.root/'memories/MEMORY.md').encode();new=str(index).encode()
-    if (not old or detached.count(old)!=1 or path.parent/'memsharing-return/memories/MEMORY.md'!=index):
-        raise recovery.Conflict('DSH reference is missing, ambiguous or targets a different return')
-    offset=detached.index(old);line_start=detached.rfind(b'\n',0,offset)+1
-    if (detached[line_start:offset]!='开始任务前读取并遵守 '.encode()
-            or not detached[offset+len(old):].startswith('；'.encode())):
-        raise recovery.Conflict('DSH reference does not match the explicit narrow path contract')
-    ck={'start':'<!-- context-keeper:start -->','end':'<!-- context-keeper:end -->'}
-    span=entries.managed_span(detached,**ck)
-    if span is not None and span[0]<=offset<span[1]:
-        raise recovery.Conflict('Context Keeper content is not a redirect target')
-    # Locate that same non-owned token in the full original, excluding only
-    # exact registered units handled by the ordinary detach engine.
-    owned=[]
-    for obj in own_units:
-        if obj.get('marker') and not uninstall._preserve_ck(obj,[runtime.root,runtime.code],original):
-            unit=entries.managed_span(original,**obj['marker'])
-            if unit is not None:owned.append(unit)
-    original_offsets=[];start=0
-    while (found:=original.find(old,start))>=0:
-        if not any(a<=found<b for a,b in owned):original_offsets.append(found)
-        start=found+len(old)
-    if len(original_offsets)!=1:
-        raise recovery.Conflict('Original DSH non-owned reference is not unique')
-    source_span=entries.managed_span(original,**ck)
-    if source_span is not None and source_span[0]<=original_offsets[0]<source_span[1]:
-        raise recovery.Conflict('Original Context Keeper reference cannot be converted')
-    expected=active.get('memories/MEMORY.md');target=changes.get(str(index))
-    if (not expected or expected.get('kind')!='file' or not target or target['stage']!='return'
-            or target['after']!=expected or target['before']!={'kind':'absent'}):
-        raise recovery.Conflict('Complete approved return MEMORY copy is missing or differs')
-    result=detached[:offset]+new+detached[offset+len(old):]
-    proof={'type':'explicit-dsh-single-user-reference-v1','agent':'dsh','entry':str(path),
-        'before_sha256':recovery.digest(original),'before_mode':mode,
-        'old_token':old.decode(),'original_token_offset':original_offsets[0],
-        'detached_before_sha256':recovery.digest(detached),'detached_token_offset':offset,
-        'new_token':new.decode(),'after_sha256':recovery.digest(result),'after_mode':mode,
-        'unchanged_prefix_sha256':recovery.digest(detached[:offset]),
-        'unchanged_suffix_sha256':recovery.digest(detached[offset+len(old):]),
-        'return_index_sha256':recovery.digest(bytes.fromhex(expected['hex'])),
-        'return_index_mode':expected['mode'],'ownership_transition':'none','context_keeper':'byte_preserved'}
-    return result,proof
-
-
 def cli(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('tool-commit','paseo-cli','cli-sha256','server-id','plugin-id'):

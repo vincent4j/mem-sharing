@@ -53,28 +53,6 @@ class CompatTests(unittest.TestCase):
 class DshRedirectTests(unittest.TestCase):
     def fixture(self):
         f=original.UninstallTests();f.setUp();self.addCleanup(f.doCleanups);return f
-    def direct(self,raw,*,planned=True):
-        f=self.fixture();path=f.home/'.dsh/AGENTS.md';index=path.parent/'memsharing-return/memories/MEMORY.md'
-        token=str(f.runtime.root/'memories/MEMORY.md').encode();raw=raw.replace(b'OLD',token)
-        active={'memories/MEMORY.md':{'kind':'file','hex':b'complete public memory'.hex(),'mode':0o600}}
-        changes={str(index):{'stage':'return','before':{'kind':'absent'},'after':active['memories/MEMORY.md']}} if planned else {}
-        return f,path,index,token,raw,active,changes
-    def test_exact_single_token_crlf_context_keeper_and_mode(self):
-        f,p,index,old,raw,active,changes=self.direct('开始任务前读取并遵守 OLD；其余原文'.encode()+b'\r\n<!-- context-keeper:start -->\r\nprivate\x00opaque\r\n<!-- context-keeper:end -->\r\nno-final-newline')
-        after,proof=compat.redirect_dsh_reference(f.runtime,p,raw,raw,0o640,index,changes,active,[])
-        self.assertEqual(after,raw.replace(old,str(index).encode(),1));self.assertEqual(proof['before_mode'],proof['after_mode']);self.assertEqual(proof['ownership_transition'],'none')
-    def test_duplicate_reference_rejected(self):
-        f,p,index,old,raw,active,changes=self.direct('开始任务前读取并遵守 OLD；OLD'.encode())
-        with self.assertRaises(ValueError):compat.redirect_dsh_reference(f.runtime,p,raw,raw,0o600,index,changes,active,[])
-    def test_context_keeper_reference_rejected(self):
-        f,p,index,old,raw,active,changes=self.direct(b'<!-- context-keeper:start -->\n'+'开始任务前读取并遵守 OLD；原文'.encode()+b'\n<!-- context-keeper:end -->')
-        with self.assertRaises(ValueError):compat.redirect_dsh_reference(f.runtime,p,raw,raw,0o600,index,changes,active,[])
-    def test_missing_planned_return_rejected(self):
-        f,p,index,old,raw,active,changes=self.direct('开始任务前读取并遵守 OLD；原文'.encode(),planned=False)
-        with self.assertRaises(ValueError):compat.redirect_dsh_reference(f.runtime,p,raw,raw,0o600,index,changes,active,[])
-    def test_unrecognized_prefix_rejected(self):
-        f,p,index,old,raw,active,changes=self.direct(b'opaque OLD')
-        with self.assertRaises(ValueError):compat.redirect_dsh_reference(f.runtime,p,raw,raw,0o600,index,changes,active,[])
     def engine_fixture(self):
         from agm_core import registry,policy_migration,paths
         f=self.fixture();config=policy_migration.config();p=Path(paths.expand_path(config['dsh']['user_entry'],home=str(f.home)))

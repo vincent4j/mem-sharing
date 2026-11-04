@@ -231,6 +231,10 @@ class NativeReturnTests(unittest.TestCase):
         for relative in ('memories/topics/facts.md','memories/MEMORY.md','memories/topics/使用约定.md'):
             with self.subTest(source=relative):
                 f=self.fixture();p=f.runtime.root/relative
+                if not p.exists():
+                    p.parent.mkdir(parents=True, exist_ok=True)
+                    from agm_core import user_entries
+                    p.write_bytes(user_entries.usage_convention_topic_text(f.runtime.code).encode())
                 p.write_bytes(p.read_bytes()+b'\r\n'+protected)
                 self.protected_chain(f,protected)
 

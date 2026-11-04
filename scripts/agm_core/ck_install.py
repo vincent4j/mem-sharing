@@ -11,11 +11,11 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import entries, layout, legacy_import as legacy, migrate, paths, registry, user_entries, user_install
+from . import detect, entries, layout, legacy_import as legacy, migrate, paths, registry, user_entries, user_install
 from .transaction import Snapshot, _atomic_file, read_snapshot, write_lock
 
 PIN = '695074ee4b6ddb9999be858093f833d6377bd641'
-PROMPT = '最后：为了让你的所有项目都能记住并续接工作经历，我们将为已接入且受支持的 Agent（Codex、Claude Code、WorkBuddy）安装项目经历引擎 Context Keeper（用户级）——它与本产品出自同一作者。同意吗？（回车=同意，n=跳过）'
+PROMPT = '为了让 Agent 在新会话中记住项目进度、决策和经验，接着上次的工作继续，需要另外安装 Context Keeper。是否为本机已安装的{agents}安装？回复“安装”或“跳过”。'
 # 上游安装器(pinned PIN)仅认这三家(LABELS/ROOTS/RULES 的键集即上游 --agent
 # flags)。dsh/zcode/opencode 已接入时:不冒支持、不传上游未知 flags、不改上游
 # ——在计划里明确列为 skipped(upstream_unsupported)并照常为旧三家安装;三家均
@@ -115,6 +115,12 @@ def _invoke(argv, home, runner=None):
     return result
 
 
+def installed_agents(request):
+    facts = detect.detect_agents(request['platform_config'], home=request['home'],
+        **{k:request[k] for k in ('search_paths','app_directories','user_candidates') if k in request})
+    return [a for a in paths.AGENT_ORDER if facts['agents'].get(a, {}).get('status') == 'installed']
+
+
 def _scene(request, main_operation_id):
     migrate._op(main_operation_id)
     runtime = user_install._runtime(request)
@@ -170,14 +176,14 @@ def _scene(request, main_operation_id):
                 intact = False
             if not intact:
                 _fail('Connected agent entry is missing or drifted', 'ck_main_incomplete')
-    return runtime, data, agents
+    return runtime, data, installed_agents(request)
 
 
 def plan_context_keeper(request, main_operation_id, source=None, *, runner=None):
     """Read-only plan, independent of the earlier main-product approval."""
     runtime, data, agents = _scene(request, main_operation_id)
     if not agents:
-        _fail('No connected executors; connect an executor before installing CK', 'ck_no_agents')
+        _fail('No installed executors detected; verify installation evidence before installing CK', 'ck_no_agents')
     supported = [a for a in agents if a in LABELS]
     skipped = [a for a in agents if a not in LABELS]
     if not supported:
@@ -209,7 +215,7 @@ def plan_context_keeper(request, main_operation_id, source=None, *, runner=None)
     argv = [interpreter, '-I', '-B', str(Path(identity['root'])/'scripts/install.py')]+['--'+a for a in agents]
     preview = _invoke(argv, runtime.home, runner)
     if preview.get('approval_required') is not True or preview.get('skill_entries') != skills or preview.get('rule_files') != rules:
-        _fail('CK preview scope differs from the exact connected executor set', 'ck_scope_mismatch')
+        _fail('CK preview scope differs from the exact installed supported executor set', 'ck_scope_mismatch')
     if _source(identity['root'], runtime) != identity or any(
             user_install._node(name) != node for name, node in observations.items()):
         _fail('CK preview changed source or installation targets', 'ck_preview_drift')
@@ -358,6 +364,9 @@ def tail(report, request, *, stdin=None, stderr=None):
     """Only a real newline from a TTY consents; main completion is independent."""
     if report.get('status') != 'completed':
         return report
+    if report.get('fusion', {}).get('status') not in (None, 'completed', 'declined', 'unchanged'):
+        report['context_keeper'] = {'status':'deferred', 'reason':'user_memory_pending'}
+        return report
     stdin, stderr = stdin or sys.stdin, stderr or sys.stderr
     if not stdin.isatty():
         report['context_keeper'] = {'status': 'skipped', 'reason': 'non_interactive',
@@ -367,16 +376,16 @@ def tail(report, request, *, stdin=None, stderr=None):
         runtime = user_install._runtime(request)
         data = registry.load_registry(runtime.registry, allowed_user_paths=paths.allowed_user_paths(
             request['platform_config'], None, home=request['home']))
-        connected_all = [a for a in paths.AGENT_ORDER if a in data['machine']['agents']]
+        connected_all = installed_agents(request)
         # 主产品接入名单按六家 PRODUCT_LABELS 全量报告;CK 上游不支持者单独说明。
         connected = [PRODUCT_LABELS[a] for a in connected_all if a in PRODUCT_LABELS]
         ck_skipped = [a for a in connected_all if a not in LABELS]
-        message = '已创建用户记忆中枢'+('，已为'+ '、'.join(connected)+'装上入口。' if connected else '。')
+        message = '公共用户记忆流程已结束。'
         if ck_skipped:
             message += '（%s 不在 Context Keeper 上游支持范围，跳过其 CK 用户级安装，不影响本产品接入。）' \
                 % '、'.join(PRODUCT_LABELS.get(a, a) for a in ck_skipped)
         print(message, file=stderr, flush=True)
-        print(PROMPT, file=stderr, flush=True)
+        print(PROMPT.format(agents='、'.join(connected)), file=stderr, flush=True)
         failure = None
         try:
             plan = plan_context_keeper(request, data['product']['last_operation_id'])
@@ -388,13 +397,13 @@ def tail(report, request, *, stdin=None, stderr=None):
                 'skipped_upstream_agents': plan['skipped_upstream_agents'],
                 'commit': plan['source']['commit'], 'files': plan['skill_entries']+plan['rule_files'],
                 'plan_sha256': plan['plan_sha256']}, ensure_ascii=False), file=stderr, flush=True)
-        if stdin.readline() not in ('\n', '\r\n'):
+        if stdin.readline().strip() != '安装':
             report['context_keeper'] = {'status': 'skipped', 'reason': 'not_consented'}
             return report
         if failure is not None:
             raise failure
         evidence = {'confirmed_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
-                    'reference': 'TTY newline consenting to displayed CK user-install purpose and exact connected-agent scope'}
+                    'reference': '用户回复：安装；已展示本机实际安装名单：'+ '、'.join(connected)}
         report['context_keeper'] = execute_context_keeper(plan, dict(plan, **evidence), request=request)
         if report['context_keeper']['status'] == 'configured':
             print('已安装 Context Keeper。可在任意项目里输入 /context-keeper；首次保存按 CK 流程确认记录库位置，记录库随项目 Git 管理，所有 Agent 共用。', file=stderr)

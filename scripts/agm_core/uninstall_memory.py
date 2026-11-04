@@ -664,6 +664,208 @@ def _retire_legacy_pointer_text(raw, native_path, *, proven):
     return raw.replace(hits[0],b'',1)
 
 
+def _share_source_proof(runtime, manifest, data, path):
+    """Replay the historical delete-spans + optional entry append producer."""
+    from . import memory_share as share
+    if data.get('operation') != share.COMMAND or data.get('status') != 'committed': return None
+    meta = (data.get('operation_metadata') or {}).get('share_user_memory') or {}
+    members = [r for r in meta.get('migrations',[]) if r.get('path') == path]
+    rows = [r for r in data.get('entries',[]) if r.get('path') == path]
+    if not members or not rows: return None
+    first,last = rows[0],rows[-1]
+    saved=first['before'].get('backup')
+    if first['before']['kind']!='file' or not isinstance(saved,str) or Path(saved).name!=saved:
+        raise recovery.Conflict('Missing fusion source before proof')
+    prior=(manifest.parent/saved).read_bytes()
+    if recovery.digest(prior)!=first['before']['fingerprint']:
+        raise recovery.Conflict('Fusion source before drift')
+    for a,b in zip(rows,rows[1:]):
+        if a['after']['fingerprint']!=b['before']['fingerprint']:
+            raise recovery.Conflict('Fusion source phases are not continuous')
+    from . import paths
+    config=paths.select_platform(paths.load_agents_table(),'darwin')
+    agent=members[0]['agent']
+    if agent not in config or path!=paths.expand_path(config[agent]['user_entry'],home=str(runtime.home)):
+        raise recovery.Conflict('Fusion source is not a native participant')
+    if any(r['agent']!=agent for r in members):raise recovery.Conflict('Mixed native source identities')
+    raw=prior
+    protected=share._protected_spans(prior)
+    for record in sorted(members,key=lambda r:r['start'],reverse=True):
+        if any(record['start'] < b and record['end'] > a for a,b in protected):
+            raise recovery.Conflict('Fusion migration overlaps protected source')
+        if raw[record['start']:record['end']]!=bytes.fromhex(record['text_hex']):
+            raise recovery.Conflict('Fusion source span drift')
+        raw=raw[:record['start']]+raw[record['end']:]
+    created=[r for r in meta.get('entries_created',[]) if r.get('path')==path]
+    if len(created)>1:raise recovery.Conflict('Ambiguous fusion entry producer')
+    block=None
+    if created:
+        entry=created[0];agent=members[0]['agent']
+        from . import paths
+        config=paths.select_platform(paths.load_agents_table(),'darwin')
+        if path!=paths.expand_path(config[agent]['user_entry'],home=str(runtime.home)):
+            raise recovery.Conflict('Fusion entry is not its native target')
+        block=share._entry_bytes(agent,runtime)
+        if (set(entry)!={'path','agent','kind','bytes_hex'} or entry['agent']!=agent
+            or entry['kind']!=share._entry_kind(agent) or entry['bytes_hex']!=block.hex()
+            or share._unfenced_offsets(prior,block)):
+            raise recovery.Conflict('Unknown fusion entry producer')
+        raw+=(share._separator(raw) or b'\n')+block
+    expected=meta.get('source_after',{}).get(path)
+    if recovery.digest(raw)!=expected or last['after']['fingerprint']!=expected:
+        raise recovery.Conflict('Fusion source producer cannot be reproduced')
+    if any(r['before']['mode']!=r['after']['mode'] for r in rows):
+        raise recovery.Conflict('Unexpected fusion source mode transition')
+    return first['before']['fingerprint'],expected,block
+
+
+def _returned_source_proof(runtime, manifest, data, path, after):
+    """Explain every output byte by retained native bytes and consumed originals."""
+    from . import memory_share as share
+    from collections import Counter, deque
+    if data.get('operation')!=share.RETURN_COMMAND or data.get('status')!='committed':return None
+    meta=(data.get('operation_metadata') or {}).get('return_user_memory') or {}
+    if not meta.get('consumed') or meta.get('additions_moved'):return None
+    sources={name:(source,producer) for name,source,producer in share._manifests(runtime)}
+    records=[];seen=set()
+    for ref in meta['consumed']:
+        key=(ref.get('manifest'),ref.get('migration'))
+        if key in seen or key[0] not in sources or type(key[1]) is not int:
+            raise recovery.Conflict('Unknown or duplicate consumed migration')
+        seen.add(key);source,producer=sources[key[0]]
+        members=((producer.get('operation_metadata') or {}).get('share_user_memory') or {}).get('migrations',[])
+        if not 0<=key[1]<len(members):raise recovery.Conflict('Missing consumed migration')
+        record=members[key[1]]
+        proof=_share_source_proof(runtime,source,producer,record['path'])
+        if proof is None:raise recovery.Conflict('Consumed migration producer is not committed')
+        if record['path']==path:records.append(record)
+    if not records:return None
+    rows=[r for r in data['entries'] if r['path']==path]
+    if len(rows)!=1:return None
+    row=rows[0];saved=row['before'].get('backup')
+    if not isinstance(saved,str) or Path(saved).name!=saved:raise recovery.Conflict('Missing return source before')
+    before=(manifest.parent/saved).read_bytes()
+    if recovery.digest(before)!=row['before']['fingerprint']:raise recovery.Conflict('Return source before drift')
+    if recovery.digest(after)!=row['after']['fingerprint'] or row['before']['mode']!=row['after']['mode']:return None
+    pieces=Counter(bytes.fromhex(r['text_hex']) for r in records)
+    tokens=sorted(pieces);counts=tuple(pieces[t] for t in tokens)
+    def matches(base):
+        todo=deque([(0,0,counts)]);visited=set()
+        while todo:
+            i,j,left=todo.popleft();key=(i,j,left)
+            if key in visited:continue
+            visited.add(key)
+            if len(visited)>2*(len(base)+len(after))+50000:raise recovery.Conflict('Bounded return ambiguity proof exhausted')
+            if i==len(base) and j==len(after) and not any(left):return True
+            if i<len(base) and j<len(after) and base[i]==after[j]:todo.append((i+1,j+1,left))
+            for n,token in enumerate(tokens):
+                if left[n] and token and after.startswith(token,j):
+                    rest=list(left);rest[n]-=1;todo.append((i,j+len(token),tuple(rest)))
+        return False
+    # Exact old adapter entry removal is the only permitted deletion.
+    block=share._entry_bytes(records[0]['agent'],runtime)
+    variants=[before]
+    offsets=share._unfenced_offsets(before,block)
+    if len(offsets)==1:
+        start=offsets[0];variants.append(before[:start]+before[start+len(block):])
+    if not any(matches(base) for base in variants):return None
+    return row['before']['fingerprint'],row['after']['fingerprint']
+
+
+def retire_fusion_entries(raw, path, runtime):
+    from . import memory_share as share
+    for _,manifest,data in share._manifests(runtime):
+        meta=(data.get('operation_metadata') or {}).get('share_user_memory') or {}
+        if not any(r.get('path')==str(path) for r in meta.get('entries_created',[])):continue
+        proof=_share_source_proof(runtime,manifest,data,str(path))
+        if proof is None:raise recovery.Conflict('Uncommitted fusion entry producer')
+        block=proof[2]
+        offsets=share._unfenced_offsets(raw,block)
+        if len(offsets)>1:raise recovery.Conflict('Ambiguous fusion entry occurrence')
+        if offsets:
+            reachable={proof[1]};progress=True
+            history=share._manifests(runtime)
+            while progress:
+                progress=False
+                for _,source,producer in history:
+                    rows=[r for r in producer.get('entries',[]) if r.get('path')==str(path)]
+                    if not rows or rows[0]['before']['fingerprint'] not in reachable:continue
+                    next_proof=_share_source_proof(runtime,source,producer,str(path))
+                    if next_proof and next_proof[1] not in reachable:reachable.add(next_proof[1]);progress=True
+            state=recovery.snapshot(path)
+            if state['kind']!='file' or recovery.digest(bytes.fromhex(state['hex'])) not in reachable:
+                raise recovery.Conflict('Fusion-created entry source chain drift')
+            start=offsets[0];raw=raw[:start]+raw[start+len(block):]
+    return raw
+
+
+def fusion_imports(runtime, ledger):
+    """Changed whole-file observations require a fully reproduced source chain."""
+    from . import memory_share as share
+    proven=set();history=share._manifests(runtime)
+    for oid,obj in ledger['machine']['objects'].items():
+        if (obj['kind']!='import' or obj['ownership']!='reused' or obj['agents']!=['claude']
+            or obj.get('scope')!='machine' or obj.get('marker') is not None or obj.get('consumers')!=[]):continue
+        reachable={obj['fingerprint']['value']};progress=True
+        while progress:
+            progress=False
+            for _,manifest,data in history:
+                rows=[r for r in data.get('entries',[]) if r.get('path')==obj['path']]
+                if not rows or rows[0]['before']['fingerprint'] not in reachable:continue
+                proof=_share_source_proof(runtime,manifest,data,obj['path'])
+                if proof and proof[1] not in reachable:reachable.add(proof[1]);progress=True
+        current=recovery.snapshot(obj['path'])
+        if current['kind']=='file' and recovery.digest(bytes.fromhex(current['hex'])) in reachable:proven.add(oid)
+    return proven
+
+
+def retired_imports(runtime, ledger):
+    """Read-only recognition of a legacy committed return; never wash V."""
+    from . import memory_share as share, paths, entries, user_entries
+    config=paths.select_platform(paths.load_agents_table(),'darwin')
+    path=paths.expand_path(config['claude']['user_entry'],home=str(runtime.home))
+    token=('@'+str(runtime.root/'memories/MEMORY.md')).encode()
+    current=recovery.snapshot(path);retired=set()
+    if current['kind']!='file':return retired
+    manifests=share._manifests(runtime)
+    for oid,obj in ledger['machine']['objects'].items():
+        if (obj['path']!=path or obj['kind']!='import' or obj['ownership']!='reused'
+            or obj['agents']!=['claude'] or obj.get('marker') is not None
+            or obj.get('scope')!='machine' or obj.get('consumers')!=[]):continue
+        for _,manifest,data in manifests:
+            if data.get('operation')!=share.RETURN_COMMAND or data.get('status')!='committed':continue
+            meta=(data.get('operation_metadata') or {}).get('return_user_memory') or {}
+            if not meta.get('consumed'):continue
+            rows=[r for r in data['entries'] if r['path']==path]
+            if len(rows)!=1:continue
+            row=rows[0];saved=row['before'].get('backup')
+            if not isinstance(saved,str) or Path(saved).name!=saved:raise recovery.Conflict('Missing return before proof')
+            before=(manifest.parent/saved).read_bytes()
+            after=bytes.fromhex(current['hex'])
+            if recovery.digest(before)!=row['before']['fingerprint']:raise recovery.Conflict('Return before drift')
+            if recovery.digest(after)!=row['after']['fingerprint'] or current['mode']!=row['after']['mode']:continue
+            if (len(share._unfenced_offsets(before,token+b'\n'))!=1
+                or share._unfenced_offsets(after,token) or row['before']['mode']!=row['after']['mode']):continue
+            marker=user_entries.CLAUDE_FALLBACK_MARKER
+            a=entries.managed_span(before,**marker);b=entries.managed_span(after,**marker)
+            if a is None or b is None or before[a[0]:a[1]]!=after[b[0]:b[1]]:continue
+            reachable={obj['fingerprint']['value']}
+            progress=True
+            while progress:
+                progress=False
+                for _,source,producer in manifests:
+                    if producer.get('operation')!=share.COMMAND or producer.get('status')!='committed':continue
+                    source_rows=[r for r in producer.get('entries',[]) if r.get('path')==path]
+                    if not source_rows or source_rows[0]['before']['fingerprint'] not in reachable:continue
+                    proof=_share_source_proof(runtime,source,producer,path)
+                    if proof and proof[1] not in reachable:reachable.add(proof[1]);progress=True
+            if row['before']['fingerprint'] in reachable:
+                proof=_returned_source_proof(runtime,manifest,data,path,after)
+                if proof is None:raise recovery.Conflict('Return metadata does not explain retired import bytes')
+                retired.add(oid)
+    return retired
+
+
 def source_returns(runtime, original, native_paths):
     """Plan exact outstanding source-count restoration inside machine uninstall."""
     from . import memory_share as share
@@ -713,6 +915,36 @@ def source_returns(runtime, original, native_paths):
         for path, members in paths.items():
             state = recovery.snapshot(path)
             raw = restored.get(path, bytes.fromhex(state['hex']) if state['kind']=='file' else b'')
+            # A current producer may also retire an empty heading / duplicate
+            # navigation. Reproduce that exact cleanup from its backed-up before
+            # bytes before restoring source occurrences; raw offsets alone no
+            # longer describe the shortened shell.
+            producer = producers[manifest]
+            row = next((r for r in producer['entries'] if r['path']==path), None)
+            saved = row['before'].get('backup') if row else None
+            if isinstance(saved, str) and Path(saved).name == saved:
+                prior = (Path(members[0]['manifest_path']).parent/saved).read_bytes()
+                if recovery.digest(prior) != row['before']['fingerprint']:
+                    raise recovery.Conflict('Native source backup mismatch: '+path)
+                all_members = [r for r in producer['operation_metadata']['share_user_memory']['migrations'] if r['path']==path]
+                reduced = prior
+                for record in sorted(all_members, key=lambda r:r['start'], reverse=True):
+                    if reduced[record['start']:record['end']] != bytes.fromhex(record['text_hex']):
+                        raise recovery.Conflict('Invalid original source proof: '+path)
+                    reduced = reduced[:record['start']] + reduced[record['end']:]
+                cleaned = share.clean_native_navigation(members[0]['agent'], reduced, runtime,
+                    original=prior, migrated=all_members)
+                if cleaned != reduced and recovery.digest(cleaned) == share._after_sha(runtime,members[0]):
+                    if not raw.startswith(cleaned):
+                        raise recovery.Conflict('Cleaned native source drift: '+path)
+                    wanted = {(r['start'],r['end']) for r in members}
+                    returned = prior
+                    for record in sorted(all_members,key=lambda r:r['start'],reverse=True):
+                        if (record['start'],record['end']) not in wanted:
+                            returned = returned[:record['start']] + returned[record['end']:]
+                    returned = share.clean_native_navigation(members[0]['agent'],returned,runtime)
+                    restored[path] = returned + raw[len(cleaned):]
+                    continue
             if recovery.digest(raw) != share._after_sha(runtime,members[0]):
                 # Later approved shares may append content. Prove the old after
                 # prefix from its own backed-up before bytes, never from prose.

@@ -772,7 +772,10 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
     _, controls, observed = policy_migration.retire_controls(ledger)
     for path, raw in controls.items():
         _change(changes,path,_file(raw,recovery.snapshot(path)['mode']),'detach')
-    units = list(ledger['machine']['objects'].values()) + list(ledger['shared_objects'].values())
+    retired_import_ids = uninstall_memory.retired_imports(runtime, ledger)
+    proven_import_ids = uninstall_memory.fusion_imports(runtime, ledger)
+    proven_import_objects = [ledger["machine"]["objects"][oid] for oid in proven_import_ids]
+    units = [obj for oid,obj in ledger['machine']['objects'].items() if oid not in retired_import_ids] + list(ledger['shared_objects'].values())
     # Native Skill launchers are exact owned files, distinct from user prose.
     for oid, obj in ledger['machine']['objects'].items():
         if not oid.endswith('#native-skill'):
@@ -843,7 +846,7 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
         for obj in own_units:
             if _preserve_ck(obj,roots,raw): continue
             if obj['kind']=='import' and obj['ownership']=='reused':
-                if recovery.digest(bytes.fromhex(state['hex']))!=(obj.get('fingerprint') or {}).get('value'):
+                if obj not in proven_import_objects and recovery.digest(bytes.fromhex(state['hex']))!=(obj.get('fingerprint') or {}).get('value'):
                     raise recovery.Conflict('Native import whole-file fingerprint drift')
                 token=('@'+str(runtime.root/'memories/MEMORY.md')).encode()
                 if raw.count(token)!=1 or sum((line.removeprefix(b'\xef\xbb\xbf') if i==0 else line).strip()==token for i,line in enumerate(raw.splitlines()))!=1:
@@ -866,6 +869,7 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
             from .uninstall_compat import detach_dsh_reference
             raw, proof = detach_dsh_reference(runtime,path,bytes.fromhex(state['hex']),raw,state['mode'])
             user_reference_redirects.append(proof)
+        raw = uninstall_memory.retire_fusion_entries(raw, path, runtime)
         raw = uninstall_memory.retire_legacy_pointer(raw, path, proven=historical_proof)
         raw = uninstall_memory.strip_generated(raw,runtime,historical_proof=historical_proof)
         if uninstall_memory.contains_text(raw,uninstall_memory.LEGACY_GENERATED_GOVERNANCE):

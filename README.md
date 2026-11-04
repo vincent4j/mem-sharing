@@ -23,7 +23,7 @@ Codex 记住的偏好，Claude 接着用；昨天做到一半的工作，今天�
 - 📋 **昨天做到一半，今天从头交代？** 方案昨天定好了、坑昨天踩完了，今天开个新会话，它完全不记得昨天做到哪里。
 - 🧩 **各写一份，越写越散？** Codex 读 `AGENTS.md`，Claude 读 `CLAUDE.md`，WorkBuddy 只认自己的记忆文件——同一个项目，约定散在三处。
 
-memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到你常用的每个 Agent：习惯说一遍各家生效；项目记忆以项目根 `AGENTS.md` 为唯一来源，各家同读；需要记录项目经历时，由同一作者的 Context Keeper 负责保存、查找与续接。
+memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到你常用的每个 Agent：习惯说一遍各家生效；项目记忆以项目根 `AGENTS.md` 为唯一来源，各家同读；需要记录项目经历时，由Context Keeper 负责保存、查找与续接。
 
 ---
 
@@ -36,7 +36,7 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 请从 https://github.com/vincent4j/mem-sharing 安装 memSharing（多 Agent 记忆共享与融合）。
 ```
 
-按 Agent 的提示确认，装好就能使用；随后自动只读对比各 Agent 已有记忆，分“默认共享”与“由你选择是否共享”两块给你选，选定并确认最终修改清单后才会修改文件。项目经历可选安装 Context Keeper。
+按 Agent 的提示确认，装好就能使用；随后自动只读对比各 Agent 已有记忆，分“默认共享”与“由你选择是否共享”两块给你选，明确选定即按方案执行，不再二次确认；查看保持零写。项目经历可选安装 Context Keeper。
 
 也可作为 Paseo 插件安装，插件名称为 Memory Sharing & Fusion。
 
@@ -54,7 +54,7 @@ memSharing 用一份公共用户记忆和项目根 `AGENTS.md`，把六家 Agent
 - **无需额外部署。** 不需要单独配置云端模型、Hook 或常驻服务，继续使用你现有的 Agent。
 - **一句话开始安装。** 把安装说明发给 Agent，按提示确认即可，不用自己配置服务和接口。
 
-![memSharing 工作原理：六家 Agent 各自读写汇聚到公共用户记忆与项目根 AGENTS.md 两个共享来源，Agent 独有内容原位保留，Context Keeper 可选独立管理项目经历](docs/assets/memory-sharing-workflow.png)
+![memSharing 工作原理：六家 Agent 各自读写汇聚到公共用户记忆与项目根 AGENTS.md 两个共享来源，Agent 独有内容原位保留，Context Keeper 可选独立管理项目经历](https://raw.githubusercontent.com/vincent4j/mem-sharing/main/docs/assets/memory-sharing-workflow.png)
 
 | 名称 | 解决什么问题 | 放在哪里 |
 |---|---|---|
@@ -93,14 +93,14 @@ memSharing 用一份公共用户记忆和项目根 `AGENTS.md`，把六家 Agent
 
 - **添加新的 Agent**：按本地应用或 CLI 的实际静态证据确认安装，再走同源接入与精确预览；不要求 Agent 应用签名，只有残留配置目录不能视为已安装。重新运行安装器会发现全部已核验 installed 的支持对象。
 - **批量接入项目记忆**：递归扫描你指定的目录，逐项目一行预览，一次批准后执行；已停用的项目不会被自动恢复。
-- **整理用户记忆**：只读对比各接入 Agent 的用户记忆，共同内容进“默认共享”，部分已有的进“由你选择是否共享”，编号稳定，`查看 3` 可读完整原文；选定后先展示完整修改清单，你确认后才把完整原文迁入公共记忆并精确删除各文件中的重复片段，本次融合在最终确认前不会修改记忆内容。
+- **整理用户记忆**：只读对比各接入 Agent 的用户记忆，共同内容进“默认共享”，部分已有的进“由你选择是否共享”，编号稳定，`查看 3` 可读完整原文；展示方案后，回复默认方案或明确编号即把完整原文迁入公共记忆并精确删除对应重复片段，不再二次确认；查看零写，未选与专属保留。
 - **健康检查**：只读报告登记与现场缺口，不修复、不写入。
 - **接入项目记忆**：进入未登记的 Git 主 checkout 默认按当前执行者接入；接入完成后自动进入当前项目记忆的只读融合预览（两块，本次融合尚未修改记忆内容），可按编号选择、查看或保留现状；历史停用登记跳过、不自动重建，不控制 CK。
 - **整机卸载**：先外置备份与独立恢复材料，把当前完整公共记忆归还每个实际接入的 Agent，再核验并清理机器资产；预览并批准后才执行。在任何一家已接入的 Agent 里直接说“卸载 memSharing”也进入同一路由；“卸载这个项目”会先澄清，不删除当前项目。Paseo 插件本体需独立移除（disabled 不算），默认保留 Context Keeper；完整合同见[整机卸载方案](docs/uninstall-design.md)。
 
 安装时会识别并接入你已安装的受支持 Agent；以后换工具，也可以随时添加。
 
-**想要项目经历？** 在需要的项目里使用 `/context-keeper`：首次按 Context Keeper 的流程初始化记录库，记录库建在项目里、随 Git 走，各家 Agent 共用（安装时会问一句要不要装它：回车＝同意，输入 n 跳过）。用户级安装目前覆盖 Codex、Claude Code 与 WorkBuddy；DeepSeek Harness、ZCode 与 OpenCode 暂不在其安装范围，不影响它们共享记忆。没装它，用户记忆与项目记忆照常工作。
+**想要项目经历？** 在需要的项目里使用 `/context-keeper`：首次按 Context Keeper 的流程初始化记录库，记录库建在项目里、随 Git 走，各家 Agent 共用（公共用户记忆流程结束后最后询问是否安装；回复“安装”或“跳过”，回车不算同意）。询问名单来自本机实际安装者，独立于 memSharing 接入范围；固定上游的用户级安装目前支持 Codex、Claude Code 与 WorkBuddy；DeepSeek Harness、ZCode 与 OpenCode 暂不在其安装范围，不影响它们共享记忆。没装它，用户记忆与项目记忆照常工作。
 
 命令参数、停用与恢复的精确语义见 [SKILL.md](SKILL.md) 与 [INSTALL.md](INSTALL.md)。
 

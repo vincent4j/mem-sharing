@@ -410,6 +410,16 @@ def _build(request):
             if raw[item['start']:item['end']] != item['text'].encode(): _fail('drift', name)
             raw = raw[:item['start']] + raw[item['end']:]
         if raw != snapshots[name].data: outputs[name] = raw
+    if mode == 'user' and not view and not declined:
+        from .memory_share import clean_native_navigation
+        for name, agents in sources.items():
+            if name not in snapshots or snapshots[name].kind != 'file' or not agents: continue
+            raw = outputs.get(name, snapshots[name].data)
+            cleaned = clean_native_navigation(agents[0], raw, runtime,
+                original=snapshots[name].data, migrated=removals.get(name, []))
+            if cleaned != raw:
+                outputs[name] = cleaned
+                removals.setdefault(name, [])
     # Public content/index are written and read back before any source deletion.
     order = retention_paths + [str(topic), str(index)] + sorted(removals)
     changes = []
@@ -504,7 +514,7 @@ def plan_organize(request):
         if not plan['changes']:
             return _result(status='viewed' if plan.get('view') else 'completed',fusion_status='declined' if plan['declined'] else 'pending_selection' if plan['groups'] else 'unchanged',prompt=present(plan),approval_plan=plan,blocked_entries=plan['blocked_entries'])
         preview=dict(plan,confirmed_at='<UTC timestamp>',reference='<real user confirmation>')
-        return _result(status='approval_required',approval_required=True,fusion_status='pending_confirmation',prompt=present(plan),approval_plan=plan,
+        return _result(status='approval_required',approval_required=True,fusion_status='pending_selection',prompt=present(plan),approval_plan=plan,
                        changes=plan['changes'],blocked_entries=plan['blocked_entries'],
                        next_action=json.dumps(preview,ensure_ascii=False))
     except (ValueError,OSError,KeyError,TypeError) as exc:
@@ -544,7 +554,7 @@ def execute_organize(plan,approval,*,request=None,hook=None):
             step_index = [0]
 
             tx=Transaction(lock_path=runtime.transaction_lock,backup_root=runtime.backups,
-                           allowed_roots=[runtime.home,runtime.root]+([Path(plan['project'])] if plan.get('project') else []),operation=COMMAND,hook=hook,operation_metadata=plan.get('operation_metadata'))
+                           allowed_roots=[runtime.home,runtime.root]+([Path(plan['project'])] if plan.get('project') else []),operation=COMMAND,hook=hook,operation_metadata=dict(plan.get('operation_metadata') or {}, approval=dict(evidence, plan_sha256=plan['plan_sha256'])))
             def guarded(event,path):
                 if hook:hook(event,path)
                 # V and all untouched evidence stay bound through the final write.
@@ -643,7 +653,7 @@ def present(plan, *, summaries=None):
               '- 共享 3、4，不共享 2：增加待选 3、4，并排除默认项 2。',
               '- 按默认方案：只选默认项，不增加待选项。',
               '- 查看 3：只读查看完整原文及来源，不选择、不修改。',
-              '也可暂不整理。选定后展示最终修改清单，确认后才执行。独有和未选内容保留。']
+              '也可暂不整理。回复选择即授权按本次完整清单执行，不再二次确认；查看保持零写。独有和未选内容保留。']
     return '\n'.join(lines)
 
 
@@ -653,7 +663,7 @@ def continuation(request, *, scope='user', project_path=None):
     req.pop('approval', None)
     if project_path: req['project'] = str(project_path)
     stage = plan_organize(req)
-    return {'status': 'pending_selection' if stage['status'] != 'failed' else 'blocked',
+    return {'status': ('completed' if stage.get('fusion_status') == 'unchanged' else 'pending_selection') if stage['status'] != 'failed' else 'blocked',
             'automatic_continue': stage['status'] != 'failed', 'can_decline': True,
             'command': 'organize-project-memory' if scope=='project' else 'organize-user-memory',
             'project': str(project_path) if project_path else None, 'preview': stage}
@@ -670,6 +680,8 @@ def cli(argv=None, *, home=None):
     parser.add_argument('--selection', default=None)
     parser.add_argument('--decline', action='store_true')
     parser.add_argument('--approval-file')
+    parser.add_argument('--selection-plan-file', help='此前展示的完整 approval_plan，用于绑定选择前现场')
+    parser.add_argument('--selection-reference', help='实际用户选择消息；选择即执行，不另问确认')
     parser.add_argument('--retention-file',help='JSON对象：已排除公共条目编号到当前项目原生文件路径')
     ns = parser.parse_args(argv)
     try:
@@ -698,6 +710,24 @@ def cli(argv=None, *, home=None):
         if ns.project and str(Path(ns.project).resolve()) != str(Path(request.get('project', ns.project)).resolve()):
             _fail('approval_mismatch','批准项目与命令不一致')
         result = run_organize(request)
+        if ns.selection_reference:
+            if ns.approval_file or ns.selection is None or not ns.selection_reference.strip():
+                _fail('approval_mismatch', '选择执行须绑定本次真实选择，不可混用批准文件')
+            if not ns.selection_plan_file:
+                _fail('approval_mismatch', '选择执行须提供已展示计划，防止沿用漂移后的编号')
+            if result.get('approval_required') and not result['approval_plan'].get('view'):
+                plan = result['approval_plan']
+                shown = json.loads(Path(ns.selection_plan_file).read_text(), object_pairs_hook=registry._no_duplicates)
+                if any(shown.get(k) != plan.get(k) for k in ('layout','observations','groups','agents','scope','project')):
+                    _fail('drift', '现场或编号内容相对已展示计划变化，停止执行')
+                evidence = {'confirmed_at': datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+                            'reference': ns.selection_reference}
+                result = execute_organize(plan, dict(plan, **evidence), request=request)
+            elif result.get('status') == 'completed' and result.get('fusion_status') != 'declined':
+                result['fusion_status'] = 'unchanged'
+        if expected_scope == 'user' and result.get('fusion_status') in ('completed','declined','unchanged'):
+            from . import ck_install
+            result = ck_install.tail(result, request)
     except (ValueError,OSError,KeyError,TypeError) as exc:
         result = _result(errors=[{'code':getattr(exc,'code','organize_failed'),'message':str(exc)}])
     print(json.dumps(result, ensure_ascii=False))

@@ -443,7 +443,7 @@ def run(args):
             if exc.code != 'ck_no_supported_agents':
                 raise
             skipped = [{'agent': a, 'reason': 'upstream_unsupported'} for a in paths.AGENT_ORDER
-                       if a in data['machine']['agents'] and a not in ck_install.LABELS]
+                       if a in ck_install.installed_agents(request) and a not in ck_install.LABELS]
             return {'command': 'install-context-keeper', 'status': 'skipped',
                     'reason': 'upstream_unsupported', 'skipped_upstream_agents': skipped,
                     'approval_required': False, 'context_keeper': {'status': 'skipped', 'reason': 'upstream_unsupported',

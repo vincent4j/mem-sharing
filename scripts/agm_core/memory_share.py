@@ -159,19 +159,83 @@ def _entry_ok(agent, data, runtime):
     return _entry_state(agent, data, runtime) == 1
 
 
+def _unfenced_offsets(data, token):
+    result = []
+    offset = 0
+    fence = None
+    for line in data.splitlines(keepends=True):
+        mark = re.match(rb'^ {0,3}(`{3,}|~{3,})', line)
+        if mark:
+            if fence is None: fence = (mark[1][:1], len(mark[1]))
+            elif mark[1][:1] == fence[0] and len(mark[1]) >= fence[1] and not line[mark.end():].strip(): fence = None
+        elif fence is None and data[offset:offset+len(token)] == token:
+            result.append(offset)
+        offset += len(line)
+    return result
+
+
+def _canonical_entry(agent, data, runtime):
+    if agent == 'claude':
+        return False
+    from . import user_entries as ue
+    if agent == 'workbuddy':
+        block = ue._wrap_block(ue.BASE_MARKER, "\n".join([ue.public_read_text(runtime.root/'memories/MEMORY.md'), ue.WORKBUDDY_CONVENTION_TEXT, ue.WORKBUDDY_FALLBACK_TEXT]))
+    elif agent in ue.NATIVE_FALLBACK_TEXTS:
+        block = ue.native_public_source_block(agent, runtime.root/'memories/MEMORY.md')
+    else:
+        return False
+    offsets = _unfenced_offsets(data, block)
+    if len(offsets) > 1:
+        _fail('entry_conflict', '重复公共读取块，需先核对所有权')
+    return len(offsets) == 1
+
+
+def clean_native_navigation(agent, data, runtime, *, original=None, migrated=()):
+    """Retire only an exact generated duplicate and a proven emptied rules heading."""
+    if _canonical_entry(agent, data, runtime):
+        block = _entry_bytes(agent, runtime)
+        offsets = _unfenced_offsets(data, block)
+        if len(offsets) == 1:
+            start = offsets[0]
+            data = data[:start] + data[start+len(block):]
+    if original is None or not migrated:
+        return data
+    title_line = '# 用户规则'.encode()
+    originals = _unfenced_offsets(original, title_line+b'\n') + _unfenced_offsets(original, title_line+b'\r\n')
+    if len(originals) != 1:
+        return data
+    title = '# 用户规则'.encode()
+    candidates = [(left, left+len(title)+len(newline))
+                  for newline in (b'\n', b'\r\n')
+                  for left in _unfenced_offsets(data, title+newline)]
+    if len(candidates) != 1 or not any(r.get('scope', [])[:1] == ['用户规则'] for r in migrated):
+        return data
+    left, right = candidates[0]
+    tail = data[right:]
+    headings = [m.start() for m in re.finditer(rb'(?m)^# ', tail) if m.start() in _unfenced_offsets(tail, b'# ')]
+    end = right + headings[0] if headings else len(data)
+    section = data[right:end]
+    for start, stop in reversed(_protected_spans(section)):
+        section = section[:start] + section[stop:]
+    if section.strip():
+        return data
+    kept = data[right:end].strip(b'\r\n')
+    return data[:left] + (kept+b'\n' if kept else b'') + data[end:]
+
+
 def _entry_state(agent, data, runtime):
     """Count only the exact current entry; malformed managed blocks fail closed."""
     expected = _entry_bytes(agent, runtime)
     if _entry_kind(agent) == 'at_import':
         return sum(line.rstrip(b'\r\n') == expected.rstrip(b'\n')
                    for line in data.splitlines(keepends=True))
-    starts = data.count(ENTRY_MARKER['start'])
-    ends = data.count(ENTRY_MARKER['end'])
+    starts = len(_unfenced_offsets(data, ENTRY_MARKER['start']))
+    ends = len(_unfenced_offsets(data, ENTRY_MARKER['end']))
     if starts or ends:
-        if starts != 1 or ends != 1 or data.count(expected) != 1:
+        if starts != 1 or ends != 1 or len(_unfenced_offsets(data, expected)) != 1:
             _fail('entry_conflict', '%s 公共入口目标或完整块漂移' % agent)
         return 1
-    return 0
+    return 1 if _canonical_entry(agent, data, runtime) else 0
 
 
 def _read_source(path):
@@ -528,15 +592,21 @@ def build_share_plan(request, proposal, selection):
             if raw[record['start']:record['end']] != bytes.fromhex(record['text_hex']):
                 _fail('drift', '来源片段与读取时不一致：' + name)
             raw = raw[:record['start']] + raw[record['end']:]
-        native_after[name] = raw
+        native_after[name] = clean_native_navigation(sources[name]["agent"], raw, runtime,
+            original=sources[name]["snapshot"].data, migrated=records)
     for name, info in sources.items():
         if name in native_after or info['status'] == 'unknown':
             continue
-        if _entry_state(info['agent'], info['snapshot'].data or b'', runtime) == 0 and migrations:
+        original = info['snapshot'].data or b''
+        cleaned = clean_native_navigation(info['agent'], original, runtime)
+        if migrations and cleaned != original:
+            native_after[name] = cleaned
+        if _entry_state(info['agent'], original, runtime) == 0 and migrations:
             native_after[name] = info['snapshot'].data or b''  # entry creation only
     for name in native_after:
         info = sources[name]
-        data = native_after[name]
+        data = clean_native_navigation(info["agent"], native_after[name], runtime)
+        native_after[name] = data
         if _entry_state(info['agent'], data, runtime) == 0:
             block = _entry_bytes(info['agent'], runtime)
             data += (_separator(data) or b'\n') + block
@@ -619,7 +689,7 @@ def present(plan):
               '- 不共享 2：排除默认项 2。',
               '- 按默认方案：只共享默认项。',
               '- 查看 3：只读查看完整原文与来源，不选择、不修改。',
-              '- 也可暂不整理。选定后展示完整修改清单，确认后才执行。']
+              '- 也可暂不整理。回复选择即授权按已展示方案执行，不再二次确认；查看零写。']
     if plan['single_numbers']:
         lines.append('单家内容默认留原处，可查看或明确指定共享：'
                      + str(plan['single_numbers']))
@@ -737,7 +807,7 @@ def execute_share(plan, approval, *, request=None, hook=None):
                                       backup_root=runtime.backups,
                                       allowed_roots=[runtime.home],
                                       operation=COMMAND, hook=hook,
-                                      operation_metadata=plan['operation_metadata'])
+                                      operation_metadata=dict(plan.get('operation_metadata') or {}, approval=dict(evidence, plan_sha256=plan['plan_sha256'])))
             tx_changes = []
             staged = dict(state)
             for c in plan['changes']:
@@ -1232,6 +1302,8 @@ def cli(argv=None, *, home=None):
     parser.add_argument('--selection', default=None)
     parser.add_argument('--decline', action='store_true')
     parser.add_argument('--approval-file')
+    parser.add_argument('--selection-plan-file', help='此前展示的完整 approval_plan')
+    parser.add_argument('--selection-reference', help='实际用户选择消息；选择即执行')
     parser.add_argument('--manifest')
     parser.add_argument('--home')
     ns = parser.parse_args(argv)
@@ -1267,6 +1339,19 @@ def cli(argv=None, *, home=None):
                 ns.selection or '按默认方案'
         if ns.command == COMMAND:
             result = run_share(request)
+            if ns.selection_reference:
+                if ns.approval_file or ns.selection is None or not ns.selection_reference.strip():
+                    _fail('approval_mismatch', '选择执行须绑定本次真实选择消息')
+                if not ns.selection_plan_file:
+                    _fail('approval_mismatch', '选择执行须提供已展示计划')
+                if result.get('approval_required') and not result['approval_plan'].get('view'):
+                    plan = result['approval_plan']
+                    shown = json.loads(Path(ns.selection_plan_file).read_text())
+                    if any(shown.get(k) != plan.get(k) for k in ('proposal','observations','groups','agents','layout')):
+                        _fail('drift', '原文或编号内容相对已展示计划变化')
+                    evidence = {'confirmed_at': datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+                                'reference': ns.selection_reference}
+                    result = execute_share(plan, dict(plan, **evidence), request=request)
         elif ns.command == RETURN_COMMAND:
             result = run_return(request)
         else:

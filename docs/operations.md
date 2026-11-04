@@ -22,17 +22,16 @@ C 为 `~/.local/share/mem-sharing`，R 为 `~/.mem-sharing`。
 
 为什么这样设计：使用者表达意图，Agent 翻译为受控命令，不要求用户维护执行器差异。
 
-## 2. 安装：六拍剧本与命令
+## 2. 安装对话与命令
 
-1. 接收安装请求，说明先检查运行环境和本机 Agent。
-2. 汇总 Python、Git、验证为已安装的 Agent 与待准备依赖，一次确认，回车开始。
-3. 确认后静默获取、核验和安装；完成只报用户记忆中枢与实际接入名单。
-4. 紧接着正向询问是否安装用户级 Context Keeper，回车同意，n 跳过。
-5. Context Keeper 实际安装完成后提醒在所需项目使用 `/context-keeper`，首次按其流程激活；跳过时不声称已安装。
-6. 自动展示用户记忆融合预览，继续编号选择与最终清单确认；用户可拒绝，安装成功不等于融合完成。
+1. 检查环境，汇总 Python、Git、实际安装 Agent、选择范围、完整修改清单与备份安排，一次集中确认安装。
+2. 静默获取、核验并安装，保留私文；成功简报实际接入名单，不冒称融合完成。
+3. 展示公共用户记忆两块：默认共享、由你选择是否共享。空块写“暂无”，保持稳定编号、忠实摘要、完整原文查看入口；说明公共全文保存并核验后才删对应原生重复片段，未选与专属保留。
+4. 用户回复“按默认方案”或明确编号即执行并简报，不再二次确认；查看零写。完整计划绑定真实选择，实质漂移则停止。用户暂不整理则保留现状并结束此阶段。
+5. 最后询问：“为了让 Agent 在新会话中记住项目进度、决策和经验，接着上次的工作继续，需要另外安装 Context Keeper。是否为本机已安装的〈实际检测名单〉安装？回复‘安装’或‘跳过’。”名单独立于 memSharing 选择；回车不算同意。旧固定上游不支持者明确跳过，不传未知 flags。
+6. CK 实际安装完成后提醒在所需项目使用 `/context-keeper`，首次保存按其流程确认记录库位置；跳过或失败不声称已安装。用户记忆与项目记忆不依赖 CK。
 
-unknown 或仅有残留目录不列为已安装。
-成功简报不罗列内部路径，不添加未安装 Agent 或新会话自检提示。
+unknown 或仅有残留目录不列为已安装。以上对话与源码/合成验证分层，不能据文字声称真实客户端已读取。
 
 先使用核验过的干净本地 Git checkout 预览：
 
@@ -174,7 +173,7 @@ DSH 本次限默认 coding `cordis` preset 与默认根。接入规划自动检�
 项目公共项排除后的保留位置先逐条询问，使用 `--retention-file` 传 JSON（如 `{"1":"CLAUDE.md"}`）纳入预览，仅允许已参与项目原生文件；同一原生文件兼作保留位置与去重来源时，使用完整计划内的 `phased_writes/steps` 在同一 Transaction manifest 中分阶段执行；原批准须包含全部步骤，不能删减或改写。核心执行者已回报临时 HOME 的逐阶段异常回滚、子进程中断后原 manifest 恢复与外部新写保全测试通过，真实宿主未验收。
 向导先只读分析，按“默认共享”与“由你选择是否共享”两块展示；编号全局连续且在同一份有效计划内稳定，`查看 n` 只读展示完整原文与来源，不选择、不执行。外层保留 `fusion.preview.prompt` 的完整骨架，不缩为单表：两块／暂无、稳定编号、查看、五类输入和最终说明不省略；可从 sources 完整原文生成一句忠实条目摘要，不写回原计划。预览可显示 Agent 名称，完整路径只在查看或最终清单展示；无模型 CLI 使用诚实条目占位，不伪造摘要或候选项。
 分类只是建议，独有与归属不明内容锁定保留，不能并入公共源或删除。
-选定后先展示完整修改清单，一次确认完整逐条计划，原文指纹逐项绑定；批准前候选可改判保留。
+展示方案后用户明确选定即执行，不再二次确认；完整计划与实际选择消息、原文指纹绑定，实质变化时停止。
 确认执行时共享内容按完整原文迁入公共目标，核实公共内容完整与各家入口正确之后，才删除原生来源中对应的准确片段，不按关键词粗删。
 公共内容与入口编辑使用可恢复事务；计划中的 `reference_rebindings` 仅允许重绑已验证 Claude reused import 的观察指纹，台账 before/after 列为 `changes` 末项并随完整计划批准，ownership/consumers 不变，其余台账不改。
 
@@ -202,8 +201,8 @@ python3 scripts/install.py --context-keeper --approval-file /absolute/ck-approva
 ```
 
 源码须为持久、干净且符合固定 pin 的 checkout，目前不自动下载。
-只有真实交互回车表示同意，空格、EOF 或非交互输入不算。
-同意后为已接入的 Codex、Claude Code、WorkBuddy 安装用户级 Context Keeper，落位由其自有安装器负责。固定 pin 安装器仅支持旧三家的 flags；`dsh`、`zcode`、`opencode` 明确跳过用户级 CK 安装（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响它们的 memSharing 接入，不可宣称它们已安装 CK 或新会话已通过。
+只有真实回复“安装”表示 CK 同意；回车、空格、EOF、跳过和非交互输入均不算。
+同意后按全机实际安装名单，为固定上游支持的 Codex、Claude Code、WorkBuddy 安装用户级 Context Keeper，落位由其自有安装器负责。固定 pin 安装器仅支持旧三家的 flags；`dsh`、`zcode`、`opencode` 明确跳过用户级 CK 安装（`reason=upstream_unsupported`），混合时旧三家仍可安装，不影响它们的 memSharing 接入，不可宣称它们已安装 CK 或新会话已通过。
 仅接入 `dsh/zcode/opencode` 中的执行器时，`--context-keeper` 输出 `status=skipped`、`reason=upstream_unsupported` 与 `skipped_upstream_agents`；交互安装尾步的 `context_keeper` 同样为 `status=skipped`、`reason=upstream_unsupported`，主安装保持 `status=completed`。混合接入执行时，`agents` 仅列受支持的执行器；跳过项列于 `skipped_upstream_agents`，每项为 `{"agent":"dsh或zcode或opencode","reason":"upstream_unsupported"}`（`agent` 取实际 ID）。`upstream_unsupported` 是原因，不是顶层状态。
 
 缺源、失败或结果不明分别报告，主产品成功保留，结果不明不自动重放。
@@ -360,19 +359,12 @@ mode 信任核验、固定已装0.1.6完整代码核验与官方 host removed �
 验证过的历史节点加入原计划 observations，归还、外置备份、锁内漂移门禁、
 独立recover.py均复用原合同；未知类型仍拒绝。不执行历史归档里的代码。
 
-DSH 自有块外公共读取引用仍属不透明用户正文。本轮用户明确批准独立的
-单处路径重定向设计，须在独立入口显式传 `--redirect-dsh-reference-to-return`。
-它不新增 import 登记或所有权，只允许既有「开始任务前读取并遵守 」行上
-唯一非自有 MEMORY 绝对路径 token 改向 DSH 的 `memsharing-return/memories/MEMORY.md`。
-精确原文件 hash/mode、原始及 detach 后 offset、old/new token、after hash、
-不变前后片段 hash、归还 index hash/mode 进入完整计划与摘要附带证明，
-均由 plan SHA 绑定；真实删除仍须批准该完整卸载计划，设计批准不是删除批准。
-
-普通卸载仍拒绝该未知依赖，只有上述显式模式可规划转换。重复/模糊路径、
-Context Keeper 内引用、非精确行前缀、未完整规划归还副本、目标不符、
-审批后全文或模式漂移均拒绝。其余私文、Context Keeper、换行、权限、
-片段相对顺序按字节保全；不重定向到 Context Keeper，也不额外追加重复指针。
-已登记产品自有块仍按原卸载所有权合同拆除，公共记忆完整归还副本按原引擎生成。
+DSH 自有块外公共读取引用仍属不透明用户正文。仅在独立入口显式传
+`--detach-dsh-reference` 并批准完整卸载计划后，才移除唯一且精确匹配的
+旧产品读取指令；`--redirect-dsh-reference-to-return` 保留为同一行为的旧参数别名，
+不再生成指向归还副本的引用。证明随完整计划绑定，不新增所有权。
+重复或未知指令、Context Keeper 内引用、批准后全文或模式漂移均拒绝。
+其余私文、Context Keeper、换行和权限按字节保全；公共正文由正式归还引擎处理。
 
 
 ### 六家用户入口统一顶部布局（未发行源码）
@@ -389,3 +381,6 @@ Codex、DeepSeek Harness、ZCode、OpenCode 使用 `mem-sharing:rules` 块：公
 结构示意：五家为 `[公共指针＋自身项目说明的产品块] → [全部原正文]`；Claude 为 `[@公共索引] → [Claude 自身说明块] → [全部原正文]`。旧正文中产品单元移走后留下的非产品空白原样保留。卸载归还继续仅处理原产品单元和自身副本指针，外置恢复保存完整原文件；不删除 Context Keeper 或其他正文，不把归还副本自动导回新公共库。
 
 机器安装或当前项目启用返回 `status=completed` 时附带 `fusion`，包含 `status`、`automatic_continue`、`can_decline`、`command`、`project` 与 `preview`。`command` 分别为 `organize-user-memory` 或 `organize-project-memory`；用户阶段 `project=null`，项目阶段为当前项目绝对路径。正常 `pending_selection` 时 `automatic_continue:true/can_decline:true`，外层按 `fusion.preview.prompt` 保留完整展示骨架后继续选择，不以单表或命令替代；条目摘要不得写回原计划。`blocked` 时 `automatic_continue:false/can_decline:true`，明确报告实际阻塞原因、`preview.errors/blocked_entries` 和 `preview.next_action` 的下一步；`prompt/approval_plan` 仅供只读诊断，不称可继续选择或已融合、不执行修改。用户可保留现状并另起 `--decline` 预览，不伪造治理命令。入口接入可能已写入文件，提示限定为“本次融合尚未修改记忆内容”；安装或启用成功与融合完成分别报告，不复用接入批准执行融合。
+
+
+融合选择即执行：先展示完整方案及查看原文入口，保存 `approval_plan`；用户选择后，执行 `organize-user-memory --selection '<实际选择>' --selection-plan-file <已展示计划.json> --selection-reference '<真实选择消息>'`，不再二次确认。完整计划、事务备份和锁内漂移复核照旧；查看仍零写。公共阶段未完成时 CK 返回 `deferred/user_memory_pending`，不提前询问。已完成或暂不整理后，CK 提问与名单遵 SKILL 的安装对话收尾。

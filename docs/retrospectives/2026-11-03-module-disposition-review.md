@@ -253,3 +253,27 @@ flowchart TD
 - [插件入口](../../plugins/paseo/index.server.ts)、[插件编排](../../plugins/paseo/server/orchestrator.ts)、[公共 TS 真源](../../plugins/shared/src/index.ts)、[发行工具说明](../../tools/plugin-release/README.md)。
 
 本轮交付仅本评审文档与必要项目经历记录。没有删除模块、修改产品源码、执行测试、提交推送、升级安装或操作真实用户记忆。以上是审核提交时的停止状态；用户随后已同意方案并要求开始实现，实施进展另见项目经历记录。
+
+## 2026-11-04 收尾退役执行（基线 `1b995587`）
+
+用户授权删除无后续用途的模块；以下执行结果补充历史表格，不覆盖原审核状态。
+
+- 删除 `scripts/plan_fusion_return_repair.py`、`scripts/agm_core/uninstall_fusion_repair.py` 及专用 `tests/unit/test_uninstall_fusion_offline.py`：事故专用离线纠正计划器，仅由该脚本及专用测试相互引用，无 CLI、Skill、插件或正式归还调用。生产代码 231 行、专用测试 128 行退出维护；历史 Git 与验收证据保留。
+- 删除 `uninstall_compat.redirect_dsh_reference` 的 51 行旧实现及仅调用它的五项测试（22 行）。当前正式卸载调用 `detach_dsh_reference`；该实现及正式卸载、私文/CK 保全、漂移拒绝和恢复测试保留。旧 CLI 参数名仍作别名，避免破坏命令入口；操作文档改述现行行为。
+- 保留 `uninstall_compat`：正式 `uninstall` 仍调用历史备份验证和 DSH 精确指令拆除。保留 `staging_retirement`：独立兼容入口仍依赖其可信工具、安装和宿主身份验证。保留 `legacy_reconcile`：存在主 CLI 路由及兼容调用。保留 `migrate` 原语：发行导出、版本管理和安装恢复仍使用，不按模块名字删除。
+- 包清单按 `scripts/` 动态枚举，无这三份已删文件的显式路由/打包条目；产品源码、测试、插件、发行工具及当前操作文档中已无删除符号引用。原复盘表中名字仅保留为历史记录。
+- 未操作真实安装、用户记忆、外置材料、Context Keeper、账号或宿主。未提交、推送或部署。本次源码删除不代表本机新版已落地。
+
+验证日志与最终计数见下方执行结果；已知 `LegacyUpgradeTests` 三项基线问题未纳入本轮定向运行，也未修改断言或历史信任白名单。
+
+最终冻结回归：55 个唯一测试，53 通过；1 方法包含 6 个发行文档闭包失败，1 方法包含旧《使用约定.md》夹具缺失错误，均在干净 `1b995587` 归档基线复现，未删断言规避。日志 `/tmp/msf-retirement-final-20261104.log`（SHA-256 `0747a7c79671d183f7947b4aea60138520db1759e8e0f24c23e84433d2002b7a`）；基线日志分别为 `/tmp/msf-retirement-baseline-closure-20261104.log`、`/tmp/msf-retirement-baseline-native-20261104.log`。119 个源码/测试/相关文档测试前后指纹相同；本轮未宣称全量通过。退役生产代码和专用测试共减少 432 行，计入文档调整后本次八文件净减 419 行。本人写集 `git diff --check` 通过，测试进程均已终态。
+
+### 2026-11-04 历史融合退出续修
+
+历史融合入口不能仅凭 marker 认领，也不能要求用户先另行归还再卸载。本轮由固定 `1b995587aeb1e55eed6f8a79e116c40541ff9103` 全部受管源码安装临时 C，通过其真实旧 CLI 生成 share/return 事务，再用当前正式卸载/恢复核心验证；没有用新实现伪造旧 producer。
+
+融合入口的所有权由 before 备份、精确迁出片段、声明 entry、完整 after、模式及阶段连续性重现；旧 Claude 观察变化须有同样的来源链。已完成旧 return 的引用退休须逐一验证 consumed 来源、返回前后指纹和模式，且 after 的每个新增字节均由对应原文次数解释。未知引用、备份篡改、重封 after 后追加私文、来源漂移均拒绝且零写。此处仅在正式卸载计划中证明语义退休，不手工改写旧 V；原台账和全部恢复材料继续保留至正常资产删除阶段。
+
+CK 桌面测试保持真实 Git 门禁，在隔离 PATH 中补 Git，限定应用扫描至临时 HOME，避免把宿主 /Applications 安装事实混入合成场景。最终证据与日志位于 `/tmp/msf-legacy-final-before.json`、`/tmp/msf-legacy-final.log`、`/tmp/msf-legacy-exit-negatives.log`、`/tmp/msf-legacy-long-private.log`。真实当前用户环境与上游 CK 未写，提交推送由主审核收口；合成通过不等于真实旧现场已验证。
+
+最终同一冻结快照：80 个唯一相关测试通过，112 个源码/测试/目标文档指纹前后一致；日志 SHA-256 `628f839185681393ce43333c2695a840e47fda3ecf701205c92d45ce5d726278`，证据 `/tmp/msf-legacy-final-evidence.json`。70KB 私文追加输入场景另行通过（与主轮既有 test ID 相同，不重复累加数量）。未跑完整单元/集成与真实宿主，旧失败日志保留。
