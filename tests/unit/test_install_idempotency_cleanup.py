@@ -168,3 +168,48 @@ class InstallCleanupTests(InstallFixture):
         self.request['operation_id']='fresh-after-uninstall'
         fresh=self.plan();self.assertEqual(fresh['channel'],'fresh')
         self.assertEqual(self.execute(fresh)['status'],'completed')
+
+    def test_new_claude_incremental_reuses_public_and_global_uninstall(self):
+        self.request.update(seed_project_executors(self.home))
+        self.request['agents']=['codex']
+        common='- 已有公共偏好。\n';new='- 新增获准偏好。\n'
+        codex=self.home/'.codex/AGENTS.md';codex.parent.mkdir(exist_ok=True)
+        codex.write_text('# 约定\n\n'+common+'\ncodex 专属保留。\n')
+        self.execute()
+        req={k:v for k,v in self.request.items() if k in ('home','platform_config','agents','search_paths','app_directories','detect_runner')}
+        preview=fusion.plan_organize(req)['approval_plan']
+        number=next(g['number'] for g in preview['groups'] if g['summary']==common.strip())
+        req['selection']='共享 '+str(number)
+        plan=fusion.plan_organize(req)['approval_plan']
+        self.assertEqual(fusion.execute_organize(plan,approved(plan),request=req)['status'],'completed')
+        topic=self.runtime.root/'memories/user-rules.md'
+        claude=self.home/'.claude/CLAUDE.md';claude.parent.mkdir(exist_ok=True)
+        claude.write_text('# 约定\n\n'+common+new+'\nclaude 专属保留。\n')
+        self.request['agents']=['claude']
+        before=self.tree(self.runtime.root/'memories')
+        install=cli.plan_machine(self.request)
+        done=cli.execute_machine(install,approved(install),request=self.request)
+        self.assertEqual(done['status'],'completed',done)
+        self.assertEqual(self.tree(self.runtime.root/'memories'),before)
+        req=dict(req,agents=['claude']);req.pop('selection',None)
+        plan=fusion.plan_organize(req)['approval_plan']
+        self.assertTrue(plan['default_numbers'])
+        number=next(g['number'] for g in plan['groups'] if g['summary']==new.strip())
+        req['selection']='共享 '+str(number)
+        plan=fusion.plan_organize(req)['approval_plan']
+        self.assertEqual(fusion.execute_organize(plan,approved(plan),request=req)['status'],'completed')
+        self.assertEqual(topic.read_text().count(common),1)
+        self.assertEqual(topic.read_text().count(new),1)
+        self.assertIn('claude 专属保留。',claude.read_text())
+        repeat=cli.plan_machine(self.request)
+        self.assertEqual(repeat['changes'],[])
+        self.assertIsNone(cli.execute_machine(repeat,approved(repeat),request=self.request)['fusion'])
+        backup=self.area/'incremental-global-uninstall'
+        plan=uninstall.preview(home=self.home,backup_dir=backup)
+        result=uninstall.execute(approval(recovery.summary(plan)),home=self.home,backup_dir=backup)
+        self.assertEqual(result['status'],'completed',result)
+        self.assertEqual(codex.read_text().count(common),1)
+        self.assertEqual(claude.read_text().count(common),1)
+        self.assertEqual(claude.read_text().count(new),1)
+        for agent in ('codex','claude'):
+            self.assertFalse((self.home/('.'+agent)/'skills/mem-sharing/SKILL.md').exists())

@@ -47,16 +47,19 @@ class NaturalUninstallRouteTests(InstallFixture):
         with patch.object(detect,'detect_agents',side_effect=installed):self.execute()
 
     def old_public(self):
+        self.topic.parent.mkdir(parents=True,exist_ok=True)
         self.index.write_bytes('# 公共记忆\n\n'.encode()+policy_migration.legacy('pre_route_contract',self.runtime)+b'\n[my topic](topics/private.md)\r\nprivate tail\xff')
         self.topic.write_bytes(policy_migration.legacy('pre_route_topic',self.runtime))
         (self.topic.parent/'private.md').write_bytes(b'# Private\r\nmy complete topic\xff')
 
     def test_installed_six_native_entries_resolve_one_shared_route_and_real_cli_preview(self):
         self.install_agents()
-        index=self.index.read_text();topic_path=(self.index.parent/re.search(r'\[使用约定\]\(([^)]+)\)',index).group(1)).resolve()
-        self.assertEqual(topic_path,self.topic)
-        topic=topic_path.read_text();route=user_entries.natural_language_uninstall_text(self.runtime.code)
-        self.assertEqual(topic.count(route),1)
+        index=self.index.read_text();skill_path=self.runtime.code/'SKILL.md'
+        self.assertIn(str(skill_path),index)
+        self.assertFalse(self.topic.exists())
+        self.assertIn('docs/uninstall-design.md',skill_path.read_text())
+        route=user_entries.natural_language_uninstall_text(self.runtime.code)
+        self.assertNotIn(route,index)
         for agent, config in self.config.items():
             entry=Path(paths.expand_path(config['user_entry'],home=str(self.home)))
             raw=entry.read_bytes()
@@ -66,7 +69,7 @@ class NaturalUninstallRouteTests(InstallFixture):
         for link in re.findall(r'\]\(<([^>]+)>\)',route):
             path=Path(link);self.assertTrue(path.is_absolute());self.assertTrue(path.is_file(),link)
         self.assertEqual((self.runtime.code/'SKILL.md').read_bytes(),(REPO/'SKILL.md').read_bytes())
-        self.assertIn('明确说',index)
+        self.assertIn('自然语言要求',index)
         command=re.search(r'```sh\n([^\n]+)\n```',route).group(1)
         argv=shlex.split(command)
         self.assertEqual(argv[:4],['python3','-B',str(self.runtime.code/'scripts/agm.py'),'uninstall-machine'])

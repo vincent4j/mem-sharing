@@ -231,8 +231,8 @@ class TemplateSemanticsTests(unittest.TestCase):
         self.assertIn("历史停用登记", governance)
         self.assertNotIn("--memory", governance)
         self.assertNotIn("tombstone", governance)
-        topic = user_entries.usage_convention_topic_text("/tmp/C")
-        self.assertIn("历史停用登记", topic)
+        topic = user_entries.public_memory_contract_text("/tmp/C")
+        self.assertIn("已停用项目", topic)
         self.assertNotIn("tombstone", topic)
         for text in user_entries.NATIVE_FALLBACK_TEXTS.values():
             self.assertNotIn("tombstone", text)

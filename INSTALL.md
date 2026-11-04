@@ -167,7 +167,7 @@ python3 -B /absolute/path/verified-source/scripts/install.py --recover /absolute
 
 ### 公共记忆分层发行转换（0.1.3 候选，本地限定验收通过）
 
-公共记忆分层把六项菜单与详细维护规则集中到公共指南 `memories/topics/使用约定.md`，`MEMORY.md` 瘦身为读取契约与真实主题索引，各执行器用户文件只保留公共指针与自身规则。该转换已在 0.1.3 候选实现：固定处理器为 `scripts/agm_core/public_layout.py`，外部 conversion 的 `entries` 固定为 `{"type": "public-memory-layout-v1"}`，沿用既有 `_conversions` 四键 schema（`before/after/direction/entries`）。两个精确前身冻结在 `scripts/agm_core/upgrade.py` 常量：0.1.1（commit `04c32e24b9ab9504514908f2368cddca4356e478`）与 0.1.2 候选（commit `0f690ef7aabf747a23bacc7662c19bee34c4bf52`），各绑定核验过的 tree 哈希。目标版本 0.1.3 由 CLI `--version`／来源清单承载，无版本文件；SOURCE 历史前身身份与合同保持冻结；TARGET 合同三文件 `agents.json`、`user_entries.py`、`public_layout.py` 按当前六家字节冻结为精确 SHA256 字面量，门禁同时核对目标来源清单与运行模块字节一致，再冻结须显式声明并留测试证据。旧 0.1.2 的 `entries=preserve` 只对旧固定合同成立，`user_entries.py` 指纹变化后不能沿用。当前候选拼版共 32 文件，含共享发行解析器；此文件闭包数量不表示已发布。
+以下为旧 0.1.3 公共布局的固定转换兼容合同：当时生成 `memories/topics/使用约定.md`；新安装不生成该指南，菜单与详细流程仅在 Skill。历史转换的固定处理器为 `scripts/agm_core/public_layout.py`，外部 conversion 的 `entries` 固定为 `{"type": "public-memory-layout-v1"}`，沿用既有 `_conversions` 四键 schema（`before/after/direction/entries`）。两个精确前身冻结在 `scripts/agm_core/upgrade.py` 常量：0.1.1（commit `04c32e24b9ab9504514908f2368cddca4356e478`）与 0.1.2 候选（commit `0f690ef7aabf747a23bacc7662c19bee34c4bf52`），各绑定核验过的 tree 哈希。目标版本 0.1.3 由 CLI `--version`／来源清单承载，无版本文件；SOURCE 历史前身身份与合同保持冻结；TARGET 合同三文件 `agents.json`、`user_entries.py`、`public_layout.py` 按当前六家字节冻结为精确 SHA256 字面量，门禁同时核对目标来源清单与运行模块字节一致，再冻结须显式声明并留测试证据。旧 0.1.2 的 `entries=preserve` 只对旧固定合同成立，`user_entries.py` 指纹变化后不能沿用。当前候选拼版共 32 文件，含共享发行解析器；此文件闭包数量不表示已发布。
 
 正常流程一份外层批准绑定代码、公共布局迁移与新增入口装配；显式 `--agent` 仅限定新增接入范围，既有公共依赖仍完整迁移。新增入口按预测 V2 快照预览，执行后回到真实现场严格比较原批准。预览阶段即触发未登记读者门禁，零写拒绝可预见的失败升级：只有存在已登记公共依赖（import 引用或受管块消费者）的入口才迁移，无依赖私文仅观察保全、零更新；已登记但入口缺失拒整单；未登记的 Claude 读者被阻断并指引先显式 `--agent claude` 完成登记再重新预览，不暗中接入。代码已同版 0.1.3 而布局仍为旧状时，预览继续生成迁移子计划，布局与入口全新才是真零写 noop；其他版本的 noop 不派迁移。执行先完成代码与台账 V，再以同一批准运行迁移事务（公共 MEMORY、公共指南、全部已登记依赖用户入口，V2 最后提交）；只有 V2 读回才报告 completed，否则 partial 并给出 `migration_phase=pending/recovery_required`。
 
@@ -203,7 +203,7 @@ CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调�
 
 ### 自然语言发起同一卸载流程
 
-用户无需进入源码目录：已接入的 Agent 读到公共 L0 后，明确的“卸载 memSharing / 卸载 mem-sharing / 不想用这个共享记忆工具了，帮我卸载”会按公共《使用约定》读取已核验 C 的 `SKILL.md` 与[完整卸载合同](docs/uninstall-design.md)，直接预览。路径与命令由安装时按 C 生成，使用 `python3 -B`；不凭路径存在信任代码，也不在预览创建备份目录。含糊的“卸载这个项目”先澄清，明确卸载请求也不替代看过精确计划后的批准。
+用户无需进入源码目录：已接入的 Agent 读到公共 L0 后，明确的“卸载 memSharing / 卸载 mem-sharing / 不想用这个共享记忆工具了，帮我卸载”会按公共索引的操作入口读取已核验 C 的 `SKILL.md` 与[完整卸载合同](docs/uninstall-design.md)，直接预览。路径与命令由安装时按 C 生成，使用 `python3 -B`；不凭路径存在信任代码，也不在预览创建备份目录。含糊的“卸载这个项目”先澄清，明确卸载请求也不替代看过精确计划后的批准。
 
 不能因换 Agent 发起而省略 Paseo 宿主义务；沿现有来源与参数合同补齐，未知先停止。已卸载或代码缺失不自动重装。安装代码已具备当前兼容实现时，旧公共指南通过 `migrate-policy` 的精确模板迁移接入新路由；旧 C 不兼容时零写拒绝，须先按现有精确安装/升级流程更新代码（预览、批准、私文保留、未知定制拒绝、重复零写）；生成指南在真正归还时退休，original 原文保全，active 不再指向被删代码。六家真实模型触发仍 pending。
 
@@ -215,4 +215,4 @@ CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调�
 
 从任意 Agent 发起卸载均走同一 `uninstall-machine` 全机核心，按受管台账移除全部已安装 native Skill 与引用，归还当前公共正文；保护用户自建同名 Skill、其他 Skill 与私文。删除前仍须外置备份、零写预览、精确批准和宿主义务核验。原生目录布局证据不代表真实 `/mem-sharing` 调用通过。
 
-新装公共索引只提示读取存在的用户规则与按需 Skill，不生成《使用约定》及索引条目，不硬编码用户个人规则。进入项目不自动写 AGENTS.md 或经历协议。旧安装的指南仅按原台账与来源兼容处理，不由新安装无批准删除。
+新装公共索引只提示读取存在的用户规则与按需 Skill，不生成《使用约定》及索引条目，不硬编码用户个人规则。首次进入未登记 Git 主目录时按 Skill 自动接入，跳过 disabled、非 Git 和 linked worktree，保留已有内容。旧安装的指南仅按原台账与来源兼容处理，不由新安装无批准删除。

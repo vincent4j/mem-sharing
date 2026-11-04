@@ -34,7 +34,10 @@ class UninstallProcessTests(unittest.TestCase):
                     try:
                         before = recovery.tree(fixture.home)
                         plan = uninstall.preview(home=fixture.home,backup_dir=fixture.backup)
-                        natives=[c for c in plan['changes'] if c['stage']=='detach']
+                        natives=[c for c in plan['changes'] if c['stage']=='detach' and c['path'] in plan['native_identities']]
+                        skills=[c for c in plan['changes'] if c['stage']=='detach' and c['path'].endswith('/skills/mem-sharing/SKILL.md')]
+                        self.assertEqual(len(skills),2)
+                        self.assertTrue(all(c['after']['kind']=='absent' for c in skills))
                         self.assertEqual(len(natives),6)
                         target=(natives[0] if stage=='native_first' else natives[-1]) if stage!='delete_product' else next(
                             c for c in plan['changes'] if c['stage']=='delete_product' and c['before']['kind']=='file')

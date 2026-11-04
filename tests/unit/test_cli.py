@@ -358,7 +358,7 @@ class InstallationHintTests(unittest.TestCase):
         )
         self.assertEqual(
             allowed,
-            ["/TestHome/.codex/AGENTS.md", "/TestHome/.claude/CLAUDE.md"],
+            ["/TestHome/.codex/AGENTS.md", "/TestHome/.codex/skills/mem-sharing/SKILL.md", "/TestHome/.claude/CLAUDE.md", "/TestHome/.claude/skills/mem-sharing/SKILL.md"],
         )
 
     def test_allowed_user_paths_single_agent(self):
@@ -900,7 +900,7 @@ class RequestBuildingTests(unittest.TestCase):
         )
         self.assertEqual(
             request["allowed_user_paths"],
-            ["/TestHome/.codex/AGENTS.md", "/TestHome/.claude/CLAUDE.md"],
+            ["/TestHome/.codex/AGENTS.md", "/TestHome/.codex/skills/mem-sharing/SKILL.md", "/TestHome/.claude/CLAUDE.md", "/TestHome/.claude/skills/mem-sharing/SKILL.md"],
         )
         self.assertEqual(request["agents"], ["codex", "claude"])
         self.assertTrue(request["interactive"])

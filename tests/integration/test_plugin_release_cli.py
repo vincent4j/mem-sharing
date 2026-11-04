@@ -64,7 +64,7 @@ class ReleaseCLIProcessTests(ReleaseFixture):
         self.assertEqual(again['status'],'completed')
         self.assertFalse(again['approval_required']); self.assertIsNone(again['approval_plan'])
         self.assertEqual(again['agents']['connected'],['codex'])
-        self.assertEqual(again['changes'],[]); self.assertIsNotNone(again['fusion'])
+        self.assertEqual(again['changes'],[]); self.assertIsNone(again['fusion'])
         self.assertEqual(before,self.snapshot())
         # A newly discovered target must still receive a complete, exact entry approval.
         claude=package/'bin/claude'

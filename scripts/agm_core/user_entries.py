@@ -127,9 +127,8 @@ ZCODE_FALLBACK_TEXT = ""
 # 配置根 ~/.config/opencode。规则加载受 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/
 # OPENCODE_CONFIG 影响的完整语义未获源码证实,第一版 default-root-only:配置根
 # 被重定向或覆盖时不接入(见 opencode_config_redirected)。
-OPENCODE_FALLBACK_TEXT = ("OpenCode 原生读取共享项目规则基座 AGENTS.md 与用户级 ~/.config/opencode/AGENTS.md，自身无额外专属项目入口；"
-                          "该基座默认建立遵公共治理条款，历史停用登记项目不自动重建。"
-                          "仅支持默认配置根，配置被 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/OPENCODE_CONFIG 重定向或覆盖时不接入。")
+OPENCODE_FALLBACK_TEXT = "配置被 XDG_CONFIG_HOME/OPENCODE_CONFIG_DIR/OPENCODE_CONFIG 重定向或覆盖时停止接入；不回显环境变量值。"
+
 NATIVE_FALLBACK_TEXTS = {"codex": CODEX_FALLBACK_TEXT, "dsh": DSH_FALLBACK_TEXT,
                          "zcode": ZCODE_FALLBACK_TEXT, "opencode": OPENCODE_FALLBACK_TEXT}
 
@@ -161,11 +160,19 @@ def agent_group_menu_text(code):
 
 
 def public_memory_contract_text(code=None):
-    """Minimal reading instructions; no menu or automatic project mutation."""
+    """Standing reading, ownership and accession instructions; operations in Skill."""
     skill = str(Path(code) / 'SKILL.md') if code else '~/.local/share/mem-sharing/SKILL.md'
     return (
-        "开始任务前读取并遵守本目录的 user-rules.md（存在时）；其他主题按需读取。相关文件无法读取时说明，不猜测其内容。\n"
-        "用户要求操作或卸载 memSharing 时，先读取 <%s>，再按相应流程执行。\n" % skill
+        "开始任务前读取并遵守本目录的 user-rules.md（存在时）；其他主题按需读取。相关文件无法读取时，说明并停止依赖该内容的操作。\n\n"
+        "## 保存记忆\n\n"
+        "保存用户记忆时，适用于所有 Agent 的规则、偏好和长期事实写入本目录的对应文件，不在各 Agent 的用户记忆中重复保存。仅适用于某个 Agent 的内容保留在它自己的用户记忆中。项目规则和项目经历留在对应项目。\n"
+        "新增主题文件时，在本索引添加链接。归属不明确时先确认；不得自动将专属内容移入公共记忆或删除。\n\n"
+        "## 自动项目接入\n\n"
+        "首次进入未登记的 Git 主工作目录时，按 mem-sharing Skill 自动接入项目，创建缺失的 AGENTS.md 并追加项目经历协议，保留已有内容。已停用项目、非 Git 目录及 linked worktree 跳过。\n"
+        "项目已接入后，当前 Agent 首次实际使用时，只补齐自身缺失的专属项目入口，不替其他 Agent 预建。\n"
+        "不自动安装或初始化 Context Keeper；项目经历按其自身规则管理。\n\n"
+        "## 操作入口\n\n"
+        "自动接入项目，或用户通过 /mem-sharing、自然语言要求安装、接入、整理、检查或卸载 mem-sharing 时，先读取 %s。无法读取时说明并停止相关操作。\n" % skill
     )
 
 

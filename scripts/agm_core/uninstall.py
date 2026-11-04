@@ -124,7 +124,7 @@ def _standalone_memory(runtime):
         value = getattr(public_layout, name, None)
         if isinstance(value, str): generated.add(value)
     expected_topic = user_entries.usage_convention_topic_text(runtime.code).encode()
-    known_topics = (expected_topic,policy_migration.legacy('pre_route_topic',runtime),policy_migration.legacy('topic',runtime),policy_migration.legacy('old_topic',runtime))
+    known_topics = (expected_topic,user_entries.legacy_usage_convention_topic_text(runtime.code).encode(),policy_migration.legacy('pre_route_topic',runtime),policy_migration.legacy('topic',runtime),policy_migration.legacy('old_topic',runtime))
     for path, state in original.items():
         if state['kind'] == 'symlink':
             target = Path(os.path.normpath(str(Path(path).parent / state['target'])))
@@ -148,6 +148,7 @@ def _standalone_memory(runtime):
             raw = ('# 使用约定\n\n公共记忆已归还本 Agent 独立维护。按索引、主题概要、全文顺序读取；'
                    '只在用户授权范围内修改。历史原文保存在 original/，不作为现行操作指令。\n').encode()
         elif relative == 'memories/MEMORY.md':
+            raw = uninstall_memory.strip_generated(raw,runtime,public=True,historical_proof=True)
             old_contract=policy_migration.legacy('old_contract',runtime)
             if old_contract in raw:
                 if raw.count(old_contract)!=1:raise recovery.Conflict('Duplicate public legacy header')

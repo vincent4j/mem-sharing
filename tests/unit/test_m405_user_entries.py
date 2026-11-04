@@ -164,7 +164,7 @@ class UserEntryFixture(unittest.TestCase):
 
     # ---- approved execution -------------------------------------------------
 
-    def test_execute_writes_entries_and_ledger_without_skill_projection(self):
+    def test_execute_registers_native_skill_and_public_reference(self):
         self.seed_codex_package()
         result = self.execute()
         self.assertEqual(result["status"], "completed", result)
@@ -178,11 +178,12 @@ class UserEntryFixture(unittest.TestCase):
         self.assertIn(user_entries.CODEX_FALLBACK_TEXT.encode(), data)
         self.assertNotIn(user_entries.GOVERNANCE_RULES_TEXT.encode(), data)
         self.assertNotIn("/mem-sharing 菜单".encode(), data)
-        self.assertFalse((self.home / ".codex" / "skills").exists())
+        native_skill=self.home / ".codex" / "skills/mem-sharing/SKILL.md"
+        self.assertTrue(native_skill.is_file())
         ledger = self.load_ledger()
         self.assertEqual(ledger["machine"]["agents"]["codex"]["installation"]["status"], "installed")
         objects = ledger["machine"]["objects"]
-        self.assertEqual(sorted(objects), [str(entry) + "#public-source"])
+        self.assertEqual(sorted(objects), sorted([str(entry) + "#public-source", str(native_skill)+"#native-skill"]))
         for obj in objects.values():
             self.assertEqual(obj["scope"], "machine")
             self.assertEqual(obj["consumers"], [])
@@ -223,9 +224,8 @@ class UserEntryFixture(unittest.TestCase):
         self.assertEqual(self.tree(), before)
         self.assertEqual(self.runtime.registry.read_bytes(), registry_bytes)
 
-    def test_projection_targets_are_never_touched_by_entry_planning(self):
-        # v1.11:产品 Skill 投影取消——预置的投影位(链接/目录)不再是受管对象,
-        # 规划与执行都不触碰它们,也不再因占用而整单停写。
+    def test_unrelated_skills_are_preserved_when_native_skill_is_added(self):
+        # Adding the selected native launcher must not adopt or alter other Skills.
         self.seed_codex_package()
         target = self.home / ".codex" / "skills" / "agent-group-memory"
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -242,7 +242,9 @@ class UserEntryFixture(unittest.TestCase):
         self.assertEqual(result["status"], "completed", result)
         self.assertTrue((self.home / ".codex" / "AGENTS.md").is_file())
         self.assertTrue((target / "foreign").is_file())
-        self.assertEqual(skills_tree(), before)
+        after=skills_tree()
+        self.assertEqual({k:after[k] for k in before},before)
+        self.assertEqual(set(after)-set(before),{'mem-sharing','mem-sharing/SKILL.md'})
         ledger = self.load_ledger()
         self.assertFalse(any(obj["kind"] == "skill_symlink"
                              for obj in ledger["machine"]["objects"].values()))
@@ -312,35 +314,20 @@ class UserEntryFixture(unittest.TestCase):
         self.assertIn('仅追加缺失',user_entries.CLAUDE_FALLBACK_TEXT)
         self.assertIn('仅 WorkBuddy',user_entries.WORKBUDDY_FALLBACK_TEXT)
 
-    def test_public_contract_and_guide_topic_layering(self):
-        # 公共 MEMORY 契约:读取契约/预算/公共治理/指南指针;菜单与维护规则在主题。
-        contract=user_entries.public_memory_contract_text()
-        self.assertIn('L0 恒读本索引',contract)
-        self.assertIn('≤200 行 / 25KB',contract)
-        self.assertIn(user_entries.GOVERNANCE_RULES_TEXT,contract)
-        self.assertIn('[使用约定](topics/使用约定.md)',contract)
-        self.assertIn('同义自然语言操作',contract)
-        self.assertIn('不回指其他菜单',contract)
-        self.assertNotIn('批量接入项目规则',contract)
+    def test_public_contract_and_skill_single_source(self):
+        contract=user_entries.public_memory_contract_text('/opt/code')
+        for instruction in ('user-rules.md（存在时）','保存用户记忆时','不在各 Agent 的用户记忆中重复保存',
+                            '新增主题文件时，在本索引添加链接','自动接入项目','linked worktree',
+                            '不替其他 Agent 预建','不自动安装或初始化 Context Keeper','/opt/code/SKILL.md'):
+            self.assertIn(instruction,contract)
+        for prose in ('topics/使用约定.md','/mem-sharing 菜单','不依赖 Codex','无 Codex','批量接入项目规则'):
+            self.assertNotIn(prose,contract)
+        self.assertNotIn('[用户规则](user-rules.md)',contract)
         self.assertNotIn(user_entries.CLAUDE_FALLBACK_TEXT,contract)
-        topic=user_entries.usage_convention_topic_text('/opt/code')
-        self.assertLess(topic.index('## L1 概要'),topic.index('## L2 正文'))
-        self.assertIn('/mem-sharing 菜单',topic)
-        self.assertIn('批量接入项目规则',topic)
-        self.assertIn('python3 /opt/code/scripts/agm.py',topic)
-        self.assertIn('/opt/code/SKILL.md',topic)
-        self.assertIn('enable-memory --project <项目绝对路径> --agent <当前执行器>；',topic)
-        self.assertNotIn('--agent <当前执行器> --memory',topic)
-        self.assertIn('历史停用登记（disabled）项目跳过',topic)
-        self.assertIn('不改变任何命令默认',topic)
-        self.assertIn('L0 索引一主题一行',topic)
-        self.assertIn('以本文件所在目录（topics/）解析',topic)
-        self.assertNotIn(user_entries.GOVERNANCE_RULES_TEXT,topic)
-        self.assertNotIn(user_entries.CLAUDE_FALLBACK_TEXT,topic)
-        # 公共治理:各 Agent 只维护自身专属入口;AGENTS 是共享基座,不依赖 Codex。
-        self.assertIn('AGENTS.md 是共享项目规则基座，不依赖 Codex',user_entries.GOVERNANCE_RULES_TEXT)
-        self.assertIn('Codex 原生读取共享项目规则基座 AGENTS.md',user_entries.CODEX_FALLBACK_TEXT)
-        self.assertNotIn('仅 Codex 首次实际使用时，按默认启用条款补缺失 AGENTS.md',user_entries.CODEX_FALLBACK_TEXT)
+        # Original shipped instructions remain frozen only for old-file recognition.
+        self.assertIn('L0 恒读本索引',user_entries.LEGACY_RUNTIME_CONTRACT)
+        self.assertIn('/mem-sharing 菜单',user_entries.legacy_usage_convention_topic_text('/opt/code'))
+        self.assertEqual(user_entries.CODEX_FALLBACK_TEXT,'')
 
     def test_menu_exact_order_names_and_cli_mapping(self):
         menu=user_entries.agent_group_menu_text('/opt/code')
@@ -519,7 +506,7 @@ class UserEntryFixture(unittest.TestCase):
         self.assertNotIn("/mem-sharing 菜单".encode(), data)
         ledger = self.load_ledger()
         objects = ledger["machine"]["objects"]
-        self.assertEqual(sorted(objects), [str(entry) + "#claude-fallback", str(entry) + "#import"])
+        self.assertEqual(sorted(objects), sorted([str(entry) + "#claude-fallback", str(entry) + "#import", str(self.home/".claude/skills/mem-sharing/SKILL.md")+"#native-skill"]))
         self.assertEqual(objects[str(entry) + "#import"]["kind"], "import")
         self.assertEqual(objects[str(entry) + "#import"]["ownership"], "reused")
         # import 登记指纹按最终整文件字节(含其后追加的兜底块)重绑,不改 ownership。

@@ -309,7 +309,7 @@ upgrade.execute_upgrade(plan,dict(plan,confirmed_at="2026-10-30T00:00:00Z",refer
         result=installed_upgrade.run_same_version_entries(request);self.assertEqual(result['status'],'completed',result)
         self.assertEqual(self.product(),before)
         self.assertTrue((self.home/'.codex/AGENTS.md').is_file())
-        self.assertFalse((self.home/'.codex/skills').exists())
+        self.assertTrue((self.home/'.codex/skills/mem-sharing/SKILL.md').is_file())
         self.assertFalse(registry.load_registry(self.runtime.registry,allowed_user_paths=install.paths.allowed_user_paths(self.config,None,home=str(self.home)))['projects'])
 
     def test_first_install_inventory_rename_precedes_any_active_code(self):

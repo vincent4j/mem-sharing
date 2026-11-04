@@ -399,7 +399,7 @@ class SignalTableTests(unittest.TestCase):
         # v1.11:产品 Skill 投影取消,用户级受管路径仅含入口文件。
         config = paths.select_platform(paths.load_agents_table(), "darwin")
         self.assertEqual(paths.allowed_user_paths(config, ["claude"], home="/TestHome"),
-                         ["/TestHome/.claude/CLAUDE.md"])
+                         ["/TestHome/.claude/CLAUDE.md", "/TestHome/.claude/skills/mem-sharing/SKILL.md"])
         self.assertFalse(hasattr(paths, "user_skill_paths"))
 
 

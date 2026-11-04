@@ -348,7 +348,7 @@ def fusion_generated_units(runtime, original, *, evidence=None):
 
 def public_body(runtime, original, *, evidence=None):
     """Expand a closed public document graph; no return directory or index link."""
-    from . import user_entries, policy_migration
+    from . import user_entries, policy_migration, memory_share
     base = runtime.root
     topic = base/'memories/topics/使用约定.md'
     known = {user_entries.usage_convention_topic_text(runtime.code).encode(), user_entries.legacy_usage_convention_topic_text(runtime.code).encode()}
@@ -395,6 +395,14 @@ def public_body(runtime, original, *, evidence=None):
             raw = raw[len(FUSION_GENERATED_PREFIX):]
         if path == base/'memories/MEMORY.md':
             # Only proven complete navigation lines lose their generated label.
+            producer_topics={record['topic'] for record in memory_share._available_migrations(runtime).values()}
+            for target in producer_topics:
+                target_path=Path(target)
+                if target_path.parent!=path.parent:continue
+                line=('- 用户记忆：['+target_path.name+']('+target_path.name+')\n').encode()
+                if any(line in part.splitlines(keepends=True) for protected,part in protected_parts(raw) if not protected):
+                    expanded_topic=read(target_path)
+                    raw=map_text(raw,lambda part:b''.join(expanded_topic if row==line else row for row in part.splitlines(keepends=True)))
             for target, line in fusion_units.items():
                 expanded_topic = read(Path(target))
                 raw = map_text(raw,lambda part:b''.join(expanded_topic if row == line else row
@@ -624,7 +632,32 @@ def source_returns(runtime, original, native_paths):
             raise recovery.Conflict('Public source span drift; explicit current-byte return plan required')
         spans.setdefault(topic,set()).add((left,right))
         by_manifest.setdefault(record['manifest'],{}).setdefault(record['path'],[]).append(record)
-    for manifest, paths in sorted(by_manifest.items(), reverse=True):
+    # Transaction directory UUIDs do not order transactions in the same second.
+    # Use the producer's closed before/after chains, including the public topic.
+    import json
+    producers={name:json.loads(Path(next(iter(groups.values()))[0]['manifest_path']).read_bytes())
+               for name,groups in by_manifest.items()}
+    dependencies={name:set() for name in producers}
+    for newer, left in producers.items():
+        for older, right in producers.items():
+            if newer==older:continue
+            if any(a['path']==b['path'] and a['before']['kind']=='file'
+                   and a['before']['fingerprint']==b['after']['fingerprint']
+                   and a['before']['fingerprint']!=a['after']['fingerprint']
+                   for a in left['entries'] for b in right['entries']):
+                dependencies[newer].add(older)
+            topic=left['operation_metadata']['share_user_memory']['topic']
+            if not any(r['path']==topic for r in left['entries']):
+                after=left['operation_metadata']['share_user_memory']['topic_after_sha256']
+                if any(r['path']==topic and r['after']['fingerprint']==after for r in right['entries']):
+                    dependencies[newer].add(older)
+    pending=set(producers);order=[]
+    while pending:
+        latest=[n for n in pending if not any(n in dependencies[m] for m in pending)]
+        if not latest:raise recovery.Conflict('Cyclic source return history')
+        order.extend(sorted(latest));pending.difference_update(latest)
+    for manifest in order:
+        paths=by_manifest[manifest]
         for path, members in paths.items():
             state = recovery.snapshot(path)
             raw = restored.get(path, bytes.fromhex(state['hex']) if state['kind']=='file' else b'')

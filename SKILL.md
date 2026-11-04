@@ -79,6 +79,21 @@ python3 -B scripts/memory_share.py recover-memory-share --manifest /当前HOME/.
 
 Codex、Claude Code 的原生 `skills/mem-sharing/SKILL.md` 由安装器按选择补齐，读取持久安装核心；记忆引用本身不等于 Skill 可发现。新增 Agent 先补入口且保留其原文，再独立预览并批准增量整理；已有公共同语境同字节正文复用，不重复搬入旧 Agent 内容。已接入 Agent 重装零写，不再提示融合。任意入口提出卸载均走同一全机卸载核心，处理全部受管 Agent；不存在仅卸载当前 Agent 的产品分支。
 
-## 项目接入触发
+## 自动项目接入
 
-仅用户明确要求接入项目时执行项目接入流程；进入 Git 目录本身不授权创建 AGENTS.md、项目经历协议或其他入口。历史 disabled 登记不自动恢复，按执行合同预览并确认重新接入计划。新装公共记忆不生成菜单或《使用约定》主题；操作与卸载只按本 Skill 和按需合同执行。
+首次进入未登记的 Git 主工作目录，先读取本 Skill 并核对项目台账；非 Git、linked worktree 和历史 disabled 项目跳过，不恢复已停用项目。用本 Skill 所在持久代码目录 C 的命令 `python3 -B <C>/scripts/agm.py enable-memory --project <项目绝对路径> --agent <当前执行器>` 接入；创建缺失的 AGENTS.md 并追加项目经历协议，完整保留已有正文。遇漂移、归属不明、覆盖或迁移要求，按对应精确预览/批准合同停止或处理，不用默认接入绕门禁。
+
+项目已接入后，当前 Agent 首次实际使用时仅补自身缺失的专属入口；不因检测到其他 Agent 已安装就预建其入口。用户明确要求全体或批量接入时沿用相应命令范围。项目经历由 Context Keeper 独立管理，不随默认接入安装、初始化或创建其记录库；历史 disabled 不代表 Context Keeper 停用。
+
+## /mem-sharing 菜单
+
+| 用户意图 | 操作入口 |
+| --- | --- |
+| 添加 Agent | [安装与增量接入](INSTALL.md)，显式 --agent 限定；重复已接入者零写。 |
+| 批量接入项目规则 | [操作手册](docs/operations.md)，指定扫描目录并预览范围。 |
+| 整理用户记忆 | 本 Skill 的用户记忆四步；先提案、再逐项批准。 |
+| 健康检查 | [操作手册](docs/operations.md)，只读 check-memory。 |
+| 接入项目规则 | 本节自动接入合同及[操作手册](docs/operations.md)。 |
+| 卸载 memSharing | [完整卸载合同](docs/uninstall-design.md)，全机统一预览与批准，不按当前 Agent 缩小范围。 |
+
+新装不生成《使用约定》主题或菜单副本；旧格式仅按已核验来源兼容识别，不无批准改删用户文件。

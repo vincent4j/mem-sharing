@@ -163,7 +163,7 @@ class GeneratedTemplateMigrationTests(unittest.TestCase):
         fixture.runtime.registry.write_bytes(registry.serialize_registry(data,allowed_user_paths=allowed))
         index=fixture.runtime.root/'memories/MEMORY.md'
         index.write_bytes(b'# public\n'+migration.legacy('contract',fixture.runtime)+b'\nprivate tail\xff')
-        topic=fixture.runtime.root/'memories/topics/使用约定.md';topic.write_bytes(migration.legacy('topic',fixture.runtime))
+        topic=fixture.runtime.root/'memories/topics/使用约定.md';topic.parent.mkdir(parents=True,exist_ok=True);topic.write_bytes(migration.legacy('topic',fixture.runtime))
         plan=migration.preview(home=fixture.home)
         self.assertGreaterEqual(len(plan['files']),8)
         migration.execute(fixtures.approval(migration.view(plan)),home=fixture.home)
@@ -172,7 +172,7 @@ class GeneratedTemplateMigrationTests(unittest.TestCase):
             self.assertNotIn('--no-memory',text)
             self.assertNotIn('remove-memory',text)
             self.assertNotIn('已有 Context Keeper 自动规则也不能覆盖',text)
-        self.assertIn(user_entries.GOVERNANCE_RULES_TEXT.encode(),index.read_bytes())
+        self.assertIn(user_entries.public_memory_contract_text().encode(),index.read_bytes())
         self.assertTrue(index.read_bytes().endswith(b'private tail\xff'))
         self.assertEqual(topic.read_text(),user_entries.usage_convention_topic_text(fixture.runtime.code))
         self.assertEqual(migration.preview(home=fixture.home)['files'],{})

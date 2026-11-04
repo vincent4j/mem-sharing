@@ -181,7 +181,7 @@ class InstallerTests(InstallFixture):
         self.assertNotIn(user_entries.GOVERNANCE_RULES_TEXT,index)
         self.assertIn(str(self.runtime.code/'SKILL.md'),index)
         self.assertFalse((self.runtime.root/'memories/topics/使用约定.md').exists())
-        self.assertLess(len(index),500)
+        self.assertLess(len(index),1500)
         self.assertEqual({p.suffix for p in (self.runtime.root/'memories').rglob('*') if p.is_file()},{'.md'})
 
     def test_repeatable_agents_and_explicit_absent_reject_without_writes(self):

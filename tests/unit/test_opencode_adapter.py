@@ -171,7 +171,7 @@ class OpenCodeInstallTests(InstallFixture):
         entry = self.entry_path()
         self.assertTrue(entry.is_file())
         self.assertIn(user_entries.OPENCODE_FALLBACK_TEXT.encode(), entry.read_bytes())
-        self.assertNotIn(user_entries.CODEX_FALLBACK_TEXT.encode(), entry.read_bytes())
+        self.assertNotIn("Codex 原生读取".encode(), entry.read_bytes())
         self.assertFalse((entry.parent / 'skills').exists())  # v1.11:不建 Skill 投影
         ledger = registry.load_registry(self.runtime.registry,
             allowed_user_paths=paths.allowed_user_paths(self.config, None, home=str(self.home)))
@@ -197,7 +197,8 @@ class OpenCodeInstallTests(InstallFixture):
         self.assertEqual(again['status'], 'completed', again)
         self.assertEqual(snapshot(self.home), before)
         # 受管块被第三方改动:整单拒绝零写,不以模板覆盖。
-        entry.write_bytes(entry.read_bytes().replace(b'AGENTS.md', b'BROKEN.md'))
+        original=entry.read_bytes();mutated=original.replace(b'MEMORY.md',b'BROKEN.md')
+        self.assertNotEqual(original,mutated);entry.write_bytes(mutated)
         before = snapshot(self.home)
         result = user_entries.run_user_entries(dict(self.request, home=str(self.home),
                                                     platform_config=self.config, runtime_layout=self.runtime))

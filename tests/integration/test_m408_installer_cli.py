@@ -64,9 +64,10 @@ class InstallerCLITests(unittest.TestCase):
         self.assertEqual(help_result.returncode,0);self.assertIn('--recover',help_result.stdout)
         before=self.snapshot()
         code,again=self.run_cli('--source',str(self.source),'--commit',self.commit,'--version','0.4.0')
-        self.assertEqual(code,5,again);self.assertTrue(again['approval_plan']['plan']['noop'])
-        self.assertEqual(again['approval_plan']['changes'],[])
-        code,noop=self.run_cli('--approval-file',self.approve(again['approval_plan']))
+        self.assertEqual(code,0,again);self.assertIsNone(again['approval_plan'])
+        self.assertFalse(again['approval_required']);self.assertEqual(again['changes'],[])
+        self.assertIsNone(again['fusion'])
+        code,noop=self.run_cli('--source',str(self.source),'--commit',self.commit,'--version','0.4.0')
         self.assertEqual(code,0,noop);self.assertEqual(before,self.snapshot())
         print('M408 COLD',self.commit,'non_git_cwd completed; same_release zero_writes_mtimes; runtime pending')
 
