@@ -361,7 +361,7 @@ class _Planner:
         path = self.runtime.home / ('.codex' if agent == 'codex' else '.claude') / 'skills/mem-sharing/SKILL.md'
         _require_real_parents(path, self.runtime.home)
         snap = self.snapshot(path)
-        raw = ("---\nname: mem-sharing\ndescription: 共享用户记忆，管理 memSharing 安装、接入与卸载。\n---\n\n"
+        raw = ("---\nname: mem-sharing\ndescription: 多 Agent 记忆共享与融合，给你的每一个 AI Agent 同一份记忆。\n---\n\n"
                "先读取并遵守 <%s>，按用户意图进入对应流程；读不到则停止并说明。\n" % (self.runtime.code / 'SKILL.md')).encode()
         oid = str(path) + '#native-skill'
         existing = self.units.get((str(path), None))

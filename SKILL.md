@@ -1,6 +1,6 @@
 ---
 name: mem-sharing
-description: memSharing，多 Agent 记忆共享与融合。提供公共用户记忆共享、项目记忆接入、检查、整理与整机卸载路由；支持明确自然语言卸载意图，项目经历由 Context Keeper 独立管理。
+description: 多 Agent 记忆共享与融合，给你的每一个 AI Agent 同一份记忆。
 ---
 
 # memSharing
