@@ -29,7 +29,7 @@ class NativeReturnTests(unittest.TestCase):
         with patch.object(detect,'detect_agents',side_effect=installed):f.execute()
         index=f.runtime.root/'memories/MEMORY.md'
         f.fact=b'# Preferences\r\n\r\ncomplete first paragraph\r\n\r\ncomplete second paragraph\r\n'
-        topic=f.runtime.root/'memories/topics/facts.md';topic.write_bytes(f.fact)
+        topic=f.runtime.root/'memories/topics/facts.md';topic.parent.mkdir(exist_ok=True);topic.write_bytes(f.fact)
         index.write_bytes(index.read_bytes()+b'\n[all facts](topics/facts.md)\n')
         f.backup=f.area/'restore-only'
         return f

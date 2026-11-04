@@ -298,3 +298,15 @@ python3 -B /Users/vincent4j/.paseo/worktrees/0p9qz2xa/skill-first-runtime/script
 全部实际输出与指纹存新0700根，文件0600：fresh-install-preview.json、fresh-install-approval.json、fresh-install-actual.json、post-install-verification.json、repeat-install-actual.json、repeat-install-verification.json、fusion-prompt-actual.json、fusion-view-actual.json、uninstall-preview-actual.json、final-verification.json、host-backup-verification.json；原文不入repo。清理/读回脚本在`/tmp/msf-final-bce-clean.py`、`/tmp/msf-bce-postverify.py`、`/tmp/msf-bce-final-checks.py`，只为本轮验收，不是产品兼容机制。
 
 收口：本轮授权的三项常规问题与新增常驻精简均已落到当前机器，CLI/文件层可以交用户验收。没有实际批准/执行新的私文融合，没有跑全量或新增原生模型测试；不声称这些层通过。所有执行/验证进程已终态，无待收进程；源码和clean checkout未改，仓库仅本报告untracked，所有保全备份不清理。
+
+## 卸载后导航残留修复（2026-11-04 09:43–09:58 UTC）
+
+用户自行卸载后，观察到四产品根不存在，六家文件各残留一次`## 用户记忆 / - user-rules.md`，规则正文仍在；未发现正式执行receipt，不凭preview宣称完整卸载状态。先前误报“六家与旧preview完整after匹配”已立即纠正：真实JSON仅DSH/ZCode/OpenCode三家匹配，另三家不匹配，原因不推断。用户恢复的six-native备份中，公共index/rules字节hash与当时0456部署快照精确相等；用固定0456 kernel重算旧public_body，导航+完整六规则连续anchor在producer输出与每家当前文件各唯一匹配。范围证明不是同名标题搜索，不扩大其他私文读取。
+
+根因是generic Markdown link展开保留label及原bullet，当前完整受管索引的“用户记忆”导航节也未退役。源码仅识别完整当前producer index前缀+纯规范同名topic导航，内联各正文、去该导航；任意用户同名标题、说明、自定义label不适用此分类，重复生成导航拒绝。Markdown fence及CK原字节保护，fence中的例子不按导航/import执行；绝对产品路径仍保留既有依赖拒绝。6初始合成全过，新增完整正式卸载/归还/恢复后，最终21项49.038秒通过（/tmp/msf-uninstall-nav-focused.log），未跑全量。
+
+首轮诊断42项32 errors日志保留（/tmp/msf-uninstall-nav-regression.log）：既有native-return fixture假设新装自动存在topics，文件写入先于产品逻辑即失败；另一次误指定不存在的test_uninstall_recovery模块。仅补fixture创建其自用topics目录，不改产品生成逻辑、不删保护断言，正确恢复验证由原native-return恢复用例及新增端到端用例执行。
+
+精确本机候选/tmp/msf-uninstall-navigation-cleanup-plan.json经主005607f2审核，0700完整备份位于`~/.mem-sharing-review-backups/uninstall-navigation-cleanup-20261104T0954Z`。六wholefile副本逐sha/mode验证后，写前重核prehash/mode/inode和唯一span；每家仅去33bytes，fsync读回posthash等计划，其他字节/权限/inode不变，规则sha保留`86d780999196a539882b7c985b9a36622afec00548d361d21f20b8f16db79d4c`。映射、批准计划、每项before/after与状态在backup/cleanup-manifest.json、approved-plan.json（0600）。当前六文件小修已完成，不是重新卸载/重装，也不是正式执行receipt恢复。
+
+本轮源码写集为uninstall_memory.py、test_uninstall_navigation.py及原native-memory测试fixture一行；本报告追加。无commit/push、模型/GUI、CK或其他文件修改。所有runner已终态；源修复未提交/发行，本机只做已审窄清理。

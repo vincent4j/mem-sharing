@@ -11,6 +11,53 @@ from urllib.parse import unquote, urlsplit
 from . import uninstall_recovery as recovery
 
 RETURN_SCHEMA = 'native-direct-v1'
+
+
+def _fence_ranges(raw):
+    """Markdown fences are literal examples, not navigation/import commands."""
+    ranges=[]; opening=None; offset=0
+    for line in raw.splitlines(keepends=True):
+        match=re.match(rb'^ {0,3}(`{3,}|~{3,})([^\r\n]*)',line)
+        if opening is None and match:
+            opening=(offset,match[1][:1],len(match[1]))
+        elif opening is not None and match and match[1][:1]==opening[1] and len(match[1])>=opening[2] and not match[2].strip():
+            ranges.append((opening[0],offset+len(line)));opening=None
+        offset+=len(line)
+    if opening is not None:ranges.append((opening[0],len(raw)))
+    return ranges
+
+
+def _map_markdown(raw, transform, *, assembled=False):
+    ranges=_fence_ranges(raw);offset=0
+    for protected,part in protected_parts(raw,assembled=assembled):
+        if protected:ranges.append((offset,offset+len(part)))
+        offset+=len(part)
+    merged=[]
+    for left,right in sorted(ranges):
+        if merged and left<=merged[-1][1]:merged[-1]=(merged[-1][0],max(right,merged[-1][1]))
+        else:merged.append((left,right))
+    chunks=[];offset=0
+    for left,right in merged:
+        chunks.extend((transform(raw[offset:left]),raw[left:right]));offset=right
+    chunks.append(transform(raw[offset:]));return b''.join(chunks)
+
+
+def _canonical_index_topics(raw, runtime):
+    """Recognize a complete current producer index, never a matching user heading."""
+    from . import user_entries
+    prefix=('# 公共记忆\n\n'+user_entries.public_memory_contract_text(runtime.code)+'\n').encode()
+    if not raw.startswith(prefix):return None
+    tail=raw[len(prefix):].strip(b'\n')
+    heading='## 用户记忆\n\n'.encode()
+    if not tail.startswith(heading):return None
+    names=[]
+    for row in tail[len(heading):].splitlines():
+        match=re.fullmatch(rb'- \[([^\[\]()/\r\n]+\.md)\]\(\1\)',row)
+        if not match:return None
+        name=match[1].decode('utf-8')
+        if name in names:raise recovery.Conflict('Duplicate generated index navigation; review required')
+        names.append(name)
+    return names or None
 # Exact historical generated return prefix, including the whole governance unit.
 # These are product text, even though individual sentences look like user rules.
 LEGACY_GENERATED_GOVERNANCE = (
@@ -77,9 +124,11 @@ def require_no_product_dependency(raw, roots, *, home=None, document=None):
     if any(token in raw for token in tokens):
         raise recovery.Conflict('Active/ambiguous product dependency; preserve and review required')
     if document is None:return
-    targets=re.findall(rb'(?m)^[ \t]*(?:\xef\xbb\xbf)?@([^\s]+)',raw)
-    targets+=re.findall(rb'\]\(\s*(<[^>]+>|[^\s)]+)',raw)
-    targets+=re.findall(rb'(?m)^[ \t]*\[[^\]]+\]:[ \t]*(<[^>]+>|\S+)',raw)
+    active=raw
+    for left,right in reversed(_fence_ranges(raw)):active=active[:left]+b'\n'+active[right:]
+    targets=re.findall(rb'(?m)^[ \t]*(?:\xef\xbb\xbf)?@([^\s]+)',active)
+    targets+=re.findall(rb'\]\(\s*(<[^>]+>|[^\s)]+)',active)
+    targets+=re.findall(rb'(?m)^[ \t]*\[[^\]]+\]:[ \t]*(<[^>]+>|\S+)',active)
     for target in targets:
         text=unquote(target.decode('utf-8',errors='surrogateescape').strip('<>')).split('#',1)[0]
         if not text or urlsplit(text).scheme:continue
@@ -371,6 +420,7 @@ def public_body(runtime, original, *, evidence=None):
         visiting.add(key)
         raw = bytes.fromhex(state['hex'])
         protected_parts(raw)
+        navigation = _canonical_index_topics(raw,runtime) if path==base/'memories/MEMORY.md' else None
         if path == topic:
             def retire_topic(part):
                 if not part.strip():return part
@@ -393,6 +443,8 @@ def public_body(runtime, original, *, evidence=None):
             raw=retire_legacy_product_instructions(raw,runtime)
         if str(path) in fusion_units:
             raw = raw[len(FUSION_GENERATED_PREFIX):]
+        if navigation is not None:
+            raw=b'\n\n'.join(read(path.parent/name) for name in navigation)
         if path == base/'memories/MEMORY.md':
             # Only proven complete navigation lines lose their generated label.
             producer_topics={record['topic'] for record in memory_share._available_migrations(runtime).values()}
@@ -402,10 +454,10 @@ def public_body(runtime, original, *, evidence=None):
                 line=('- 用户记忆：['+target_path.name+']('+target_path.name+')\n').encode()
                 if any(line in part.splitlines(keepends=True) for protected,part in protected_parts(raw) if not protected):
                     expanded_topic=read(target_path)
-                    raw=map_text(raw,lambda part:b''.join(expanded_topic if row==line else row for row in part.splitlines(keepends=True)))
+                    raw=_map_markdown(raw,lambda part:b''.join(expanded_topic if row==line else row for row in part.splitlines(keepends=True)))
             for target, line in fusion_units.items():
                 expanded_topic = read(Path(target))
-                raw = map_text(raw,lambda part:b''.join(expanded_topic if row == line else row
+                raw = _map_markdown(raw,lambda part:b''.join(expanded_topic if row == line else row
                     for row in part.splitlines(keepends=True)))
         def expand(match):
             target = unquote(match.group(2).decode().strip('<>')).split('#', 1)[0]
@@ -416,13 +468,13 @@ def public_body(runtime, original, *, evidence=None):
                 raise recovery.Conflict('Public topic path escape')
             expanded=read(resolved)
             return (match.group(1)+b'\n'+expanded) if expanded else b''
-        raw = map_text(raw,lambda part:re.sub(rb'\[([^\]\n]*)\]\(\s*(<[^>]+>|[^\s)]+)\s*\)', expand, part))
+        raw = _map_markdown(raw,lambda part:re.sub(rb'\[([^\]\n]*)\]\(\s*(<[^>]+>|[^\s)]+)\s*\)', expand, part))
         def expand_import(match):
             target=unquote(match.group(1).decode())
             resolved=Path(os.path.normpath(str(path.parent/target)))
             if not resolved.is_relative_to(base):raise recovery.Conflict('Native public import escape')
             return read(resolved)
-        raw=map_text(raw,lambda part:re.sub(rb'(?m)^[ \t]*@([^\s]+)[ \t]*\r?$',expand_import,part),assembled=True)
+        raw=_map_markdown(raw,lambda part:re.sub(rb'(?m)^[ \t]*@([^\s]+)[ \t]*\r?$',expand_import,part),assembled=True)
         if any(re.search(rb'(?m)^[ \t]*\[[^\]]+\]:',part) for protected,part in protected_parts(raw,assembled=True) if not protected):
             raise recovery.Conflict('Reference-style user links need explicit expansion review')
         require_no_product_dependency(raw,(runtime.root,runtime.code,'.agents-group/','memsharing-return/'),home=runtime.home,document=path)
