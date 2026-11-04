@@ -38,3 +38,22 @@
 最终当前快照受影响回归：**136项、100.248秒全部通过**，`/tmp/msf-six-native-final-affected.log`。136个不同test ID、10个冻结实现/测试/产品文档文件运行前后hash完全一致，证据`/tmp/msf-six-native-round2-final-evidence.json`。覆盖六家新分发、原用户入口、DSH/OpenCode适配、安装幂等、非历史布局、台账及本轮故障回滚。排除的仅为已在基线同样失败且在固定历史候选通过的LegacyUpgradeTests三项；未声称全量unit/integration通过，也未跳过/修改其测试代码。生产历史转换合同及白名单逐字节未修改。
 
 第二段收口：新功能和当前受影响范围通过，可交主审核源码；当前仓库仍28b5508a+本次dirty，真实安装bce未改变，本轮不部署。原生文件分发为合成证据，四家真实发现/新会话调用仍未验。所有runner均已终态、无待收进程；不commit/push、不模型/GUI/真实产品写入。基线与历史只读临时checkouts和证据保留供复核。
+
+## 已批准真实部署（2026-11-04 09:10–09:20 UTC）
+
+本节更新前述“尚未部署”边界。用户明确要求提交、推送、合并main及部署；主完成固定并推送`0456ed888dffdc8763cdc4ccd03489ff38bf6f6b`，执行者仅部署，不commit/push。新0700长期保全根：`/Users/vincent4j/.mem-sharing-review-backups/six-native-20261104T0911Z`，clean detached固定checkout及全部旧备份保留。该clean源关键分发/增量测试2项15.683秒通过（`/tmp/msf-six-native-deploy-clean-tests.log`），不是重跑全量。
+
+部署前核现机bce C完整树与owned对象：Claude reused import整文件receipt漂移，原因未知；canonical公共import为唯一首行且fallback span精确匹配登记。主再次确认仅按这些已证产品片段处理，完整备份当前bytes/mode、副本逐hash校验、写前重读一致后才清理；未将整文件视为产品所有权，也未改旧V指纹。四新增Skill目标absent且祖先真实，备份后、写前再次复核；无同名覆盖。六家私文其余字节/mode/inode保留。四产品根按精确库存清理，sources原absent照实记录；这是授权手工清理后fresh，不是旧正式卸载成功。所需恢复副本与映射在新manual-manifest.json，交回前再次逐一核sha/mode。
+
+正式fresh预览79项、六家effective、六个原生Skill文件，内置plan_sha256=`84b796a503ff87dca7d6315cf2be804c558d8ce3ab8ee37a5675ef649a2f6b59`。同operation重预览逐对象全等，按本次真实部署授权及主对漂移片段审查引用执行精确批准文件；未借用内容融合授权。实际rc0/completed，六家connected，fusion=pending_selection，CK=skipped。未执行新增私文融合/卸载/CK操作。
+
+真实读回结果：
+
+- C49文件逐一hash匹配；V schema3/complete/0.1.7，source=0456，tree=`c3691f4f794bdc033890d6792bd9fcef230a63d582ec69c2c822f354cb963121`。13受管对象指纹全匹配，需要恢复manifest的对象均有实际材料。
+- 六家native Skill全文均等于预期：name=`mem-sharing`，description=`多 Agent 记忆共享与融合，给你的每一个 AI Agent 同一份记忆。`，正文指向持久`~/.local/share/mem-sharing/SKILL.md`，无临时checkout引用。当前文件分发层已落地，四家不再只是公共记忆指针。
+- 六家原生文件安装事务before备份逐一等于本次清理后baseline，actual diff仅insert；私文与权限保留。公共六规则按本次备份原字节恢复一份，sha仍`86d780999196a539882b7c985b9a36622afec00548d361d21f20b8f16db79d4c`；新MEMORY只加有效单链接，未用旧控制模板覆盖，公共仍两md。
+- 正式**已装C无参**重复安装rc0，实际“已安装，已接入。”、changes=[]、approval_plan=null、fusion=null；118相关文件sha/mode/mtime_ns/inode前后相同，完整相关文件集亦相同。卸载预览后再次复核118文件全同。
+- 正式卸载仅preview：rc5/approval_required、无error，六个Skill各有detach→absent行动（摘要after精确等于absent结构的hash），所需backup闭合、目标backup未创建；没有执行卸载，留用户验收。
+- Paseo daemon身份/启动时间及8插件列表前后全等；CK、其他Skill、账号/凭据与业务项目未改。无模型或GUI调用。原生客户端新会话发现/实际调用仍由用户后续验收，不用文件存在或静态合同代替。
+
+私有证据均在新0700根且文件0600：product-inventory.json、manual-manifest.json、products/native/reviewed-public、fresh-install-preview/approval/actual.json、post-install-verification.json、repeat-install-actual/verification.json、uninstall-preview-actual.json、six-native-deploy-verification.json。该最后证据含六文件路径/hash、13对象指纹、六项absent-detach覆盖、118零写与文件集、Paseo不变及保存副本重核。辅助脚本/log在`/tmp/msf-six-native-deploy-*`，不是新增产品协议。所有命令/runner终态，无待收进程；本轮唯一仓库写为本说明追加，未改源码或部署旧/dirty源。
