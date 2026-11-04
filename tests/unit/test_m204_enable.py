@@ -141,6 +141,36 @@ class EnableTests(EnableFixture):
         self.apply('follow_ck')
         self.assertEqual((self.root/'CLAUDE.md').read_bytes(),raw+b'\n@AGENTS.md\n')
 
+    def test_claude_first_use_only_current_registered_project_and_disabled_skip(self):
+        self.request['agents'] = ['codex']
+        self.apply(None)
+        claude = self.root/'CLAUDE.md'
+        self.assertFalse(claude.exists())
+        other = self.area/'another-project'
+        other.mkdir()
+        other_entry = other/'CLAUDE.md'
+        other_entry.write_bytes(b'other private\r\n')
+        other_before = other_entry.read_bytes(), other_entry.stat().st_mtime_ns
+        self.request['agents'] = ['claude']
+        self.apply(None)
+        self.assertEqual(claude.read_bytes(), b'@AGENTS.md\n')
+        before = claude.read_bytes(), claude.stat().st_mtime_ns
+        self.request['approval'] = None
+        repeated = enable.run(self.request)
+        self.assertEqual(repeated['status'], 'completed', repeated)
+        self.assertEqual(repeated['changes'], [])
+        self.assertEqual((claude.read_bytes(), claude.stat().st_mtime_ns), before)
+        self.assertEqual((other_entry.read_bytes(), other_entry.stat().st_mtime_ns), other_before)
+        self.assertFalse((self.root/'.workbuddy').exists())
+        self.apply_tombstone()
+        claude.unlink()
+        ledger_before = self.runtime.registry.read_bytes()
+        skipped = enable.run(self.request)
+        self.assertEqual(skipped['status'], 'gaps', skipped)
+        self.assertFalse(claude.exists())
+        self.assertEqual(self.runtime.registry.read_bytes(), ledger_before)
+        self.assertEqual((other_entry.read_bytes(), other_entry.stat().st_mtime_ns), other_before)
+
     def test_idempotent_no_byte_or_mtime_change(self):
         self.apply('follow_ck',True)
         before={p:(p.read_bytes(),p.stat().st_mtime_ns) for p in (self.root/'AGENTS.md',self.root/'CLAUDE.md')}

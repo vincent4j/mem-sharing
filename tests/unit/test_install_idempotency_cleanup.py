@@ -6,7 +6,7 @@ from test_m404_install import InstallFixture, approved
 from test_m408_installer import cli
 from runtime_fixture import seed_project_executors
 from agm_core import detect, paths, user_rules_organize as fusion, memory_share as share
-from agm_core import uninstall, uninstall_recovery as recovery
+from agm_core import uninstall, uninstall_recovery as recovery, user_entries
 from test_uninstall import approval
 
 
@@ -14,6 +14,42 @@ class InstallCleanupTests(InstallFixture):
     def tree(self, root):
         return {str(p.relative_to(root)): (p.read_bytes(), p.stat().st_mtime_ns)
                 for p in root.rglob('*') if p.is_file()}
+
+    def test_short_claude_route_repeat_and_uninstall_preview(self):
+        self.request.update(seed_project_executors(self.home))
+        self.request['agents'] = ['claude']
+        entry = self.home/'.claude/CLAUDE.md'
+        entry.parent.mkdir(exist_ok=True)
+        private = b'private\r\n\xfftail'
+        entry.write_bytes(private)
+        entry.chmod(0o640)
+        self.execute()
+        raw = entry.read_bytes()
+        self.assertTrue(raw.startswith(('@'+str(self.runtime.root/'memories/MEMORY.md')+'\n').encode()))
+        self.assertIn(private, raw)
+        self.assertIn(user_entries.CLAUDE_FALLBACK_TEXT.encode(), raw)
+        self.assertEqual(entry.stat().st_mode & 0o777, 0o640)
+        before = self.tree(self.home)
+        repeat = cli.plan_machine(self.request)
+        result = cli.execute_machine(repeat, approved(repeat), request=self.request)
+        self.assertEqual(result['message'], '已安装，已接入。')
+        self.assertEqual(result['changes'], [])
+        self.assertEqual(self.tree(self.home), before)
+        preview = uninstall.preview(home=self.home, backup_dir=self.area/'short-route-backup')
+        self.assertTrue(preview)
+        self.assertEqual(self.tree(self.home), before)
+
+    def test_old_template_reader_rejects_short_block_even_with_current_fingerprint(self):
+        self.request.update(seed_project_executors(self.home))
+        self.request['agents'] = ['claude']
+        self.execute()
+        before = self.tree(self.home)
+        old = ('仅 Claude Code 在本项目实际使用且项目已启用（历史停用登记项目跳过）时补引用：CLAUDE.md 不存在才创建仅含 @AGENTS.md 的文件；'
+               '已有正文必须完整保留，仅追加缺失的 @AGENTS.md 引用行，重复执行不改字节。')
+        with patch.object(user_entries, 'CLAUDE_FALLBACK_TEXT', old):
+            with self.assertRaisesRegex(ValueError, '兜底块内容非模板'):
+                cli.plan_machine(self.request)
+        self.assertEqual(self.tree(self.home), before)
 
     def test_monday_codex_wednesday_claude_and_repeat(self):
         self.request.update(seed_project_executors(self.home))

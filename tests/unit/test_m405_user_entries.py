@@ -310,8 +310,8 @@ class UserEntryFixture(unittest.TestCase):
         self.assertIn('首次保存按其流程确认位置',text)
         self.assertNotIn('从启用时刻开始记',text)
         self.assertNotIn(' CK ',text)
-        self.assertIn('已有正文必须完整保留',user_entries.CLAUDE_FALLBACK_TEXT)
-        self.assertIn('仅追加缺失',user_entries.CLAUDE_FALLBACK_TEXT)
+        self.assertEqual(user_entries.CLAUDE_FALLBACK_TEXT,
+                         '首次使用已接入项目时，先读取 mem-sharing Skill，再按其流程补齐项目 CLAUDE.md 对 AGENTS.md 的引用。')
         self.assertIn('仅 WorkBuddy',user_entries.WORKBUDDY_FALLBACK_TEXT)
 
     def test_public_contract_and_skill_single_source(self):
@@ -328,6 +328,15 @@ class UserEntryFixture(unittest.TestCase):
         self.assertIn('L0 恒读本索引',user_entries.LEGACY_RUNTIME_CONTRACT)
         self.assertIn('/mem-sharing 菜单',user_entries.legacy_usage_convention_topic_text('/opt/code'))
         self.assertEqual(user_entries.CODEX_FALLBACK_TEXT,'')
+
+    def test_claude_project_details_live_in_skill_not_user_fallback(self):
+        skill = (REPO/'SKILL.md').read_text()
+        for instruction in ('仅处理当前项目', '历史 disabled 项目跳过', '--agent claude',
+                            '缺失时创建仅含 `@AGENTS.md`', '完整保留原文字节和权限',
+                            '已有有效引用时不重复添加', '不改其他项目或其他 Agent'):
+            self.assertIn(instruction, skill)
+        for detail in ('disabled', '不存在才创建', '仅追加缺失', '重复执行不改字节'):
+            self.assertNotIn(detail, user_entries.CLAUDE_FALLBACK_TEXT)
 
     def test_menu_exact_order_names_and_cli_mapping(self):
         menu=user_entries.agent_group_menu_text('/opt/code')

@@ -259,9 +259,13 @@ class TemplateSemanticsTests(unittest.TestCase):
         self.assertEqual(public_layout._OLD_WORKBUDDY_FALLBACK, namespace["WORKBUDDY_FALLBACK_TEXT"])
         # live 语义独立断言:当前模板必须仍是退役后的新职责文案,而非历史旧句;
         # 冻结旧字面量与新文案共存,供迁移精确识别历史字节。
-        for live in (user_entries.CLAUDE_FALLBACK_TEXT, user_entries.WORKBUDDY_FALLBACK_TEXT):
+        # Claude's user entry routes to Skill; disabled execution protection lives there.
+        self.assertIn("先读取 mem-sharing Skill", user_entries.CLAUDE_FALLBACK_TEXT)
+        self.assertIn("历史 disabled 项目跳过", (repo/'SKILL.md').read_text())
+        for live in (user_entries.WORKBUDDY_FALLBACK_TEXT,):
             self.assertIn("历史停用登记", live)
             self.assertNotIn("政策非 disabled", live)
+        self.assertNotIn("政策非 disabled", user_entries.CLAUDE_FALLBACK_TEXT)
         self.assertNotEqual(user_entries.CLAUDE_FALLBACK_TEXT, public_layout._OLD_CLAUDE_FALLBACK)
         self.assertNotEqual(user_entries.WORKBUDDY_FALLBACK_TEXT, public_layout._OLD_WORKBUDDY_FALLBACK)
 

@@ -112,8 +112,7 @@ GOVERNANCE_RULES_TEXT = (
     "AGENTS.md 是共享项目规则基座，不依赖 Codex，无 Codex 的机器同样成立，其默认建立遵本治理条款；非 Git 目录和 linked worktree 不触发。"
 )
 CLAUDE_FALLBACK_TEXT = (
-    "仅 Claude Code 在本项目实际使用且项目已启用（历史停用登记项目跳过）时补引用：CLAUDE.md 不存在才创建仅含 @AGENTS.md 的文件；"
-    "已有正文必须完整保留，仅追加缺失的 @AGENTS.md 引用行，重复执行不改字节。"
+    "首次使用已接入项目时，先读取 mem-sharing Skill，再按其流程补齐项目 CLAUDE.md 对 AGENTS.md 的引用。"
 )
 WORKBUDDY_FALLBACK_TEXT = "仅 WorkBuddy 在本项目实际使用产生原生 .workbuddy/memory 目录，且项目已启用（历史停用登记项目跳过）时，补顶部 AGENTS.md 指针；保留已有正文字节，不预建原生目录。"
 CODEX_FALLBACK_TEXT = ""

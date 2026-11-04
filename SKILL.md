@@ -85,6 +85,8 @@ Codex、Claude Code 的原生 `skills/mem-sharing/SKILL.md` 由安装器按选�
 
 项目已接入后，当前 Agent 首次实际使用时仅补自身缺失的专属入口；不因检测到其他 Agent 已安装就预建其入口。用户明确要求全体或批量接入时沿用相应命令范围。项目经历由 Context Keeper 独立管理，不随默认接入安装、初始化或创建其记录库；历史 disabled 不代表 Context Keeper 停用。
 
+Claude Code 首次使用已接入项目时，仅处理当前项目：先核对台账，历史 disabled 项目跳过；按上述命令显式指定 `--agent claude`，沿精确预览与批准流程补齐项目 `CLAUDE.md` 对 `AGENTS.md` 的引用。`CLAUDE.md` 缺失时创建仅含 `@AGENTS.md` 引用行的文件；已有文件完整保留原文字节和权限，只追加缺失的引用行。已有有效引用时不重复添加，重复执行不改字节；不改其他项目或其他 Agent 的专属入口。
+
 ## /mem-sharing 菜单
 
 | 用户意图 | 操作入口 |
