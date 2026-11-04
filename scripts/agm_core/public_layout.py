@@ -743,13 +743,6 @@ def _guard_raw(plan):
                            'launcher_sha256': plan['launcher_sha256']})
 
 
-def _reader_scan_unchanged(plan):
-    for raw in plan['user_paths']:
-        if not _observed(raw, plan['observations'][raw]):
-            _fail('unregistered_public_reader',
-                  '计划后用户入口出现新读者/变化,停止迁移并重预览: ' + raw)
-
-
 def _check_observations(plan, written):
     """核对全部观察:已写 target 期待 after(注册表写后期待 V2),其余期待 before。"""
     registry_path = str(Path(plan['layout']['root']) / 'var' / 'registry.json')

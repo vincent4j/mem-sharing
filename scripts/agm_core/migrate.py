@@ -3,7 +3,6 @@
 Schema 1/2 ledgers and their migration journals are preserved, never converted or
 replayed. Release upgrade and recovery begin with the formal schema 3 baseline.
 """
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -26,10 +25,6 @@ def _fail(message, code="migration_conflict"):
 
 def _bytes(value):
     return (json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
-
-
-def _sha(raw):
-    return hashlib.sha256(raw).hexdigest()
 
 
 def _json(path):

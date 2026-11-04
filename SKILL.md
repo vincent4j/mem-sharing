@@ -5,7 +5,7 @@ description: 多 Agent 记忆共享与融合，给你的每一个 AI Agent 同�
 
 # memSharing
 
-当前 Agent 理解原文，用户决定共享范围，小工具按确认清单精确修改字节。设计合同见[记忆共享与融合 PRD（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/memory-sharing-fusion-prd.md)和[已批准模块去向（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/retrospectives/2026-11-03-module-disposition-review.md)。
+当前 Agent 理解原文，用户决定共享范围，小工具按确认清单精确修改字节。设计合同见[共享 PRD（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/prd/sharing.md)和[架构与保护边界](docs/architecture.md)。
 
 ## 用户记忆：四步入口
 
@@ -70,10 +70,10 @@ python3 -B scripts/memory_share.py recover-memory-share --manifest /当前HOME/.
 | 意图 | 路由 |
 | --- | --- |
 | 安装、升级、添加 Agent | [INSTALL.md](INSTALL.md)；按既有精确计划和批准，不把六家安装支持当成本切片验收。 |
-| 当前项目规则接入与共享 | 项目记忆四步与用户记忆同一薄 CLI：`python3 -B scripts/memory_share.py share-project-memory --project <项目绝对路径>`（预览/提案/选择/批准同用户四步；归还 `return-project-memory`，恢复 `recover-memory-share --manifest`）。仅 Git 主 checkout，独立文件去重计票；AGENTS 既有公共项默认保留并只整理其他文件重复，不进待选；排除既有项必须逐项绑定本项目原生文件去向；Claude 补 `@AGENTS.md`、WorkBuddy 补项目桥块并核验后才删源；disabled 历史登记 fail closed 跳过；事务材料在 `<项目>/.mem-sharing/backups/`。合同见 [PRD（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/memory-sharing-fusion-prd.md) 与[项目链验收（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/skill-first-project-chain.md)。 |
+| 当前项目规则接入与共享 | 项目记忆四步与用户记忆同一薄 CLI：`python3 -B scripts/memory_share.py share-project-memory --project <项目绝对路径>`（预览/提案/选择/批准同用户四步；归还 `return-project-memory`，恢复 `recover-memory-share --manifest`）。仅 Git 主 checkout，独立文件去重计票；AGENTS 既有公共项默认保留并只整理其他文件重复，不进待选；排除既有项必须逐项绑定本项目原生文件去向；Claude 补 `@AGENTS.md`、WorkBuddy 补项目桥块并核验后才删源；disabled 历史登记 fail closed 跳过；事务材料在 `<项目>/.mem-sharing/backups/`。合同见 [项目 PRD（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/prd/project-rules.md) 与[当前验收（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)。 |
 | 批量接入、健康检查 | `scripts/agm.py enable-memory-batch`、`check-memory`，参数见操作手册；检查只读。 |
 | 明确“卸载 memSharing／mem-sharing”“不想用这个共享记忆工具了，帮我卸载” | 立即进入[整机卸载合同](docs/uninstall-design.md)的零写预览。核实旧安装代码与台账，外置恢复路径和精确批准后才卸载；自然语言意图不代替完整计划确认。目标含糊先澄清。 |
-| 旧迁移、staging、旧卸载恢复 | 按[模块去向评审（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/retrospectives/2026-11-03-module-disposition-review.md)读取对应兼容文档；不删除未知备份或绕过恢复门禁。 |
+| 旧迁移、staging、旧卸载恢复 | 按[兼容操作路由](docs/operations.md#保留的历史兼容入口)读取对应兼容文档；不删除未知备份或绕过恢复门禁。 |
 
 项目经历由 Context Keeper 独立管理，记录库、协议及上游源码不参与本流程。AGENTS 项目基座和有效原生项目桥接按既有治理保留。未经单独授权，不提交、推送、安装、卸载或修改真实宿主。
 

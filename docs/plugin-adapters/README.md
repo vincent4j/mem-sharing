@@ -6,7 +6,7 @@
 
 Python 业务只维护 `scripts/agm_core`，项目与机器入口分别为 `scripts/agm.py`、`scripts/install.py`。Node 公共代码只维护 `plugins/shared/src`，通过 `sync-to-plugins.mjs` 生成到 `plugins/paseo/server/shared/common`；许可披露同步进入插件目录。宿主子目录不依赖安装后的父仓库文件。
 
-源码提交 S 必须干净且固定完整 SHA。生成器从 S 的七份受管文档与 scripts 集合生成 `payload/core`、`payload/release.json`、根 `release/core-release.json` 和 `server/shared/release-identity.ts`。R 仅包含允许的生成变化，S/R 的受管字节和模式必须相同。内核身份记录 S，获取来源记录 R；摘要校验只证明完整性，不自证官方来源。开发 identity 保持空哨兵，不能手填摘要使开发目录冒充发行。
+源码提交 S 必须干净且固定完整 SHA。生成器从 S 的八份受管文档与 scripts 集合生成 `payload/core`、`payload/release.json`、根 `release/core-release.json` 和 `server/shared/release-identity.ts`。R 仅包含允许的生成变化，S/R 的受管字节和模式必须相同。内核身份记录 S，获取来源记录 R；摘要校验只证明完整性，不自证官方来源。开发 identity 保持空哨兵，不能手填摘要使开发目录冒充发行。
 
 生成、重生成和 CI 的准确步骤统一在[发行工具说明](../../tools/plugin-release/README.md)。普通 Git 安装与插件使用相同源身份和版本库存。版本来自获批发行输入，不从插件版本推断；同版异内容、未知前身、缺精确 conversion 或未来版本继续由原内核拒绝，不提供降级/同版覆盖捷径。修改受管文档也改变产品树，后续发行须重新生成与核验，不能继续使用旧 S/R。
 
@@ -23,7 +23,7 @@ Python 业务只维护 `scripts/agm_core`，项目与机器入口分别为 `scri
 1. 检查现有 Python≥3.9、Git、发行载荷与机器状态；缺工具时单独展示固定官方资产及目标路径，用户确认后准备私有依赖。
 2. 从当前包调用原 `--release-request` 解析器；必要时独立批准持久 export，然后用返回的 `--source-manifest` 形成机器计划。历史 export 仅可作为恢复候选，不能绕过当前包验证。
 3. 展示原内核精确计划、完整 JSON 和政策转换，确认后执行。相同计划的 digest 可相同；一次性 confirmationToken 另绑定 nonce、host/HOME、argv、内核树及资产场景，旧预览/跨 worker token 不可复用。
-4. 项目 enable/remove 复用原 `--preview`。记忆三态为保留、显式启用、显式禁用；`--no-memory` 对应 disabled 且保留规则。rebuild 的独立批准未代填，当前插件明确阻断该分支。
+4. 项目接入复用原内核预览和批准。历史 disabled 仅作规则接入 tombstone，不表示 CK 停用；不把已退役 `remove-memory/--memory/--no-memory` 当作可用新请求。原生入口按当前 Agent 实际使用补齐。
 
 拒绝计划不执行其业务写入；宿主可保留私有 request/operation 证据，不承诺整个文件系统绝对零写。机器状态只由原 R/C/V、库存、锁和 journal 管理，宿主辅助状态不是第二套台账。
 
@@ -43,7 +43,7 @@ R=`~/.mem-sharing`、C=`~/.local/share/mem-sharing`、V=`~/.mem-sharing/var/regi
 
 CK 是独立可选 Skill，固定 pin 为 `695074ee4b6ddb9999be858093f833d6377bd641`。来源获取先独立批准，持久 clean checkout 验证后再调用原上游安装器，安装批准单独进行。拒绝/失败不回滚 memSharing，不自动建项目记录库。
 
-当前上游安装支持 Codex、Claude Code、WorkBuddy，DSH/ZCode 按不支持跳过。宿主 enabled、Skill 链接存在、原生新会话实际读取和首次命令/保存是不同证据。无项目聊天、disabled、linked worktree 和首次 `/context-keeper` 规则继续生效，不用插件 hook 模拟自动保存。更新/卸载插件不升级或接管 CK。
+当前上游安装支持 Codex、Claude Code、WorkBuddy，DSH/ZCode/OpenCode 按不支持跳过。宿主 enabled、Skill 链接存在、原生新会话实际读取和首次命令/保存是不同证据。无项目聊天、disabled、linked worktree 和首次 `/context-keeper` 规则继续生效，不用插件 hook 模拟自动保存。更新/卸载插件不升级或接管 CK。
 
 ## 维护验证与历史
 

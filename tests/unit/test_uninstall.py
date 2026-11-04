@@ -344,26 +344,6 @@ class MultiAgentUninstallTests(InstallFixture):
         self.assertIn(self.private,self.claude.read_bytes())
         self.assertEqual(self.claude.read_bytes().count(b'@'),0)
 
-    def test_redirect_preserves_non_token_bytes_and_rejects_ambiguity(self):
-        old = self.runtime.root/'memories/MEMORY.md'
-        new = self.claude.parent/'memsharing-return/memories/MEMORY.md'
-        raw = b'private\r\n  @'+str(old).encode()+b' \r\ntail without LF'
-        obj = {'kind':'import','marker':None,'ownership':'reused',
-               'fingerprint':{'value':recovery.digest(raw)}}
-        expected = raw.replace(str(old).encode(),str(new).encode())
-        self.assertEqual(uninstall._redirect_import(raw,obj,old,new),expected)
-        no_lf = b'@'+str(old).encode()
-        obj['fingerprint']['value'] = recovery.digest(no_lf)
-        self.assertEqual(uninstall._redirect_import(no_lf,obj,old,new),b'@'+str(new).encode())
-        for bad in (raw+b'\n@'+str(old).encode(),b'private only'):
-            obj['fingerprint']['value']=recovery.digest(bad)
-            with self.assertRaises(ValueError):uninstall._redirect_import(bad,obj,old,new)
-        obj['fingerprint']['value']=recovery.digest(raw)
-        with self.assertRaises(ValueError):uninstall._redirect_import(raw+b'changed',obj,old,new)
-        obj['kind']='file'
-        with self.assertRaises(ValueError):uninstall._redirect_import(raw,obj,old,new)
-
-
 if __name__ == '__main__':unittest.main()
 
 from entry_opaque_fixture import assert_opaque, remember_mode

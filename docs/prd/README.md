@@ -24,7 +24,6 @@ memSharing：多 Agent 记忆共享与融合，给你的每一个 AI Agent 同�
 
 ## 资料关系
 
-[融合详细规格](../memory-sharing-fusion-prd.md)提供具体分组与示例，与本目录保持一致；历史验收与复盘是证据，不覆盖最新需求。
-[安装与本机验收](../acceptance/skill-first-real-reinstall.md)、[六家原生分发验收](../acceptance/six-native-skill-distribution.md)、[项目恢复验收](../acceptance/skill-first-project-runtime.md)记录各自当时的验证范围。本轮新增交互不得直接借用旧证据宣称通过。
+本目录是当前需求唯一维护入口；操作步骤由根 Skill/INSTALL 和操作手册承载。[验收总览](../acceptance/index.md)集中记录现状、未验项和固定历史证据；阶段材料不再与现行 PRD 并存维护。
 
 项目已启用 PRD Distill；[合同索引](contracts/README.md)只登记有明确测试绑定与证据的合同。

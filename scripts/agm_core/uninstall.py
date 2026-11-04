@@ -26,18 +26,6 @@ COMMAND = 'uninstall-machine'
 RETURN_DIR = 'memsharing-return'
 
 
-def _append_directories(changes, path, home):
-    missing = []
-    current = Path(path)
-    while current != Path(home) and recovery.snapshot(current)['kind'] == 'absent':
-        missing.append(current)
-        current = current.parent
-    for directory in reversed(missing):
-        key = str(directory)
-        changes.setdefault(key, {'path': key, 'before': {'kind':'absent'},
-                                  'after': {'kind':'directory','mode':0o700}, 'stage':'return'})
-
-
 def _change(changes, path, after, stage):
     path = str(path)
     before = recovery.snapshot(path)
@@ -90,22 +78,6 @@ def _preserve_ck(obj,roots,raw=None):
     if any(str(root).encode() in content for root in roots):
         raise recovery.Conflict('Context Keeper depends on product; migrate it independently before uninstall: '+obj['path'])
     return True
-
-
-def _redirect_import(raw, obj, old_index, new_index):
-    """Explicitly approved dependency redirect; confers no deletion ownership."""
-    if obj['kind']!='import' or obj.get('marker') is not None or obj['ownership']!='reused':
-        raise recovery.Conflict('Not a proven native import dependency')
-    if recovery.digest(raw)!=(obj.get('fingerprint') or {}).get('value'):
-        raise recovery.Conflict('Native import whole-file fingerprint drift')
-    token = ('@'+str(old_index)).encode()
-    # Require exactly one complete import line. Whitespace/newline bytes are
-    # outside the path token and remain untouched, including absent final LF.
-    lines = raw.splitlines(keepends=True)
-    matches = [line for line in lines if line.strip()==token]
-    if len(matches)!=1 or raw.count(token)!=1:
-        raise recovery.Conflict('Missing/ambiguous native public import')
-    return raw.replace(token,('@'+str(new_index)).encode(),1)
 
 
 def _standalone_memory(runtime):

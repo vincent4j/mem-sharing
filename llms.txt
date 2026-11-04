@@ -1,30 +1,16 @@
 # memSharing 文档地图
 
-memSharing(多 Agent 记忆共享与融合):纯文件、零服务、一句话安装的跨执行器记忆共享层。一行一文档:标题 + 一句话 + 相对链接。
+- [README](README.md)：产品介绍与使用入口。
+- [INSTALL](INSTALL.md)：固定来源安装、选装与补装、独立 CK 尾步。
+- [SKILL](SKILL.md)：菜单、提案、选择即执行、共享与归还命令。
+- [DESIGN](DESIGN.md)：产品范围和设计原则。
+- [架构](docs/architecture.md)：数据、内核、适配器、所有权与事务边界。
+- [操作路由](docs/operations.md)：命令入口、故障、恢复与仍受支持的兼容能力。
+- [卸载合同](docs/uninstall-design.md)：全机范围、精确归还、外置恢复及宿主义务。
+- [模块 PRD（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/prd/README.md)：安装、共享、项目规则、卸载恢复的当前需求真源。
+- [当前验收（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)：已证现状、未验边界及固定历史证据。
+- [Paseo 手册（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/plugin-adapters/README.md)：薄宿主适配、发行、批准和依赖边界。
+- [Paseo 验收（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/plugin-adapters/acceptance.md)：宿主专属证据及待验项。
+- [Context Keeper 记录库（源码仓库）](https://github.com/vincent4j/mem-sharing/tree/main/docs/context-keeper)：本项目经历，由 Context Keeper 独立维护。
 
-## 入口文档
-
-- [README](README.md):产品门面——是什么、三记忆模型、快速上手、FAQ。
-- [INSTALL](INSTALL.md):安装操作页——五拍安装剧本、环境要求、Context Keeper 尾步。
-- [SKILL](SKILL.md):会话内操作路由——/mem-sharing 六项短菜单与读取契约;菜单与维护细则由公共指南 topics/使用约定.md 承载,各执行器用户文件只留公共指针与自身规则。
-- [DESIGN](DESIGN.md):设计总纲——现行范围、原则与治理合同；历史沿革留 Git。
-
-## 体系文档
-
-- [系统架构](docs/architecture.md):R/C/V 布局、台账 schema=3、事务与恢复、六家执行器（含 OpenCode 桌面／CLI 分面检测）接入与升级；机器 fresh/同来源再次安装/合法 upgrade 缺省全部核验 installed，显式限定新增；项目缺省旧三家、专属入口按实际使用维护。
-- [操作手册](docs/operations.md):安装/规则接入/批量/政策迁移/整机卸载/整理/健康检查/排查的完整操作说明。
-- [验收门禁总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md):分层结论、当前验收与暂停续审入口；阶段原件按 Git 历史取回。
-
-- [整机卸载方案](docs/uninstall-design.md):六家归还、外置恢复、宿主绑定与 CK 独立选择。
-
-## 设计与验收
-
-- [发布清单（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/m4/m4-10-prep/release-checklist.md):发布门禁与暂停中的后续运行验收规格。
-- [Paseo 维护手册（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/plugin-adapters/README.md):单仓发行、宿主批准、依赖与恢复合同。
-- [Paseo 验收记录（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/plugin-adapters/acceptance.md):当前分层证据、现场定位与尚未验证范围。
-
-- 现行合同的完整裁定沿革存 Git 历史(`f06db31:docs/plan/decisions-m4.md`);[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md) 汇总各里程碑结论。
-
-## 项目经历(由 Context Keeper 管理)
-
-- [docs/context-keeper/（源码仓库）](https://github.com/vincent4j/mem-sharing/tree/main/docs/context-keeper):本仓库自身的工作记录库,随 Git 走,由 Context Keeper 管理；固定 pin 用户级安装仅支持 Codex、Claude Code、WorkBuddy，dsh/zcode/opencode 跳过用户级安装（reason=upstream_unsupported）。
+阶段计划、交接日志和退役复盘不与当前合同重复维护；历史原件从当前验收页的固定提交链接追溯。
