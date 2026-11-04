@@ -77,7 +77,7 @@ python3 -B scripts/memory_share.py recover-memory-share --manifest /当前HOME/.
 
 ## 原生入口与增量接入
 
-Codex、Claude Code 的原生 `skills/mem-sharing/SKILL.md` 由安装器按选择补齐，读取持久安装核心；记忆引用本身不等于 Skill 可发现。新增 Agent 先补入口且保留其原文，再独立预览并批准增量整理；已有公共同语境同字节正文复用，不重复搬入旧 Agent 内容。已接入 Agent 重装零写，不再提示融合。任意入口提出卸载均走同一全机卸载核心，处理全部受管 Agent；不存在仅卸载当前 Agent 的产品分支。
+六家执行器的原生 `skills/mem-sharing/SKILL.md` 由安装器按选择补齐，读取持久安装核心；记忆引用本身不等于 Skill 可发现。新增 Agent 先补入口且保留其原文，再独立预览并批准增量整理；已有公共同语境同字节正文复用，不重复搬入旧 Agent 内容。已接入 Agent 重装零写，不再提示融合。任意入口提出卸载均走同一全机卸载核心，处理全部受管 Agent；不存在仅卸载当前 Agent 的产品分支。WorkBuddy 的 WORKBUDDY_CONFIG_DIR、CODEBUDDY_CONFIG_DIR、数据目录名或实例号使用户根偏离默认值时停止接入，不回显环境原值。
 
 ## 自动项目接入
 

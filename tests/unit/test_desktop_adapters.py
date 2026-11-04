@@ -94,7 +94,9 @@ class DesktopInstallTests(InstallFixture):
             assert_opaque(self, p.read_bytes(), private, index=self.runtime.root/"memories/MEMORY.md", path=p)
             self.assertIn(user_entries.NATIVE_FALLBACK_TEXTS[agent].encode(), p.read_bytes())
             self.assertNotIn("Codex 原生读取".encode(), p.read_bytes())
-            self.assertFalse((p.parent / 'skills').exists())
+            skill = p.parent/'skills/mem-sharing/SKILL.md'
+            self.assertTrue(skill.is_file())
+            self.assertIn(str(self.runtime.code/'SKILL.md'), skill.read_text())
             self.assertEqual(user_entries.connection_status(self.runtime, self.config, ledger, [agent])[agent]['status'], 'connected')
         before = snapshot(self.home)
         same = user_entries.run_user_entries(self.request)

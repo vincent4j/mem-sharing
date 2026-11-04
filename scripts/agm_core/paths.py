@@ -33,6 +33,16 @@ from pathlib import Path
 # 接入全部已核验安装的执行器(见 user_entries/安装器缺省=AGENT_ORDER 全量),
 # 与项目实际使用入口策略分开判定。
 AGENT_ORDER = ("codex", "claude", "workbuddy", "dsh", "zcode", "opencode")
+NATIVE_SKILL_ROOTS = {
+    'codex': '.codex/skills', 'claude': '.claude/skills',
+    'workbuddy': '.workbuddy/skills', 'dsh': '.dsh/skills',
+    'zcode': '.zcode/skills', 'opencode': '.config/opencode/skills',
+}
+
+
+def native_skill_path(agent, *, home):
+    """Executor-owned default discovery root, never a shared cross-agent alias."""
+    return Path(home) / NATIVE_SKILL_ROOTS[agent] / 'mem-sharing/SKILL.md'
 DEFAULT_AGENTS = ("codex", "claude", "workbuddy")
 AGENTS = frozenset(AGENT_ORDER)
 
@@ -357,7 +367,7 @@ def allowed_user_paths(platform_config, agents, *, home):
 
     M2-02 内核合同:凡涉及 user/machine 对象的 registry load/validate/serialize/commit
     必须传该列表,不在表内的用户级路径一律拒绝;CLI 层不得自行放宽。v1.11(2026-10-30
-    裁定)起保留用户级入口；当前另为 Codex/Claude 枚举原生 mem-sharing Skill 文件。
+    裁定)起保留用户级入口；当前为六家枚举原生 mem-sharing Skill 文件。
     agents=None 表示"全部支持执行器"(六家全集):台账加载/校验必须覆盖已登记的
     dsh/zcode/opencode 用户对象,否则显式接入后 check/remove/升级会误判越界;缺省
     接入三家的语义由调用方经 resolve_agents 表达,不在本函数重复。
@@ -367,6 +377,5 @@ def allowed_user_paths(platform_config, agents, *, home):
         expanded = expand_path(platform_config[agent]["user_entry"], home=home)
         if expanded not in collected:
             collected.append(expanded)
-        if agent in ('codex', 'claude'):
-            collected.append(str(Path(home) / ('.codex' if agent == 'codex' else '.claude') / 'skills/mem-sharing/SKILL.md'))
+        collected.append(str(native_skill_path(agent, home=home)))
     return collected

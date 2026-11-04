@@ -778,7 +778,9 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
         if not oid.endswith('#native-skill'):
             continue
         path = Path(obj['path'])
-        expected = runtime.home / ('.codex' if obj['agents'] == ['codex'] else '.claude') / 'skills/mem-sharing/SKILL.md'
+        if len(obj['agents']) != 1 or obj['agents'][0] not in paths.NATIVE_SKILL_ROOTS:
+            raise recovery.Conflict('Native Skill agent ownership: ' + str(path))
+        expected = paths.native_skill_path(obj['agents'][0], home=runtime.home)
         state = recovery.snapshot(path)
         if (path != expected or obj['kind'] != 'file' or obj['ownership'] != 'created'
                 or state['kind'] != 'file' or recovery.digest(bytes.fromhex(state['hex'])) != obj['fingerprint']['value']):

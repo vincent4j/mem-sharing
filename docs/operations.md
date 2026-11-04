@@ -162,7 +162,7 @@ OpenCode 检测分别报告 CLI 与桌面 App 安装面。桌面核对 `OpenCode
 
 DSH 本次限默认 coding `cordis` preset 与默认根。接入规划自动检查 `DSH_HOME`，非默认根拒绝默认入口接入，错误不回传变量值。`DSH_AGENTS_HOME` 影响共享 Skill 根，目前不自动检测，也不承诺默认共享 Skill 目录已被客户端发现。显式插件配置也可能覆盖根，自定义配置与桌面进程实际环境未验证。`ZCODE_HOME` 不是 ZCode 规则根，不能用它推导规则位置。
 
-静态读取逻辑支持 DSH 的 `~/.dsh/skills`、ZCode 的 `~/.zcode/skills`，以及两者共用的 `~/.agents/skills`；项目侧也有各自隐藏目录与 `.agents/skills` 发现逻辑。memSharing 不创建、复制或投影这些 Skill。静态发现与符号链接支持不等于桌面实际加载通过。
+静态读取逻辑支持 DSH 的 `~/.dsh/skills`、ZCode 的 `~/.zcode/skills`，以及两者共用的 `~/.agents/skills`；项目侧也有各自隐藏目录与 `.agents/skills` 发现逻辑。memSharing 按安装选择在各家专属默认根创建受管 mem-sharing 薄 Skill；不写共享 .agents/skills，也不预建未选择者。静态发现依据不等于桌面实际加载通过。
 
 原生入口证据见[桌面合同（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/desktop-agent-contracts.md)。原生入口静态证据不代表运行时加载通过；两款桌面端新会话的用户记忆、项目记忆和 Skill 加载验收均为 pending。
 

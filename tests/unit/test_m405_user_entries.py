@@ -484,6 +484,8 @@ class UserEntryFixture(unittest.TestCase):
     def test_workbuddy_unregistered_current_block_is_rejected_without_adoption(self):
         self.seed_workbuddy_bundle()
         self.execute(detect_runner=self.workbuddy_runner())
+        # Isolate the unregistered memory-block case from native Skill conflicts.
+        (self.home/'.workbuddy/skills/mem-sharing/SKILL.md').unlink()
         entry = self.home / ".workbuddy/MEMORY.md"
         raw = entry.read_bytes()
         ledger = self.load_ledger()

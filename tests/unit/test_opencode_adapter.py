@@ -172,7 +172,9 @@ class OpenCodeInstallTests(InstallFixture):
         self.assertTrue(entry.is_file())
         self.assertIn(user_entries.OPENCODE_FALLBACK_TEXT.encode(), entry.read_bytes())
         self.assertNotIn("Codex 原生读取".encode(), entry.read_bytes())
-        self.assertFalse((entry.parent / 'skills').exists())  # v1.11:不建 Skill 投影
+        skill = entry.parent/'skills/mem-sharing/SKILL.md'
+        self.assertTrue(skill.is_file())
+        self.assertIn(str(self.runtime.code/'SKILL.md'), skill.read_text())
         ledger = registry.load_registry(self.runtime.registry,
             allowed_user_paths=paths.allowed_user_paths(self.config, None, home=str(self.home)))
         self.assertIn('opencode', ledger['machine']['agents'])

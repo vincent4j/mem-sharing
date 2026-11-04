@@ -358,7 +358,7 @@ class _Planner:
     # ---- per-mode entry planning ------------------------------------------
 
     def native_skill(self, agent):
-        path = self.runtime.home / ('.codex' if agent == 'codex' else '.claude') / 'skills/mem-sharing/SKILL.md'
+        path = agm_paths.native_skill_path(agent, home=self.runtime.home)
         _require_real_parents(path, self.runtime.home)
         snap = self.snapshot(path)
         raw = ("---\nname: mem-sharing\ndescription: 多 Agent 记忆共享与融合，给你的每一个 AI Agent 同一份记忆。\n---\n\n"
@@ -893,6 +893,15 @@ def _plan(request, runtime, detection, effective, *, transaction):
         _preflight_machine_units(ledger)
     planner = _Planner(config=config, runtime=runtime, ledger=ledger,
                        detection=detection, effective=effective, transaction=transaction)
+    if 'workbuddy' in effective:
+        default = Path(home)/'.workbuddy'
+        redirected = any(value and (not Path(value).is_absolute() or Path(value).resolve()!=default)
+                         for key in ('WORKBUDDY_CONFIG_DIR', 'CODEBUDDY_CONFIG_DIR')
+                         for value in [os.environ.get(key, '').strip()])
+        redirected = redirected or os.environ.get('WORKBUDDY_DATA_FOLDER_NAME', '.workbuddy').strip() not in ('', '.workbuddy')
+        if redirected or os.environ.get('WORKBUDDY_INSTANCE_NUMBER', '').strip():
+            raise UserEntryError('workbuddy_config_redirected',
+                                 'WorkBuddy 用户配置根重定向；只支持默认根，整单停止，零写入。')
     if "dsh" in effective and dsh_home_redirected(home):
         # 冻结合同:DSH_HOME 重定向时默认入口不被读取;fail closed,不写无效文件。
         # 只说明变量名与默认根支持范围,不回传 DSH_HOME 原始值(隐私)。
@@ -913,8 +922,7 @@ def _plan(request, runtime, detection, effective, *, transaction):
             "整单停止,零写入。")
     for agent in effective:
         entry = config[agent]
-        if agent in ('codex', 'claude'):
-            planner.native_skill(agent)
+        planner.native_skill(agent)
         user_path = Path(agm_paths.expand_path(entry["user_entry"], home=home))
         _require_real_parents(user_path, runtime.home)
         if entry["rule_mode"] == "user_convention":

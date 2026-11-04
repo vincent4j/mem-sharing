@@ -52,7 +52,7 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 | 受管标记前缀 | `mem-sharing:*` |
 | v0 历史源 | `~/.agents-group`，只读来源，原地保留 |
 
-中枢只包含 memories、references、backups、var，不建 skills/mcp，Codex 与 Claude Code 按所选范围安装各自原生 `skills/mem-sharing/SKILL.md` 薄入口，指向持久安装核心，不占用公共 Skills 目录；其他四家原生 Skill 分发未在本轮实现。旧标记与现网文件不能因改名被自动接管，按漂移处理，真实重建留 M4-10。运行中的本地 checkout 不在本次操作中改目录名。
+中枢只包含 memories、references、backups、var，不建 skills/mcp，六家执行器按所选范围安装各自原生 `skills/mem-sharing/SKILL.md` 薄入口，指向持久安装核心，不占用公共 Skills 目录。旧标记与现网文件不能因改名被自动接管，按漂移处理，真实重建留 M4-10。运行中的本地 checkout 不在本次操作中改目录名。
 
 四通道仍为：全新、确认的 v0 内容复制、有效产品升级（同版幂等）、异常停止。v0 从历史源复制到新 R，只纳入 memories/references；skills、mcp、旧脚本与状态原地保留，不运行、不接管。源目标天然分离，不改写旧源索引；旧索引作为原文与链接上下文保留，新索引只索引它。保留清单、恢复材料、逐字节验证与一次导入约束；同路径夹具的快照语义不等于真机必须改写旧源。
 
