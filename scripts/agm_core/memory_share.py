@@ -500,7 +500,7 @@ def _parse_selection(selection, numbers):
         for clause in re.split(r'[,，;；](?=\s*(?:不共享|共享|不合并|再加入))', selection):
             match = re.fullmatch(r'\s*(不共享|共享|不合并|再加入)?\s*(\d+(?:\s*[、,，]\s*\d+)*)\s*', clause)
             if not match:
-                _fail('invalid_selection', '请使用编号、不共享 n、按默认方案、查看 n 或暂不整理')
+                _fail('invalid_selection', '请使用编号、不合并 n、再加入 n、按默认方案、查看 n 或暂不整理')
             picked = {int(v) for v in re.split(r'[、,，]', match[2])}
             if not picked <= numbers:
                 _fail('invalid_selection', '未知编号：' + selection)

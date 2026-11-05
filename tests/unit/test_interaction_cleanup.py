@@ -10,6 +10,21 @@ from agm_core import detect,uninstall,uninstall_recovery as recovery,memory_shar
 
 OUT=Path('/tmp/msf-interaction-cleanup-output');OUT.mkdir(mode=0o700,exist_ok=True)
 class InteractionCleanupTests(unittest.TestCase):
+    def test_unknown_sources_are_not_presented_as_no_rules(self):
+        from agm_core import user_rules_organize as org
+        plan = dict(request={'home': '/example'}, groups=[],
+                    default_numbers=[], optional_numbers=[], single_numbers=[],
+                    unknown_sources=[{'path': '/example/.codex/AGENTS.md'}])
+        for render in (org.present, ms.present):
+            text = render(plan)
+            self.assertIn('未能完整读取', text)
+            self.assertIn('~/.codex/AGENTS.md', text)
+            self.assertNotIn('没有需要合并', text)
+        plan['project'] = '/example/project'
+        self.assertIn('未能完整读取', ps.present(plan))
+        plan['unknown_sources'] = []
+        self.assertEqual(ps.present(plan), '没有需要合并的项目规则。')
+
     def test_user_and_project_real_cli_all_candidates_and_new_alias(self):
         for mod,klass,command in [(ms,user_fixture.MemoryShareChainTests,'share-user-memory'),(ps,project_fixture.ProjectShareTests,'share-project-memory')]:
             f=klass();f.setUp();self.addCleanup(f.doCleanups)

@@ -766,6 +766,14 @@ def present(plan, *, summaries=None):
     pending = sorted(set(plan['optional_numbers']) | set(plan['single_numbers']))
     names = {'codex':'Codex','claude':'Claude Code','workbuddy':'WorkBuddy','dsh':'DSH','zcode':'ZCode','opencode':'OpenCode'}
     home = plan['request']['home']
+    unknown = plan.get('unknown_sources', [])
+    if unknown:
+        lines.append('以下来源未能完整读取，不能据此判断没有规则或全部内容相同：')
+        for item in unknown:
+            source = item['path']
+            if source.startswith(home+'/'): source = '~'+source[len(home):]
+            lines.append('- '+source)
+        lines.append('')
     if plan.get('view'):
         group = next(g for g in plan['groups'] if g['number']==plan['view'])
         return '\n'.join('来源：'+i['source']+'\n'+i['text'] for i in group['sources'])
@@ -787,7 +795,10 @@ def present(plan, *, summaries=None):
                     if value not in sources: sources.append(value)
             lines.append('   来源：'+'、'.join(sources))
         lines.append('')
-    if not plan['groups']: return '没有需要合并的用户规则。'
+    if not plan['groups']:
+        if unknown: return '\n'.join(lines).rstrip()
+        scope = '项目' if plan.get('project') or plan['request'].get('scope') == 'project' else '用户'
+        return '没有需要合并的'+scope+'规则。'
     choices=[]
     if plan['default_numbers']:
         choices += ['“按默认方案”', '“不合并%d”排除该项' % plan['default_numbers'][0]]
