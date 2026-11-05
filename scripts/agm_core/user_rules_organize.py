@@ -219,6 +219,71 @@ def validate_reference_rebinding(old_raw, new_raw, source_before, source_after, 
     return matched
 
 
+def _created_public_span(record, raw):
+    """Only the producer that added this exact offset seeds automatic context reuse."""
+    manifest = Path(record['manifest_path'])
+    producer = json.loads(_file(manifest).data, object_pairs_hook=registry._no_duplicates)
+    rows = [r for r in producer.get('entries', []) if r['path'] == record['topic']]
+    if len(rows) != 1:
+        return False
+    before = rows[0]['before']
+    if before['kind'] == 'absent':
+        prior = b''
+    elif before['kind'] == 'file':
+        name = before.get('backup')
+        if not isinstance(name, str) or Path(name).name != name:
+            _fail('content_conflict', '公共 producer 备份缺失')
+        prior = _file(manifest.parent/name).data
+        if entries.sha256(prior) != before['fingerprint']:
+            _fail('content_conflict', '公共 producer 备份漂移')
+    else:
+        return False
+    left, right = record['public_offset'], record['public_end']
+    return left >= len(prior) and right-left == len(raw)
+
+
+def _explicit_public_reuse(request, items, public_copies, snapshots, topic):
+    declarations = request.get('public_reuse', [])
+    if not isinstance(declarations, list):
+        _fail('invalid_public_reuse', 'public_reuse 必须为列表')
+    if declarations and request.get('scope', 'user') != 'user':
+        _fail('invalid_public_reuse', '仅支持已有公共用户正文')
+    indexed = {(i['source'], i['start'], i['end']): i for i in items}
+    result = {}
+    fields = {'source', 'start', 'end', 'source_context', 'public_start', 'public_end',
+              'public_context', 'text_sha256', 'equivalent', 'reason', 'source_basis', 'public_basis'}
+    for row in declarations:
+        if not isinstance(row, dict) or set(row) != fields or row['equivalent'] is not True:
+            _fail('invalid_public_reuse', '需要完整精确绑定及明确语境等价声明')
+        if not isinstance(row['reason'], str) or not row['reason'].strip():
+            _fail('invalid_public_reuse', '需要 Agent 的语境等价理由')
+        if any(type(row[k]) is not int for k in ('start','end','public_start','public_end')):
+            _fail('invalid_public_reuse', '字节范围必须为整数')
+        if not isinstance(row['source'], str):
+            _fail('invalid_public_reuse', 'source 必须为精确原生路径字符串')
+        for field in ('source_context','public_context'):
+            ctx = row[field]
+            if not isinstance(ctx, list) or any(not isinstance(h, list) or len(h)!=3
+                    or type(h[0]) is not int or not 1<=h[0]<=6 or not isinstance(h[1], str)
+                    or type(h[2]) is not int or h[2]<1 for h in ctx):
+                _fail('invalid_public_reuse', '语境必须为原始标题层级/文本/次数列表')
+        key = (row['source'], row['start'], row['end'])
+        item = indexed.get(key)
+        if item is None or key in result:
+            _fail('invalid_public_reuse', '源片段未知或重复声明')
+        if (row['source_basis'] != snapshots[item['source']].fingerprint
+                or row['public_basis'] != snapshots[str(topic)].fingerprint):
+            _fail('invalid_public_reuse', 'Agent 读取后的源/公共整文件基线已变化')
+        raw = item['text'].encode()
+        if item['context'] != row['source_context'] or entries.sha256(raw) != row['text_sha256']:
+            _fail('invalid_public_reuse', '源语境或原文哈希不符')
+        target = public_copies.get((json.dumps(row['public_context']), raw))
+        if target != (row['public_start'], row['public_end']):
+            _fail('invalid_public_reuse', '目标不是已证明的同字节公共片段/语境')
+        result[key] = row
+    return result
+
+
 def _build(request):
     import sys
     from .memory_share import _heading_context
@@ -298,8 +363,10 @@ def _build(request):
         for record in _available_migrations(runtime).values():
             raw = bytes.fromhex(record['text_hex'])
             left, right = record['public_offset'], record['public_end']
-            if record.get('topic') == str(topic) and public_raw[left:right] == raw:
+            if (record.get('topic') == str(topic) and public_raw[left:right] == raw
+                    and _created_public_span(record, raw)):
                 public_copies.setdefault((json.dumps(record.get('context', record['scope'])), raw), (left, right))
+    explicit_reuse = _explicit_public_reuse(request, items, public_copies, snapshots, topic)
     groups = {}
     for item in items:
         key = _encoded([_identity(item['text']), item['scope'], item['context']]).decode()
@@ -309,9 +376,16 @@ def _build(request):
     for key, members in groups.items():
         coverage = len({i['source'] for i in members})
         existing = bool(root and any(i['source'] == str(topic) for i in members) or mode == 'user' and any((json.dumps(i['context']), i['text'].encode()) in public_copies for i in members))
+        declared = [(i['source'],i['start'],i['end']) in explicit_reuse for i in members]
+        if any(declared) and any(not d and (json.dumps(i['context']), i['text'].encode()) not in public_copies
+                                 for i,d in zip(members,declared)):
+            _fail('invalid_public_reuse', '同组语境等价必须逐处声明，不能扩大未声明来源')
+        existing = existing or any(declared)
         all_present = n >= 2 and coverage == n and not unknown
         group = {'group_id': entries.sha256(key.encode()), 'summary': members[0]['text'].strip().splitlines()[0],
             'sources': members, 'existing_public': existing, 'default': existing or all_present}
+        group['public_reuse'] = [explicit_reuse[(i['source'],i['start'],i['end'])] for i in members
+                                 if (i['source'],i['start'],i['end']) in explicit_reuse]
         (defaults if group['default'] else optional if coverage >= 2 else single).append(group)
     numbered = defaults + optional + single
     for number, group in enumerate(numbered, 1): group['number'] = number
@@ -377,7 +451,10 @@ def _build(request):
             for item in group['sources']:
                 raw = item['text'].encode()
                 key = (json.dumps(item['context']), raw)
-                if key not in copies:
+                reuse = explicit_reuse.get((item['source'],item['start'],item['end']))
+                if reuse:
+                    offset, end = reuse['public_start'], reuse['public_end']
+                elif key not in copies:
                     context = ('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate(item['scope']))+'\n').encode() if item['scope'] else b'\n'
                     if mode == 'user' and emitted_scope == item['context']:
                         context = b'\n'
@@ -387,7 +464,7 @@ def _build(request):
                     content += chunk
                     public_added += chunk
                     copies[key] = (offset, offset + len(raw))
-                offset, end = copies[key]
+                if not reuse: offset, end = copies[key]
                 migrated.append(item)
                 for agent in item['agents']:
                     migrations.append({'group': group['number'], 'summary': group['summary'],
@@ -462,7 +539,7 @@ def _build(request):
                 rebindings=[{'object_id':oid,'path':native,'before':snapshots[native].fingerprint,'after':after.fingerprint} for oid in ids]
                 changes.append({'path':str(runtime.registry),'before':_meta(vsnap),'after_hex':raw.hex(),'after_sha256':entries.sha256(raw)})
     saved = {k:copy.deepcopy(request[k]) for k in ('home','platform_config','agents','topic','scope','project','selection',
-        'search_paths','app_directories','user_candidates','retentions') if k in request}
+        'search_paths','app_directories','user_candidates','retentions','public_reuse') if k in request}
     saved['home'] = str(runtime.home)
     plan = {'schema_version': 2, 'command': COMMAND, 'layout': runtime.describe(), 'request': saved,
         'declined': declined, 'scope': mode, 'project': str(root) if root else None, 'agents': selected, 'agent_facts': facts,
@@ -651,6 +728,9 @@ def present(plan, *, summaries=None):
                 agents = sorted({a for item in group['sources'] for a in item['agents']})
                 suffix = '；单家内容，默认不共享' if group['number'] in plan['single_numbers'] else ''
                 lines.append('%d. %s（%s%s）' % (group['number'], caption, '、'.join(names.get(a,a) for a in agents), suffix))
+                for reuse in group.get('public_reuse', []):
+                    lines.append('   Agent 明确判定语境等价：%s；复用既有公共字节 [%d,%d)。' %
+                                 (reuse['reason'], reuse['public_start'], reuse['public_end']))
     lines += ['', '请告诉我你的选择（以下序号仅为输入示例，以本次实际编号为准）：',
               '- 3、4：保留默认项，并共享待选项 3、4。',
               '- 不共享 2：排除默认项 2。',
@@ -686,6 +766,7 @@ def cli(argv=None, *, home=None):
     parser.add_argument('--approval-file')
     parser.add_argument('--selection-plan-file', help='此前展示的完整 approval_plan，用于绑定选择前现场')
     parser.add_argument('--selection-reference', help='实际用户选择消息；选择即执行，不另问确认')
+    parser.add_argument('--public-reuse-file', help='Agent 显式等价语境与已有公共字节范围绑定 JSON 列表')
     parser.add_argument('--retention-file',help='JSON对象：已排除公共条目编号到当前项目原生文件路径')
     ns = parser.parse_args(argv)
     try:
@@ -698,7 +779,7 @@ def cli(argv=None, *, home=None):
             request.update(approval['request'])
             if request['home'] != str(Path(home or Path.home()).resolve()):
                 _fail('approval_mismatch','批准HOME与当前目标不一致')
-            if ns.selection is not None or ns.decline or ns.agents or ns.retention_file or ns.topic:
+            if ns.selection is not None or ns.decline or ns.agents or ns.retention_file or ns.topic or ns.public_reuse_file:
                 _fail('approval_mismatch','执行批准时不得同时改变选择或参与者')
             request['approval'] = approval
         else:
@@ -706,6 +787,8 @@ def cli(argv=None, *, home=None):
             if ns.agents: request['agents'] = ns.agents
             if ns.project: request['project'] = ns.project
             if ns.topic: request['topic'] = ns.topic
+            if ns.public_reuse_file:
+                request['public_reuse'] = json.loads(Path(ns.public_reuse_file).read_text(), object_pairs_hook=registry._no_duplicates)
             request['selection'] = '暂不整理' if ns.decline else ns.selection or '按默认方案'
             if ns.retention_file: request['retentions'] = json.loads(Path(ns.retention_file).read_text(),object_pairs_hook=registry._no_duplicates)
         expected_scope = 'project' if ns.command=='organize-project-memory' else 'user'
