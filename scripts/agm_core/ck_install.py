@@ -361,7 +361,7 @@ def execute_context_keeper(plan, approval, *, request=None, runner=None):
 
 
 def tail(report, request, *, stdin=None, stderr=None):
-    """Only a real newline from a TTY consents; main completion is independent."""
+    """Only the explicit TTY reply 安装 consents; a newline or EOF never does."""
     if report.get('status') != 'completed':
         return report
     if report.get('fusion', {}).get('status') not in (None, 'completed', 'declined', 'unchanged'):
@@ -386,22 +386,10 @@ def tail(report, request, *, stdin=None, stderr=None):
                 % '、'.join(PRODUCT_LABELS.get(a, a) for a in ck_skipped)
         print(message, file=stderr, flush=True)
         print(PROMPT.format(agents='、'.join(connected)), file=stderr, flush=True)
-        failure = None
-        try:
-            plan = plan_context_keeper(request, data['product']['last_operation_id'])
-        except (ValueError, OSError, subprocess.SubprocessError) as exc:
-            failure = exc
-            print('CK 安装预览暂不可用：'+str(exc), file=stderr, flush=True)
-        if failure is None:
-            print('CK 预览：'+json.dumps({'agents': plan['agents'], 'source': plan['source']['root'],
-                'skipped_upstream_agents': plan['skipped_upstream_agents'],
-                'commit': plan['source']['commit'], 'files': plan['skill_entries']+plan['rule_files'],
-                'plan_sha256': plan['plan_sha256']}, ensure_ascii=False), file=stderr, flush=True)
         if stdin.readline().strip() != '安装':
             report['context_keeper'] = {'status': 'skipped', 'reason': 'not_consented'}
             return report
-        if failure is not None:
-            raise failure
+        plan = plan_context_keeper(request, data['product']['last_operation_id'])
         evidence = {'confirmed_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                     'reference': '用户回复：安装；已展示本机实际安装名单：'+ '、'.join(connected)}
         report['context_keeper'] = execute_context_keeper(plan, dict(plan, **evidence), request=request)

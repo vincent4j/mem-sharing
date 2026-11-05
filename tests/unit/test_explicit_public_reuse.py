@@ -79,7 +79,8 @@ class ExplicitReuseTests(InstallFixture):
             rc=org.cli(['organize-user-memory','--agent','opencode','--public-reuse-file',str(evidence)],home=self.home)
         self.assertEqual(rc,5,out.getvalue());shown=json.loads(out.getvalue())['approval_plan']
         self.assertEqual(shown['request']['public_reuse'],self.bindings)
-        self.assertIn('Agent 明确判定语境等价',org.present(shown))
+        self.assertIn('需要你确认是否合并' if not shown['default_numbers'] else '建议合并的相同规则',org.present(shown))
+        self.assertIn('来源：',org.present(shown))
         org.execute_organize(shown,approved(shown),request=dict(self.req,public_reuse=self.bindings))
         from agm_core.memory_share import _available_migrations
         refs=[(key,record) for key,record in _available_migrations(self.runtime).items() if record['path']==str(self.open)]

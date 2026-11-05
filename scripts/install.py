@@ -573,6 +573,75 @@ def run(args):
     return report
 
 
+def interactive_install(args, report, *, stdin=None, stdout=None):
+    """One real TTY newline approves the displayed, exact machine plan."""
+    stdin = stdin or sys.stdin
+    stdout = stdout or sys.stdout
+    if not stdin.isatty():
+        return report
+    names = ck_install.PRODUCT_LABELS
+    if report.get('approval_required'):
+        plan = report.get('approval_plan') or {}
+        if plan.get('command') != 'install-machine-cli':
+            return report
+        labels = '、'.join(names.get(a, a) for a in plan['effective_agents'])
+        print('环境检查完成。将为以下 Agent 安装 memSharing：'+labels+'。', file=stdout)
+        print('安装后，它们可以使用同一份公共用户记忆。按回车开始安装。', file=stdout, flush=True)
+        answer = stdin.readline()
+        if answer not in ('\n', '\r\n'):
+            print('尚未安装。', file=stdout)
+            return {'status':'skipped', 'reason':'not_consented', 'changes':[]}
+        evidence = dict(plan, confirmed_at=datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+                        reference='真实 TTY 回车；已展示实际安装名单：'+labels+'；精确计划 '+plan['plan_sha256'])
+        report = execute_machine(plan, evidence, project=args.project)
+    if report.get('status') != 'completed':
+        return report
+    labels = '、'.join(names.get(a,a) for a in report['agents']['connected'])
+    print('memSharing 已安装。\n公共用户记忆：~/.mem-sharing/memories。\n已接入：'+labels, file=stdout, flush=True)
+    if report.get('fusion') is None:
+        return report
+    from agm_core import user_rules_organize as org
+    request = dict(plan['request'])
+    stage = org.plan_organize(request)
+    if stage['status'] == 'failed':
+        report['fusion'] = stage
+        return report
+    shown = stage['approval_plan']
+    if shown['groups']:
+        print(stage['prompt'], file=stdout, flush=True)
+        while True:
+            answer = stdin.readline()
+            if not answer:
+                report['fusion'] = {'status':'pending_selection'}
+                return report
+            selected = dict(request, selection=answer.strip())
+            choice = org.plan_organize(selected)
+            if choice['status'] == 'failed':
+                print('无法执行该选择：'+str(choice['errors']), file=stdout, flush=True)
+                continue
+            current = choice['approval_plan']
+            if any(shown.get(k) != current.get(k) for k in ('layout','observations','groups','agents','scope','project')):
+                raise InstallError('现场或编号已变化，请重新查看方案', 'drift')
+            if current.get('view'):
+                group = next(g for g in current['groups'] if g['number']==current['view'])
+                for item in group['sources']:
+                    print('来源：'+item['source']+'\n'+item['text'], file=stdout)
+                stdout.flush()
+                continue
+            if choice.get('approval_required'):
+                choice = org.execute_organize(current, dict(current,
+                    confirmed_at=datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),
+                    reference='真实 TTY 选择：'+answer.strip()), request=selected)
+            report['fusion'] = {'status':choice.get('fusion_status'), 'result':choice}
+            if choice['status'] != 'completed':
+                return report
+            print('已暂不整理，原有内容保留。' if current['declined'] else '公共用户记忆已整理完成。未选和专属内容保留。', file=stdout, flush=True)
+            break
+    else:
+        report['fusion'] = {'status':'unchanged'}
+    return ck_install.tail(report, request, stdin=stdin, stderr=stdout)
+
+
 def main(argv=None):
     try:
         argv = list(sys.argv[1:] if argv is None else argv)
@@ -585,13 +654,17 @@ def main(argv=None):
                 seen.add(flag)
         args = build_parser().parse_args(argv)
         result = run(args)
+        interactive = sys.stdin.isatty() and sys.stdout.isatty() and not args.approval_file
+        if interactive:
+            result = interactive_install(args, result)
     except (ValueError, OSError, subprocess.SubprocessError, KeyError, TypeError) as exc:
         ck_route = any(token.split('=', 1)[0] == '--context-keeper' for token in argv)
         result = {'schema_version': 1, 'command': 'install-context-keeper' if ck_route else 'install-machine', 'status': 'failed',
                   'errors': [{'code': getattr(exc, 'code', 'install_failed'), 'message': str(exc)}]}
         if ck_route:
             result['context_keeper'] = {'status': 'unavailable' if getattr(exc, 'code', None) == 'ck_source_unavailable' else 'failed'}
-    print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+    if not locals().get('interactive') or result.get('status') not in ('completed', 'skipped'):
+        print(json.dumps(result, ensure_ascii=False, sort_keys=True))
     return 5 if result['status'] == 'approval_required' else 0 if result['status'] in ('completed', 'configured', 'acquired', 'rolled_back', 'skipped') else 2
 
 

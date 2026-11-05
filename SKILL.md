@@ -32,14 +32,14 @@ description: 多 Agent 记忆共享与融合，给你的每一个 AI Agent 同�
    python3 -B scripts/memory_share.py share-user-memory --agent codex --agent claude --proposal-file /绝对路径/proposal.json --selection '共享 3，不共享 2'
    ```
 
-   展示返回 `prompt` 的“默认共享”“由你选择是否共享”两块，空块写“暂无”；保持全局稳定编号，不能把 CLI 占位当实际摘要。N≥2 且全参与者同内容才默认推荐，部分覆盖默认不选。用户可输入待选编号、`不共享 2`、组合选择、`按默认方案`、`查看 3`、`暂不整理`。查看只返回完整原文与来源，零写，不选择、不批准；暂不整理零写。换提案或来源漂移后须重新展示，不复用旧编号含义。
+   展示返回 `prompt` 的“建议合并的相同规则”“需要你确认是否合并”两块，空栏目不展示；保持全局稳定编号，不能把 CLI 占位当实际摘要。N≥2 且全参与者同内容才默认推荐，部分覆盖默认不选。用户可输入待选编号、`不合并2`、组合选择、`按默认方案`、`查看 3`、`暂不整理`。查看只返回完整原文与来源，零写，不选择、不批准；暂不整理零写。换提案或来源漂移后须重新展示，不复用旧编号含义。
 4. **选择即执行。** 展示两块方案时说明参与者、原文查看入口、公共目标、删源范围、保留内容、必要入口与备份安排。把本次 `approval_plan` 保存在本地；用户回复“按默认方案”或明确编号即授权，不再问“确认执行”。按实际选择构建完整计划，绑定真实选择消息；不得伪称用户另行批准。示例：
 
    ```bash
    python3 -B scripts/memory_share.py share-user-memory --agent codex --agent claude --proposal-file /绝对路径/proposal.json --selection '按默认方案' --selection-plan-file /绝对路径/已展示计划.json --selection-reference '实际用户选择消息'
    ```
 
-   安装后 `organize-user-memory` 同样使用 `--selection`、`--selection-plan-file`、`--selection-reference`。`--approval-file` 保留为内部精确批准接口，批准证据直接来自本次选择。现场或编号实质变化才停止并重新展示；查看零写、不生成执行批准。执行后简报实际迁移、保留及备份结果。
+   安装后 `organize-user-memory` 若使用等价提案，查看与选择时均传同一 `--equivalent-sources-file`；同样使用 `--selection`、`--selection-plan-file`、`--selection-reference`。`--approval-file` 保留为内部精确批准接口，批准证据直接来自本次选择。现场或编号实质变化才停止并重新展示；查看零写、不生成执行批准。执行后简报实际迁移、保留及备份结果。
 
    执行批准时不混入 `--agent`、`--selection`、`--proposal-file`；HOME、来源、公共正文和入口漂移均使旧批准失效。顺序为公共完整原文→全部原生入口→核验→精确删源，复用同一 Transaction 备份/恢复。同语境且完全同字节的同组来源可共用一份公共正文，每处来源、位置和次数仍在 manifest 顶层可选 `operation_metadata` 中逐处记录；格式变体逐份保留。原文不摘要替换。条目之间只补足一个空行，原生剩余字节不重排。
 
@@ -104,7 +104,7 @@ Claude Code 首次使用已接入项目时，仅处理当前项目：先核对�
 
 ## 安装对话收尾
 
-检查后集中确认一次安装范围，静默安装；成功后展示公共用户记忆的默认共享/由你选择两块。选定直接执行并简报，或用户暂不整理后结束该阶段，最后才询问 CK。已有有效公共读取块时不另加 memory-index；仅精确归并已证明的产品重复指针，空用户规则章节随同一事务清理，保留未选正文。
+检查后集中确认一次安装范围，静默安装；成功后展示公共用户记忆的建议合并的相同规则/需要你确认是否合并两块。选定直接执行并简报，或用户暂不整理后结束该阶段，最后才询问 CK。已有有效公共读取块时不另加 memory-index；仅精确归并已证明的产品重复指针，空用户规则章节随同一事务清理，保留未选正文。
 CK 提示：为了让 Agent 在新会话中记住项目进度、决策和经验，接着上次的工作继续，需要另外安装 Context Keeper。是否为本机已安装的〈实际检测名单〉安装？回复“安装”或“跳过”。名单独立于本次 memSharing 选择；CK 单独授权，回车不算同意。当前固定上游只支持三家，其余明确报告不支持，不传未知 flags、不改上游。
 
 ### 显式复用既有公共片段
@@ -112,3 +112,9 @@ CK 提示：为了让 Agent 在新会话中记住项目进度、决策和经验�
 标题不同但 Agent 完整阅读后确认适用语义等价时，不改写来源标题或取消语境保护。为 `organize-user-memory --public-reuse-file /绝对路径/reuse.json` 提供 JSON 列表：每项包含 `source/start/end/source_context`、`public_start/public_end/public_context`、`text_sha256`、Agent 实际完整读取时的 `source_basis/public_basis` SHA256、`equivalent: true` 和非空 `reason`。context 使用实际的 `[标题深度, 标题原文, 同级出现次数]` 列表；公共目标必须是已证明、同字节的既有片段。同组需要逐处声明，不能用一处判断扩大其他来源。
 
 先展示含理由、源/目标范围的完整预览，再按实际选择执行；查看零写。没有声明仍按原语境保护，不自动建立永久标题别名。来源 context、位置和次数保持原样记录，归还与卸载仍使用已有协议。
+
+### 安装交互与单编号提案
+
+先检查 Python >=3.9、Git 与六家安装事实，再汇总实际名单，提示“环境检查完成。将为以下 Agent 安装 memSharing：〈名单〉。安装后，它们可以使用同一份公共用户记忆。按回车开始安装。”用户真实回车绑定本次精确计划直接执行，不解释内部确认机制，不再要求“确认安装”；EOF/非交互空输入不批准。CLI 的真实 TTY 提供同样前端；外层已收到回车则走正式批准接口，不再启动 TTY 重问。安装静默，完成只报“memSharing 已安装。公共用户记忆：~/.mem-sharing/memories。已接入：〈实际名单〉”。
+
+Agent 先完整读取来源并核实语境。不同标题若同属通用约束且原文完全相同，以 `--equivalent-sources-file` 传本次提案：列表项含 `sources`、`canonical_context`、`reason`；每个 source 含 `source/start/end/context/text_sha256/basis`。canonical 取真实来源语境，逐处完整绑定全部同组 occurrences，不能仅因文字相同声明等价。工具据此只显示一个编号、公共正文一份；原 context 与次数进入既有归还记录，无永久标题别名。未声明继续严格分组。提案及完整内部计划保存在本地，不让用户填写 JSON。
