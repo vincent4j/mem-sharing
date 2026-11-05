@@ -46,6 +46,18 @@ class ByteLayoutTests(unittest.TestCase):
         self.assertEqual(obj['ownership'],'reused')
         with self.assertRaises(ValueError):top.arrange(b'private\n'+b,[(m,b,obj)])
 
+    def test_top_import_allows_opaque_edits_but_relocation_still_requires_baseline(self):
+        token=b'@/fixture/public/MEMORY.md'
+        original=token+b'\nprivate before\n'
+        obj=dict(scope='machine',ownership='created',kind='import',
+                 fingerprint=dict(basis='file_bytes',value=sha256(original)))
+        changed=token+b'\nprivate after\n<!-- context-keeper:start -->new<!-- context-keeper:end -->'
+        self.assertEqual(top.arrange(changed,[(None,token,obj)]),changed)
+        for unsafe in (b'private after\n'+token,changed+b'\n'+token,
+                       b' '+token+b'\nprivate after',b'private only'):
+            with self.subTest(unsafe=unsafe),self.assertRaises(ValueError):
+                top.arrange(unsafe,[(None,token,obj)])
+
     def test_unknown_duplicate_missing_and_drift_rejected(self):
         m=user_entries.BASE_MARKER;b=user_entries._wrap_block(m,'owned')
         obj=dict(scope='machine',ownership='created',marker=m,fingerprint=dict(value=sha256(b)))

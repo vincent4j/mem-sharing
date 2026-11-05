@@ -55,7 +55,7 @@ def arrange(original, units):
                     raise EntryConflict("Reused user block cannot be relocated")
             elif (obj.get("kind") != "import" or not obj.get("fingerprint")
                     or obj["fingerprint"]["basis"] != "file_bytes"
-                    or sha256(original) != obj["fingerprint"]["value"]):
+                    or (not already_top and sha256(original) != obj["fingerprint"]["value"])):
                 raise EntryConflict("Public import whole-file baseline drift")
             spans.append(span)
         elif obj is not None:
