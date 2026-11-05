@@ -1,6 +1,6 @@
 <div align="center">
 
-# memSharing · 多 Agent 记忆共享与融合
+# memSharing · 多 Agent 编排记忆共享与融合
 
 **Multi-Agent Memory Sharing & Fusion**
 
@@ -33,10 +33,10 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 把这一句话复制给正在使用的 Agent：
 
 ```text
-请从 https://github.com/vincent4j/mem-sharing 安装 memSharing（多 Agent 记忆共享与融合）。
+请从 https://github.com/vincent4j/mem-sharing 安装 memSharing（多 Agent 编排记忆共享与融合）。
 ```
 
-Codex 交互终端通过 `$mem-sharing` 或原生 Skill 选择器调用；其他客户端使用各自的原生 Skill 入口。Codex exec 的普通文本 `/mem-sharing` 路由不代表终端支持同名斜杠命令。
+在会话中通过 `/mem-sharing` 调用 Skill 菜单。
 
 按回车开始安装，装好就能使用；随后自动只读对比各 Agent 已有记忆，分“建议合并的相同规则”与“需要你确认是否合并”两块给你选，明确选定即按方案执行，不再二次确认；查看保持零写。项目经历可选安装 Context Keeper。
 
