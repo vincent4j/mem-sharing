@@ -497,14 +497,14 @@ def _parse_selection(selection, numbers):
         return set(), int(view[1]), False
     chosen = set()
     if selection.strip() != '按默认方案':
-        for clause in re.split(r'[,，;；](?=\s*(?:不共享|共享))', selection):
-            match = re.fullmatch(r'\s*(不共享|共享)?\s*(\d+(?:\s*[、,，]\s*\d+)*)\s*', clause)
+        for clause in re.split(r'[,，;；](?=\s*(?:不共享|共享|不合并|再加入))', selection):
+            match = re.fullmatch(r'\s*(不共享|共享|不合并|再加入)?\s*(\d+(?:\s*[、,，]\s*\d+)*)\s*', clause)
             if not match:
                 _fail('invalid_selection', '请使用编号、不共享 n、按默认方案、查看 n 或暂不整理')
             picked = {int(v) for v in re.split(r'[、,，]', match[2])}
             if not picked <= numbers:
                 _fail('invalid_selection', '未知编号：' + selection)
-            if match[1] == '不共享':
+            if match[1] in ('不共享','不合并'):
                 chosen -= picked
             else:
                 chosen |= picked
@@ -528,8 +528,8 @@ def build_share_plan(request, proposal, selection):
     chosen, view, declined = _parse_selection(selection, numbers)
     if not view and not declined:
         excluded = set()
-        for clause in re.split(r'[,，;；](?=\s*(?:不共享|共享))', selection):
-            match = re.fullmatch(r'\s*不共享\s*(\d+(?:\s*[、,，]\s*\d+)*)\s*', clause)
+        for clause in re.split(r'[,，;；](?=\s*(?:不共享|共享|不合并|再加入))', selection):
+            match = re.fullmatch(r'\s*(?:不共享|不合并)\s*(\d+(?:\s*[、,，]\s*\d+)*)\s*', clause)
             if match:
                 excluded.update(int(v) for v in re.split(r'[、,，]', match[1]))
         chosen |= {g['number'] for g in defaults} - excluded
@@ -669,34 +669,12 @@ def build_share_plan(request, proposal, selection):
 
 
 def present(plan):
-    names = {'codex': 'Codex', 'claude': 'Claude Code', 'workbuddy': 'WorkBuddy',
-             'dsh': 'DeepSeek Harness', 'zcode': 'ZCode', 'opencode': 'OpenCode'}
-    lines = ['已找到 %d 个参与者，本次共享尚未修改任何文件。'
-             % len(plan['request'].get('agents', []))]
-    for label, key in (('默认共享', 'default_numbers'),
-                       ('由你选择是否共享', 'optional_numbers')):
-        lines += ['', label]
-        if not plan[key]:
-            lines.append('暂无。')
-        for group in plan['groups']:
-            if group['number'] in plan[key]:
-                agents = sorted({names.get(i['agent'], i['agent'])
-                                 for i in group['items']})
-                lines.append('%d. %s（%s）' % (group['number'], group['summary'],
-                                              '、'.join(agents)))
-    lines += ['', '请告诉我你的选择（序号为本次实际编号）：',
-              '- 3、4：保留默认项，并共享待选项 3、4。',
-              '- 不共享 2：排除默认项 2。',
-              '- 按默认方案：只共享默认项。',
-              '- 查看 3：只读查看完整原文与来源，不选择、不修改。',
-              '- 也可暂不整理。回复选择即授权按已展示方案执行，不再二次确认；查看零写。']
-    if plan['single_numbers']:
-        lines.append('单家内容默认留原处，可查看或明确指定共享：'
-                     + str(plan['single_numbers']))
-    if plan['unknown_sources']:
-        lines.append('读取失败来源不推定全覆盖：'
-                     + ','.join(s['path'] for s in plan['unknown_sources']))
-    return '\n'.join(lines)
+    from .user_rules_organize import present as render
+    projected = dict(plan, request=dict(plan['request']), groups=[])
+    for group in plan['groups']:
+        sources=[dict(source=i['source'], agents=[i['agent']], text=i['text']) for i in group['items']]
+        projected['groups'].append(dict(group,sources=sources))
+    return render(projected, summaries={g['number']:g['summary'] for g in plan['groups']})
 
 
 def final_list(plan):

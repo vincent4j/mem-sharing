@@ -331,8 +331,8 @@ def build_share_plan(request, proposal, selection):
     elif not view:
         excluded = set()
         import re as _re
-        for clause in _re.split(r'[,，;；](?=\s*(?:不共享|共享))', selection):
-            match = _re.fullmatch(r'\s*不共享\s*(\d+(?:\s*[、,，]\s*\d+)*)\s*', clause)
+        for clause in _re.split(r'[,，;；](?=\s*(?:不共享|共享|不合并|再加入))', selection):
+            match = _re.fullmatch(r'\s*(?:不共享|不合并)\s*(\d+(?:\s*[、,，]\s*\d+)*)\s*', clause)
             if match:
                 excluded.update(int(v) for v in _re.split(r'[、,，]', match[1]))
         chosen |= {g['number'] for g in defaults} - excluded
@@ -469,28 +469,12 @@ def build_share_plan(request, proposal, selection):
 
 
 def present(plan):
-    labels = {'claude': 'CLAUDE.md', 'workbuddy': '.workbuddy/memory/MEMORY.md'}
-    lines = ['当前项目 %s 已找到独立规则文件，本次共享尚未修改任何文件。'
-             % plan['project']]
-    for label, key in (('默认共享', 'default_numbers'),
-                       ('由你选择是否共享', 'optional_numbers')):
-        lines += ['', label]
-        if not plan[key]:
-            lines.append('暂无。')
-        for group in plan['groups']:
-            if group['number'] in plan[key]:
-                tag = '（AGENTS 已有，默认整理重复）' if group['in_agents'] else ''
-                files = '、'.join(labels.get(i['source'], i['source'])
-                                  for i in group['items'])
-                lines.append('%d. %s（%s）%s' % (group['number'], group['summary'],
-                                                 files, tag))
-    lines += ['', '请告诉我你的选择（序号为本次实际编号）：',
-              '- 3、4：保留默认项，并共享待选项 3、4。',
-              '- 不共享 2：排除默认项 2（AGENTS 既有项的移除另需逐项去向）。',
-              '- 按默认方案：只共享默认项。',
-              '- 查看 3：只读查看完整原文与来源，不选择、不修改。',
-              '- 也可暂不整理。选定后展示完整修改清单，确认后才执行。']
-    return '\n'.join(lines)
+    from .user_rules_organize import present as render
+    projected = dict(plan, request=dict(plan['request']), groups=[])
+    for group in plan['groups']:
+        sources=[dict(source=str(_source_files(RuntimeLayout(Path(plan['project'])))[i['source']]), agents=[i['source']], text=i['text']) for i in group['items']]
+        projected['groups'].append(dict(group,sources=sources))
+    return render(projected, summaries={g['number']:g['summary'] for g in plan['groups']})
 
 
 def final_list(plan):
@@ -1075,6 +1059,8 @@ def cli(argv=None, *, home=None):
     parser.add_argument('--selection', default=None)
     parser.add_argument('--decline', action='store_true')
     parser.add_argument('--approval-file')
+    parser.add_argument('--selection-plan-file', help='此前展示的完整计划')
+    parser.add_argument('--selection-reference', help='本次真实用户选择')
     parser.add_argument('--manifest')
     parser.add_argument('--home')
     ns = parser.parse_args(argv)
@@ -1106,6 +1092,16 @@ def cli(argv=None, *, home=None):
                 ns.selection or '按默认方案'
         if ns.command == COMMAND:
             result = run_share(request)
+            if ns.selection_reference:
+                if ns.approval_file or ns.selection is None or not ns.selection_reference.strip() or not ns.selection_plan_file:
+                    _fail('approval_mismatch','选择执行须绑定真实选择与此前展示计划')
+                if result.get('approval_required') and not result['approval_plan'].get('view'):
+                    plan=result['approval_plan'];shown=json.loads(Path(ns.selection_plan_file).read_text())
+                    if any(shown.get(k)!=plan.get(k) for k in ('proposal','observations','groups','project','main_checkout')):
+                        _fail('drift','原文或编号相对已展示方案变化')
+                    from datetime import datetime, timezone
+                    evidence={'confirmed_at':datetime.now(timezone.utc).isoformat().replace('+00:00','Z'),'reference':ns.selection_reference}
+                    result=execute_share(plan,dict(plan,**evidence),request=request)
         elif ns.command == RETURN_COMMAND:
             result = run_return(request)
         else:

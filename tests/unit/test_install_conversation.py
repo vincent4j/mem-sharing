@@ -41,7 +41,7 @@ class ConversationTests(unittest.TestCase):
         f,s,r=self.fixture();rc,out=self.tty(f,s,r,b'\n'+ '查看1\n再加入1\n跳过\n'.encode())
         self.assertEqual(rc,0,out);self.assertIn('memSharing 已安装。',out);self.assertIn('需要你确认是否合并',out);self.assertNotIn('建议合并的相同规则',out)
         self.assertIn('来源：Codex（~/.codex/AGENTS.md）',out);self.assertIn('公共用户记忆已整理完成',out)
-        self.assertLess(out.index('公共用户记忆已整理完成'),out.index('需要另外安装 Context Keeper'))
+        self.assertLess(out.index('公共用户记忆已整理完成'),out.index('需要再安装 Context Keeper'))
         self.assertEqual(out.count('按回车开始安装'),1);self.assertNotIn('确认执行',out);self.assertNotIn('CK 安装预览暂不可用',out);self.assertNotIn('再加入7',out);self.assertNotIn('不合并2',out)
         self.assertTrue((f.runtime.root/'memories/user-rules.md').is_file())
         self.assertNotIn('- 合成规则正文。',f.home.joinpath('.codex/AGENTS.md').read_text())

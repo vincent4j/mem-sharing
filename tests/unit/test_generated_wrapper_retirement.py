@@ -47,6 +47,7 @@ class GeneratedWrapperTests(InstallFixture):
         for a,p in self.native.items():
             raw=bytes.fromhex(next(c['after']['hex'] for c in plan['changes'] if c['path']==str(p)))
             self.assertEqual([x for x in raw.splitlines() if x.strip()],[x for x in self.original[a].splitlines() if x.strip()],a)
+            if a=='claude': self.assertEqual(raw,self.original[a])
         uninstall.execute(approval(recovery.summary(plan)),home=self.home,backup_dir=backup)
         tool=[sys.executable,'-I','-S','-B',str(backup/'recover.py'),'--manifest',str(backup/'manifest.json'),'--action','restore'];env=dict(os.environ,HOME=str(self.home));child=subprocess.run(tool,capture_output=True,text=True,env=env);self.assertEqual(child.returncode,5,child.stdout)
         a=self.area/'restore.json';a.write_text(json.dumps(approval(json.loads(child.stdout)['plan'])));child=subprocess.run(tool+['--approval-file',str(a)],capture_output=True,text=True,env=env);self.assertEqual(child.returncode,0,child.stdout);self.assertEqual(recovery.tree(self.home),before)

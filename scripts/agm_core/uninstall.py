@@ -98,6 +98,50 @@ def _without_object(raw, obj):
     return raw.replace(matched[0], b'', 1)
 
 
+def _restore_import_layout(raw, path, units, runtime):
+    """Inverse only a complete, registered install producer; never trim user bytes."""
+    from . import user_entry_layout
+    matches=[o for o in units if o.get('marker')==user_entries.CLAUDE_FALLBACK_MARKER
+             and o.get('ownership')=='created' and o.get('backup_manifest')]
+    imports=[o for o in units if o['kind']=='import']
+    if len(matches)!=1 or len(imports)!=1:return None
+    obj=matches[0];manifest=recovery.safe(obj['backup_manifest'])
+    if len(manifest.parents)<3:return None
+    bootstrap=manifest.parents[2]
+    if bootstrap.parent!=runtime.home or not bootstrap.name.startswith('.mem-sharing-install-') or manifest.parent.parent!=bootstrap/'entry-backups':return None
+    journal,bound=user_install._load_journal(bootstrap/'journal.json')
+    if bound!=runtime or journal['status']!='committed':return None
+    staged=bootstrap/'staged-registry.json'
+    if recovery.digest(staged.read_bytes())!=journal['entry_registry_sha256']:raise recovery.Conflict('Entry producer registry drift')
+    if obj not in _strict_json(staged)['machine']['objects'].values():return None
+    receipt=_strict_json(manifest)
+    if receipt.get('status')!='committed' or receipt.get('operation')!=user_entries.COMMAND:return None
+    rows=[r for r in receipt.get('entries',[]) if r.get('path')==str(path)]
+    if len(rows)!=1 or rows[0].get('attempted') is not True:return None
+    row=rows[0];before=row['before']
+    if before['kind']=='absent':prior=b''
+    elif before['kind']=='file':
+        name=before.get('backup')
+        if not isinstance(name,str) or Path(name).name!=name:raise recovery.Conflict('Invalid entry producer backup')
+        prior=recovery.safe(manifest.parent/name).read_bytes()
+        if recovery.digest(prior)!=before['fingerprint']:raise recovery.Conflict('Entry producer before drift')
+    else:return None
+    token=('@'+str(runtime.root/'memories/MEMORY.md')).encode()
+    present = any(line == token for line in prior.splitlines())
+    if token in prior and (not present or prior.count(token)!=1):return None
+    block=user_entries._wrap_block(user_entries.CLAUDE_FALLBACK_MARKER,user_entries.CLAUDE_FALLBACK_TEXT)
+    if entries.sha256(block)!=obj['fingerprint']['value']:return None
+    importer=copy.deepcopy(imports[0]);importer['fingerprint']['value']=entries.sha256(prior)
+    produced=user_entry_layout.arrange(prior,[(None,token,importer if present else None),(obj['marker'],block,None)])
+    expected=next((c for c in journal['plan']['entry_plan']['changes'] if c['path']==str(path)),None)
+    if (not expected or expected['after_fingerprint']!=row['after']['fingerprint']
+            or entries.sha256(produced)!=row['after']['fingerprint']):return None
+    remainder=entries.remove_block(produced,**obj['marker'],expected_fingerprint=obj['fingerprint']['value'])
+    # A pre-existing import loses only its token; all its original whitespace remains.
+    original=prior.replace(token,b'',1) if present else prior
+    return original if raw==remainder else None
+
+
 def _preserve_ck(obj,roots,raw=None):
     marker=obj.get('marker') or {}
     keeper=(Path(obj['path']).name=='context-keeper' or obj.get('bridge_owner')=='context-keeper'
@@ -877,7 +921,8 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
             raw = restored_raw
         if imports and imports[0]['ownership']=='reused':
             token=('@'+str(runtime.root/'memories/MEMORY.md')).encode()
-            raw=raw.replace(token,b'',1)
+            restored=_restore_import_layout(raw,path,own_units,runtime)
+            raw=restored if restored is not None else raw.replace(token,b'',1)
         if (agent=='dsh' and not imports and
                 ((tool_identity or {}).get('user_conversions') or {}).get('dsh_reference')=='explicit-single-path-to-return-v1'):
             from .uninstall_compat import detach_dsh_reference

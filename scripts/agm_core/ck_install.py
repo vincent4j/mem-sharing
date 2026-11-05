@@ -15,7 +15,7 @@ from . import detect, entries, layout, legacy_import as legacy, migrate, paths, 
 from .transaction import Snapshot, _atomic_file, read_snapshot, write_lock
 
 PIN = '695074ee4b6ddb9999be858093f833d6377bd641'
-PROMPT = '为了让 Agent 在新会话中记住项目进度、决策和经验，接着上次的工作继续，需要另外安装 Context Keeper。是否为本机已安装的{agents}安装？回复“安装”或“跳过”。'
+PROMPT = '为了让 Agent 在新会话中接着上次的项目进展、决策和经验继续工作，需要再安装 Context Keeper。是否为本机已安装的{agents}安装？回复“安装”或“跳过”。'
 # 上游安装器(pinned PIN)仅认这三家(LABELS/ROOTS/RULES 的键集即上游 --agent
 # flags)。dsh/zcode/opencode 已接入时:不冒支持、不传上游未知 flags、不改上游
 # ——在计划里明确列为 skipped(upstream_unsupported)并照常为旧三家安装;三家均
