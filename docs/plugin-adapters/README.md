@@ -41,7 +41,7 @@ R=`~/.mem-sharing`、C=`~/.local/share/mem-sharing`、V=`~/.mem-sharing/var/regi
 
 ## Context Keeper
 
-CK 是独立可选 Skill，固定 pin 为 `695074ee4b6ddb9999be858093f833d6377bd641`。来源获取先独立批准，持久 clean checkout 验证后再调用原上游安装器，安装批准单独进行。拒绝/失败不回滚 memSharing，不自动建项目记录库。
+CK 是独立可选 Skill，固定 pin 为 `86af15073c1da7fedddc34342eb10bba64062b73`。来源获取先独立批准，持久 clean checkout 验证后再调用原上游安装器，安装批准单独进行。拒绝/失败不回滚 memSharing，不自动建项目记录库。
 
 当前上游安装支持 Codex、Claude Code、WorkBuddy，DSH/ZCode/OpenCode 按不支持跳过。宿主 enabled、Skill 链接存在、原生新会话实际读取和首次命令/保存是不同证据。无项目聊天、disabled、linked worktree 和首次 `/context-keeper` 规则继续生效，不用插件 hook 模拟自动保存。更新/卸载插件不升级或接管 CK。
 

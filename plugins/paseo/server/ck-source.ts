@@ -6,7 +6,7 @@ import { hostname } from "node:os";
 import { ensureRealDirectory } from "./owned-paths";
 import type { Runner } from "./orchestrator";
 
-export const CK_PIN = "695074ee4b6ddb9999be858093f833d6377bd641";
+export const CK_PIN = "86af15073c1da7fedddc34342eb10bba64062b73";
 export const CK_URL = "https://github.com/vincent4j/context-keeper.git";
 export function ckDestination(home: string): string {
   return path.join(home, ".local", "share", "context-keeper-sources", CK_PIN);
@@ -14,7 +14,7 @@ export function ckDestination(home: string): string {
 export function ckAcquisitionPlan(home: string): Record<string, unknown> {
   return { command: "prepare-context-keeper-source", home, host: hostname(), url: CK_URL,
     commit: CK_PIN, destination: ckDestination(home), network: "Git fetch from fixed upstream",
-    installs_context_keeper: false, agents: ["codex", "claude", "workbuddy"] };
+    installs_context_keeper: false, agents: ["codex", "claude", "workbuddy", "zcode", "dsh", "opencode"] };
 }
 
 export async function acquireCkSource(home: string, git: string, runner: Runner, signal?: AbortSignal): Promise<string> {

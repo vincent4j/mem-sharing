@@ -25,13 +25,13 @@ class TailScopeTests(unittest.TestCase):
             out=io.StringIO()
             done=ck.tail({'status':'completed','fusion_status':'completed'},f.request,stdin=fixtures.TTY('安装\n'),stderr=out)
         self.assertEqual(done['context_keeper']['status'],'configured',done)
-        self.assertEqual(done['context_keeper']['agents'],['codex','claude','workbuddy'])
-        self.assertEqual([x['agent'] for x in done['context_keeper']['skipped_upstream_agents']],['dsh','zcode','opencode'])
+        self.assertEqual(done['context_keeper']['agents'],list(ck.LABELS))
+        self.assertEqual(done['context_keeper']['skipped_upstream_agents'],[])
         self.assertIn('/context-keeper',out.getvalue())
         self.assertNotIn('同一作者',out.getvalue())
         for agent in ('dsh','zcode','opencode'):
             root=f.home/('.config/opencode' if agent=='opencode' else '.'+agent)
-            self.assertFalse((root/'skills/context-keeper').exists())
+            self.assertEqual((root/'skills/context-keeper').resolve(),f.cksource)
 
     def test_pending_and_non_tty_never_plan_or_invoke_CK(self):
         with patch.object(ck,'plan_context_keeper',side_effect=AssertionError('premature')):

@@ -18,7 +18,7 @@ const CORE = path.resolve(here, "../../..");
 // Pinned-fixture runs may point this at a durable local clone checked out at
 // the pin; the HEAD==pin gate below still applies unchanged.
 const CK_SOURCE = process.env.MEMSHARING_TEST_CK_SOURCE ?? "/Users/vincent4j/Tools/Source/context-keeper";
-const CK_PIN = "695074ee4b6ddb9999be858093f833d6377bd641";
+const CK_PIN = "86af15073c1da7fedddc34342eb10bba64062b73";
 // CK sources may not live under /tmp or /var/folders (kernel forbids it);
 // scratch inside the worktree is durable and outside every forbidden zone.
 const WORKSPACE_SCRATCH = path.resolve(here, "test-scratch");

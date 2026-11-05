@@ -3,7 +3,7 @@ import { test } from "node:test";
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { acquireCkSource, CK_PIN, CK_URL, ckDestination } from "../server/ck-source";
+import { acquireCkSource, CK_PIN, CK_URL, ckDestination, ckAcquisitionPlan } from "../server/ck-source";
 import { realRunner, type Runner } from "../server/orchestrator";
 
 const source = "/Users/vincent4j/Tools/Source/context-keeper";
@@ -65,4 +65,10 @@ test("CK source parent symlink is rejected before foreign writes or Git executio
       assert.deepEqual([fs.statSync(foreign).mode, fs.statSync(foreign).mtimeMs, fs.statSync(path.join(foreign, "PRIVATE")).mode], before);
     } finally { fs.rmSync(home, { recursive: true, force: true }); }
   }
+});
+
+
+test("CK acquisition declares all six supported hosts", () => {
+  assert.deepEqual(ckAcquisitionPlan("/Users/fixture").agents,
+    ["codex", "claude", "workbuddy", "zcode", "dsh", "opencode"]);
 });

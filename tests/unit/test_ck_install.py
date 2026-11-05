@@ -23,11 +23,11 @@ DURABLE_CHECK = ck._durable_source
 UPSTREAM = r'''import json, os, sys
 from pathlib import Path
 home=Path(os.environ['HOME']); source=Path(__file__).resolve().parents[1]
-agents=[a for a in ('codex','claude','workbuddy') if '--'+a in sys.argv]
-roots={'codex':['.agents/skills','.codex/skills'],'claude':['.claude/skills'],'workbuddy':['.workbuddy/skills']}
-rules={'codex':'.codex/AGENTS.md','claude':'.claude/CLAUDE.md','workbuddy':'.workbuddy/MEMORY.md'}
-labels={'codex':'Codex','claude':'Claude Code','workbuddy':'WorkBuddy'}
-skills=[str(home/r/'context-keeper') for a in agents for r in roots[a]]
+agents=[a for a in ('codex','claude','workbuddy','zcode','dsh','opencode') if '--'+a in sys.argv]
+roots={'codex':['.agents/skills','.codex/skills'],'claude':['.claude/skills'],'workbuddy':['.workbuddy/skills'],'zcode':['.zcode/skills','.agents/skills'],'dsh':['.dsh/skills','.agents/skills'],'opencode':['.config/opencode/skills']}
+rules={'codex':'.codex/AGENTS.md','claude':'.claude/CLAUDE.md','workbuddy':'.workbuddy/MEMORY.md','zcode':'.zcode/AGENTS.md','dsh':'.dsh/AGENTS.md','opencode':'.config/opencode/AGENTS.md'}
+labels={'codex':'Codex','claude':'Claude Code','workbuddy':'WorkBuddy','zcode':'ZCode','dsh':'DeepSeek Harness','opencode':'OpenCode'}
+skills=list(dict.fromkeys(str(home/r/'context-keeper') for a in agents for r in roots[a]))
 files=[str(home/rules[a]) for a in agents]
 if '--approved' not in sys.argv:
  print(json.dumps({'approval_required':True,'operation':'安装','skill_entries':skills,'rule_files':files,'effect':'新增或复用 Skill 入口，并更新自身区块'})); sys.exit(0)
@@ -120,25 +120,29 @@ class CKInstallTests(InstallFixture):
             done = user_entries.run_user_entries(req)
             self.assertEqual(done['status'], 'completed', done)
 
-    def test_mixed_upstream_support_reports_skipped_and_preserves_desktop_bytes(self):
+    def test_mixed_six_host_support_deduplicates_shared_paths_and_preserves_private_bytes(self):
         self.connect_desktops()
         private = {a: (Path(paths.expand_path(self.config[a]['user_entry'], home=str(self.home)))).read_bytes() for a in ('dsh', 'zcode', 'opencode')}
         before = self.snapshot()
         plan = self.plan_ck()
-        skipped = [{'agent': a, 'reason': 'upstream_unsupported'} for a in ('dsh', 'zcode', 'opencode')]
-        self.assertEqual(plan['agents'], ['codex'])
-        self.assertEqual(plan['skipped_upstream_agents'], skipped)
+        self.assertEqual(plan['agents'], ['codex', 'zcode', 'dsh', 'opencode'])
+        self.assertEqual(plan['skipped_upstream_agents'], [])
         self.assertEqual(self.snapshot(), before)
-        self.assertNotIn('--dsh', plan['argv']); self.assertNotIn('--zcode', plan['argv']); self.assertNotIn('--opencode', plan['argv'])
+        self.assertEqual(len(plan['skill_entries']), 5)
+        self.assertEqual(len(plan['skill_entries']), len(set(plan['skill_entries'])))
+        for agent in ('dsh', 'zcode', 'opencode'):
+            self.assertIn('--'+agent, plan['argv'])
         result = self.apply(plan)
         self.assertEqual(result['status'], 'configured', result)
-        self.assertEqual(result['agents'], ['codex'])
-        self.assertEqual(result['skipped_upstream_agents'], skipped)
-        for a, raw in private.items():
-            self.assertEqual((Path(paths.expand_path(self.config[a]['user_entry'], home=str(self.home)))).read_bytes(), raw)
-            self.assertFalse((self.home/('.'+a)/'skills/context-keeper').exists())
+        self.assertEqual(result['agents'], plan['agents'])
+        self.assertEqual(result['skipped_upstream_agents'], [])
+        for agent, raw in private.items():
+            entry = Path(paths.expand_path(self.config[agent]['user_entry'], home=str(self.home)))
+            ck._verify_rule(raw, entry.read_bytes(), agent)
+            for root in ck.ROOTS[agent]:
+                self.assertEqual((self.home/root/'context-keeper').resolve(), self.cksource)
 
-    def test_desktop_only_ck_skip_never_invokes_upstream_or_changes_product(self):
+    def test_desktop_only_installs_without_legacy_three_hosts(self):
         self.connect_desktops()
         (Path(self.request['search_paths'][0])/'codex').unlink()
         import shutil
@@ -149,30 +153,14 @@ class CKInstallTests(InstallFixture):
         self.runtime.registry.write_bytes(registry.serialize_registry(data,
             allowed_user_paths=paths.allowed_user_paths(self.config, None, home=str(self.home))))
         before = self.snapshot()
-        with patch.object(ck, '_invoke', side_effect=AssertionError('unsupported upstream call')):
-            with self.assertRaises(ck.CKError) as stopped: self.plan_ck()
-        self.assertEqual(stopped.exception.code, 'ck_no_supported_agents')
+        plan = self.plan_ck()
+        self.assertEqual(plan['agents'], ['zcode', 'dsh', 'opencode'])
+        self.assertEqual(plan['skipped_upstream_agents'], [])
         self.assertEqual(self.snapshot(), before)
-        output = io.StringIO()
-        result = ck.tail({'status': 'completed'}, self.request, stdin=TTY('安装\n'), stderr=output)
-        self.assertEqual(result['status'], 'completed')
-        self.assertEqual(result['context_keeper']['status'], 'skipped')
-        self.assertEqual(result['context_keeper']['reason'], 'upstream_unsupported')
-        self.assertEqual([x['agent'] for x in result['context_keeper']['skipped_upstream_agents']], ['dsh', 'zcode', 'opencode'])
-        for name in ('DeepSeek Harness', 'ZCode', 'OpenCode'):
-            self.assertIn(name, output.getvalue())
-        self.assertIn('上游支持范围', output.getvalue())
-        from test_m408_installer import cli
-        from contextlib import redirect_stdout
-        output = io.StringIO()
-        with patch.dict(os.environ, HOME=str(self.home), PATH=os.pathsep.join(self.request['search_paths'])), patch.object(detect,'STANDARD_APP_DIRECTORIES',()), redirect_stdout(output):
-            code = cli.main(['--context-keeper'])
-        self.assertEqual(code, 0, output.getvalue())
-        result = json.loads(output.getvalue())
-        self.assertEqual(result['status'], 'skipped')
-        self.assertEqual(result['reason'], 'upstream_unsupported')
-        self.assertEqual([x['agent'] for x in result['skipped_upstream_agents']], ['dsh', 'zcode', 'opencode'])
-        self.assertEqual(self.snapshot(), before)
+        self.assertEqual(len(plan['skill_entries']), 4)
+        result = self.apply(plan)
+        self.assertEqual(result['status'], 'configured', result)
+        self.assertEqual(result['agents'], plan['agents'])
 
     def test_no_installed_agent_keeps_missing_agent_error(self):
         (Path(self.request['search_paths'][0])/'codex').unlink()

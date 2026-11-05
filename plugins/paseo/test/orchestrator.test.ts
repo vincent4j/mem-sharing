@@ -478,8 +478,8 @@ test("CK acquisition is separately approved; rejection starts no Git fetch and R
     assert.equal(plan.status, "approval_required");
     if (plan.status !== "approval_required") return;
     assert.equal(plan.planKind, "prepare-context-keeper-source");
-    assert.equal(plan.plan.commit, "695074ee4b6ddb9999be858093f833d6377bd641");
-    assert.deepEqual(plan.plan.agents, ["codex", "claude", "workbuddy"]);
+    assert.equal(plan.plan.commit, "86af15073c1da7fedddc34342eb10bba64062b73");
+    assert.deepEqual(plan.plan.agents, ["codex", "claude", "workbuddy", "zcode", "dsh", "opencode"]);
     assert.equal((await orch.ckConfirm({ action: "reject" })).status, "rejected");
     assert.equal(runner.calls.length, 1);
     const contracts = fs.readFileSync(new URL("../shared/contracts.ts", import.meta.url), "utf8");
