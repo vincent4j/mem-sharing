@@ -368,11 +368,19 @@ def tail(report, request, *, stdin=None, stderr=None):
         report['context_keeper'] = {'status':'deferred', 'reason':'user_memory_pending'}
         return report
     stdin, stderr = stdin or sys.stdin, stderr or sys.stderr
-    if not stdin.isatty():
-        report['context_keeper'] = {'status': 'skipped', 'reason': 'non_interactive',
-            'next_action': 'Run scripts/install.py --context-keeper --ck-source /absolute/durable/context-keeper'}
-        return report
+    ck_skipped = []
     try:
+        if not stdin.isatty():
+            agents = installed_agents(request)
+            report['context_keeper'] = {
+                'status': 'pending_selection',
+                'reason': 'user_choice_required',
+                'agents': agents,
+                'prompt': PROMPT.format(agents='、'.join(PRODUCT_LABELS[a] for a in agents)),
+                'choices': ['安装', '跳过'],
+                'next_action': '向用户展示 prompt，等待实际选择；尚未选择不能视为跳过。',
+            }
+            return report
         runtime = user_install._runtime(request)
         data = registry.load_registry(runtime.registry, allowed_user_paths=paths.allowed_user_paths(
             request['platform_config'], None, home=request['home']))

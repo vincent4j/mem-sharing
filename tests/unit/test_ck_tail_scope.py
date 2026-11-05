@@ -38,4 +38,16 @@ class TailScopeTests(unittest.TestCase):
             result=ck.tail({'status':'completed','fusion':{'status':'pending_selection'}},self.f.request,stdin=fixtures.TTY('安装\n'))
             self.assertEqual(result['context_keeper']['reason'],'user_memory_pending')
             result=ck.tail({'status':'completed'},self.f.request,stdin=io.StringIO('安装\n'))
-            self.assertEqual(result['context_keeper']['reason'],'non_interactive')
+            pending=result['context_keeper']
+            self.assertEqual(pending['status'],'pending_selection')
+            self.assertEqual(pending['reason'],'user_choice_required')
+            self.assertEqual(pending['choices'],['安装','跳过'])
+            self.assertEqual(set(pending['agents']),set(ck.PRODUCT_LABELS))
+            for label in ck.PRODUCT_LABELS.values():
+                self.assertIn(label,pending['prompt'])
+            self.assertIn('新会话中接着上次',pending['prompt'])
+
+    def test_non_tty_detection_failure_is_reported_without_installing(self):
+        with patch.object(ck,'installed_agents',side_effect=OSError('detection failed')), patch.object(ck,'plan_context_keeper',side_effect=AssertionError('must not plan')):
+            result=ck.tail({'status':'completed'},self.f.request,stdin=io.StringIO())
+        self.assertEqual(result['context_keeper']['status'],'unavailable')

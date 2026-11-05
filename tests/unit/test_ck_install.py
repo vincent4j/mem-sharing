@@ -527,7 +527,8 @@ class CKInstallTests(InstallFixture):
                 self.assertIn('Codex',err.getvalue())
         with patch.object(ck,'plan_context_keeper',side_effect=AssertionError('non TTY is zero work')):
             result=ck.tail({'status':'completed'},self.request,stdin=io.StringIO('\n'),stderr=io.StringIO())
-            self.assertEqual(result['context_keeper']['reason'],'non_interactive')
+            self.assertEqual(result['context_keeper']['status'],'pending_selection')
+            self.assertEqual(result['context_keeper']['reason'],'user_choice_required')
         with patch.object(ck,'plan_context_keeper',side_effect=AssertionError('main is incomplete')):
             self.assertNotIn('context_keeper',ck.tail({'status':'partial'},self.request,stdin=TTY('安装\n')))
 
