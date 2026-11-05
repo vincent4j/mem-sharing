@@ -23,6 +23,14 @@ DURABLE_CHECK = ck._durable_source
 UPSTREAM = r'''import json, os, sys
 from pathlib import Path
 home=Path(os.environ['HOME']); source=Path(__file__).resolve().parents[1]
+import argparse
+parser=argparse.ArgumentParser()
+parser.add_argument('--codex')
+parser.add_argument('--claude')
+parser.add_argument('--workbuddy')
+parser.add_argument('--zcode')
+parser.add_argument('--dsh')
+parser.add_argument('--opencode')
 agents=[a for a in ('codex','claude','workbuddy','zcode','dsh','opencode') if '--'+a in sys.argv]
 roots={'codex':['.agents/skills','.codex/skills'],'claude':['.claude/skills'],'workbuddy':['.workbuddy/skills'],'zcode':['.zcode/skills','.agents/skills'],'dsh':['.dsh/skills','.agents/skills'],'opencode':['.config/opencode/skills']}
 rules={'codex':'.codex/AGENTS.md','claude':'.claude/CLAUDE.md','workbuddy':'.workbuddy/MEMORY.md','zcode':'.zcode/AGENTS.md','dsh':'.dsh/AGENTS.md','opencode':'.config/opencode/AGENTS.md'}
@@ -68,7 +76,9 @@ class CKInstallTests(InstallFixture):
         git('-c','user.name=fixture','-c','user.email=fixture@example.invalid','commit','-m','synthetic CK')
         self.pin=git('rev-parse','HEAD')
         self.addCleanup(patch.stopall)
-        patch.object(ck,'PIN',self.pin).start()
+        git('remote','add','origin',ck.OFFICIAL)
+        git('update-ref','refs/remotes/origin/main',self.pin)
+        patch.object(ck,'prepare_source',return_value=str(self.cksource)).start()
         # Production rejects OS-temp sources. Fixtures deliberately live in temp;
         # this single check is mocked while all source identity/bytes stay real.
         patch.object(ck,'_durable_source').start()
@@ -193,7 +203,8 @@ class CKInstallTests(InstallFixture):
         runtime=RuntimeLayout(Path('/Users/synthetic-ck-install-home'))
         for root in (runtime.root/'ck', runtime.code/'ck',
                 runtime.home/'.local/share/mem-sharing-versions/ck', Path('/tmp').resolve()/'ck',
-                Path('/private/var/folders/synthetic/ck'), runtime.home/'.mem-sharing-install-op/checkout'):
+                Path('/private/var/folders/synthetic/ck'), runtime.home/'.mem-sharing-install-op/checkout',
+                Path(ck.__file__).resolve().parents[2]/'vendor/context-keeper'):
             with self.subTest(root=root),self.assertRaises(ck.CKError):
                 DURABLE_CHECK(root,runtime)
         DURABLE_CHECK(runtime.home/'independent-ck-source',runtime)
@@ -290,8 +301,9 @@ class CKInstallTests(InstallFixture):
                 if kind=='parent':(self.home/'.agents').rmdir()
 
     def test_wrong_pin_and_hidden_tracked_change_rejected(self):
-        with patch.object(ck,'PIN','f'*40):
-            with self.assertRaises(ck.CKError):self.plan_ck()
+        subprocess.run(['git','-C',str(self.cksource),'remote','set-url','origin','https://example.invalid/other.git'],check=True)
+        with self.assertRaises(ck.CKError):self.plan_ck()
+        subprocess.run(['git','-C',str(self.cksource),'remote','set-url','origin',ck.OFFICIAL],check=True)
         subprocess.run(['git','-C',str(self.cksource),'update-index','--assume-unchanged','SKILL.md'],check=True)
         (self.cksource/'SKILL.md').write_text('hidden dirty bytes')
         with self.assertRaises(ck.CKError):self.plan_ck()
@@ -437,13 +449,14 @@ class CKInstallTests(InstallFixture):
             return result
         with self.assertRaises(ck.CKError):self.plan_ck(runner=runner)
 
-    def test_missing_source_still_has_positive_question_and_safe_next_action(self):
+    def test_download_failure_still_has_positive_question_and_safe_next_action(self):
         out=io.StringIO();before=self.snapshot()
-        result=ck.tail({'status':'completed'},self.request,stdin=TTY('安装\n'),stderr=out)
+        with patch.object(ck, 'prepare_source', side_effect=OSError('download failed')):
+            result=ck.tail({'status':'completed'},self.request,stdin=TTY('安装\n'),stderr=out)
         self.assertEqual(result['status'],'completed')
         self.assertEqual(result['context_keeper']['status'],'unavailable')
         self.assertNotIn('同一作者',out.getvalue())
-        self.assertIn('--context-keeper --ck-source',result['context_keeper']['next_action'])
+        self.assertIn('--context-keeper',result['context_keeper']['next_action'])
         self.assertEqual(before,self.snapshot())
 
     def test_tail_ck_failure_keeps_main_completed_and_main_bytes(self):

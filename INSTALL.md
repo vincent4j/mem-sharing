@@ -10,13 +10,13 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 
 ## 用户看到的安装对话
 
-用户发出上面的安装请求后，按检查并一次开始确认、静默安装、两块共享选择、选定执行并简报、最后询问 CK 的顺序执行。
+用户发出上面的安装请求后，按检查并一次开始确认、静默安装、两块共享选择、选定执行并简报、最后询问 Context Keeper 的顺序执行。
 
 1. **环境检查。** 检查 Python >=3.9、Git 和六家实际安装事实，汇总：“环境检查完成。将为以下 Agent 安装 memSharing：〈实际名单〉。安装后，它们可以使用同一份公共用户记忆。按回车开始安装。”用户已看到范围后，真实回车直接开始；不要求其他确认语，不引用 Skill 或内部确认机制解释等待。EOF、非交互空输入不批准。
 2. **静默安装。** 完成仅报告：“memSharing 已安装。公共用户记忆：~/.mem-sharing/memories。已接入：〈实际名单〉”。未完成融合不报融合成功。
 3. **展示融合方案。** Agent 完整阅读语境后，展示“建议合并的相同规则”和“需要你确认是否合并”；空栏目不展示；非空待选全部展示，单家、不推荐、默认不选不能成为隐藏理由。每条列来源 Agent 和原生文件，一个规则只一个稳定编号；不同标题须经本次精确等价提案判断，不靠同文字自动合并。
 4. **选择即执行。** “按默认方案”“不合并2”“再加入7”等按实际编号选择，直接执行并简报；查看零写、专属和未选保留。只有现场实质变化才停下，不二次确认。外层收到用户回车/选择后直接绑定内部计划执行，不再进入 TTY 重问。
-5. **最后问 CK。** 公共整理完成或明确暂不整理后，才问：“为了让 Agent 在新会话中接着上次的项目进展、决策和经验继续工作，需要再安装 Context Keeper。是否为本机已安装的〈逐名列出的实际安装名单〉安装？回复‘安装’或‘跳过’。”只有“安装”批准；回车、EOF、跳过不准备 CK 安装计划。固定上游不支持者准确报告，安装完成再提醒 `/context-keeper`。
+5. **最后问 Context Keeper。** 公共整理完成或明确暂不整理后，才问：“为了让 Agent 在新会话中接着上次的项目进展、决策和经验继续工作，需要再安装 Context Keeper。是否为本机已安装的〈逐名列出的实际安装名单〉安装？回复‘安装’或‘跳过’。”只有“安装”批准；回车、EOF、跳过不准备 Context Keeper 安装计划。按当次获取的上游实际能力报告支持范围，安装完成再提醒 `/context-keeper`。
 
 
 ## 运行时准备
@@ -89,13 +89,13 @@ python3 -B scripts/install.py --approval-file /absolute/path/install-approval.js
 公共用户记忆流程结束（或用户明确暂不整理）后才生成独立 `command=install-context-keeper` 封皮，不在主批准中预填未来同意。交互中仅明确回复“安装”算同意；回车、空格、EOF、跳过或非交互输入均不算同意。独立预览与执行为：
 
 ```bash
-python3 -B scripts/install.py --context-keeper --ck-source /absolute/durable/context-keeper
+python3 -B scripts/install.py --context-keeper
 python3 -B scripts/install.py --context-keeper --approval-file /absolute/ck-approval.json
 ```
 
-可用 `--operation-id <已完成主操作>` 绑定主操作；此路由与普通安装、获取、恢复互斥。封皮绑定已 committed 主日志、台账、全部实际接入者、Context Keeper pin、执行内容与目标指纹；主产品待恢复时拒绝。Context Keeper 来源须为既存、干净、固定 pin 的持久独立 checkout，可从唯一用户级别名发现或显式提供，目前不自动下载；缺源独立报告 unavailable，主产品保留成功。结果不明不自动重放，Context Keeper 自身回滚不由 memSharing 提供。
+可用 `--operation-id <已完成主操作>` 绑定主操作；此路由与普通安装、获取、恢复互斥。用户选择安装后，实时从 Context Keeper 官方仓库 `https://github.com/vincent4j/context-keeper.git` 获取 `main` 最新代码，再调用其自己的安装器。默认复用唯一独立源码别名，缺少时放到 `~/.local/share/context-keeper/source`；显式 `--ck-source` 也必须来自官方仓库并更新至当次 main。已有本地修改或分叉时停止，不覆盖用户源码。
 
-仅接入 `dsh/zcode` 时，`--context-keeper` 输出 `status=skipped`、`reason=upstream_unsupported` 与 `skipped_upstream_agents`；交互安装尾步的 `context_keeper` 同样为 `status=skipped`、`reason=upstream_unsupported`，主安装保持 `status=completed`。混合接入执行时，`agents` 仅列受支持的执行器；跳过项列于 `skipped_upstream_agents`，每项为 `{"agent":"dsh或zcode","reason":"upstream_unsupported"}`（`agent` 取实际 ID）。`upstream_unsupported` 是原因，不是顶层状态。
+memSharing 不绑定 Context Keeper 固定版本，也不将其源码放进本仓库或发行包。计划记录当次取得的提交、目标范围和指纹；批准后不再拉取代码，若现场变化则重新预览，避免执行内容超出本次计划。按当前上游声明的实际执行器参数安装，未支持者明确报告。主产品待恢复时拒绝；网络或上游失败独立报告，主产品保留成功，结果不明不自动重放。
 
 ## 诊断报告与用户简报
 
@@ -121,7 +121,7 @@ python3 -B "$HOME/.local/share/mem-sharing/scripts/agm.py" check-memory --projec
 
 不带 `--agent` 的通用 enable 不触碰 `CLAUDE.md`，包括已有文件；Claude 自身实际使用时按 `--agent claude` 精确接入，可幂等补 `@AGENTS.md` 引用；其它执行者默认流程不预建，不因机器已装执行器而创建。该兜底规则位于 Claude 自身用户文件、不放公共索引。WorkBuddy 仅在原生目录存在时补桥接，不预建目录。`AGENTS.md` 是共享项目记忆基座，不依赖安装 Codex；只接入 Claude、WorkBuddy 或两者而无 Codex 的组合均成立，缺失的执行器用户目录不预建。
 
-旧 `remove-memory`、`--memory`、`--no-memory` 已退役，新请求零写拒绝。历史 disabled 只作规则接入 tombstone，默认跳过、不重建；它不否决 Context Keeper 的自动规则，不表示 CK 已停用或入口已删除。使用 `migrate-policy [--project ABS]` 精确预览并批准后，仅退役产品自有且指纹匹配的旧控制与已知旧模板，保留私文、CK 设置和历史数据，不替用户启用 CK。
+旧 `remove-memory`、`--memory`、`--no-memory` 已退役，新请求零写拒绝。历史 disabled 只作规则接入 tombstone，默认跳过、不重建；它不否决 Context Keeper 的自动规则，不表示 Context Keeper 已停用或入口已删除。使用 `migrate-policy [--project ABS]` 精确预览并批准后，仅退役产品自有且指纹匹配的旧控制与已知旧模板，保留私文、Context Keeper 设置和历史数据，不替用户启用 Context Keeper。
 
 批量入口先只读预览，待批准退出码为 5；一次批准完整清单后执行：
 
@@ -189,9 +189,9 @@ python3 -B scripts/install.py --approval-file /absolute/path/upgrade-approval.js
 
 ## 整机卸载
 
-整机卸载使用 `python3 -B scripts/agm.py uninstall-machine --backup-dir <全新外置目录>` 先预览，再以 `--approval-file` 精确批准。归还当前完整公共记忆给每个实际接入者的自身用户目录，再核验、清依赖、最后删除产品；不是恢复安装前。外置 manifest/recover.py 与独立解释器支持删除代码后的精确恢复。未知/漂移阻断，项目 AGENTS、有效 Claude/WB 桥接及 CK 默认保留。完整数据与门槛见[整机卸载方案](docs/uninstall-design.md)。
+整机卸载使用 `python3 -B scripts/agm.py uninstall-machine --backup-dir <全新外置目录>` 先预览，再以 `--approval-file` 精确批准。归还当前完整公共记忆给每个实际接入者的自身用户目录，再核验、清依赖、最后删除产品；不是恢复安装前。外置 manifest/recover.py 与独立解释器支持删除代码后的精确恢复。未知/漂移阻断，项目 AGENTS、有效 Claude/WB 桥接及 Context Keeper 默认保留。完整数据与门槛见[整机卸载方案](docs/uninstall-design.md)。
 
-CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调用范围；Paseo 为 `machine_and_paseo`，机器 completed 但插件仍在时 overall=partial。必须在插件移除前经外置入口独立绑定真实安装 ID/来源/CLI/daemon/live serverId，再用户 remove、同目标 full-list check 证实缺席，最后才可另选卸载 CK。disabled、查询错误、能力/版本错误均不算 removed；默认保留 CK，尾步另行精确批准。正式 payload 待干净提交与版本授权后生成，本轮源码/合成验证不等于实际宿主卸载或六家新会话加载验收。
+CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调用范围；Paseo 为 `machine_and_paseo`，机器 completed 但插件仍在时 overall=partial。必须在插件移除前经外置入口独立绑定真实安装 ID/来源/CLI/daemon/live serverId，再用户 remove、同目标 full-list check 证实缺席，最后才可另选卸载 Context Keeper。disabled、查询错误、能力/版本错误均不算 removed；默认保留 Context Keeper，尾步另行精确批准。正式 payload 待干净提交与版本授权后生成，本轮源码/合成验证不等于实际宿主卸载或六家新会话加载验收。
 
 ### 自然语言发起同一卸载流程
 

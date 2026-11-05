@@ -37,7 +37,7 @@ class CKAuditFixture(unittest.TestCase):
                 'platform_config': {}, 'registry_path': str(self.runtime.registry),
                 'registry_sha256': 'a' * 64, 'agents': ['codex'], 'skipped_upstream_agents': [],
                 'main_journal': {'path': str(main), 'fingerprint': {'kind': 'file'}},
-                'source': {'root': '/durable/synthetic/ck-source', 'commit': ck_install.PIN,
+                'source': {'root': '/durable/synthetic/ck-source', 'commit': '695074ee4b6ddb9999be858093f833d6377bd641',
                            'files': {'SKILL.md': {'sha256': 'b' * 64, 'mode': 0o644},
                                      'scripts/install.py': {'sha256': 'd' * 64, 'mode': 0o755}}},
                 'preview_argv': ['/usr/bin/python3', '-I', '-B', '/durable/synthetic/ck-source/scripts/install.py', '--codex'],
@@ -134,9 +134,9 @@ class CKAuditJournalTests(CKAuditFixture):
         document = self.audit(); document['plan']['main_operation_id'] = 'other-op'
         self.refreshed(document)
         cases.append(('filename/main-op mismatch', self.journal, document))
-        document = self.audit(); document['plan']['source']['commit'] = 'f' * 40
+        document = self.audit(); document['plan']['source']['commit'] = 'not-a-commit'
         self.refreshed(document)
-        cases.append(('source commit drift', self.journal, document))
+        cases.append(('malformed source commit', self.journal, document))
         document = self.audit(); document['result']['removed'] = [str(self.home / 'x')]
         cases.append(('result removed non-empty', self.journal, document))
         document = self.audit(); document['result']['bridges'] = []

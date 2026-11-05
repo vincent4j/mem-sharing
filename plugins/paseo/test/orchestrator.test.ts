@@ -358,8 +358,8 @@ test("ck preview/confirm keeps the independent CK approval shape", async () => {
     const preview = await orch.ckPreview("/durable/ck");
     assert.equal(preview.status, "approval_required");
     const previewArgv = runner.calls[0];
-    assert.deepEqual(previewArgv.slice(3, 5), ["--context-keeper", "--ck-source"]);
-    assert.equal(previewArgv[5], "/durable/ck");
+    assert.deepEqual(previewArgv.slice(3, 6), ["--context-keeper", "--ck-preview-only", "--ck-source"]);
+    assert.equal(previewArgv[6], "/durable/ck");
     if (preview.status !== "approval_required") return;
     const confirm = await orch.ckConfirm({ action: "confirm", confirmationToken: preview.confirmationToken });
     assert.equal(confirm.status, "completed");
@@ -478,10 +478,10 @@ test("CK acquisition is separately approved; rejection starts no Git fetch and R
     assert.equal(plan.status, "approval_required");
     if (plan.status !== "approval_required") return;
     assert.equal(plan.planKind, "prepare-context-keeper-source");
-    assert.equal(plan.plan.commit, "86af15073c1da7fedddc34342eb10bba64062b73");
+    assert.equal(plan.plan.branch, "main");
     assert.deepEqual(plan.plan.agents, ["codex", "claude", "workbuddy", "zcode", "dsh", "opencode"]);
     assert.equal((await orch.ckConfirm({ action: "reject" })).status, "rejected");
-    assert.equal(runner.calls.length, 1);
+    assert.equal(runner.calls.length, 0);
     const contracts = fs.readFileSync(new URL("../shared/contracts.ts", import.meta.url), "utf8");
     const acquisition=contracts.slice(contracts.indexOf("export const ckPreviewRpc"),contracts.indexOf("export const ckConfirmRpc"));
     assert.equal(acquisition.includes("ckSource:"), false);

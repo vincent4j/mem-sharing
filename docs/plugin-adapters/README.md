@@ -23,7 +23,7 @@ Python 业务只维护 `scripts/agm_core`，项目与机器入口分别为 `scri
 1. 检查现有 Python≥3.9、Git、发行载荷与机器状态；缺工具时单独展示固定官方资产及目标路径，用户确认后准备私有依赖。
 2. 从当前包调用原 `--release-request` 解析器；必要时独立批准持久 export，然后用返回的 `--source-manifest` 形成机器计划。历史 export 仅可作为恢复候选，不能绕过当前包验证。
 3. 展示原内核精确计划、完整 JSON 和政策转换，确认后执行。相同计划的 digest 可相同；一次性 confirmationToken 另绑定 nonce、host/HOME、argv、内核树及资产场景，旧预览/跨 worker token 不可复用。
-4. 项目接入复用原内核预览和批准。历史 disabled 仅作规则接入 tombstone，不表示 CK 停用；不把已退役 `remove-memory/--memory/--no-memory` 当作可用新请求。原生入口按当前 Agent 实际使用补齐。
+4. 项目接入复用原内核预览和批准。历史 disabled 仅作规则接入 tombstone，不表示 Context Keeper 停用；不把已退役 `remove-memory/--memory/--no-memory` 当作可用新请求。原生入口按当前 Agent 实际使用补齐。
 
 拒绝计划不执行其业务写入；宿主可保留私有 request/operation 证据，不承诺整个文件系统绝对零写。机器状态只由原 R/C/V、库存、锁和 journal 管理，宿主辅助状态不是第二套台账。
 
@@ -37,16 +37,16 @@ Python 业务只维护 `scripts/agm_core`，项目与机器入口分别为 `scri
 
 R=`~/.mem-sharing`、C=`~/.local/share/mem-sharing`、V=`~/.mem-sharing/var/registry.json` 是唯一活动产品。载荷获批后导出至 `~/.local/share/mem-sharing-sources/<version>/<tree>/`；恢复不能依赖会被移除的插件目录。
 
-运行取消终止本操作进程组，但不能承诺即时回滚；结果未知时保留原 journal。恢复仅选择与原 journal source/tools hash 匹配的 CLI/toolkit，再走原继续/回滚批准。V 提交后的收尾与成功安装后的主动降级不是同一操作，不自动抢锁或回放旧计划。插件卸载不删除产品、公共记忆、用户入口、持久源、已用运行时或 CK。
+运行取消终止本操作进程组，但不能承诺即时回滚；结果未知时保留原 journal。恢复仅选择与原 journal source/tools hash 匹配的 CLI/toolkit，再走原继续/回滚批准。V 提交后的收尾与成功安装后的主动降级不是同一操作，不自动抢锁或回放旧计划。插件卸载不删除产品、公共记忆、用户入口、持久源、已用运行时或 Context Keeper。
 
 ## Context Keeper
 
-CK 是独立可选 Skill，固定 pin 为 `86af15073c1da7fedddc34342eb10bba64062b73`。来源获取先独立批准，持久 clean checkout 验证后再调用原上游安装器，安装批准单独进行。拒绝/失败不回滚 memSharing，不自动建项目记录库。
+Context Keeper 是独立可选 Skill，每次从官方仓库 `main` 实时获取最新代码，不锁定版本或内置源码。来源获取先独立批准，持久 clean checkout 验证后再调用原上游安装器，安装批准单独进行。拒绝/失败不回滚 memSharing，不自动建项目记录库。
 
-当前上游安装支持 Codex、Claude Code、WorkBuddy，DSH/ZCode/OpenCode 按不支持跳过。宿主 enabled、Skill 链接存在、原生新会话实际读取和首次命令/保存是不同证据。无项目聊天、disabled、linked worktree 和首次 `/context-keeper` 规则继续生效，不用插件 hook 模拟自动保存。更新/卸载插件不升级或接管 CK。
+按当次上游安装器实际能力核实六家支持范围；多个执行器共用的 Skill 目录只列一次。宿主 enabled、Skill 链接存在、原生新会话实际读取和首次命令/保存是不同证据。无项目聊天、disabled、linked worktree 和首次 `/context-keeper` 规则继续生效，不用插件 hook 模拟自动保存。更新/卸载插件不升级或接管 Context Keeper。
 
 ## 维护验证与历史
 
 只针对改动执行所需检查：common/notice 修改运行 sync 一致性测试，宿主修改运行相应 Node 测试与 SDK typecheck；内核改动按项目 Python 测试规定验证。发行前执行 source/release CI，不以合成通过代替真实宿主批准或新会话。
 
-旧设计、任务拆分、v1-v5/r1-r2日志与hash清单不再作为当前输入；完整历史保存在 Git `0906d7acea8f0f1dc02ddef734f90322a8180579`。例如 `git show 0906d7a:docs/plugin-adapters/design.md`。CK 历史中的旧相对链接按同一提交和原路径追溯，不能把已删过程文件当作证据从未存在。
+旧设计、任务拆分、v1-v5/r1-r2日志与hash清单不再作为当前输入；完整历史保存在 Git `0906d7acea8f0f1dc02ddef734f90322a8180579`。例如 `git show 0906d7a:docs/plugin-adapters/design.md`。Context Keeper 历史中的旧相对链接按同一提交和原路径追溯，不能把已删过程文件当作证据从未存在。

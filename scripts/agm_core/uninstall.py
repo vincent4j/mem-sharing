@@ -706,7 +706,8 @@ def _ck_audit_journal(path, runtime):
         and all(agent in ck_install.LABELS for agent in plan['agents'])
         and isinstance(plan['skill_entries'], list) and isinstance(plan['rule_files'], list)
         and plan['skill_entries'] and plan['rule_files']
-        and isinstance(plan['source'], dict) and plan['source'].get('commit') == ck_install.PIN
+        and isinstance(plan['source'], dict) and isinstance(plan['source'].get('commit'), str)
+        and re.fullmatch(r'[0-9a-f]{40}', plan['source']['commit'])
         and isinstance(plan['source'].get('root'), str) and isinstance(plan['source'].get('files'), dict)
         and legacy.digest(legacy.encoded({key: value for key, value in plan.items()
                                            if key != 'plan_sha256'})) == plan['plan_sha256'])
@@ -740,8 +741,8 @@ def _ck_audit_journal(path, runtime):
     skills, rules = plan['skill_entries'], plan['rule_files']
     source_root = os.path.normpath(str(plan['source']['root']))
     files = plan['source']['files']
-    expected_skills = sorted(str(runtime.home / root / 'context-keeper')
-                             for agent in plan['agents'] for root in ck_install.ROOTS[agent])
+    expected_skills = sorted({str(runtime.home / root / 'context-keeper')
+                             for agent in plan['agents'] for root in ck_install.ROOTS[agent]})
     expected_rules = sorted(str(runtime.home / ck_install.RULES[agent]) for agent in plan['agents'])
     safe_files = (
         isinstance(files, dict) and files

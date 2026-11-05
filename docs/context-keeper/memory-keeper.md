@@ -19,6 +19,8 @@
 
 ## 主题摘要（按类型）
 
+- **Context Keeper 当前安装要求：** 用户要求从官方 main 实时获取，不固定版本、不内置上游源码，对外使用全称。mem-sharing 当前工作分支已同步 main aacfd1d9；新适配仍待提交部署。来源：[本轮日志](worklogs/2026-11-05-Context-Keeper-实时获取-main-与全称.md)。
+
 - **Context Keeper 安装集成（当前）：** 旧固定源导致后三家跳过与长入口已修复；CK最终保留完整触发、细节留Skill，345字符入口（WorkBuddy386），150项全量通过，86af150已推送main。本机七Skill链接已切至该clean持久源。memSharing Python/Paseo统一固定86af150，六家支持/排序/共享路径去重已验证，真实上游隔离安装六家通过、Node22项通过；按本轮授权提交推送本源码，实际提交以Git记录为准。活动memSharing核心未部署，新会话仍待验。来源：[修复日志](worklogs/2026-11-05-修复ContextKeeper固定版本与六家安装.md)。
 
 - **融合提示反馈与真机接管（当前）：** 本机0.1.7@bce32565已安装，六家入口/私文/六条公共规则保全，无参重复安装和查看114文件零写，单家待选摘录显示正确，卸载只读预览通过。DSH/OpenCode仅公共指针、Claude短触发；用户无Claude账号，取消其模型验收。新菜单描述已改源码但未部署。本轮授权提交推送并合并main。来源：[本机验收](../acceptance/skill-first-real-reinstall.md)、[当前日志](worklogs/2026-11-03-Skill运行验收接续.md)。

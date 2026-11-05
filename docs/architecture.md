@@ -29,7 +29,7 @@ Agent 理解原文并提出语境/作用域分组，用户决定共享范围，�
 ## 内核与适配器
 
 - `scripts/agm.py`：项目启用、批量、检查以及兼容/卸载路由。
-- `scripts/install.py`：机器安装、固定来源、追加 Agent、恢复与独立 CK 安装。
+- `scripts/install.py`：机器安装、固定来源、追加 Agent、恢复与独立 Context Keeper 安装。
 - `memory_share.py`、`project_share.py`：Agent 提案、选择、共享、归还与恢复；`user_rules_organize.py` 保留安装后整理路由。
 - `paths.py`、`detect.py`、`user_entries.py`：六家路径、安装事实与原生入口。规则引用不等于 Skill 可发现；文件存在不等于模型读取成功。
 - `transaction.py`、`registry.py`、安装/卸载恢复模块：锁、快照、精确写入、台账与恢复；不另造重复事务、日志或服务。

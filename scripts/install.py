@@ -28,7 +28,7 @@ from agm_core import upgrade, user_entries, user_install, ck_install, public_lay
 OFFICIAL = 'https://github.com/vincent4j/mem-sharing'
 LEGACY_OFFICIAL = 'https://github.com/vincent4j/agent-group-memory'  # 远程改名前的旧 URL,仍视作官方来源
 # Closed release manifest: the seven docs a C-side install can click through,
-# plus scripts/. Acceptance records, CK worklogs and local state stay source-only.
+# plus scripts/. Acceptance records, Context Keeper worklogs and local state stay source-only.
 SHIPPED_DOCS = plugin_release.SHIPPED_DOCS
 
 
@@ -417,8 +417,9 @@ def build_parser():
     p.add_argument('--acquire', action='store_true', help='Separate official pinned-source acquisition plan')
     p.add_argument('--staging', help='Absolute absent acquisition directory')
     p.add_argument('--project', help='Actual absolute project root for reported follow-up commands only')
-    p.add_argument('--context-keeper', action='store_true', help='Independent optional CK user-install plan')
-    p.add_argument('--ck-source', help='Absolute durable clean CK checkout at the integration pin')
+    p.add_argument('--context-keeper', action='store_true', help='Independent optional Context Keeper user-install plan')
+    p.add_argument('--ck-preview-only', action='store_true', help=argparse.SUPPRESS)
+    p.add_argument('--ck-source', help='Absolute independent Context Keeper checkout; fetch current official main')
     return p
 
 
@@ -445,7 +446,7 @@ def run(args):
                 'request_file', 'agent', 'acquire', 'staging', 'project', 'recover', 'action')):
             raise InstallError('--context-keeper cannot mix with recovery/acquisition/ordinary installation')
         if approval and approval.get('command') != 'install-context-keeper':
-            raise InstallError('CK requires a separate install-context-keeper approval')
+            raise InstallError('Context Keeper requires a separate install-context-keeper approval')
         home = os.environ.get('HOME')
         if not home:
             raise InstallError('Explicit HOME is required')
@@ -457,12 +458,14 @@ def run(args):
         op = args.operation_id or (approval or {}).get('main_operation_id') or data['product']['last_operation_id']
         source = args.ck_source or (approval or {}).get('source', {}).get('root')
         try:
+            if not approval and not args.ck_preview_only:
+                ck_install._scene(request, op)
+                source = ck_install.prepare_source(request, source)
             plan = ck_install.plan_context_keeper(request, op, source)
         except ck_install.CKError as exc:
             if exc.code != 'ck_no_supported_agents':
                 raise
-            skipped = [{'agent': a, 'reason': 'upstream_unsupported'} for a in paths.AGENT_ORDER
-                       if a in ck_install.installed_agents(request) and a not in ck_install.LABELS]
+            skipped = [{'agent': a, 'reason': 'upstream_unsupported'} for a in exc.agents]
             return {'command': 'install-context-keeper', 'status': 'skipped',
                     'reason': 'upstream_unsupported', 'skipped_upstream_agents': skipped,
                     'approval_required': False, 'context_keeper': {'status': 'skipped', 'reason': 'upstream_unsupported',
@@ -471,8 +474,8 @@ def run(args):
             return ck_install.execute_context_keeper(plan, approval, request=request)
         return {'command': 'install-context-keeper', 'status': 'approval_required',
                 'approval_required': True, 'approval_plan': plan, 'context_keeper': {'status': 'not_started'}}
-    if args.ck_source or (approval and approval.get('command') == 'install-context-keeper'):
-        raise InstallError('CK source/approval requires --context-keeper')
+    if args.ck_source or args.ck_preview_only or (approval and approval.get('command') == 'install-context-keeper'):
+        raise InstallError('Context Keeper source/approval requires --context-keeper')
     if approval and approval.get('command') == 'acquire-machine-source' and not ordinary and not args.recover and not args.action:
         return execute_acquisition(approval_without_evidence(approval), approval)
     if args.recover:

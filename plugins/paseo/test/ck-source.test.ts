@@ -3,26 +3,30 @@ import { test } from "node:test";
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { acquireCkSource, CK_PIN, CK_URL, ckDestination, ckAcquisitionPlan } from "../server/ck-source";
+import { acquireCkSource, CK_URL, ckDestination, ckAcquisitionPlan } from "../server/ck-source";
 import { realRunner, type Runner } from "../server/orchestrator";
 
-const source = "/Users/vincent4j/Tools/Source/context-keeper";
 
-test("fixed CK Git acquisition uses a local pin fixture without network, reuses clean source and preserves foreign destination", { timeout: 60_000 }, () => run());
+
+test("Context Keeper fetches advancing main with a local remote and preserves foreign destination", { timeout: 60_000 }, () => run());
 async function run() {
-  // Explicit prerequisite: no substitute pin and no remote fallback.
-  execFileSync("git", ["-C", source, "cat-file", "-e", CK_PIN + "^{commit}"]);
   const raw = fs.mkdtempSync(new URL("./ck-acquisition-", import.meta.url).pathname);
   const home = fs.realpathSync(raw);
+  const source = path.join(home, "upstream"); fs.mkdirSync(source);
+  const git = (...args: string[]) => execFileSync("git", ["-C", source, ...args], { encoding: "utf8" }).trim();
+  git("init", "-b", "main");
+  fs.writeFileSync(path.join(source, "SKILL.md"), "first"); git("add", ".");
+  git("-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "first");
+  let head = git("rev-parse", "HEAD");
   const base = realRunner(home);
   let fetches = 0;
   const runner: Runner = { async run(argv, options) {
     const actual = [...argv];
     const fetch = actual.indexOf("fetch");
     if (fetch >= 0) {
-      assert.equal(actual[fetch + 3], "origin");
-      assert.equal(actual[fetch + 4], CK_PIN);
-      actual[fetch + 3] = source; // only the test runner replaces transport
+      assert.equal(actual[fetch + 2], "origin");
+      assert.equal(actual[fetch + 3], "+refs/heads/main:refs/remotes/origin/main");
+      actual[fetch + 2] = source; // only the test runner replaces transport
       fetches++;
     }
     return base.run(actual, options);
@@ -30,11 +34,26 @@ async function run() {
   try {
     const dest = await acquireCkSource(home, "git", runner);
     assert.equal(dest, ckDestination(home));
-    assert.equal(execFileSync("git", ["-C", dest, "rev-parse", "HEAD"], { encoding: "utf8" }).trim(), CK_PIN);
+    assert.equal(execFileSync("git", ["-C", dest, "rev-parse", "HEAD"], { encoding: "utf8" }).trim(), head);
     assert.equal(execFileSync("git", ["-C", dest, "remote", "get-url", "origin"], { encoding: "utf8" }).trim(), CK_URL);
     assert.equal(fetches, 1);
+    fs.writeFileSync(path.join(source, "SKILL.md"), "second"); git("add", ".");
+    git("-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-m", "second");
+    head = git("rev-parse", "HEAD");
     await acquireCkSource(home, "git", runner);
-    assert.equal(fetches, 1, "clean source should be reused without network");
+    assert.equal(fetches, 2, "each install must fetch current main");
+    assert.equal(execFileSync("git", ["-C", dest, "rev-parse", "HEAD"], { encoding: "utf8" }).trim(), head);
+    const offline: Runner = { async run(argv, options) {
+      if (argv.includes("fetch")) throw new Error("offline");
+      return runner.run(argv, options);
+    } };
+    await assert.rejects(acquireCkSource(home, "git", offline), /offline/);
+    assert.equal(execFileSync("git", ["-C", dest, "rev-parse", "HEAD"], { encoding: "utf8" }).trim(), head);
+    execFileSync("git", ["-C", dest, "update-index", "--assume-unchanged", "SKILL.md"]);
+    fs.writeFileSync(path.join(dest, "SKILL.md"), "hidden private edit");
+    await assert.rejects(acquireCkSource(home, "git", runner), /drift/);
+    assert.equal(fs.readFileSync(path.join(dest, "SKILL.md"), "utf8"), "hidden private edit");
+    fs.writeFileSync(path.join(dest, "SKILL.md"), "second");
     fs.writeFileSync(path.join(dest, "PRIVATE"), "keep me");
     await assert.rejects(acquireCkSource(home, "git", runner), /drift/);
     assert.equal(fs.readFileSync(path.join(dest, "PRIVATE"), "utf8"), "keep me");

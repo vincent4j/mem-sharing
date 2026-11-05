@@ -18,7 +18,7 @@ description: 多 Agent 记忆共享与融合，给你的每一个 AI Agent 同�
    python3 -B scripts/memory_share.py share-user-memory --agent codex --agent claude
    ```
 
-3. **Agent 提议，用户选编号。** 当前 Agent 阅读完整原文及上下文，在用户指定的临时工作位置写提案 JSON（不写原生或公共记忆）。沿用输出的完整 `basis`，每组写一句忠实摘要、`same_content` 和各处 UTF-8 原文的精确字节范围；同文件重复项逐处列出。`same_content=true` 是 Agent 已核实语境与作用域后的判断，标题相同不足以证明；仅语义类似或冲突项写 false。独有项默认留原处，CK、Agent 专属及受保护协议不可迁。工具分段不是语义裁决，必要时可提供未预切的完整原文范围，不能截断字符或跨受保护块。
+3. **Agent 提议，用户选编号。** 当前 Agent 阅读完整原文及上下文，在用户指定的临时工作位置写提案 JSON（不写原生或公共记忆）。沿用输出的完整 `basis`，每组写一句忠实摘要、`same_content` 和各处 UTF-8 原文的精确字节范围；同文件重复项逐处列出。`same_content=true` 是 Agent 已核实语境与作用域后的判断，标题相同不足以证明；仅语义类似或冲突项写 false。独有项默认留原处，Context Keeper、Agent 专属及受保护协议不可迁。工具分段不是语义裁决，必要时可提供未预切的完整原文范围，不能截断字符或跨受保护块。
 
    ```json
    {"schema_version":1,"basis":{"/实际来源绝对路径":"步骤2返回的sha256"},"groups":[{"summary":"依据实际原文写一句摘要","same_content":true,"items":[{"agent":"codex","start":0,"end":实际字节末位},{"agent":"claude","start":0,"end":实际字节末位}]}]}
@@ -52,7 +52,7 @@ description: 多 Agent 记忆共享与融合，给你的每一个 AI Agent 同�
 - `schema_version:1`，`basis` 至少含当前公共主题绝对路径与 sha256，建议含全部目标基线。
 - `items` 每处指定 `ref`（共享 manifest 父目录名）、`migration`（该 manifest 的迁移数组下标）、当前 `public_span:{start,end,text_hex}`、`target:{path,mode}`。未漂移原来源可用 `mode:in_place`；当前原生内容已编辑时必须用 `mode:insert_at,insert_at:当前字节偏移`，不能默认文末追加。多个偏移均针对本次当前文件，由工具从后往前执行。
 - 公共新增用 `additions:[{start,end,text_hex,action:"move",target:{path,insert_at}}]` 明确目标；要保留公共则 `action:"keep_public"`。历史迁移也可明确 `action:"keep_public"`；它保留读取依赖，不构成完整退出。
-- `remove_entries:true` 仅在迁移全部处置、无保留公共迁移时使用。只移除本次精确公共目标入口，其他引用和 CK 不动。分隔空白默认保留；需移动的其他当前公共正文也须明确列入新增范围。
+- `remove_entries:true` 仅在迁移全部处置、无保留公共迁移时使用。只移除本次精确公共目标入口，其他引用和 Context Keeper 不动。分隔空白默认保留；需移动的其他当前公共正文也须明确列入新增范围。
 
 ```bash
 python3 -B scripts/memory_share.py return-user-memory --agent codex --agent claude --return-plan-file /绝对路径/return.json
@@ -104,8 +104,8 @@ Claude Code 首次使用已接入项目时，仅处理当前项目：先核对�
 
 ## 安装对话收尾
 
-安装与 CK 对话只按 INSTALL 的“用户看到的安装对话”执行。已有有效公共读取块时不另加 memory-index；仅精确归并已证明的产品重复指针，空用户规则章节随同一事务清理，保留未选正文。
-CK 的目的、逐名名单和输入文案统一使用 INSTALL 的“最后问 CK”；不向用户引用 Skill 要求作为提问理由。
+安装与 Context Keeper 对话只按 INSTALL 的“用户看到的安装对话”执行。已有有效公共读取块时不另加 memory-index；仅精确归并已证明的产品重复指针，空用户规则章节随同一事务清理，保留未选正文。
+Context Keeper 的目的、逐名名单和输入文案统一使用 INSTALL 的“最后问 Context Keeper”；不向用户引用 Skill 要求作为提问理由。
 
 ### 显式复用既有公共片段
 

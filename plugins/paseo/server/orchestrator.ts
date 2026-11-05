@@ -11,7 +11,7 @@ import { hostname, release, tmpdir } from "node:os";
 import path from "node:path";
 import { CORE_RELEASE_MANIFEST_SHA256 } from "./shared/release-identity";
 import { ensureRealDirectory } from "./owned-paths";
-import { ckAcquisitionPlan, ckDestination, acquireCkSource } from "./ck-source";
+import { ckAcquisitionPlan, acquireCkSource } from "./ck-source";
 import { runProcess } from "./shared/common/process";
 import { parseCliJson, classifyExitCode } from "./shared/common/json";
 import { planDigest, buildEvidence, buildApproval, isSha256Hex } from "./shared/common/digest";
@@ -115,7 +115,7 @@ export type ConfirmOutcome =
   | { status: "completed"; envelope: Record<string, unknown> }
   | { status: "failed"; code: string; message: string; envelope?: Record<string, unknown> };
 
-// Enable/remove/CK/recovery confirmations never produce the bootstrap-only
+// Enable/remove/Context Keeper/recovery confirmations never produce the bootstrap-only
 // "acquired" variant; this narrower type is what their RPC contracts accept.
 export type PlanConfirmOutcome = Exclude<ConfirmOutcome, { status: "acquired" }>;
 
@@ -185,9 +185,9 @@ export function summarizePlan(plan: Record<string, unknown>): { label: string; v
   return rows;
 }
 
-// CK 执行计划携带的 journal 是本 HOME var/ck-install-*.json 的非事务审计件
+// Context Keeper 执行计划携带的 journal 是本 HOME var/ck-install-*.json 的非事务审计件
 // (无 layout.root,宿主与内核认领规则均永不可归结);照抄进操作记录会把已完成
-// 的 CK 安装永久留成 staging 阻断。仅这一已知来源不写入记录——CK 审计原件与
+// 的 Context Keeper 安装永久留成 staging 阻断。仅这一已知来源不写入记录——Context Keeper 审计原件与
 // 计划批准材料原样保留。其余任何 journal(非 ck 流程、路径不符、他 HOME、
 // 未知形态)一律原样写入,交由 staging 认领规则拒绝,不静默清洗。
 export function recordJournalForOperation(flow: FlowKind, journal: unknown, home: string): unknown {
@@ -200,6 +200,7 @@ export function recordJournalForOperation(flow: FlowKind, journal: unknown, home
 }
 
 export class Orchestrator {
+  private preparedContextKeeperSource?: string;
   private readonly pending = new Map<FlowKind, PendingPlan>();
   private readonly running = new Map<FlowKind, { controller: AbortController; record: string }>();
 
@@ -578,7 +579,7 @@ export class Orchestrator {
       const { confirmed_at: _c, reference: _r, ...planKeys } = pending.plan;
       approval = buildApproval(planKeys as Record<string, unknown>, evidence);
     } else if (pending.approvalShape === "core-envelope") {
-      // Uninstall/recovery/CK cores use a nested {plan, reference,
+      // Uninstall/recovery/Context Keeper cores use a nested {plan, reference,
       // confirmed_at} envelope that must byte-match the previewed summary.
       approval = { plan: pending.plan, reference: evidence.reference, confirmed_at: evidence.confirmed_at };
     } else {
@@ -1232,38 +1233,38 @@ export class Orchestrator {
     if ("error" in inputs) return { status: "failed", code: "ck_followup_binding_missing", message: inputs.error };
     // source 必须用户显式选择;不自动定位、不自动执行。
     if (!path.isAbsolute(input.ckSource) || fs.realpathSync(input.ckSource) !== input.ckSource) {
-      return { status: "failed", code: "ck_source_invalid", message: "CK source 必须是用户显式选择的绝对真实路径" };
+      return { status: "failed", code: "ck_source_invalid", message: "Context Keeper source 必须是用户显式选择的绝对真实路径" };
     }
     const argv = [inputs.interpreter, "-I", "-S", "-B", inputs.recoverPy, "--manifest", input.manifest, "--ck-choice", "uninstall", "--ck-source", input.ckSource];
     for (const agent of input.ckAgents) argv.push("--ck-agent", agent);
     if (input.ckProject) argv.push("--ck-project", input.ckProject);
     const { parsed, exitKind } = await this.runRecoverPy(argv, signal);
     if (!parsed || !this.coreEnvelopeStatusValid(exitKind, parsed)) {
-      return { status: "failed", code: "cli_status_mismatch", message: `CK 预览: rc=${exitKind} status=${String(parsed?.status ?? "unparseable")}` };
+      return { status: "failed", code: "cli_status_mismatch", message: `Context Keeper 预览: rc=${exitKind} status=${String(parsed?.status ?? "unparseable")}` };
     }
     if (exitKind === "approval_required") {
       const plan = this.corePlanFromEnvelope(parsed);
-      if (!plan) return { status: "failed", code: "plan_unavailable", message: "CK preview did not expose a plan" };
+      if (!plan) return { status: "failed", code: "plan_unavailable", message: "Context Keeper preview did not expose a plan" };
       const stored = this.storePending("ckUninstall", plan, "core-envelope", argv);
       return { status: "approval_required", planKind: "uninstall-context-keeper", ...stored, plan };
     }
-    return { status: "failed", code: String(parsed.status ?? "ck_unavailable"), message: `CK preview: ${JSON.stringify(parsed.errors ?? parsed.status)}`, envelope: parsed };
+    return { status: "failed", code: String(parsed.status ?? "ck_unavailable"), message: `Context Keeper preview: ${JSON.stringify(parsed.errors ?? parsed.status)}`, envelope: parsed };
   }
 
   private async ckUninstallConfirmImpl(input: { action: "confirm" | "reject"; confirmationToken?: string }, signal?: AbortSignal): Promise<PlanConfirmOutcome> {
     if (input.action === "reject") { this.pending.delete("ckUninstall"); return { status: "rejected" }; }
     const popped = this.popPending("ckUninstall", input.confirmationToken);
     if (!popped.ok) return popped.outcome as PlanConfirmOutcome;
-    // 独立 CK 批准,绝不复用主 uninstall 批准;批准文件仍走外置临时文件。
+    // 独立 Context Keeper 批准,绝不复用主 uninstall 批准;批准文件仍走外置临时文件。
     const approvalFile = this.buildExternalApprovalFile(popped.pending);
     try {
       const argv = [...popped.pending.confirmArgv, "--ck-approval-file", approvalFile];
       const { parsed, exitKind } = await this.runRecoverPy(argv, signal);
       if (!parsed || !this.coreEnvelopeStatusValid(exitKind, parsed)) {
-        return { status: "failed", code: "cli_status_mismatch", message: `CK 执行: rc=${exitKind} status=${String(parsed?.status ?? "unparseable")}`, envelope: parsed ?? undefined };
+        return { status: "failed", code: "cli_status_mismatch", message: `Context Keeper 执行: rc=${exitKind} status=${String(parsed?.status ?? "unparseable")}`, envelope: parsed ?? undefined };
       }
       if (exitKind === "completed") return { status: "completed", envelope: parsed };
-      return { status: "failed", code: `exit_${exitKind}`, message: `CK confirm failed: ${JSON.stringify(parsed.errors ?? parsed.status)}`, envelope: parsed };
+      return { status: "failed", code: `exit_${exitKind}`, message: `Context Keeper confirm failed: ${JSON.stringify(parsed.errors ?? parsed.status)}`, envelope: parsed };
     } finally {
       try { fs.rmSync(path.dirname(approvalFile), { recursive: true, force: true }); } catch { /* best-effort */ }
     }
@@ -1278,13 +1279,17 @@ export class Orchestrator {
     if (git.status !== "ready") return this.dependencyPreviewImpl();
     const kernel = this.activeKernel();
     if (!kernel) {
-      return { status: "failed", code: "kernel_missing", message: "memSharing machine install not found; CK is a separate optional step after it" };
+      return { status: "failed", code: "kernel_missing", message: "memSharing machine install not found; Context Keeper is a separate optional step after it" };
     }
-    // Existing installations are discovered by the original CLI first. Only
-    // its explicit source-unavailable result offers a separately approved fetch.
-    const automaticSource = ckDestination(this.deps.home);
-    if (!ckSource && fs.existsSync(automaticSource)) ckSource = automaticSource;
-    const previewArgv = [python.pythonPath, "-B", kernel.installer, "--context-keeper"];
+    // Every new install intent first fetches current main after source approval.
+    ckSource = ckSource ?? this.preparedContextKeeperSource;
+    this.preparedContextKeeperSource = undefined;
+    if (!ckSource) {
+      const plan = ckAcquisitionPlan(this.deps.home);
+      const stored = this.storePending("ck", plan, "plan-plus-evidence", [python.pythonPath, "-B", kernel.installer]);
+      return { status: "approval_required", planKind: "prepare-context-keeper-source", ...stored, plan };
+    }
+    const previewArgv = [python.pythonPath, "-B", kernel.installer, "--context-keeper", "--ck-preview-only"];
     if (ckSource && ckSource.trim().length > 0) previewArgv.push("--ck-source", ckSource.trim());
     const result = await this.runJson<PreviewOutcome>(previewArgv, { signal });
     if ("failure" in result) return result.failure;
@@ -1297,15 +1302,10 @@ export class Orchestrator {
       return { status: "approval_required", planKind: "install-context-keeper", ...stored, plan };
     }
     if (exitKind === "completed") return { status: "completed", envelope: parsed };
-    if (!ckSource && (parsed.errors as Record<string, unknown>[] | undefined)?.some(e => e.code === "ck_source_unavailable")) {
-      const plan = ckAcquisitionPlan(this.deps.home);
-      const stored = this.storePending("ck", plan, "plan-plus-evidence", [python.pythonPath, "-B", kernel.installer]);
-      return { status: "approval_required", planKind: "prepare-context-keeper-source", ...stored, plan };
-    }
     return {
       status: "failed",
       code: String((parsed.errors as Record<string, unknown>[] | undefined)?.[0]?.code ?? "ck_unavailable"),
-      message: `CK preview: ${JSON.stringify(parsed.errors ?? parsed.status)}`,
+      message: `Context Keeper preview: ${JSON.stringify(parsed.errors ?? parsed.status)}`,
       envelope: parsed,
     };
   }
@@ -1318,10 +1318,11 @@ export class Orchestrator {
     const popped = this.popPending("ck", input.confirmationToken);
     if (!popped.ok) return popped.outcome as PlanConfirmOutcome;
     if (popped.pending.plan.command === "prepare-context-keeper-source") {
-      if (planDigest(popped.pending.plan) !== planDigest(ckAcquisitionPlan(this.deps.home))) return { status: "stale_plan", detail: "CK acquisition target changed" };
+      if (planDigest(popped.pending.plan) !== planDigest(ckAcquisitionPlan(this.deps.home))) return { status: "stale_plan", detail: "Context Keeper acquisition target changed" };
       const git = await this.git();
       if (git.status !== "ready" || !git.path) return { status: "failed", code: "git_missing", message: git.detail };
       const source = await acquireCkSource(this.deps.home, git.path, { run: (argv, options) => this.runCli(argv, options) }, signal);
+      this.preparedContextKeeperSource = source;
       return { status: "completed", envelope: { status: "source_prepared", source, installation_complete: false, next_action: "Preview Context Keeper installation for separate approval" } };
     }
     const approvalFile = this.buildApprovalFile(popped.pending);
@@ -1333,7 +1334,7 @@ export class Orchestrator {
     return {
       status: "failed",
       code: `exit_${exitKind}`,
-      message: `CK confirm failed: ${JSON.stringify(parsed.errors ?? parsed.status)}`,
+      message: `Context Keeper confirm failed: ${JSON.stringify(parsed.errors ?? parsed.status)}`,
       envelope: parsed,
     };
   }
