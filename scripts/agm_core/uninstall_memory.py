@@ -866,6 +866,72 @@ def retired_imports(runtime, ledger):
     return retired
 
 
+def _generated_topic_wrapper(topic, current, removed_spans, producers, *, modern):
+    """Reproduce complete known append producers back to a created empty topic.
+
+    A shape/name alone is never ownership. Reused sources do not create public
+    bytes; every created public span must already have an outstanding return.
+    """
+    created = set(); seen = set(); cursor = current
+    while recovery.digest(cursor) not in seen:
+        digest = recovery.digest(cursor); seen.add(digest)
+        matched = None
+        for producer in producers.values():
+            meta = (producer.get('operation_metadata') or {}).get('share_user_memory') or {}
+            if (producer.get('schema_version') != 1 or producer.get('status') != 'committed' or producer.get('operation') != 'organize-user-rules'
+                    or meta.get('topic') != topic or meta.get('topic_after_sha256') != digest):
+                continue
+            rows = [row for row in producer.get('entries', []) if row['path'] == topic]
+            if len(rows) != 1 or rows[0]['after'].get('fingerprint') != digest:
+                continue
+            row = rows[0]; before = row['before']
+            if before['kind'] == 'absent':
+                prior = b''
+            elif before['kind'] == 'file':
+                name = before.get('backup')
+                if not isinstance(name, str) or Path(name).name != name:
+                    raise recovery.Conflict('Missing public producer before backup')
+                # Producer dictionaries are annotated only in memory below.
+                base = Path(producer['_wrapper_manifest']).parent
+                state = recovery.snapshot(base/name)
+                if state['kind'] != 'file' or recovery.digest(bytes.fromhex(state['hex'])) != before['fingerprint']:
+                    raise recovery.Conflict('Public producer before backup drift')
+                prior = bytes.fromhex(state['hex'])
+            else:
+                continue
+            generated = prior or '# 用户规则\n'.encode()
+            emitted = [[1,'用户规则',1]] if not prior else None
+            by_span = {}
+            for record in meta.get('migrations', []):
+                raw = bytes.fromhex(record['text_hex'])
+                left,right = record['public_offset'],record['public_end']
+                if recovery.digest(raw) != record['text_sha256']:
+                    raise recovery.Conflict('Public producer text hash drift')
+                if left < len(prior):
+                    if prior[left:right] != raw: break
+                    continue
+                by_span.setdefault((left,right),record)
+            else:
+                spans = set()
+                for (left,right),record in sorted(by_span.items()):
+                    context = record.get('context')
+                    if modern and (not isinstance(context,list) or [h[1] for h in context] != record['scope']): break
+                    prefix = ('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate(record['scope']))+'\n').encode() if record['scope'] else b'\n'
+                    if modern and emitted == context: prefix = b'\n'
+                    raw = bytes.fromhex(record['text_hex'])
+                    if (left,right) != (len(generated)+len(prefix)+1,len(generated)+len(prefix)+1+len(raw)): break
+                    generated += prefix+b'\n'+raw; emitted = context; spans.add((left,right))
+                else:
+                    if generated == cursor:
+                        matched = (before['kind'], prior, spans); break
+        if matched is None:
+            return False
+        kind,cursor,spans = matched; created.update(spans)
+        if kind == 'absent':
+            return created == set(removed_spans)
+    return False
+
+
 def source_returns(runtime, original, native_paths):
     """Plan exact outstanding source-count restoration inside machine uninstall."""
     from . import memory_share as share
@@ -891,6 +957,8 @@ def source_returns(runtime, original, native_paths):
     import json
     producers={name:json.loads(Path(next(iter(groups.values()))[0]['manifest_path']).read_bytes())
                for name,groups in by_manifest.items()}
+    for name,groups in by_manifest.items():
+        producers[name]['_wrapper_manifest'] = next(iter(groups.values()))[0]['manifest_path']
     dependencies={name:set() for name in producers}
     for newer, left in producers.items():
         for older, right in producers.items():
@@ -989,7 +1057,9 @@ def source_returns(runtime, original, native_paths):
         for _,record in sorted(by_span.items()):
             context=('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate(record['scope']))+'\n').encode() if record['scope'] else b'\n'
             expected += context+b'\n'+bytes.fromhex(record['text_hex'])
-        if bytes.fromhex(original[topic]['hex'])==expected:
+        current = bytes.fromhex(original[topic]['hex'])
+        legacy = current == expected and _generated_topic_wrapper(topic,current,positions,producers,modern=False)
+        if legacy or _generated_topic_wrapper(topic,current,positions,producers,modern=True):
             raw=b''
         residual[topic]['hex']=raw.hex()
     return restored,residual
