@@ -36,7 +36,9 @@ class UninstallProcessTests(unittest.TestCase):
                         plan = uninstall.preview(home=fixture.home,backup_dir=fixture.backup)
                         natives=[c for c in plan['changes'] if c['stage']=='detach' and c['path'] in plan['native_identities']]
                         skills=[c for c in plan['changes'] if c['stage']=='detach' and c['path'].endswith('/skills/mem-sharing/SKILL.md')]
-                        self.assertEqual(len(skills),2)
+                        roots=('.codex','.claude','.workbuddy','.dsh','.zcode','.config/opencode')
+                        self.assertEqual({c['path'] for c in skills},
+                            {str(fixture.home/root/'skills/mem-sharing/SKILL.md') for root in roots})
                         self.assertTrue(all(c['after']['kind']=='absent' for c in skills))
                         self.assertEqual(len(natives),6)
                         target=(natives[0] if stage=='native_first' else natives[-1]) if stage!='delete_product' else next(

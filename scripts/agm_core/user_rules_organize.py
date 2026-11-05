@@ -306,7 +306,7 @@ def _build(request):
         groups.setdefault(key, []).append(item)
     defaults = []; optional = []; single = []
     n = len(sources) if root else len(selected)
-    for key, members in sorted(groups.items()):
+    for key, members in groups.items():
         coverage = len({i['source'] for i in members})
         existing = bool(root and any(i['source'] == str(topic) for i in members) or mode == 'user' and any((json.dumps(i['context']), i['text'].encode()) in public_copies for i in members))
         all_present = n >= 2 and coverage == n and not unknown
@@ -369,7 +369,8 @@ def _build(request):
 
     public_added = b''
     migrations = []
-    for group in numbered:
+    emitted_scope = [[1, '用户规则', 1]] if mode == 'user' and not snapshots[str(topic)].data else None
+    for group in sorted(numbered, key=lambda group: min(items.index(item) for item in group['sources'])):
         if view or group['number'] not in chosen: continue
         if mode == 'user' or not group['existing_public']:
             copies = dict(public_copies) if mode == 'user' else {}
@@ -378,6 +379,9 @@ def _build(request):
                 key = (json.dumps(item['context']), raw)
                 if key not in copies:
                     context = ('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate(item['scope']))+'\n').encode() if item['scope'] else b'\n'
+                    if mode == 'user' and emitted_scope == item['context']:
+                        context = b'\n'
+                    emitted_scope = item['context']
                     chunk = context + b'\n' + raw
                     offset = len(content) + len(context) + 1
                     content += chunk

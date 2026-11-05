@@ -17,7 +17,7 @@ import sys
 from datetime import datetime, timezone, timedelta
 from urllib.parse import unquote, urlsplit
 
-from . import entries, paths, registry, user_install, versions
+from . import entries, paths, registry, user_install, versions, user_entries
 from .layout import resolve_layout
 from . import policy_migration, uninstall_memory
 from . import uninstall_recovery as recovery
@@ -34,6 +34,43 @@ def _change(changes, path, after, stage):
         return
     if before != after:
         changes[path] = {'path': path, 'before': before, 'after': after, 'stage': stage}
+
+
+def _created_native_directory(runtime, obj, path):
+    """Use only the leaf's registered producer and its sealed install journal."""
+    raw = obj.get('backup_manifest')
+    if not raw:
+        return False
+    manifest = Path(raw)
+    if len(manifest.parents) < 3:
+        return False
+    bootstrap = manifest.parents[2]
+    if (bootstrap.parent != runtime.home or not bootstrap.name.startswith('.mem-sharing-install-')
+            or manifest.parent.parent != bootstrap/'entry-backups'):
+        return False
+    try:
+        journal, bound = user_install._load_journal(bootstrap/'journal.json')
+        if bound != runtime or journal['status'] != 'committed':
+            return False
+        if journal['plan']['observations'].get(str(path.parent)) != {'kind':'absent'}:
+            return False
+        staged = bootstrap/'staged-registry.json'
+        if recovery.digest(staged.read_bytes()) != journal['entry_registry_sha256']:
+            return False
+        data = _strict_json(staged)
+        if data['machine']['objects'].get(str(path)+'#native-skill') != obj:
+            return False
+        receipt = _strict_json(manifest)
+        if (receipt.get('status') != 'committed' or receipt.get('operation') != user_entries.COMMAND
+                or str(path.parent) not in receipt.get('created_directories', [])):
+            return False
+        return any(item.get('path') == str(path)
+                   and item.get('before', {}).get('kind') == 'absent'
+                   and item.get('after', {}).get('kind') == 'file'
+                   and item['after'].get('fingerprint') == obj['fingerprint']['value']
+                   and item.get('attempted') is True for item in receipt.get('entries', []))
+    except (ValueError, OSError, KeyError, TypeError):
+        return False  # Missing historical creation proof retains the directory.
 
 
 def _file(raw, mode=0o600):
@@ -748,6 +785,7 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
     proven_import_ids = uninstall_memory.fusion_imports(runtime, ledger)
     proven_import_objects = [ledger["machine"]["objects"][oid] for oid in proven_import_ids]
     units = [obj for oid,obj in ledger['machine']['objects'].items() if oid not in retired_import_ids] + list(ledger['shared_objects'].values())
+    native_directories = []
     # Native Skill launchers are exact owned files, distinct from user prose.
     for oid, obj in ledger['machine']['objects'].items():
         if not oid.endswith('#native-skill'):
@@ -761,6 +799,10 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
                 or state['kind'] != 'file' or recovery.digest(bytes.fromhex(state['hex'])) != obj['fingerprint']['value']):
             raise recovery.Conflict('Native Skill ownership/drift: ' + str(path))
         _change(changes, path, {'kind': 'absent'}, 'detach')
+        if (_created_native_directory(runtime, obj, path)
+                and set(path.parent.iterdir()) == {path}):
+            _change(changes, path.parent, {'kind': 'absent'}, 'detach')
+            native_directories.append(str(path.parent))
     connected = set()
     user_paths = {agent: Path(paths.expand_path(data['user_entry'],home=str(runtime.home))) for agent,data in config.items()}
     observations = dict(extras)
@@ -900,7 +942,7 @@ def preview(*, home, backup_dir, host_obligation=None, tool_identity=None):
             'agents':ordered,'project_roots':project_roots,'delete_roots':[str(p) for p in roots],
             'memory_return':uninstall_memory.RETURN_SCHEMA,
             'native_identities':{str(user_paths[a]):[user_paths[a].stat().st_dev,user_paths[a].stat().st_ino] for a in ordered},
-            'guard_roots':[],
+            'guard_roots':native_directories,
             'changes':values,'recovery_sha256':recovery.digest(runner),
             'observations':observations,
             'retained_evidence':retained,

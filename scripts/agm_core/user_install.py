@@ -182,6 +182,11 @@ def inspect_machine(request):
         for old in known_old:
             observations[str(old)] = _node(old)
             observations[str(old.parent/'.agm.lock')] = _node(old.parent/'.agm.lock')
+        # Seal the native directory's pre-install existence in the original approval.
+        for agent in paths.NATIVE_SKILL_ROOTS:
+            parent = paths.native_skill_path(agent, home=runtime.home).parent
+            _real_chain(parent, runtime.home)
+            observations[str(parent)] = _node(parent)
         for key in paths.allowed_user_paths(request['platform_config'], None, home=str(runtime.home)):
             p = Path(key)
             # 入口文件父链不得为符号链接;叶子本身的类型由场景枚举如实记录。

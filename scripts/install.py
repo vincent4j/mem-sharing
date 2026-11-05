@@ -81,6 +81,25 @@ def _git(root, *args):
     return result.stdout.strip()
 
 
+def checkout_version(root, explicit=None):
+    """Read tracked core metadata as data, never execute checkout code."""
+    root = _absolute(root).resolve()
+    name = 'scripts/core-version.json'
+    tracked = _git(root, 'ls-files', '-z').split('\0')
+    if name not in tracked:
+        if explicit: return explicit  # Historical explicit-source contract.
+        raise InstallError('Core version metadata missing; provide --version for this historical source')
+    path = root / name
+    if path.is_symlink() or not path.is_file():
+        raise InstallError('Core version metadata is not a regular tracked file', 'source_drift')
+    data = _json(path)
+    if set(data) != {'version'} or not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', str(data['version'])):
+        raise InstallError('Invalid core version metadata', 'source_drift')
+    if explicit and explicit != data['version']:
+        raise InstallError('Explicit version conflicts with fixed core source metadata', 'source_drift')
+    return data['version']
+
+
 def checkout_source(root, commit, version):
     """Read a user checkout; derive a closed product manifest from tracked files."""
     root = _absolute(root).resolve()
@@ -510,17 +529,24 @@ def run(args):
             raise InstallError('--source-manifest cannot mix with source identity arguments')
         inputs['source'] = _json(args.source_manifest)
     elif not (args.source or args.commit or args.version) and 'source' not in inputs:
-        inputs['source'] = active_source(home)
+        if Path(__file__).resolve() == Path(home)/'.local/share/mem-sharing/scripts/install.py':
+            inputs['source'] = active_source(home)
+        else:
+            root = str(Path(__file__).resolve().parents[1])
+            if plugin_release.ROOT_MANIFEST in _git(root, 'ls-files', '-z').split('\0'):
+                version = plugin_release._read_manifest(Path(root)/plugin_release.ROOT_MANIFEST)['source']['version']
+                delivery = plugin_release.checkout_delivery(root, None, version)
+            else:
+                inputs['source'] = checkout_source(root, None, checkout_version(root))
     elif args.source or args.commit or args.version:
-        if not args.version:
-            raise InstallError('--version is required with a checkout; alternatively provide --source-manifest')
         root = args.source or str(Path(__file__).resolve().parents[1])
         # HEAD/pin/clean keep their original meanings. Only after checking R do
         # we resolve S through the tracked release and a durable export.
         if plugin_release.ROOT_MANIFEST in _git(root, 'ls-files', '-z').split('\0'):
-            delivery = plugin_release.checkout_delivery(root, args.commit, args.version)
+            version = args.version or plugin_release._read_manifest(Path(root)/plugin_release.ROOT_MANIFEST)['source']['version']
+            delivery = plugin_release.checkout_delivery(root, args.commit, version)
         else:
-            inputs['source'] = checkout_source(root, args.commit, args.version)
+            inputs['source'] = checkout_source(root, args.commit, checkout_version(root, args.version))
     if delivery:
         export = plugin_release.plan_export(delivery, home, operation_id)
         if not export['reused']:

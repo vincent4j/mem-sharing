@@ -67,10 +67,12 @@ Claude Code 的 macOS 原生 CLI 根据受支持的命令入口名、可读可�
 以下参数以当前源码 CLI help 为准；尖括号内容须替换为真实核验值。普通安装来源参数二选一；显式选择执行器的示例如下：
 
 ```text
-python3 -B scripts/install.py --source /absolute/path/clean-checkout --commit <完整SHA> --version <SemVer>
+python3 -B scripts/install.py --source /absolute/path/clean-checkout --commit <完整SHA>
 python3 -B scripts/install.py --source-manifest /absolute/path/source.json --agent codex --agent claude
 python3 -B scripts/install.py --source-manifest /absolute/path/source.json --agent dsh --agent zcode
 ```
+
+干净固定源码安装默认读取被跟踪的 `scripts/core-version.json`，无须用户提供内部版本。显式 `--version` 必须与该核心元数据一致；历史无该元数据的源码仍可显式指定版本。发行来源使用发行 manifest 的版本，不借用插件版本，也不伪造发行收据。
 
 `source.json` 含 `root/url/commit/version/files`，不与 source/commit/version 混用。无批准输出 `approval_plan`，批准文件为完整计划加真实 `confirmed_at/reference`，`confirmed_at` 须使用真实 UTC 的 `YYYY-MM-DDTHH:MM:SS[.小数]Z` 格式；不使用 `+00:00` 或本地时区。一次用户确认由执行编排绑定到精确计划，不额外制造逐项确认，也不伪造确认。锁内重核，计划外变化停止。
 
