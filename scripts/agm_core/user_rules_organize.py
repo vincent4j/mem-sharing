@@ -290,8 +290,59 @@ def _explicit_public_reuse(request, items, public_copies, snapshots, topic):
     return result
 
 
+def _append_declared_sources(request, mode, sources, snapshots, items, protected):
+    """Explicit Agent spans only; never widen the default semantic scanner."""
+    from .memory_share import _check_source_binding, _heading_context
+    equivalents = request.get('equivalent_sources', [])
+    reuse = request.get('public_reuse', [])
+    if not isinstance(equivalents, list) or not isinstance(reuse, list):
+        _fail('invalid_equivalence', '显式来源提案须为列表')
+    if not equivalents and not reuse:
+        return
+    if mode != 'user':
+        return  # Preserve existing project proof behavior; no new precut sources.
+    bindings = []
+    for group in equivalents:
+        if not isinstance(group, dict) or set(group) != {'sources', 'canonical_context', 'reason'} or not isinstance(group['sources'], list):
+            _fail('invalid_equivalence', '需要完整逐来源等价提案')
+        bindings.extend(group['sources'])
+    reuse_fields = {'source', 'start', 'end', 'source_context', 'public_start', 'public_end',
+                    'public_context', 'text_sha256', 'equivalent', 'reason', 'source_basis', 'public_basis'}
+    for row in reuse:
+        if not isinstance(row, dict) or set(row) != reuse_fields:
+            _fail('invalid_public_reuse', '复用绑定不完整')
+        bindings.append({'source': row['source'], 'start': row['start'], 'end': row['end'],
+                         'context': row['source_context'], 'text_sha256': row['text_sha256'], 'basis': row['source_basis']})
+    for row in bindings:
+        if not isinstance(row, dict) or set(row) != {'source', 'start', 'end', 'context', 'text_sha256', 'basis'}:
+            _fail('invalid_equivalence', '来源绑定不完整')
+        name = row['source']; left = row['start']; right = row['end']
+        if not isinstance(name, str) or name not in sources or type(left) is not int or type(right) is not int:
+            _fail('invalid_equivalence', '来源必须是本次参与的精确原生路径')
+        snap = snapshots.get(name)
+        if snap is None or snap.kind != 'file' or not (0 <= left < right <= len(snap.data)):
+            _fail('invalid_equivalence', '来源不可读或范围无效')
+        spans = protected[name]
+        if any(left < end and right > start for start, end in spans):
+            _fail('invalid_equivalence', '显式来源不能包含受保护入口或协议')
+        try:
+            text = snap.data[left:right].decode('utf-8')
+        except UnicodeError:
+            _fail('invalid_equivalence', '来源范围截断UTF-8字符')
+        item = {'source': name, 'agents': sources[name], 'start': left, 'end': right, 'text': text,
+                'sha256': entries.sha256(snap.data[left:right]), 'scope': _scope(snap.data, left, spans),
+                'context': _heading_context(snap.data, left, spans)[1]}
+        _check_source_binding(row, item, snap.fingerprint)
+        if any(i['source'] == name and (i['start'], i['end']) == (left, right) for i in items):
+            continue
+        if any(i['source'] == name and left < i['end'] and right > i['start'] for i in items):
+            _fail('invalid_equivalence', '显式来源与既有候选范围重叠')
+        items.append(item)
+
+
 def _equivalent_sources(request, items, snapshots):
     """Single-plan Agent judgment; source context and migration protocol stay intact."""
+    from .memory_share import _check_source_binding
     declarations = request.get('equivalent_sources', [])
     if not isinstance(declarations, list):
         _fail('invalid_equivalence', '等价提案须为列表')
@@ -311,11 +362,10 @@ def _equivalent_sources(request, items, snapshots):
             key=(row['source'],row['start'],row['end']);item=indexed.get(key)
             if item is None or key in bound or any(key==(m['source'],m['start'],m['end']) for m in members):
                 _fail('invalid_equivalence','未知、重叠或重复来源')
-            if row['context']!=item['context'] or row['text_sha256']!=entries.sha256(item['text'].encode()) or row['basis']!=snapshots[item['source']].fingerprint:
-                _fail('invalid_equivalence','来源原文、语境或完整基线已变化')
+            _check_source_binding(row, item, snapshots[item['source']].fingerprint)
             members.append(item)
         canonical=group['canonical_context']
-        if not any(i['context']==canonical for i in members) or len({i['text'] for i in members})!=1:
+        if not any(_encoded(i['context'])==_encoded(canonical) for i in members) or len({i['text'] for i in members})!=1:
             _fail('invalid_equivalence','公共语境须来自实际来源，原文必须完全相同')
         # Every occurrence in each declared strict group must be covered.
         keys={(i['source'],i['start'],i['end']) for i in members}
@@ -369,7 +419,7 @@ def _build(request):
         if path.is_file():
             snap = read_snapshot(path)
             snapshots[str(path)] = snap; observations[str(path)] = _meta(snap)
-    items = []; unknown = []; protected_report = []; blocked = []
+    items = []; unknown = []; protected_report = []; blocked = []; protected_by_source = {}
     for name, agents in sorted(sources.items()):
         try:
             snap = _file(Path(name), optional=True)
@@ -381,6 +431,7 @@ def _build(request):
         snapshots[name] = snap; observations[name] = _meta(snap)
         if snap.kind == 'absent': continue
         spans = _protected(snap.data, Path(name), runtime, objects)
+        protected_by_source[name] = spans
         protected_report.extend({'path': name, 'start': a, 'end': b} for a,b in spans)
         if any(o['path'] == name and o['kind'] in ('file', 'import')
                and not (root and entries.free_project_rules(o))
@@ -395,6 +446,7 @@ def _build(request):
             raw = snap.data[left:right]
             items.append({'source': name, 'agents': agents, 'start': left, 'end': right,
                 'text': text, 'sha256': entries.sha256(raw), 'scope': scope, 'context': _heading_context(snap.data, left, spans)[1]})
+    _append_declared_sources(request, mode, sources, snapshots, items, protected_by_source)
     for path in (topic, index):
         if str(path) not in snapshots:
             snap = _file(path, optional=True); snapshots[str(path)] = snap; observations[str(path)] = _meta(snap)

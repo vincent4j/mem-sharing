@@ -23,6 +23,7 @@ import json
 import os
 import re
 from pathlib import Path
+from datetime import datetime, timezone
 
 from . import entries, layout, paths
 from .transaction import (Change, Snapshot, Transaction, TransactionError,
@@ -408,10 +409,65 @@ def _collect(request):
     return runtime, sources, segments, basis
 
 
+def _check_source_binding(row, item, source_basis):
+    """Pure exact binding shared by thin proposals and explicit legacy sources."""
+    if not isinstance(row, dict) or set(row) != {'source', 'start', 'end', 'context', 'text_sha256', 'basis'}:
+        _fail('invalid_equivalence', '来源绑定不完整')
+    if (not isinstance(row['source'], str) or type(row['start']) is not int or type(row['end']) is not int
+            or (row['source'], row['start'], row['end']) != (item['source'], item['start'], item['end'])):
+        _fail('invalid_equivalence', '来源范围无效')
+    if (_encoded(row['context']) != _encoded(item['context'])
+            or row['text_sha256'] != entries.sha256(item['text'].encode()) or row['basis'] != source_basis):
+        _fail('invalid_equivalence', '来源原文、语境或全文基线已变化')
+
+
+def _proposal_equivalents(proposal, groups, segments, basis):
+    """One-plan Agent judgment, bound to original contexts and complete groups."""
+    declarations = proposal.get('equivalent_sources', [])
+    if not isinstance(declarations, list):
+        _fail('invalid_equivalence', 'equivalent_sources 必须为列表')
+    indexed = {(i['source'], i['start'], i['end']): (g, i)
+               for g in groups for i in g['items']}
+    declared = set()
+    for proof in declarations:
+        if not isinstance(proof, dict) or set(proof) != {'sources', 'canonical_context', 'reason'}:
+            _fail('invalid_equivalence', '需要完整来源、公共语境和等价理由')
+        if not isinstance(proof['reason'], str) or not proof['reason'].strip() or not isinstance(proof['sources'], list) or len(proof['sources']) < 2:
+            _fail('invalid_equivalence', '需要逐来源判断及理由')
+        members = []; keys = set(); owner = None
+        for row in proof['sources']:
+            if not isinstance(row, dict) or set(row) != {'source', 'start', 'end', 'context', 'text_sha256', 'basis'}:
+                _fail('invalid_equivalence', '来源绑定不完整')
+            if not isinstance(row['source'], str) or type(row['start']) is not int or type(row['end']) is not int:
+                _fail('invalid_equivalence', '来源范围无效')
+            key = (row['source'], row['start'], row['end'])
+            if key not in indexed or key in keys or key in declared:
+                _fail('invalid_equivalence', '未知或重复来源')
+            group, item = indexed[key]
+            if owner is not None and group is not owner:
+                _fail('invalid_equivalence', '等价声明必须精确对应一个已展示分组')
+            owner = group
+            _check_source_binding(row, item, basis[item['source']])
+            keys.add(key); members.append(item)
+        if keys != {(i['source'], i['start'], i['end']) for i in owner['items']}:
+            _fail('invalid_equivalence', '必须声明本组全部来源')
+        if not owner['proposed_same'] or len({i['text'] for i in members}) != 1 or not any(_encoded(i['context']) == _encoded(proof['canonical_context']) for i in members):
+            _fail('invalid_equivalence', '公共语境须来自真实来源，且原文必须完全相同')
+        for item in segments:
+            if item['text'] == members[0]['text'] and any(_encoded(item['context']) == _encoded(m['context']) for m in members) and (item['source'], item['start'], item['end']) not in keys:
+                _fail('invalid_equivalence', '同语境的全部来源次数必须完整声明')
+        declared.update(keys)
+        owner['canonical_context'] = proof['canonical_context']
+        owner['equivalence_reason'] = proof['reason']
+        owner['supported_same'] = True
+
+
 def _validate_proposal(request, proposal):
     runtime, sources, segments, basis = _collect(request)
     if not isinstance(proposal, dict) or proposal.get('schema_version') != 1:
         _fail('invalid_proposal', '提案必须是 schema_version 1 的 JSON 对象')
+    if set(proposal) - {'schema_version', 'basis', 'groups', 'equivalent_sources', 'public_reuse'}:
+        _fail('invalid_proposal', '未知提案字段')
     if proposal.get('basis') != basis:
         _fail('drift', '提案依据与当前文件不一致，请重新预览')
     groups = proposal.get('groups')
@@ -426,10 +482,16 @@ def _validate_proposal(request, proposal):
                 or not raw['summary'].strip() or not isinstance(raw.get('same_content'), bool) \
                 or not isinstance(raw.get('items'), list) or not raw['items']:
             _fail('invalid_proposal', '每个分组需要 summary、same_content、非空 items')
+        if set(raw) != {'summary', 'same_content', 'items'}:
+            _fail('invalid_proposal', '未知分组字段')
         items = []
         for element in raw['items']:
             if not isinstance(element, dict) or element.get('agent') not in agent_to_path:
                 _fail('invalid_proposal', 'item 引用了未参与的 Agent')
+            if set(element) != {'agent', 'start', 'end'}:
+                _fail('invalid_proposal', '未知来源字段')
+            if type(element.get('start')) is not int or type(element.get('end')) is not int:
+                _fail('invalid_proposal', '来源范围必须为整数')
             name = agent_to_path[element['agent']]
             if sources[name]['status'] != 'ok':
                 _fail('invalid_proposal', 'item 来源不可读：' + name)
@@ -464,6 +526,7 @@ def _validate_proposal(request, proposal):
                           'identity_match': identity, 'same_scope': same_scope,
                           'supported_same': raw['same_content'] and identity and same_scope,
                           'coverage': sorted({i['source'] for i in items})})
+    _proposal_equivalents(proposal, validated, segments, basis)
     return runtime, sources, segments, basis, validated
 
 
@@ -542,6 +605,22 @@ def build_share_plan(request, proposal, selection):
         if snap.kind not in ('absent', 'file'):
             _fail('path_conflict', '公共目标必须是普通文件或不存在：' + str(path))
     public = topic_snapshot.data or b''
+    # Reuse the existing exact public-span validator and producer proof. No
+    # semantic inference, permanent alias or new recovery protocol is added.
+    from .user_rules_organize import _created_public_span, _explicit_public_reuse
+    copies = {}
+    for record in _available_migrations(runtime).values() if proposal.get('public_reuse') else ():
+        raw = bytes.fromhex(record['text_hex']); left, right = record['public_offset'], record['public_end']
+        if public[left:right] == raw and _created_public_span(record, raw):
+            copies.setdefault((json.dumps(record.get('context', record['scope'])), raw), (left, right))
+    items = [i for g in groups for i in g['items']]
+    snapshots = {name: info['snapshot'] for name, info in sources.items()}
+    snapshots[str(topic)] = topic_snapshot
+    reuse = _explicit_public_reuse({'public_reuse': proposal.get('public_reuse', [])}, items, copies, snapshots, topic)
+    for group in groups:
+        flags = [(i['source'], i['start'], i['end']) in reuse for i in group['items']]
+        if any(flags) and not all(flags):
+            _fail('invalid_public_reuse', '本组复用须逐处完整声明')
     index_bytes = index_snapshot.data or b''
     migrations = []
     if topic_snapshot.kind == 'absent' and not view and not declined and chosen:
@@ -558,15 +637,24 @@ def build_share_plan(request, proposal, selection):
             variants = []
             for member in members:
                 raw = member['text'].encode()
-                if (raw, member['context']) not in [(v[0], v[1]['context']) for v in variants]:
-                    variants.append((raw, member))
-            for raw, first_member in variants:
-                offset = len(public)
-                public += _separator(public) + raw
-                span = (offset + len(_separator(public[:offset])), len(public))
-                for member in members:
-                    if member['text'].encode() != raw or member['context'] != first_member['context']:
-                        continue
+                context = group.get('canonical_context', member['context'])
+                if (raw, context) not in [(v[0], v[2]) for v in variants]:
+                    variants.append((raw, member, context))
+            for raw, first_member, context in variants:
+                matching = [m for m in members if m['text'].encode() == raw and group.get('canonical_context', m['context']) == context]
+                if 'canonical_context' in group:
+                    matching.sort(key=lambda m: m['context'] != context)
+                bindings = [reuse.get((m['source'], m['start'], m['end'])) for m in matching]
+                if bindings and all(bindings):
+                    spans = {(r['public_start'], r['public_end']) for r in bindings}
+                    if len(spans) != 1:
+                        _fail('invalid_public_reuse', '同一等价组必须复用同一公共范围')
+                    span = next(iter(spans))
+                else:
+                    offset = len(public)
+                    public += _separator(public) + raw
+                    span = (offset + len(_separator(public[:offset])), len(public))
+                for member in matching:
                     migrations.append({
                         'group': group['number'], 'summary': group['summary'],
                         'agent': member['agent'], 'path': member['source'],
@@ -1014,7 +1102,7 @@ def build_return_plan(request, agent_plan):
     removals = planned_returns + addition_moves
     # A shared public copy remains readable while any alias is outstanding.
     def relation_key(record):
-        return (record['manifest'], record['public_offset'], record['public_end'])
+        return (record['topic'], record['public_offset'], record['public_end'])
     moving_refs = {r['ref'] for r in planned_returns}
     outstanding = {relation_key(record) for ref, record in available.items()
                    if ref not in consumed and ref not in moving_refs}

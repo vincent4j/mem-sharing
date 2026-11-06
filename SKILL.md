@@ -120,3 +120,11 @@ Context Keeper 的目的、逐名名单和输入文案统一使用 INSTALL 的�
 完整展示 `prompt` 中全部有资格候选：`default_numbers` 为“建议合并的相同规则”，`optional_numbers` 与 `single_numbers` 全部属于“需要你确认是否合并”。默认不选、不推荐、来自单家均不能作为隐藏候选的理由。只有栏目集合确实为空才省略；摘要可忠实改写，编号、来源与候选覆盖不得改变。明确被保护的专属协议不进入候选；已进入待选的内容留给用户决定，不再由外层静默过滤。
 
 Agent 先完整读取来源并核实语境。不同标题若同属通用约束且原文完全相同，以 `--equivalent-sources-file` 传本次提案：列表项含 `sources`、`canonical_context`、`reason`；每个 source 含 `source/start/end/context/text_sha256/basis`。canonical 取真实来源语境，逐处完整绑定全部同组 occurrences，不能仅因文字相同声明等价。工具据此只显示一个编号、公共正文一份；原 context 与次数进入既有归还记录，无永久标题别名。未声明继续严格分组。提案及完整内部计划保存在本地，不让用户填写 JSON。
+
+### 薄 CLI 的本次语境等价证明
+
+`share-user-memory --proposal-file` 的 schema_version 1 提案可带 `equivalent_sources`，格式与安装后整理的逐来源声明一致：每组含 `sources`、`canonical_context`、`reason`；每个来源含 `source/start/end/context/text_sha256/basis`。声明必须完整覆盖该提案组及同语境的全部重复次数；路径、UTF-8 范围、真实标题 context、整文件基线与原文哈希均精确绑定，canonical 必须来自真实来源。只有 Agent 实际完整阅读后才能声明，不由工具因文字相同推定。无声明沿用原语境保护；项目共享不消费此扩展。
+
+已有公共正文可用同一提案顶层 `public_reuse`，沿用上文的完整逐来源/公共 span 绑定格式。必须绑定当前公共整文件基线、已证明的 producer span/context 及每个本次来源。工具不改写既有公共正文，保留其字节、模式与元数据；每处新来源仍以真实原 context 和次数写入原事务记录，归还和卸载消费同一协议。查看、暂不整理零写；用户选择仍绑定整份已展示计划后直接执行。未知提案字段、部分证明或任何漂移拒绝，不形成永久标题别名。
+
+安装后的 `organize-user-memory`（包括插件提交的同形证明）也可使用这些显式精确来源：仅在本次已选用户来源和完整 proof 中，纳入默认分类器未推荐的具体字节片段；受保护入口、Context Keeper、重叠与错误基线仍拒绝。未提供证明时默认分类和候选保持原样，不能以此自动迁移整个私人章节。证明导致候选或编号变化后须重新展示完整方案并绑定新场景；项目共享不新增此预切能力。源接口与合成 CLI 通过不等于真实 Paseo UI 验收通过。
