@@ -87,7 +87,7 @@ test("CK source parent symlink is rejected before foreign writes or Git executio
 });
 
 
-test("CK acquisition declares all six supported hosts", () => {
-  assert.deepEqual(ckAcquisitionPlan("/Users/fixture").agents,
-    ["codex", "claude", "workbuddy", "zcode", "dsh", "opencode"]);
+test("CK acquisition defers support claims to current upstream plan", () => {
+  assert.equal(ckAcquisitionPlan("/Users/fixture").agent_support, "determined by the acquired upstream installer plan");
+  assert.equal(ckAcquisitionPlan("/Users/fixture").agents, undefined);
 });

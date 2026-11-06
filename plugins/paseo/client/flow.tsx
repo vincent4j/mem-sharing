@@ -5,15 +5,15 @@
 // the plan digest — the server holds the plan and builds the approval file.
 // The modal closes after confirm or reject; this is not a management page.
 
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import type { PluginTheme } from "@getpaseo/plugin";
 import { useRpc } from "@getpaseo/plugin/client";
 import { Modal } from "@getpaseo/plugin/client/ui";
 import {
-  fusionPreviewRpc, fusionConfirmRpc,
-  dependencyConfirmRpc,
+  fusionPreviewRpc, fusionSelectRpc, fusionConfirmRpc,
+  dependencyConfirmRpc, dependencyPreviewRpc,
   cancelPendingRpc,
   operationStatusRpc,
   bootstrapPreviewRpc,
@@ -23,7 +23,7 @@ import {
   projectCheckRpc,
   projectEnablePreviewRpc,
   projectEnableConfirmRpc,
-  ckPreviewRpc,
+  ckPreviewRpc, detectAgentsRpc,
   ckConfirmRpc,
   recoverPreviewRpc,
   recoverConfirmRpc,
@@ -31,10 +31,11 @@ import {
   uninstallRecoverPreviewRpc, uninstallRecoverConfirmRpc,
 } from "../shared/contracts";
 
-import { fusionGroups, fusionResult, record } from "./fusion";
+import { fusionGroups, fusionResult, record, contextKeeperResult } from "./fusion";
 import { uninstallResult, externalSteps, publicPlan } from "./uninstall-result";
 
 type Phase =
+  | { kind: "ckChoice"; prompt: string; agents: string[]; choices: string[] }
   | { kind: "fusion"; envelope: Record<string, unknown>; original?: string }
   | { kind: "form" }
   | { kind: "loading" }
@@ -79,6 +80,7 @@ function titleFor(flow: string): string {
 
 export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
   const fusionPreview = useRpc(fusionPreviewRpc);
+  const fusionSelect = useRpc(fusionSelectRpc);
   const fusionConfirm = useRpc(fusionConfirmRpc);
   const [fusionScope, setFusionScope] = useState<"user" | "project">("user");
   const [fusionToken, setFusionToken] = useState<string>();
@@ -87,6 +89,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
   const flow = params.flow ?? "onboard";
   const projectRoot = params.projectRoot ?? "";
   const bootstrapPreview = useRpc(bootstrapPreviewRpc);
+  const dependencyPreview = useRpc(dependencyPreviewRpc);
   const dependencyConfirm = useRpc(dependencyConfirmRpc);
   const bootstrapConfirm = useRpc(bootstrapConfirmRpc);
   const machinePreview = useRpc(machinePreviewRpc);
@@ -112,7 +115,25 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
   const [phase, setPhase] = useState<Phase>({ kind: "form" });
   const [showPlan, setShowPlan] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [agents, setAgents] = useState<AgentName[]>(["codex", "claude", "workbuddy"]);
+  const [agents, setAgents] = useState<AgentName[]>([]);
+  const detectAgents = useRpc(detectAgentsRpc);
+  const [detectionEvidence, setDetectionEvidence] = useState("");
+  const [showDetection, setShowDetection] = useState(false);
+  const [availableAgents, setAvailableAgents] = useState<AgentName[]>([]);
+  const [detectionDetail, setDetectionDetail] = useState("正在读取实际安装事实…");
+  useEffect(() => {
+    if (flow !== "onboard" && flow !== "enable") return;
+    let active = true;
+    void detectAgents({}).then(result => {
+      if (!active) return;
+      const facts = record(record(result.envelope.facts)?.agents);
+      const installed = AGENT_CHOICES.filter(name => record(facts?.[name])?.status === "installed");
+      setDetectionEvidence(JSON.stringify(facts ?? result.envelope, null, 2));
+      setAvailableAgents(installed); setAgents(installed);
+      setDetectionDetail(result.status === "completed" ? "实际安装名单；CLI 与 App 的证据分别保留在探测详情。" : "探测未完成，请重开入口后重试。");
+    }).catch(() => { if (active) setDetectionDetail("探测失败，请重开入口后重试。"); });
+    return () => { active = false; };
+  }, []);
   const cancelPending = useRpc(cancelPendingRpc);
   const operations = useRpc(operationStatusRpc);
   const currentFlow = useRef<"fusion" | "dependency" | "bootstrap" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "ck" | "recover">("bootstrap");
@@ -140,18 +161,36 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
     [theme, layout.compact],
   );
 
+  function finishUserMemory(envelope: Record<string, unknown>, message = fusionResult(envelope)) {
+    const ck = record(envelope.context_keeper);
+    if (ck?.status === "pending_selection" && typeof ck.prompt === "string") {
+      setPhase({ kind: "ckChoice", prompt: ck.prompt, agents: Array.isArray(ck.agents) ? ck.agents.map(String) : [],
+        choices: Array.isArray(ck.choices) ? ck.choices.map(String) : [] });
+    } else setPhase({ kind: "result", ok: true, message, detail: JSON.stringify(envelope, null, 2) });
+  }
+
   async function startFusion(envelope: Record<string, unknown>, scope: "user" | "project") {
+    if (envelope.approval_plan === null && Array.isArray(envelope.changes) && envelope.changes.length === 0) {
+      setPhase({ kind: "result", ok: true, message: "已安装，已接入。" }); return;
+    }
     const stage = record(envelope.fusion);
     if (stage?.status === "blocked") {
       setPhase({ kind: "result", ok: false, message: "接入已完成；记忆融合预览受阻。", detail: JSON.stringify(stage.preview, null, 2) }); return;
     }
     if (!stage || stage.automatic_continue !== true) {
-      setPhase({ kind: "result", ok: true, message: "接入完成；当前内核未提供自动融合阶段。", detail: JSON.stringify(envelope, null, 2) }); return;
+      if (scope === "user") finishUserMemory(envelope, "接入完成。");
+      else setPhase({ kind: "result", ok: true, message: "项目规则接入完成。", detail: JSON.stringify(envelope, null, 2) });
+      return;
     }
     setFusionScope(scope); setFusionToken(undefined); setSelection("按默认方案"); setRetentions("");
     currentFlow.current = "fusion";
     const next = await fusionPreview({ scope, ...(scope === "project" ? { projectRoot } : {}) });
     setFusionToken(next.contextToken);
+    if (next.status === "completed" && ["completed", "declined", "unchanged"].includes(String(next.envelope.fusion_status))) {
+      if (scope === "user") finishUserMemory(next.envelope);
+      else setPhase({ kind: "result", ok: true, message: fusionResult(next.envelope) });
+      return;
+    }
     setPhase(next.status === "completed" ? { kind: "fusion", envelope: next.envelope } : { kind: "result", ok: false, message: "融合预览受阻；接入结果保留。", detail: JSON.stringify(next.envelope, null, 2) });
   }
 
@@ -159,19 +198,18 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
     setPhase({ kind: "loading" }); currentFlow.current = "fusion";
     try {
       const locations = !decline && !(choice ?? selection).trim().startsWith("查看") && retentions.trim() ? JSON.parse(retentions) : undefined;
-      const next = await fusionPreview({ scope: fusionScope, ...(fusionScope === "project" ? { projectRoot } : {}),
-        contextToken: fusionToken, ...(decline ? { decline: true } : { selection: choice ?? selection }),
+      const next = await fusionSelect({ scope: fusionScope, ...(fusionScope === "project" ? { projectRoot } : {}),
+        contextToken: fusionToken!, ...(decline ? { decline: true } : { selection: choice ?? selection }),
         ...(locations && !decline && !(choice ?? selection).trim().startsWith("查看") ? { retentions: locations } : {}) });
-      if (next.status === "failed") { setPhase({ kind: "result", ok: false, message: "融合选择未执行；请保留现场并重新预览。", detail: JSON.stringify(next.envelope, null, 2) }); return; }
+      if (next.status === "failed") { setPhase({ kind: "result", ok: false, message: "融合未完成，写入结果需核对；请保留现场，查看错误与 manifest 后恢复。", detail: JSON.stringify(next.envelope, null, 2) }); return; }
       setFusionToken(next.contextToken);
-      if (decline || next.envelope.fusion_status === "unchanged") { setPhase({ kind: "result", ok: true, message: fusionResult(next.envelope) }); return; }
-      if (next.approval?.status === "approval_required") {
-        adoptPreview("fusion", "memory-fusion", next.approval, setPhase, setShowPlan);
-      } else {
-        const plan = record(next.envelope.approval_plan);
-        const viewed = typeof plan?.view === "number" ? fusionGroups(next.envelope).find(g => g.number === plan.view) : undefined;
-        setPhase({ kind: "fusion", envelope: next.envelope, original: viewed?.original });
+      if (["completed", "declined", "unchanged"].includes(String(next.envelope.fusion_status))) {
+        if (fusionScope === "user") finishUserMemory(next.envelope);
+        else setPhase({ kind: "result", ok: true, message: fusionResult(next.envelope) }); return;
       }
+      const plan = record(next.envelope.approval_plan);
+      const viewed = typeof plan?.view === "number" ? fusionGroups(next.envelope).find(g => g.number === plan.view) : undefined;
+      setPhase({ kind: "fusion", envelope: next.envelope, original: viewed?.original });
     } catch (error) { setPhase({ kind: "result", ok: false, message: "融合请求未能确认结果；请重新预览并核对现场。", detail: String(error) }); }
   }
 
@@ -221,7 +259,28 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
         return;
       }
       if (flow !== "onboard") { setPhase({ kind: "gate", message: "未知操作入口；请从 Command Center 重新选择。" }); return; }
+      if (agents.length === 0) {
+        const tools = await dependencyPreview({});
+        if (tools.status !== "completed") { adoptPreview("dependency", "prepare-tool-assets", tools, setPhase, setShowPlan); return; }
+        const detected = await detectAgents({});
+        if (detected.status !== "completed") {
+          setDetectionEvidence(JSON.stringify(detected.envelope, null, 2));
+          setShowDetection(true);
+          setAvailableAgents([]); setAgents([]);
+          setDetectionDetail("安装探测失败，尚不能确定实际名单；请查看原始结果，再点击生成精确预览重试。");
+          setPhase({ kind: "form" }); return;
+        }
+        const facts = record(record(detected.envelope.facts)?.agents);
+        const installed = AGENT_CHOICES.filter(name => record(facts?.[name])?.status === "installed");
+        setDetectionEvidence(JSON.stringify(facts ?? detected.envelope, null, 2));
+        setAvailableAgents(installed); setAgents(installed);
+        setDetectionDetail(installed.length ? "环境已就绪，请选择实际安装的 Agent。" : "本次未发现已安装的 Agent；请检查 CLI/App 安装后重试。");
+        setPhase({ kind: "form" }); return;
+      }
       const result = await bootstrapPreview({});
+      if (result.status === "completed") {
+        setPhase({ kind: "result", ok: true, message: "已安装，已接入。" }); return;
+      }
       if (result.status === "already_prepared") {
         currentFlow.current = "machine";
         const machine = await machinePreview({ agents });
@@ -260,12 +319,9 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
       } else if (outcome.status === "stale_plan" || outcome.status === "no_pending_plan") {
         setPhase({ kind: "gate", message: describe(outcome.status, outcome.detail) });
       } else if (outcome.status === "acquired") {
-        setPhase({
-          kind: "result",
-          ok: true,
-          message: "持久来源已就绪；继续机器安装预览。",
-          detail: JSON.stringify(outcome.envelope, null, 2),
-        });
+        const next = await machinePreview({ agents });
+        if (next.status === "completed") await startFusion(next.envelope, "user");
+        else adoptPreview("machine", "install-machine", next, setPhase, setShowPlan);
       } else if (outcome.status === "completed") {
         if (phase.flow === "fusion") {
           setPhase({ kind: "result", ok: true, message: fusionResult(outcome.envelope), detail: JSON.stringify(outcome.envelope, null, 2) });
@@ -276,6 +332,8 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
           setPhase({ kind: "result", ...shown, continuation: externalSteps(outcome.envelope, JSON.parse(phase.planText)), detail: JSON.stringify(outcome.envelope, null, 2) });
         } else if (phase.flow === "stagingCleanup") {
           setPhase({ kind: "result", ok: true, message: "宿主暂存已外置并清理；继续整机卸载须另起预览和批准。", detail: JSON.stringify(outcome.envelope, null, 2) });
+        } else if (phase.flow === "ck" && outcome.envelope.status !== "source_prepared") {
+          setPhase({ kind: "result", ok: true, message: contextKeeperResult(outcome.envelope), detail: JSON.stringify(outcome.envelope, null, 2) });
         } else if (outcome.envelope.status === "tool_assets_ready") {
           await runPreview();
         } else if (outcome.envelope.status === "source_prepared") {
@@ -315,9 +373,11 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
           {flow === "uninstallRecover" ? <View style={{ gap: 8 }}><Text style={styles.label}>外置 manifest 绝对路径</Text><TextInput style={inputStyle} value={manifestPath} onChangeText={setManifestPath} /><View style={{ flexDirection: "row", gap: 8 }}>{(["restore", "resume"] as const).map(action => <Pressable key={action} style={styles.chip(uninstallAction === action)} onPress={() => setUninstallAction(action)}><Text style={styles.detail}>{action}</Text></Pressable>)}</View></View> : null}
           {picksAgents ? (
             <View style={{ gap: 8 }}>
-              <Text style={styles.label}>拟接入的执行器（实际用户文件以精确预览为准）</Text>
+              <Text style={styles.label}>{detectionDetail}</Text>
+              {detectionEvidence ? <Pressable onPress={() => setShowDetection(!showDetection)}><Text style={{ color: theme.colors.accent }}>查看 CLI / App 安装证据</Text></Pressable> : null}
+              {showDetection ? <JsonBlock theme={theme} text={detectionEvidence} /> : null}
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {AGENT_CHOICES.map((name) => (
+                {availableAgents.map((name) => (
                   <Pressable
                     key={name}
                     style={styles.chip(agents.includes(name))}
@@ -331,7 +391,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
               </View>
             </View>
           ) : null}
-          {flow === "ck" ? <Text style={styles.label}>Context Keeper 为可选独立安装，仅支持 Codex、Claude Code、WorkBuddy。需要获取来源时，先确认固定来源与目标目录，再单独确认安装计划。</Text> : null}
+          {flow === "ck" ? <Text style={styles.label}>Context Keeper 帮助 Agent 在新会话接续项目进展、决策和经验。支持范围以当次上游安装计划为准；获取当前 main 来源与安装分别批准。</Text> : null}
           {flow === "recover" ? (
             <View style={{ gap: 8 }}>
               <Pressable style={styles.button} onPress={() => { void operations({}).then(records => {
@@ -352,9 +412,9 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
           ) : null}
           <Pressable
             accessibilityRole="button"
-            style={[styles.button, picksAgents && agents.length === 0 ? { opacity: 0.4 } : null]}
+            style={[styles.button, flow === "enable" && agents.length === 0 ? { opacity: 0.4 } : null]}
             onPress={() => {
-              if (picksAgents && agents.length === 0) return;
+              if (flow === "enable" && agents.length === 0) return;
               if (flow === "recover" && journalPath.trim().length === 0) return;
               if (flow === "uninstall" && !backupDir.trim()) return;
               if (flow === "stagingCleanup" && !evidenceDir.trim()) return;
@@ -367,6 +427,13 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
         </View>
       ) : null}
 
+      {phase.kind === "ckChoice" ? <View style={{ gap: 12 }}>
+        <Text style={styles.detail}>{phase.prompt}</Text>
+        <Text style={styles.label}>{phase.agents.join("、")}</Text>
+        {phase.choices.includes("安装") ? <Pressable style={styles.button} onPress={() => { currentFlow.current = "ck"; setPhase({ kind: "loading" }); void ckPreview({}).then(next => adoptPreview("ck", "install-context-keeper", next, setPhase, setShowPlan)).catch(error => setPhase({ kind: "result", ok: false, message: "Context Keeper 准备失败；公共记忆结果保留。", detail: String(error) })); }}><Text style={styles.buttonText}>安装 Context Keeper</Text></Pressable> : null}
+        {phase.choices.includes("跳过") ? <Pressable style={styles.button} onPress={() => setPhase({ kind: "result", ok: true, message: "已跳过 Context Keeper；公共用户记忆结果保留。" })}><Text style={styles.buttonText}>跳过</Text></Pressable> : null}
+      </View> : null}
+
       {phase.kind === "fusion" ? <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 12 }}>
         <Text style={styles.detail}>{typeof phase.envelope.prompt === "string" ? phase.envelope.prompt : fusionResult(phase.envelope)}</Text>
         <Text style={styles.label}>{fusionResult(phase.envelope)}</Text>
@@ -375,7 +442,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
         <Text style={styles.label}>共享编号或组合输入，例如 3、4 / 不共享 2 / 共享 3、4，不共享 2 / 按默认方案</Text>
         <TextInput style={inputStyle} value={selection} onChangeText={setSelection} />
         {fusionScope === "project" ? <><Text style={styles.label}>排除已有公共项时，先逐条确认保留位置（编号到已参与原生文件的 JSON，例如 {`{"1":"CLAUDE.md"}`}）</Text><TextInput style={inputStyle} value={retentions} onChangeText={setRetentions} /></> : null}
-        <Pressable style={styles.button} onPress={() => void chooseFusion()}><Text style={styles.buttonText}>生成完整修改清单</Text></Pressable>
+        <Pressable style={styles.button} onPress={() => void chooseFusion()}><Text style={styles.buttonText}>按此次选择执行</Text></Pressable>
         <Pressable style={styles.button} onPress={() => void chooseFusion(undefined, true)}><Text style={styles.buttonText}>保留现状，暂不融合</Text></Pressable>
       </ScrollView> : null}
 
@@ -470,9 +537,9 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
 type AdoptResult = { status: string; message?: string; detail?: string; continuation?: string; rows?: { label: string; value: string }[] };
 
 function adoptPreview(
-  flow: "fusion" | "onboard" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "uninstallRecover" | "ck" | "recover",
+  flow: "dependency" | "fusion" | "onboard" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "uninstallRecover" | "ck" | "recover",
   planKind: string,
-  result: { status: string; planKind?: string; digest?: string; confirmationToken?: string; summary?: { label: string; value: string }[]; plan?: Record<string, unknown>; message?: string; detail?: string },
+  result: { status: string; planKind?: string; digest?: string; confirmationToken?: string; summary?: { label: string; value: string }[]; plan?: Record<string, unknown>; message?: string; detail?: string; envelope?: Record<string, unknown> },
   setPhase: (phase: Phase) => void,
   setShowPlan: (value: boolean) => void,
 ): void {
@@ -487,6 +554,8 @@ function adoptPreview(
       summary: result.summary ?? [],
       planText: JSON.stringify(flow === "fusion" ? result.plan : publicPlan(result.plan), null, 2),
     });
+  } else if (result.status === "completed") {
+    setPhase({ kind: "result", ok: true, message: flow === "ck" ? contextKeeperResult(result.envelope ?? {}) : describe(result.status), detail: JSON.stringify(result.envelope ?? {}, null, 2) });
   } else {
     setPhase({ kind: "gate", message: describe(result.status, "message" in result ? result.message : "detail" in result ? result.detail : undefined) });
   }

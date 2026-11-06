@@ -330,13 +330,22 @@ export const ckUninstallConfirmRpc = defineRpc({
   output: confirmStatus,
 });
 
-// Selection is read-only; approval contents remain server-owned.
-export const fusionPreviewRpc = defineRpc({
-  name: "memsharing.fusion.preview",
+// Preview is read-only; numbered selection executes the displayed kernel plan.
+const fusionOutput = z.object({ status: z.enum(["completed", "failed"]), envelope: jsonObject,
+  contextToken: z.string().optional() });
+export const fusionPreviewRpc = defineRpc({ name: "memsharing.fusion.preview",
+  input: z.object({ scope: z.enum(["user", "project"]), projectRoot: z.string().optional() }).strict(), output: fusionOutput });
+export const fusionSelectRpc = defineRpc({ name: "memsharing.fusion.select",
   input: z.object({ scope: z.enum(["user", "project"]), projectRoot: z.string().optional(),
-    selection: z.string().optional(), decline: z.boolean().optional(),
-    contextToken: z.string().optional(), retentions: z.record(z.string(), z.string()).optional() }).strict(),
-  output: z.object({ status: z.enum(["completed", "failed"]), envelope: jsonObject,
-    contextToken: z.string().optional(), approval: previewStatus.optional() }),
-});
+    selection: z.string().optional(), decline: z.boolean().optional(), contextToken: z.string(),
+    retentions: z.record(z.string(), z.string()).optional() }).strict(), output: fusionOutput });
 export const fusionConfirmRpc = defineRpc({ name: "memsharing.fusion.confirm", input: confirmAction.strict(), output: confirmStatus });
+
+export const detectAgentsRpc = defineRpc({ name: "memsharing.agents.detect", input: z.object({}).strict(),
+  output: z.object({ status: z.enum(["completed", "failed"]), envelope: jsonObject }) });
+
+// Agent-authored exact proposals; all bases/contexts/spans remain untrusted
+// input and are validated by the original kernel against actual bytes.
+export const fusionProposeRpc = defineRpc({ name: "memsharing.fusion.propose",
+  input: z.object({ scope: z.enum(["user", "project"]), projectRoot: z.string().optional(), contextToken: z.string(),
+    equivalentSources: z.array(jsonObject).optional(), publicReuse: z.array(jsonObject).optional() }).strict(), output: fusionOutput });

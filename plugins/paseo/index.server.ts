@@ -11,11 +11,11 @@ import { CORE_RELEASE_MANIFEST_SHA256 } from "./server/shared/release-identity";
 import type { PluginRpcContract } from "@getpaseo/plugin";
 import type { ZodType, input as ZodInput, output as ZodOutput } from "zod";
 import {
-  fusionPreviewRpc, fusionConfirmRpc,
+  fusionPreviewRpc, fusionProposeRpc, fusionSelectRpc, fusionConfirmRpc,
   dependencyPreviewRpc,
   dependencyConfirmRpc,
   operationStatusRpc,
-  envStatusRpc,
+  envStatusRpc, detectAgentsRpc,
   bootstrapPreviewRpc,
   bootstrapConfirmRpc,
   machinePreviewRpc,
@@ -95,12 +95,15 @@ export default function contribute(server: PluginServerContext) {
     };
   });
 
+  handle(detectAgentsRpc, orchestrator => orchestrator.detectAgents());
   handle(bootstrapPreviewRpc, async (orchestrator) => orchestrator.bootstrapPreview());
   handle(dependencyPreviewRpc, async (orchestrator) => orchestrator.dependencyPreview());
   handle(dependencyConfirmRpc, async (orchestrator, input) => orchestrator.dependencyConfirm(input));
   handle(bootstrapConfirmRpc, async (orchestrator, input) => orchestrator.bootstrapConfirm(input));
 
   handle(fusionPreviewRpc, (orchestrator, input) => orchestrator.fusionPreview(input));
+  handle(fusionProposeRpc, (orchestrator, input) => orchestrator.fusionPropose(input));
+  handle(fusionSelectRpc, (orchestrator, input) => orchestrator.fusionSelect(input));
   handle(fusionConfirmRpc, (orchestrator, input) => orchestrator.fusionConfirm(input));
 
   handle(machinePreviewRpc, async (orchestrator, input) => orchestrator.machinePreview(input.agents));

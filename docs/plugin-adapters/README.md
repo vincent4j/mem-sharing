@@ -50,3 +50,13 @@ Context Keeper 是独立可选 Skill，每次从官方仓库 `main` 实时获取
 只针对改动执行所需检查：common/notice 修改运行 sync 一致性测试，宿主修改运行相应 Node 测试与 SDK typecheck；内核改动按项目 Python 测试规定验证。发行前执行 source/release CI，不以合成通过代替真实宿主批准或新会话。
 
 旧设计、任务拆分、v1-v5/r1-r2日志与hash清单不再作为当前输入；完整历史保存在 Git `0906d7acea8f0f1dc02ddef734f90322a8180579`。例如 `git show 0906d7a:docs/plugin-adapters/design.md`。Context Keeper 历史中的旧相对链接按同一提交和原路径追溯，不能把已删过程文件当作证据从未存在。
+
+## 当前内核适配
+
+重复安装的已核验成功无变更响应直接显示“已安装，已接入”，不重新启动融合或 Context Keeper。融合预览与写操作分别为 `fusion.preview`、`fusion.select`；后者将服务端保存的完整展示计划和本次选择交给内核校验后执行，查看和拒绝不执行迁移。内核返回无内容时直接进入尾步。
+
+用户记忆流程结束后显示内核 `context_keeper.pending_selection` 的原问句、实际名单和安装/跳过选项；无响应保持待选择，选择安装后才准备当前上游 main 来源，来源与安装分别批准。项目规则融合不带此尾步。Agent 名单通过 `agents.detect` 复用内核探测，空目录不算安装，CLI/App 证据分别保留。
+
+外层 Agent 完整阅读来源与公共正文后，可向 `fusion.propose` 提交本次 `equivalentSources` / `publicReuse` 完整提案及展示 token；工具核对旧场景并交内核校验原 context、全文基线、精确字节范围和原文哈希，返回重新编号的展示方案。前端不猜测等价，不把提案摘要视为信任来源。提案在 0700 临时目录、0600 文件传递并清理，选择执行复用同一提案。此接口面向外层 Agent，内部 JSON 不作为普通用户必填流程。
+
+上述源代码适配不代表已重生成发行包或完成真实宿主 UI 验收；发行须另行授权生成并验证。

@@ -16,5 +16,12 @@ export function fusionResult(envelope: Record<string, unknown>) {
   if (envelope.status === "viewed") return "只读查看原文；未选择、未执行。";
   if (envelope.fusion_status === "completed") return "记忆融合完成。";
   if (envelope.fusion_status === "unchanged") return "没有需要融合的内容，记忆内容未修改。";
-  return "本次融合尚未修改记忆内容，请选择后查看完整修改清单。";
+  return "本次融合尚未修改记忆内容。选择即执行；未选内容保留，可先查看完整原文与来源。";
+}
+
+export function contextKeeperResult(envelope: Record<string, unknown>): string {
+  const status = record(envelope.context_keeper)?.status ?? envelope.status;
+  if (status === "configured") return "Context Keeper 配置完成；请在需要的项目使用 /context-keeper，首次使用按其流程创建记录库。新会话运行验收待完成。";
+  if (status === "skipped") return "本次未安装 Context Keeper；公共用户记忆结果保留。请查看当次上游支持范围。";
+  return `Context Keeper：${String(status)}。请核对结果详情。`;
 }

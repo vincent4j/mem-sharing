@@ -23,6 +23,9 @@ import { probeGitEnvironment } from "./shared/common/git";
 import { PRODUCTION_TOOL_ASSETS } from "./shared/common/production-assets";
 import { assetScene, assetDestination, prepareToolAsset, toolEnvironment, toolTreeDigest, type ToolAsset } from "./shared/common/tool-assets";
 
+export type FusionInput = { scope: "user" | "project"; projectRoot?: string; selection?: string; decline?: boolean;
+  contextToken?: string; retentions?: Record<string, string>; equivalentSources?: Record<string, unknown>[]; publicReuse?: Record<string, unknown>[] };
+
 export type FlowKind = "dependency" | "bootstrap" | "machine" | "enable" | "uninstall" | "stagingCleanup" | "ck" | "recover" | "ckUninstall" | "fusion";
 
 export interface CliRunOutcome {
@@ -449,6 +452,9 @@ export class Orchestrator {
     if ("failure" in result) return result.failure;
     const { parsed, exitKind } = result;
     const plan = jsonRecord(parsed.approval_plan);
+    if (exitKind === "completed" && parsed.status === "completed" && parsed.approval_plan === null && Array.isArray(parsed.changes) && parsed.changes.length === 0) {
+      return { status: "completed", envelope: parsed };
+    }
     if (exitKind !== "approval_required" || !plan) return { status: "failed", code: "release_resolution_failed", message: JSON.stringify(parsed.errors ?? parsed.status), envelope: parsed };
     if (plan.command === "prepare-release-source") {
       const stored = this.storePending("bootstrap", plan, "plan-plus-evidence", [python.pythonPath, "-B", payload.installerPath as string]);
@@ -465,6 +471,17 @@ export class Orchestrator {
     for (const agent of agents) confirmArgv.push("--agent", agent);
     const stored = this.storePending("machine", plan, "plan-plus-evidence", confirmArgv);
     return { status: "approval_required", planKind: "install-machine", ...stored, plan, envelope: parsed };
+  }
+
+  // One detector: import the bundled/active kernel, without launching an Agent.
+  async detectAgents(): Promise<{ status: "completed" | "failed"; envelope: Record<string, unknown> }> {
+    const python = await this.requirePython();
+    const installer = this.activeKernel()?.installer ?? this.payload().installerPath;
+    if (!python.ok || !installer) return { status: "failed", envelope: { errors: [{ code: "kernel_or_python_missing" }] } };
+    const script = "import sys,json;sys.path.insert(0,sys.argv[1]);from agm_core import detect,paths;config=paths.select_platform(paths.load_agents_table(),sys.platform);print(json.dumps(dict(status='completed',facts=detect.detect_agents(config,home=sys.argv[2]))))";
+    const result = await this.runJson<PreviewOutcome>([python.pythonPath, "-B", "-c", script, path.dirname(installer), this.deps.home]);
+    if ("failure" in result) return { status: "failed", envelope: { errors: [result.failure] } };
+    return { status: result.exitKind === "completed" && result.parsed.status === "completed" ? "completed" : "failed", envelope: result.parsed };
   }
 
   private async requirePython(): Promise<{ ok: true; pythonPath: string } | { ok: false; detail: string }> {
@@ -1413,51 +1430,86 @@ export class Orchestrator {
     };
   }
 
-  private fusionContext?: { token: string; identity: string; scope: string; project?: string };
+  private fusionContext?: { token: string; binding: string; plan: Record<string, unknown>; scope: string; project?: string; proposals?: Pick<FusionInput, "equivalentSources" | "publicReuse"> };
 
   async fusionPreview(input: { scope: "user" | "project"; projectRoot?: string; selection?: string;
-    decline?: boolean; contextToken?: string; retentions?: Record<string, string> }, signal?: AbortSignal): Promise<{
-      status: "completed" | "failed"; envelope: Record<string, unknown>; contextToken?: string; approval?: PreviewOutcome }> {
-    return this.operate("fusion", "preview", signal, async owned => {
+    decline?: boolean; contextToken?: string; retentions?: Record<string, string> }, signal?: AbortSignal) {
+    if (input.selection || input.decline || input.retentions) return { status: "failed" as const, envelope: { errors: [{ code: "use_fusion_select" }] } };
+    return this.fusionRun(input, false, signal);
+  }
+
+  async fusionPropose(input: FusionInput, signal?: AbortSignal) {
+    const context = this.fusionContext;
+    if (!input.contextToken || context?.token !== input.contextToken || context.scope !== input.scope || context.project !== input.projectRoot) return { status: "failed" as const, envelope: { errors: [{ code: "stale_fusion_context" }] } };
+    // Revalidate the displayed scene first; proposals are judgments, never authority.
+    const fresh = await this.fusionRun({ scope: input.scope, projectRoot: input.projectRoot }, false, signal);
+    const current = this.fusionContext;
+    if (fresh.status !== "completed" || !current || context.binding !== current.binding || ["layout", "observations", "groups", "agents", "scope", "project"].some(key => planDigest({ value: context.plan[key] }) !== planDigest({ value: current.plan[key] }))) {
+      this.fusionContext = undefined;
+      return { status: "failed" as const, envelope: { errors: [{ code: "fusion_scene_changed_preview_again" }] } };
+    }
+    const proposed = await this.fusionRun({ ...input, contextToken: undefined }, false, signal);
+    const proposedScene = this.fusionContext;
+    if (proposed.status !== "completed" || !proposedScene || ["layout", "observations", "agents", "scope", "project"].some(key => planDigest({ value: context.plan[key] }) !== planDigest({ value: proposedScene.plan[key] }))) {
+      this.fusionContext = undefined;
+      return { status: "failed" as const, envelope: { errors: [{ code: "fusion_scene_changed_preview_again" }] } };
+    }
+    return proposed;
+  }
+
+  async fusionSelect(input: FusionInput, signal?: AbortSignal) {
+    return this.fusionRun(input, true, signal);
+  }
+
+  private async fusionRun(input: FusionInput, execute: boolean, signal?: AbortSignal): Promise<{
+    status: "completed" | "failed"; envelope: Record<string, unknown>; contextToken?: string; approval?: PreviewOutcome }> {
+    return this.operate("fusion", execute ? "execute" : "preview", signal, async owned => {
       const fail = (code: string, envelope: Record<string, unknown> = {}) => ({ status: "failed" as const, envelope: { ...envelope, errors: [{ code, message: code }] } });
       if (input.scope === "project" && (!input.projectRoot || !path.isAbsolute(input.projectRoot))) return fail("project_required");
-      if (input.contextToken && (this.fusionContext?.token !== input.contextToken || this.fusionContext.scope !== input.scope || this.fusionContext.project !== input.projectRoot)) return fail("stale_fusion_context");
-      // Numbered commands must refer to a previously displayed scene.
-      if (!input.contextToken && (input.selection || input.decline || input.retentions)) return fail("fusion_preview_required");
+      const context = this.fusionContext;
+      if (execute && (!input.contextToken || context?.token !== input.contextToken || context.scope !== input.scope || context.project !== input.projectRoot)) return fail("stale_fusion_context");
+      if (execute && !input.selection && !input.decline) return fail("selection_required");
       const python = await this.requirePython(); const agm = this.activeKernelAgm();
       if (!python.ok || !agm) return fail("kernel_or_python_missing");
       const base = [python.pythonPath, "-B", agm, input.scope === "project" ? "organize-project-memory" : "organize-user-memory"];
       if (input.scope === "project") base.push("--project", input.projectRoot!);
+      const binding = this.kernelBinding(base);
+      if (execute && context!.binding !== binding) return fail("fusion_kernel_changed_preview_again");
       const argv = [...base];
-      if (input.decline) argv.push("--decline");
-      else if (input.selection) argv.push("--selection", input.selection);
-      let retentionDirectory: string | undefined;
-      if (input.retentions) {
-        retentionDirectory = fs.mkdtempSync(path.join(tmpdir(), "memsharing-fusion-input-"));
-        fs.chmodSync(retentionDirectory, 0o700);
-        const file = path.join(retentionDirectory, "retentions.json");
-        fs.writeFileSync(file, JSON.stringify(input.retentions), { mode: 0o600, flag: "wx" });
-        argv.push("--retention-file", file);
-      }
-      let result: Awaited<ReturnType<typeof this.runJson<PreviewOutcome>>>;
-      try { result = await this.runJson<PreviewOutcome>(argv, { signal: owned }); }
-      finally { if (retentionDirectory) { fs.unlinkSync(path.join(retentionDirectory, "retentions.json")); fs.rmdirSync(retentionDirectory); } }
-      if ("failure" in result) return fail(result.failure.status === "failed" ? result.failure.code : "cli_failed");
-      const { parsed, exitKind } = result; const plan = jsonRecord(parsed.approval_plan);
-      if (exitKind === "failed" || !plan || !["approval_required", "viewed", "completed"].includes(String(parsed.status))) return { status: "failed", envelope: parsed };
-      const identity = planDigest({ observations: plan.observations, groups: plan.groups, scope: plan.scope, project: plan.project });
-      if (input.contextToken && this.fusionContext?.identity !== identity) {
-        this.fusionContext = undefined; return fail("fusion_scene_changed_preview_again", parsed);
-      }
-      const token = input.contextToken ?? randomUUID();
-      this.fusionContext = { token, identity, scope: input.scope, project: input.projectRoot };
-      // Initial preview and 查看 never create an executable pending plan.
-      let approval: PreviewOutcome | undefined;
-      if (input.selection && !plan.view && !input.decline && parsed.status === "approval_required" && exitKind === "approval_required") {
-        const stored = this.storePending("fusion", plan, "plan-plus-evidence", base);
-        approval = { status: "approval_required", planKind: "memory-fusion", ...stored, plan };
-      }
-      return { status: "completed", envelope: parsed, contextToken: token, approval };
+      const directory = fs.mkdtempSync(path.join(tmpdir(), "memsharing-fusion-input-"));
+      fs.chmodSync(directory, 0o700);
+      const write = (name: string, value: unknown) => {
+        const file = path.join(directory, name);
+        fs.writeFileSync(file, JSON.stringify(value), { mode: 0o600, flag: "wx" }); return file;
+      };
+      try {
+        if (input.decline) argv.push("--decline");
+        else if (input.selection) {
+          argv.push("--selection", input.selection);
+          // The kernel compares the complete displayed scene before any write.
+          if (!input.selection.trim().startsWith("查看")) argv.push("--selection-plan-file", write("shown.json", context!.plan), "--selection-reference", `Paseo user selection: ${input.selection}`);
+        }
+        const proposals = execute ? context!.proposals : input;
+        if (proposals?.equivalentSources) argv.push("--equivalent-sources-file", write("equivalent.json", proposals.equivalentSources));
+        if (proposals?.publicReuse) argv.push("--public-reuse-file", write("reuse.json", proposals.publicReuse));
+        // Retentions affect a project selection only; 查看/decline must stay
+        // independent of any supplied retention map, even for direct RPC callers.
+        if (input.scope === "project" && input.retentions && input.selection && !input.decline && !input.selection.trim().startsWith("查看")) {
+          argv.push("--retention-file", write("retentions.json", input.retentions));
+        }
+        const result = await this.runJson<PreviewOutcome>(argv, { signal: owned });
+        if ("failure" in result) return fail(result.failure.status === "failed" ? result.failure.code : "cli_failed");
+        const { parsed, exitKind } = result;
+        if (exitKind === "failed" || !["approval_required", "viewed", "completed"].includes(String(parsed.status))) return { status: "failed", envelope: parsed };
+        const terminal = ["completed", "declined", "unchanged"].includes(String(parsed.fusion_status));
+        if (terminal) { this.fusionContext = undefined; return { status: "completed", envelope: parsed }; }
+        const plan = jsonRecord(parsed.approval_plan);
+        if (!plan) return fail("fusion_plan_missing", parsed);
+        const token = execute ? context!.token : randomUUID();
+        // 查看 must not replace the scene the user originally saw.
+        if (!execute) this.fusionContext = { token, binding, plan, scope: input.scope, project: input.projectRoot, proposals: { equivalentSources: input.equivalentSources, publicReuse: input.publicReuse } };
+        return { status: "completed", envelope: parsed, contextToken: token };
+      } finally { fs.rmSync(directory, { recursive: true, force: true }); }
     });
   }
 

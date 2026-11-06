@@ -14,7 +14,7 @@ export function ckDestination(home: string): string {
 export function ckAcquisitionPlan(home: string): Record<string, unknown> {
   return { command: "prepare-context-keeper-source", home, host: hostname(), url: CK_URL,
     branch: CK_BRANCH, destination: ckDestination(home), network: "Git fetch from current upstream main",
-    installs_context_keeper: false, agents: ["codex", "claude", "workbuddy", "zcode", "dsh", "opencode"] };
+    installs_context_keeper: false, agent_support: "determined by the acquired upstream installer plan" };
 }
 
 export async function acquireCkSource(home: string, git: string, runner: Runner, signal?: AbortSignal): Promise<string> {

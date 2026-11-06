@@ -479,7 +479,8 @@ test("CK acquisition is separately approved; rejection starts no Git fetch and R
     if (plan.status !== "approval_required") return;
     assert.equal(plan.planKind, "prepare-context-keeper-source");
     assert.equal(plan.plan.branch, "main");
-    assert.deepEqual(plan.plan.agents, ["codex", "claude", "workbuddy", "zcode", "dsh", "opencode"]);
+    assert.equal(plan.plan.agents, undefined);
+    assert.equal(plan.plan.agent_support, "determined by the acquired upstream installer plan");
     assert.equal((await orch.ckConfirm({ action: "reject" })).status, "rejected");
     assert.equal(runner.calls.length, 0);
     const contracts = fs.readFileSync(new URL("../shared/contracts.ts", import.meta.url), "utf8");
@@ -556,4 +557,25 @@ test("operation record journal rule drops only this HOME's CK audit journal, kee
   assert.equal(recordJournalForOperation("ck", "", home), "");
   const odd = { stray: true };
   assert.equal(recordJournalForOperation("machine", odd, home), odd);
+});
+
+test("first install detection uses bundled kernel before active install; missing Python keeps dependency route", async () => {
+  const f = tempHome(); try {
+    const pluginDir = pluginPayloadFixture(f.home);
+    const runner = scriptedRunner([completed(0, { status: "completed", facts: { agents: { codex: { status: "installed", evidence: [{ kind: "path_executable" }] }, claude: { status: "absent" } } } })]);
+    const ready = new Orchestrator({ home: f.home, pluginDir, searchedPluginDirs: [], runner, pythonProbe: readyPython(), gitProbe: readyGit() });
+    const detected = await ready.detectAgents();
+    assert.equal(detected.status, "completed");
+    assert.ok(runner.calls[0].includes(path.join(pluginDir, "payload/core/scripts")));
+    assert.ok(!fs.existsSync(path.join(f.home, ".local/share/mem-sharing")));
+    const missing = new Orchestrator({ home: f.home, pluginDir, searchedPluginDirs: [], runner,
+      pythonProbe: async () => ({ status: "missing", candidates: [], evidence: "fixture missing" }), gitProbe: readyGit() });
+    assert.equal((await missing.detectAgents()).status, "failed");
+    // The empty list is not an install authorization; dependency preparation
+    // remains reachable independently and does not launch the Python CLI.
+    const before = runner.calls.length;
+    const dependencies = await missing.dependencyPreview();
+    assert.ok(["approval_required", "failed"].includes(dependencies.status));
+    assert.equal(runner.calls.length, before);
+  } finally { f.cleanup(); }
 });
