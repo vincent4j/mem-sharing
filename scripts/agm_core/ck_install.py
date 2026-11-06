@@ -398,7 +398,20 @@ def execute_context_keeper(plan, approval, *, request=None, runner=None):
             record['status'] = 'unknown'
             record['errors'] = [{'code': 'ck_readback_failed', 'message': 'Context Keeper target metadata cannot be verified; inspect journal'}]
         save()
+    # Upstream remains the independent installer. Sharing is a later user choice.
+    sharing = {'status': 'not_checked', 'eligible_agents': [], 'protected_agents': []}
+    if record['status'] == 'configured':
+        from . import ck_common_trigger as common
+        sharing['status'] = 'pending_selection'
+        for agent, name in zip(plan['agents'], plan['rule_files']):
+            try:
+                recognized = common.recognize(Path(name).read_bytes(), agent)
+            except (ValueError, OSError):
+                recognized = None
+            sharing['eligible_agents' if recognized else 'protected_agents'].append(agent)
+        sharing['next_action'] = 'organize-user-memory; present exact common trigger candidate and await selection'
     return {'command': 'install-context-keeper', 'status': record['status'],
+            'common_trigger_sharing': sharing,
             'agents': list(plan['agents']),
             'skipped_upstream_agents': list(plan['skipped_upstream_agents']),
             'main_operation_id': plan['main_operation_id'], 'journal': str(journal),

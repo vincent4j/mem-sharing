@@ -208,3 +208,8 @@ CLI 的 `scope=standalone_declared`、`host_plugin=not_applicable` 仅声明调�
 从任意 Agent 发起卸载均走同一 `uninstall-machine` 全机核心，按受管台账移除全部已安装 native Skill 与引用，归还当前公共正文；保护用户自建同名 Skill、其他 Skill 与私文。删除前仍须外置备份、零写预览、精确批准和宿主义务核验。原生目录布局证据不代表真实 `/mem-sharing` 调用通过。
 
 新装公共索引只提示读取存在的用户规则与按需 Skill，不生成《使用约定》及索引条目，不硬编码用户个人规则。首次进入未登记 Git 主目录时按 Skill 自动接入，跳过 disabled、非 Git 和 linked worktree，保留已有内容。旧安装的指南仅按原台账与来源兼容处理，不由新安装无批准删除。
+
+
+### 安装后的通用触发整理
+
+Context Keeper 仍独立从官方 main 安装或更新，不因 memSharing 共享识别哈希固定版本。安装结果的 `common_trigger_sharing` 只报告可核验候选和仍受保护的执行器，不执行搬运；继续按 SKILL 的原文展示、选择、执行流程整理。当前已审完整通用正文可共享一份，原生标题和标记保留；未知或未来变更模板继续原生工作并明确未共享。上游重装写回后，再次整理复用原有公共正文；公共编辑或来源漂移时停止，不覆盖或追加第二份。卸载 memSharing 前完整归还入口，不卸载 Context Keeper。

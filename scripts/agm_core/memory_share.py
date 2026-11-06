@@ -25,7 +25,7 @@ import re
 from pathlib import Path
 from datetime import datetime, timezone
 
-from . import entries, layout, paths
+from . import ck_common_trigger as ck, entries, layout, paths
 from .transaction import (Change, Snapshot, Transaction, TransactionError,
                           inspect_recovery, read_snapshot, recover_manifest,
                           write_lock)
@@ -398,6 +398,11 @@ def _collect(request):
         if info['status'] != 'ok':
             continue
         protected = _protected_spans(snapshot.data)
+        common = ck.candidate(snapshot.data, info['agent'], protected)
+        if common:
+            segments.append(dict(common, source=name, agent=info['agent'],
+                                 scope=_scope_titles(snapshot.data, common['start'], protected),
+                                 context=_heading_context(snapshot.data, common['start'], protected)[1]))
         for start, end in _segments(snapshot.data, protected):
             raw = snapshot.data[start:end]
             segments.append({'source': name, 'agent': info['agent'],
@@ -527,6 +532,10 @@ def _validate_proposal(request, proposal):
                           'supported_same': raw['same_content'] and identity and same_scope,
                           'coverage': sorted({i['source'] for i in items})})
     _proposal_equivalents(proposal, validated, segments, basis)
+    for group in validated:
+        if group['proposed_same'] and all(i.get('kind') == ck.KIND for i in group['items']):
+            group['supported_same'] = True
+            group['canonical_context'] = group['items'][0]['context']
     return runtime, sources, segments, basis, validated
 
 
@@ -622,6 +631,14 @@ def build_share_plan(request, proposal, selection):
         if any(flags) and not all(flags):
             _fail('invalid_public_reuse', '本组复用须逐处完整声明')
     index_bytes = index_snapshot.data or b''
+    ck_selected = any(g['number'] in chosen and any(i.get('kind') == ck.KIND for i in g['items']) for g in numbered)
+    ck_span = None
+    if ck_selected and not view and not declined:
+        if not index_bytes:
+            from .user_entries import public_memory_contract_text
+            index_bytes = ('# 公共记忆\n\n' + public_memory_contract_text(runtime.code)).encode()
+        ck.require_reader(index_bytes)
+        ck_span = ck.shared_span(runtime, public, topic)
     migrations = []
     if topic_snapshot.kind == 'absent' and not view and not declined and chosen:
         public = '# 用户记忆\n'.encode()
@@ -645,7 +662,9 @@ def build_share_plan(request, proposal, selection):
                 if 'canonical_context' in group:
                     matching.sort(key=lambda m: m['context'] != context)
                 bindings = [reuse.get((m['source'], m['start'], m['end'])) for m in matching]
-                if bindings and all(bindings):
+                if first_member.get('kind') == ck.KIND and ck_span:
+                    span = ck_span
+                elif bindings and all(bindings):
                     spans = {(r['public_start'], r['public_end']) for r in bindings}
                     if len(spans) != 1:
                         _fail('invalid_public_reuse', '同一等价组必须复用同一公共范围')
@@ -654,8 +673,11 @@ def build_share_plan(request, proposal, selection):
                     offset = len(public)
                     public += _separator(public) + raw
                     span = (offset + len(_separator(public[:offset])), len(public))
+                if first_member.get('kind') == ck.KIND:
+                    ck_span = span  # One copy even when the proposal splits CK into groups.
                 for member in matching:
                     migrations.append({
+                        **({'kind': ck.KIND} if member.get('kind') == ck.KIND else {}),
                         'group': group['number'], 'summary': group['summary'],
                         'agent': member['agent'], 'path': member['source'],
                         'start': member['start'], 'end': member['end'],
@@ -722,6 +744,7 @@ def build_share_plan(request, proposal, selection):
         operation_metadata = {'share_user_memory': {
             'topic': str(topic), 'topic_after_sha256': entries.sha256(topic_after),
             'migrations': migrations, 'entries_created': entries_created,
+            **({'superseded_ck_sources': replaced} if (replaced := ck.superseded_sources(runtime, migrations)) else {}),
             'source_after': {name: entries.sha256(raw)
                              for name, raw in native_after.items()},
             'request_agents': list(request.get('agents', []))}}
@@ -957,11 +980,88 @@ def _manifests(runtime):
 def _consumed_index(runtime):
     """References already consumed by earlier return manifests (history only)."""
     consumed = set()
-    for _, _, data in _manifests(runtime):
+    manifests = _manifests(runtime)
+    available = _available_migrations(runtime)
+    replaced_once = set()
+    by_name = {name: (path, data) for name, path, data in manifests}
+    graph = {}
+    for name, _, data in manifests:
+        share = (data.get("operation_metadata") or {}).get("share_user_memory") or {}
+        refs = share.get("superseded_ck_sources", [])
+        if data.get("status") == "committed" and isinstance(refs, list):
+            graph[name] = [r.get("manifest") for r in refs if isinstance(r, dict) and isinstance(r.get("manifest"), str)]
+    visiting, visited = set(), set()
+    def visit(name):
+        if name in visiting:
+            _fail("invalid_supersession", "CK 来源替代存在环")
+        if name in visited:
+            return
+        visiting.add(name)
+        for older in graph.get(name, []):
+            visit(older)
+        visiting.remove(name)
+        visited.add(name)
+    for name in graph:
+        visit(name)
+    for name, manifest, data in manifests:
         if data.get('status') != 'committed':
             continue
         meta = (data.get('operation_metadata') or {}).get('return_user_memory') or {}
-        for ref in meta.get('consumed', []):
+        share = ((data.get('operation_metadata') or {}).get('share_user_memory') or {})
+        superseded = share.get('superseded_ck_sources', [])
+        if not isinstance(superseded, list):
+            _fail('invalid_supersession', 'CK 来源替代记录无效')
+        seen = set()
+        for ref in superseded:
+            if not isinstance(ref, dict) or set(ref) != {'manifest', 'migration', 'manifest_sha256'} or not isinstance(ref['manifest'], str) or type(ref['migration']) is not int:
+                _fail('invalid_supersession', 'CK 来源引用无效')
+            key = (ref['manifest'], ref['migration'])
+            old = available.get(key)
+            if key in seen or key in replaced_once or ref['manifest'] == name or not old or old.get('kind') != ck.KIND:
+                _fail('invalid_supersession', '只能替代既有 CK 来源')
+            seen.add(key)
+            replaced_once.add(key)
+            if old['topic'] != share.get('topic') or not any(
+                    r.get('kind') == ck.KIND and all(r.get(k) == old.get(k) for k in
+                        ('path', 'agent', 'text_hex', 'text_sha256', 'public_offset', 'public_end'))
+                    for r in share.get('migrations', [])):
+                _fail('invalid_supersession', 'CK 替代必须绑定同来源、公共正文和范围')
+            older_path, older_data = by_name[ref['manifest']]
+            if (older_path is None or older_data.get('status') != 'committed'
+                    or read_snapshot(older_path).fingerprint != ref['manifest_sha256']):
+                _fail('invalid_supersession', 'CK 旧事务不匹配替代前指纹')
+            replacement = next(r for r in share['migrations'] if r.get('kind') == ck.KIND
+                               and r['path'] == old['path'])
+            try:
+                ck.validate_replacement(runtime, manifest, data, replacement)
+                ck.validate_replacement(runtime, older_path, older_data, old)
+                # A reuse must descend from a transaction that actually created
+                # this public span; an arbitrary matching migration is not proof.
+                from .user_rules_organize import _created_public_span
+                ancestors, pending = set(), [ref['manifest']]
+                while pending:
+                    ancestor = pending.pop()
+                    if ancestor not in ancestors:
+                        ancestors.add(ancestor)
+                        pending.extend(graph.get(ancestor, []))
+                proven = False
+                for candidate in available.values():
+                    if (candidate['manifest'] not in ancestors or candidate.get('kind') != ck.KIND
+                            or any(candidate.get(k) != old.get(k) for k in
+                                   ('topic', 'text_hex', 'public_offset', 'public_end'))):
+                        continue
+                    producer = by_name[candidate['manifest']][1]
+                    public_rows = [row for row in producer.get('entries', []) if row['path'] == old['topic']]
+                    if (len(public_rows) == 1 and public_rows[0].get('attempted') is True
+                            and public_rows[0]['after']['fingerprint'] == producer['operation_metadata']['share_user_memory'].get('topic_after_sha256')
+                            and _created_public_span(candidate, bytes.fromhex(old['text_hex']))):
+                        proven = True
+                        break
+                if not proven:
+                    _fail('invalid_supersession', 'CK 替代缺少公共正文创建祖先')
+            except (ValueError, OSError, KeyError, TypeError) as exc:
+                _fail('invalid_supersession', 'CK 替代缺少真实删除证据：' + str(exc))
+        for ref in meta.get('consumed', []) + superseded:
             consumed.add((ref['manifest'], ref['migration']))
     return consumed
 
@@ -1028,6 +1128,8 @@ def build_return_plan(request, agent_plan):
         current = topic_snapshot.data[start:end]
         if current.hex() != (span.get('text_hex') or ''):
             _fail('drift', '公共范围字节与提案不一致（请按当前正文重新提案）')
+        if record.get('kind') == ck.KIND and entries.sha256(current) != ck.COMMON_SHA256:
+            _fail('drift', '公共 CK 触发正文已编辑，保留并停止归还')
         if raw.get('action') == 'keep_public':
             keep_public.append((ref, record, start, end))
             continue

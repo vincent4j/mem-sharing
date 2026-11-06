@@ -175,6 +175,20 @@ def _participants(request, runtime, ledger):
     return selected, {a: detect.detection_fingerprint(facts['agents'][a]) for a in requested}
 
 
+def _ck_writeback_matches(runtime, name, snapshot, fingerprint):
+    """Accept only reinserted audited CK bytes over an outstanding exact shell."""
+    from . import memory_share as ms
+    if snapshot.kind != 'file': return False
+    body = ms.ck.candidate(snapshot.data, 'claude')
+    if body is None: return False
+    shell = snapshot.data[:body['start']] + snapshot.data[body['end']:]
+    if entries.sha256(shell) != fingerprint: return False
+    consumed = ms._consumed_index(runtime)
+    return any(ref not in consumed and r.get('kind') == ms.ck.KIND and r['path'] == name
+               and ms._after_sha(runtime, r) == fingerprint
+               for ref, r in ms._available_migrations(runtime).items())
+
+
 def _modern_claude_reference(obj, name, request, runtime, ledger):
     """A reused machine @index reference is not ownership of its whole body."""
     if (request.get('scope','user') != 'user' or obj.get('kind') != 'import'
@@ -184,7 +198,11 @@ def _modern_claude_reference(obj, name, request, runtime, ledger):
         or obj.get('consumers') != []): return False
     expected = paths.expand_path(request['platform_config']['claude']['user_entry'],home=str(runtime.home))
     if name != expected: return False
-    if (obj.get('fingerprint') or {}).get('value') != read_snapshot(name).fingerprint: return False
+    snapshot = read_snapshot(name)
+    if (obj.get('fingerprint') or {}).get('value') != snapshot.fingerprint:
+        from .memory_share import _entry_ok
+        return (_ck_writeback_matches(runtime, name, snapshot, obj['fingerprint']['value'])
+                and _entry_ok('claude', snapshot.data, runtime))
     state = user_entries.connection_status(runtime,request['platform_config'],ledger,['claude'])
     return state.get('claude',{}).get('status') == 'connected'
 
@@ -203,7 +221,8 @@ def validate_reference_rebinding(old_raw, new_raw, source_before, source_after, 
         if (obj['path'] != native or obj['kind'] != 'import' or obj['scope'] != 'machine'
             or obj['ownership'] != 'reused' or obj['marker'] is not None or obj['agents'] != ['claude']
             or obj['original_existed'] is not True or obj['backup_manifest'] is not None or obj['consumers'] != []):continue
-        if obj['fingerprint'] != {'algorithm':'sha256','basis':'file_bytes','value':source_before.fingerprint}:
+        if (obj['fingerprint'] != {'algorithm':'sha256','basis':'file_bytes','value':source_before.fingerprint}
+                and not _ck_writeback_matches(runtime, native, source_before, obj['fingerprint']['value'])):
             _fail('drift','Claude引用观察基线不等于本次批准before')
         expected['machine']['objects'][oid]['fingerprint']['value'] = source_after.fingerprint
         matched.append(oid)
@@ -379,6 +398,7 @@ def _equivalent_sources(request, items, snapshots):
 def _build(request):
     import sys
     from .memory_share import _heading_context
+    from . import ck_common_trigger as ck
     trusted = paths.select_platform(paths.load_agents_table(), 'darwin' if sys.platform == 'darwin' else sys.platform)
     if request.get('platform_config') != trusted:
         _fail('untrusted_platform_config', '路径配置必须来自当前受信任平台表，批准不能替换')
@@ -437,6 +457,12 @@ def _build(request):
                and not (root and entries.free_project_rules(o))
                and not _modern_claude_reference(o,name,request,runtime,ledger) for o in objects):
             blocked.append({'path': name, 'reason': '旧整文件受管入口须先转换，融合不改归属台账。'})
+        if mode == 'user':
+            common = ck.candidate(snap.data, agents[0], spans)
+            if common:
+                items.append(dict(common, source=name, agents=agents,
+                                  scope=_scope(snap.data, common['start'], spans),
+                                  context=_heading_context(snap.data, common['start'], spans)[1]))
         for left,right in _segments(snap.data, spans):
             text = snap.data[left:right].decode()
             if text.lstrip().startswith(('<!--', '@', '```', '~~~')) or _SPECIFIC.search(text):
@@ -465,7 +491,7 @@ def _build(request):
     groups = {}
     for item in items:
         ctx = equivalents.get((item['source'],item['start'],item['end']),item['context'])
-        key = _encoded([_identity(item['text']), [h[1] for h in ctx], ctx]).decode()
+        key = ck.KIND if item.get('kind') == ck.KIND else _encoded([_identity(item['text']), [h[1] for h in ctx], ctx]).decode()
         groups.setdefault(key, []).append(item)
     defaults = []; optional = []; single = []
     n = len(sources) if root else len(selected)
@@ -539,6 +565,16 @@ def _build(request):
         for item in sorted(public_removals,key=lambda i:i['start'],reverse=True):
             content = content[:item['start']] + content[item['end']:]
 
+    ck_selected = any(g['number'] in chosen and any(i.get('kind') == ck.KIND for i in g['sources']) for g in numbered)
+    if ck_selected and not view and not declined:
+        if topic.name != 'user-rules.md':
+            _fail('invalid_request', 'CK 通用触发仅共享到必读 user-rules.md')
+        ck.require_reader(snapshots[str(index)].data or b'')
+        span = ck.shared_span(runtime, content, topic)
+        if span:
+            for g in numbered:
+                if any(i.get('kind') == ck.KIND for i in g['sources']):
+                    public_copies[(json.dumps(g['canonical_context']), g['sources'][0]['text'].encode())] = span
     public_added = b''
     migrations = []
     emitted_scope = [[1, '用户规则', 1]] if mode == 'user' and not snapshots[str(topic)].data else None
@@ -566,7 +602,7 @@ def _build(request):
                 if not reuse: offset, end = copies[key]
                 migrated.append(item)
                 for agent in item['agents']:
-                    migrations.append({'group': group['number'], 'summary': group['summary'],
+                    migrations.append({**({'kind': ck.KIND} if item.get('kind') == ck.KIND else {}), 'group': group['number'], 'summary': group['summary'],
                         'agent': agent, 'path': item['source'], 'start': item['start'], 'end': item['end'],
                         'scope': item['scope'], 'context': item['context'], 'text_hex': raw.hex(), 'text_sha256': entries.sha256(raw),
                         'public_offset': offset, 'public_end': end})
@@ -650,6 +686,7 @@ def _build(request):
         'phased_writes': phased, 'steps': steps, 'retention_paths': retention_paths, 'public_paths': list(dict.fromkeys([str(topic),str(index)])),
         'operation_metadata': {'share_user_memory': {'topic': str(topic),
             'topic_after_sha256': entries.sha256(content), 'migrations': migrations,
+            **({'superseded_ck_sources': replaced} if (replaced := ck.superseded_sources(runtime, migrations)) else {}),
             'entries_created': [], 'source_after': {name: entries.sha256(outputs[name]) for name in removals if name in outputs},
             'request_agents': selected}} if migrations and mode == 'user' and not phased else None,
         'reference_rebindings':rebindings, 'registry_policy':'only verified reused import fingerprint; ownership and consumers preserved'}

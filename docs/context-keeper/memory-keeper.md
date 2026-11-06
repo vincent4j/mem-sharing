@@ -19,7 +19,9 @@
 
 ## 主题摘要（按类型）
 
-- **Context Keeper 当前安装要求：** 用户要求从官方 main 实时获取，不固定版本、不内置上游源码，对外使用全称。mem-sharing 当前工作分支已同步 main aacfd1d9；新适配仍待提交部署。来源：[本轮日志](worklogs/2026-11-05-Context-Keeper-实时获取-main-与全称.md)。
+- **Context Keeper 通用触发共享（源码已验，未部署）：** 用户指定巴克队长直接收口；替代环原反例已拒绝、写尝试0，12文件冻结指纹读回一致。作者相关58项通过，既有4fail/1error基线一致；源码/隔离验收通过，真实迁移、UI、新会话及发行仍待验。未修改上游或真实HOME；来源：[日志](worklogs/2026-11-06-Context-Keeper-六家用户级安装验收.md)。
+
+- **Context Keeper 当前安装要求：** 继续采用唯一官方 main 源码、不固定旧版或内置源码。2026-11-06 用户独立选择安装后，六家用户级配置已完成（当次 commit `66d7e919`，7 个 Skill 链接、6 个入口块读回通过），公共记忆保全；真实新会话触发仍待验（ZCode quota1310）。来源：[本次安装日志](worklogs/2026-11-06-Context-Keeper-六家用户级安装验收.md)、[原安装要求](worklogs/2026-11-05-Context-Keeper-实时获取-main-与全称.md)。
 
 - **Context Keeper 安装集成（当前）：** 旧固定源导致后三家跳过与长入口已修复；CK最终保留完整触发、细节留Skill，345字符入口（WorkBuddy386），150项全量通过，86af150已推送main。本机七Skill链接已切至该clean持久源。memSharing Python/Paseo统一固定86af150，六家支持/排序/共享路径去重已验证，真实上游隔离安装六家通过、Node22项通过；按本轮授权提交推送本源码，实际提交以Git记录为准。活动memSharing核心未部署，新会话仍待验。来源：[修复日志](worklogs/2026-11-05-修复ContextKeeper固定版本与六家安装.md)。
 

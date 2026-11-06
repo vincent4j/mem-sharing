@@ -963,7 +963,10 @@ def source_returns(runtime, original, native_paths):
     for newer, left in producers.items():
         for older, right in producers.items():
             if newer==older:continue
-            if any(a['path']==b['path'] and a['before']['kind']=='file'
+            if any(a['path']==b['path']
+                   and (a['path'] in by_manifest[newer] and a['path'] in by_manifest[older]
+                        or a['path']==left['operation_metadata']['share_user_memory']['topic'])
+                   and a['before']['kind']=='file'
                    and a['before']['fingerprint']==b['after']['fingerprint']
                    and a['before']['fingerprint']!=a['after']['fingerprint']
                    for a in left['entries'] for b in right['entries']):
