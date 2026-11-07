@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "platforms": {
+    "darwin": {
+      "codex": {
+        "user_entry": "{home}/.codex/AGENTS.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/AGENTS.md",
+        "project_skill_roots": ["{project}/.agents/skills", "{project}/.codex/skills"],
+        "installation_signals": [
+          {"kind": "directory_exists", "path": "{home}/.codex", "strength": "hint"},
+          {"kind": "path_executable", "executable": "codex", "package_name": "@openai/codex", "strength": "strong"},
+          {"kind": "macos_app_bundle", "bundle_name": "Codex.app", "product_name": "Codex", "require_bundle_version": false, "require_signature_identifier_match": false, "strength": "strong"}
+        ],
+        "rule_mode": "native",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
+      },
+      "claude": {
+        "user_entry": "{home}/.claude/CLAUDE.md",
+        "project_rule_entry": "{project}/CLAUDE.md",
+        "project_bridge_entry": "{project}/CLAUDE.md",
+        "project_skill_roots": ["{project}/.claude/skills"],
+        "installation_signals": [
+          {"kind": "directory_exists", "path": "{home}/.claude", "strength": "hint"},
+          {"kind": "path_executable", "executable": "claude", "package_name": "@anthropic-ai/claude-code", "strength": "strong"},
+          {"kind": "user_receipt", "product_name": "Claude Code", "strength": "strong"}
+        ],
+        "rule_mode": "import_agents",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
+      },
+      "workbuddy": {
+        "user_entry": "{home}/.workbuddy/MEMORY.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/.workbuddy/memory/MEMORY.md",
+        "project_skill_roots": ["{project}/.workbuddy/skills"],
+        "installation_signals": [
+          {"kind": "directory_exists", "path": "{home}/.workbuddy", "strength": "hint"},
+          {"kind": "macos_app_bundle", "bundle_name": "WorkBuddy.app", "product_name": "WorkBuddy", "require_bundle_version": true, "require_signature_identifier_match": true, "strength": "strong"}
+        ],
+        "rule_mode": "user_convention",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
+      },
+      "dsh": {
+        "user_entry": "{home}/.dsh/AGENTS.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/AGENTS.md",
+        "project_skill_roots": ["{project}/.dsh/skills", "{project}/.agents/skills"],
+        "installation_signals": [
+          {"kind": "directory_exists", "path": "{home}/.dsh", "strength": "hint"},
+          {"kind": "macos_app_bundle", "bundle_name": "DeepSeek Harness.app", "product_name": "DeepSeek Harness", "require_bundle_version": true, "require_signature_identifier_match": true, "strength": "strong"}
+        ],
+        "rule_mode": "native",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
+      },
+      "zcode": {
+        "user_entry": "{home}/.zcode/AGENTS.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/AGENTS.md",
+        "project_skill_roots": ["{project}/.zcode/skills", "{project}/.agents/skills"],
+        "installation_signals": [
+          {"kind": "directory_exists", "path": "{home}/.zcode", "strength": "hint"},
+          {"kind": "macos_app_bundle", "bundle_name": "ZCode.app", "product_name": "ZCode", "require_bundle_version": true, "require_signature_identifier_match": true, "strength": "strong"}
+        ],
+        "rule_mode": "native",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
+      },
+      "opencode": {
+        "user_entry": "{home}/.config/opencode/AGENTS.md",
+        "project_rule_entry": "{project}/AGENTS.md",
+        "project_bridge_entry": "{project}/AGENTS.md",
+        "project_skill_roots": ["{project}/.opencode/skills", "{project}/.claude/skills", "{project}/.agents/skills"],
+        "installation_signals": [
+          {"kind": "directory_exists", "path": "{home}/.opencode", "strength": "hint"},
+          {"kind": "path_executable", "executable": "opencode", "package_name": "@opencode/cli", "strength": "strong"},
+          {"kind": "macos_app_bundle", "bundle_name": "OpenCode.app", "product_name": "OpenCode", "require_bundle_version": true, "require_signature_identifier_match": true, "strength": "strong"},
+          {"kind": "user_receipt", "product_name": "OpenCode", "strength": "strong"}
+        ],
+        "rule_mode": "native",
+        "bridge_owner": "mem-sharing",
+        "runtime_status": "pending"
+      }
+    }
+  }
+}
