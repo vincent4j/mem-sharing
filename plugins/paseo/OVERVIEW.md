@@ -14,9 +14,9 @@ Let Claude use the preferences you shared with Codex, and let any Agent pick up 
 
 Bring scattered memory together
 
-你可能已经在 Codex、Claude 或其他 Agent 里积累了不少习惯和约定。memSharing 的“融合”，就是帮你梳理这些已有记忆：先只读对比，按“默认共享”与“由你选择是否共享”两块展示，每条都能查看完整原文和来源；你选定后先看到完整修改清单，确认了才把选中内容完整迁入公共记忆、再精确删除各文件里对应的重复片段。各 Agent 独有或拿不准归属的内容留在原处，本次融合在最终确认前不修改记忆内容。
+你可能已经在 Codex、Claude 或其他 Agent 里积累了不少习惯和约定。memSharing 的“融合”，就是帮你梳理这些已有记忆：先只读对比，按“默认共享”与“由你选择是否共享”两块展示，每条都能查看完整原文和来源。明确选择后即执行：将选中内容完整迁入公共记忆，核验公共内容与读取入口后，再精确删除来源文件里对应的重复片段，并保留可审计的修改清单和备份。未选、各 Agent 独有或拿不准归属的内容留在原处；查看原文和“保留现状，暂不融合”不修改记忆内容。执行前若发现内容或范围发生实质变化，会停止并说明差异。
 
-You may already have preferences and rules saved in Codex, Claude or other Agents. Memory fusion means reviewing that existing knowledge: you get a read-only preview in two groups — shared by default, and yours to choose — each item with its full original text and sources. After you pick, you review the complete change list; only your final confirmation moves the selected content in full into common memory and then removes the exact duplicates from source files. Agent-specific or unclear items stay in place, and this fusion step does not change memory content before that confirmation.
+You may already have preferences and rules saved in Codex, Claude or other Agents. Memory fusion means reviewing that existing knowledge: you get a read-only preview in two groups — shared by default, and yours to choose — each item with its full original text and sources. Your explicit selection starts execution: the selected content moves in full into common memory; after verifying that content and its reading entries, the tool removes the exact matching fragments from source files, keeping an auditable change list and backups. Unselected, Agent-specific or unclear items stay in place. Viewing original text or choosing “Keep things as they are” leaves memory content unchanged. Material changes to the content or scope before execution stop the operation and are reported.
 
 共享，让各家读同一份；融合，让过去分散积累的内容也能接着用。项目经历的保存、查找与续接由可选的 Context Keeper 提供。
 
@@ -39,9 +39,9 @@ Three kinds of memory
 
 What you can do in Paseo
 
-在命令中心搜索 **memSharing**，检查接入状态、启用或停用当前项目，也可以选择安装 Context Keeper。变更先展示计划，你确认后才执行；停用项目会保留记忆内容和已有经验记录。
+在命令中心搜索 **memSharing**，检查接入状态、启用或停用当前项目。接入与项目变更先展示计划，你确认后才执行；融合按你的明确选择直接执行。公共用户记忆流程结束后，可独立选择安装 Context Keeper。停用项目会保留记忆内容和已有经验记录。
 
-Search for **memSharing** in the Command Center to check your setup, enable or disable memory for the current project, or choose Context Keeper. Changes are previewed before confirmation. Disabling a project preserves its memory and work history.
+Search for **memSharing** in the Command Center to check your setup or enable or disable memory for the current project. Setup and project changes are previewed for confirmation; fusion executes your explicit selection directly. After the shared user memory workflow ends, you can independently choose to install Context Keeper. Disabling a project preserves its memory and work history.
 
 ## ⚙️ 使用条件
 
