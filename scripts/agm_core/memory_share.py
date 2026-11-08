@@ -288,7 +288,9 @@ def _protected_spans(data):
     spans.sort()
     merged = []
     for start, end in spans:
-        if merged and start <= merged[-1][1]:
+        # Adjacent half-open protocol spans are distinct, not nested. Keeping
+        # their boundary lets the audited CK exception verify its own shell.
+        if merged and start < merged[-1][1]:
             merged[-1] = (merged[-1][0], max(merged[-1][1], end))
         else:
             merged.append((start, end))

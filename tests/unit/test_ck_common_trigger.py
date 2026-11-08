@@ -51,6 +51,29 @@ class CommonTriggerTests(unittest.TestCase):
                     b'<!-- mem-sharing:private:start -->\n'+block('codex')+b'<!-- mem-sharing:private:end -->\n'):
             self.assertIsNone(ck.candidate(raw,'codex'))
 
+    def test_adjacent_native_protocols_keep_the_audited_ck_boundary(self):
+        from agm_core import memory_share as ms
+        pointer = (b'<!-- mem-sharing:rules:start -->\nread public rules\n'
+                   b'<!-- mem-sharing:rules:end -->\n')
+        for agent in ('codex', 'claude', 'workbuddy', 'zcode', 'dsh', 'opencode'):
+            for raw in (pointer + block(agent), block(agent) + pointer,
+                        pointer + block(agent) + b'@public-memory.md\n'):
+                with self.subTest(agent=agent, prefix=raw[:30]):
+                    candidate = ck.candidate(raw, agent)
+                    self.assertIsNotNone(candidate)
+                    self.assertEqual(raw[candidate['start']:candidate['end']], BODY)
+                    self.assertTrue(any(a == candidate['block_start'] and
+                                        candidate['block_end'] <= b <= candidate['block_end'] + 1
+                                        for a, b in ms._protected_spans(raw)))
+
+    def test_nested_private_protocol_is_still_not_a_ck_candidate(self):
+        pointer = (b'<!-- mem-sharing:rules:start -->\nread public rules\n'
+                   b'<!-- mem-sharing:rules:end -->\n')
+        for agent in ('codex', 'workbuddy'):
+            raw = (pointer + b'<!-- mem-sharing:private:start -->\n' + block(agent)
+                   + b'<!-- mem-sharing:private:end -->\n')
+            self.assertIsNone(ck.candidate(raw, agent))
+
     def test_mandatory_reader_rejects_literal_and_negated_lines(self):
         from agm_core.user_entries import public_memory_contract_text
         valid=public_memory_contract_text().encode()

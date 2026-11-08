@@ -585,15 +585,19 @@ def _build(request):
             for item in group['sources']:
                 raw = item['text'].encode()
                 canonical = group['canonical_context']
+                # Source context stays byte-proven in migration records. The
+                # audited host-neutral CK body must not inherit a host's prior
+                # private section as its generated public heading.
+                public_context = [[2, 'Context Keeper 通用触发', 1]] if item.get('kind') == ck.KIND else canonical
                 key = (json.dumps(canonical), raw)
                 reuse = explicit_reuse.get((item['source'],item['start'],item['end']))
                 if reuse:
                     offset, end = reuse['public_start'], reuse['public_end']
                 elif key not in copies:
-                    context = ('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate([h[1] for h in canonical]))+'\n').encode() if canonical else b'\n'
-                    if mode == 'user' and emitted_scope == canonical:
+                    context = ('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate([h[1] for h in public_context]))+'\n').encode() if public_context else b'\n'
+                    if mode == 'user' and emitted_scope == public_context:
                         context = b'\n'
-                    emitted_scope = canonical
+                    emitted_scope = public_context
                     chunk = context + b'\n' + raw
                     offset = len(content) + len(context) + 1
                     content += chunk

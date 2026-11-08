@@ -4,6 +4,7 @@ import os
 import re
 import subprocess
 import sys
+import unittest
 from pathlib import Path
 from unittest.mock import patch
 from test_m404_install import InstallFixture, approved
@@ -11,6 +12,62 @@ from test_uninstall import approval
 from agm_core import detect, paths, user_rules_organize as org
 from agm_core import uninstall, uninstall_memory as memory, memory_share as share
 from agm_core import uninstall_recovery as recovery
+
+
+class CKWrapperReplayTests(unittest.TestCase):
+    def producer(self, current, *, prior=b'', plain=False):
+        from test_ck_common_trigger import BODY
+        topic = '/synthetic/user-rules.md'
+        records = []
+        fragments = [(BODY, ['native private'], 'ck_common_trigger')]
+        if plain:
+            fragments.insert(0, (b'ordinary shared rule\n', ['ordinary'], None))
+        for raw, scope, kind in fragments:
+            left = current.index(raw)
+            record = dict(text_hex=raw.hex(), text_sha256=recovery.digest(raw),
+                          public_offset=left, public_end=left+len(raw), scope=scope,
+                          context=[[1, title, 1] for title in scope])
+            if kind: record['kind'] = kind
+            records.append(record)
+        before = dict(kind='file', backup='0.before', fingerprint=recovery.digest(prior)) if prior else dict(kind='absent')
+        producer = dict(schema_version=1, status='committed', operation='organize-user-rules',
+                        _wrapper_manifest='/synthetic/manifest.json',
+                        entries=[dict(path=topic, before=before, after=dict(fingerprint=recovery.digest(current)))],
+                        operation_metadata=dict(share_user_memory=dict(topic=topic,
+                            topic_after_sha256=recovery.digest(current), migrations=records)))
+        return topic, {(r['public_offset'], r['public_end']) for r in records}, {'producer': producer}
+
+    def test_old_and_common_ck_headings_replay_with_ordinary_rules(self):
+        from test_ck_common_trigger import BODY
+        for common in (False, True):
+            for plain in (False, True):
+                with self.subTest(common=common, plain=plain):
+                    current = '# 用户规则\n'.encode()
+                    if plain: current += b'\n## ordinary\n\nordinary shared rule\n'
+                    heading = 'Context Keeper 通用触发' if common else 'native private'
+                    current += ('\n## '+heading+'\n\n').encode() + BODY
+                    topic, spans, producers = self.producer(current, plain=plain)
+                    self.assertTrue(memory._generated_topic_wrapper(topic, current, spans, producers, modern=True))
+                    if not common:
+                        self.assertTrue(memory._generated_topic_wrapper(topic, current, spans, producers, modern=False))
+
+    def test_user_existing_common_heading_and_tampered_producer_stay_protected(self):
+        from test_ck_common_trigger import BODY
+        prior = '# 用户规则\n\n## Context Keeper 通用触发\n'.encode()
+        current = prior + '\n## Context Keeper 通用触发\n\n'.encode() + BODY
+        topic, spans, producers = self.producer(current, prior=prior)
+        with patch.object(recovery, 'snapshot', return_value=dict(kind='file', hex=prior.hex())):
+            self.assertFalse(memory._generated_topic_wrapper(topic, current, spans, producers, modern=True))
+        current = '# 用户规则\n\n## Context Keeper 通用触发\n\n'.encode() + BODY
+        topic, spans, producers = self.producer(current)
+        self.assertFalse(memory._generated_topic_wrapper(topic, current, set(), producers, modern=True))
+        self.assertFalse(memory._generated_topic_wrapper(topic, current+b'user insertion\n', spans, producers, modern=True))
+        record = producers['producer']['operation_metadata']['share_user_memory']['migrations'][0]
+        kind = record.pop('kind')
+        self.assertFalse(memory._generated_topic_wrapper(topic, current, spans, producers, modern=True))
+        record['kind'] = kind
+        record['context'] = [[1, 'unproven context', 1]]
+        self.assertFalse(memory._generated_topic_wrapper(topic, current, spans, producers, modern=True))
 
 class GeneratedWrapperTests(InstallFixture):
     def setUp(self):

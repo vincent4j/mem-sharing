@@ -872,6 +872,7 @@ def _generated_topic_wrapper(topic, current, removed_spans, producers, *, modern
     A shape/name alone is never ownership. Reused sources do not create public
     bytes; every created public span must already have an outstanding return.
     """
+    from . import ck_common_trigger as ck
     created = set(); seen = set(); cursor = current
     while recovery.digest(cursor) not in seen:
         digest = recovery.digest(cursor); seen.add(digest)
@@ -899,8 +900,6 @@ def _generated_topic_wrapper(topic, current, removed_spans, producers, *, modern
                 prior = bytes.fromhex(state['hex'])
             else:
                 continue
-            generated = prior or '# 用户规则\n'.encode()
-            emitted = [[1,'用户规则',1]] if not prior else None
             by_span = {}
             for record in meta.get('migrations', []):
                 raw = bytes.fromhex(record['text_hex'])
@@ -912,18 +911,31 @@ def _generated_topic_wrapper(topic, current, removed_spans, producers, *, modern
                     continue
                 by_span.setdefault((left,right),record)
             else:
-                spans = set()
-                for (left,right),record in sorted(by_span.items()):
-                    context = record.get('context')
-                    if modern and (not isinstance(context,list) or [h[1] for h in context] != record['scope']): break
-                    prefix = ('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate(record['scope']))+'\n').encode() if record['scope'] else b'\n'
-                    if modern and emitted == context: prefix = b'\n'
-                    raw = bytes.fromhex(record['text_hex'])
-                    if (left,right) != (len(generated)+len(prefix)+1,len(generated)+len(prefix)+1+len(raw)): break
-                    generated += prefix+b'\n'+raw; emitted = context; spans.add((left,right))
-                else:
-                    if generated == cursor:
-                        matched = (before['kind'], prior, spans); break
+                # Each append producer used one rendering format. Replay both
+                # historical native scopes and the audited host-neutral CK
+                # heading, without changing the recorded source context.
+                for common_ck in ((False, True) if modern else (False,)):
+                    generated = prior or '# 用户规则\n'.encode()
+                    emitted = [[1,'用户规则',1]] if not prior else None
+                    spans = set()
+                    for (left,right),record in sorted(by_span.items()):
+                        context = record.get('context')
+                        if modern and (not isinstance(context,list) or [h[1] for h in context] != record['scope']): break
+                        raw = bytes.fromhex(record['text_hex'])
+                        public_context = context
+                        scope = record['scope']
+                        if common_ck and record.get('kind') == ck.KIND:
+                            if len(raw) != ck.COMMON_SIZE or recovery.digest(raw) != ck.COMMON_SHA256: break
+                            public_context = [[2, 'Context Keeper 通用触发', 1]]
+                            scope = [h[1] for h in public_context]
+                        prefix = ('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate(scope))+'\n').encode() if scope else b'\n'
+                        if modern and emitted == public_context: prefix = b'\n'
+                        if (left,right) != (len(generated)+len(prefix)+1,len(generated)+len(prefix)+1+len(raw)): break
+                        generated += prefix+b'\n'+raw; emitted = public_context; spans.add((left,right))
+                    else:
+                        if generated == cursor:
+                            matched = (before['kind'], prior, spans); break
+                if matched is not None: break
         if matched is None:
             return False
         kind,cursor,spans = matched; created.update(spans)
@@ -1045,6 +1057,17 @@ def source_returns(runtime, original, native_paths):
                 if not 0 <= offset <= len(raw):raise recovery.Conflict('Invalid original source offset')
                 raw=raw[:offset]+text+raw[offset:]
             restored[path]=raw
+    # Superseded CK sources must not be returned again, but their committed
+    # public append producers can still be the only path to the absent creator.
+    # Keep these histories solely for full-byte wrapper proof, separate from
+    # the live-source ordering/restoration above.
+    wrapper_producers = dict(producers)
+    for record in available.values():
+        if record.get('topic') not in spans or record['manifest'] in wrapper_producers:
+            continue
+        producer = json.loads(Path(record['manifest_path']).read_bytes())
+        producer['_wrapper_manifest'] = record['manifest_path']
+        wrapper_producers[record['manifest']] = producer
     for topic, positions in spans.items():
         raw=bytes.fromhex(residual[topic]['hex'])
         positions=sorted(positions)
@@ -1061,8 +1084,8 @@ def source_returns(runtime, original, native_paths):
             context=('\n'+'\n'.join('#'*(level+2)+' '+title for level,title in enumerate(record['scope']))+'\n').encode() if record['scope'] else b'\n'
             expected += context+b'\n'+bytes.fromhex(record['text_hex'])
         current = bytes.fromhex(original[topic]['hex'])
-        legacy = current == expected and _generated_topic_wrapper(topic,current,positions,producers,modern=False)
-        if legacy or _generated_topic_wrapper(topic,current,positions,producers,modern=True):
+        legacy = current == expected and _generated_topic_wrapper(topic,current,positions,wrapper_producers,modern=False)
+        if legacy or _generated_topic_wrapper(topic,current,positions,wrapper_producers,modern=True):
             raw=b''
         residual[topic]['hex']=raw.hex()
     return restored,residual

@@ -123,9 +123,14 @@ class CKChainTests(unittest.TestCase):
         native={}
         for a in AGENTS:
             p=Path(paths.expand_path(f.config[a]['user_entry'],home=str(f.home)))
-            p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b'private prefix\n'+block(a)+b'private suffix\n');native[a]=p
+            p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(('private prefix\n# '+a+' 专属\n## native detail\n').encode()+block(a)+b'private suffix\n');native[a]=p
         with patch.object(detect,'detect_agents',side_effect=installed):
             self.assertEqual(f.execute()['status'],'completed')
+            # Compare the final return with the same installation's pre-share
+            # uninstall layout (including its existing separator bytes).
+            baseline = uninstall.preview(home=f.home, backup_dir=f.area/'pre-share-exit')
+            native_expected = {a: bytes.fromhex(next(c['after']['hex'] for c in baseline['changes']
+                               if c['path'] == str(p))) for a, p in native.items()}
             req=dict(f.request,agents=AGENTS)
             result=org.plan_organize(req);self.assertEqual(result['status'],'approval_required',result)
             plan=result['approval_plan']
@@ -137,6 +142,12 @@ class CKChainTests(unittest.TestCase):
             done=org.execute_organize(plan,dict(plan,confirmed_at='2026-11-06T09:00:00Z',reference='synthetic selection'),request=dict(req,selection=selection))
             self.assertEqual(done['status'],'completed',done)
             self.assertEqual((f.runtime.root/'memories/user-rules.md').read_bytes().count(BODY),1)
+            public = (f.runtime.root/'memories/user-rules.md').read_bytes()
+            self.assertIn('## Context Keeper 通用触发\n\n'.encode() + BODY, public)
+            self.assertNotIn('claude 专属'.encode(), public)
+            migrated = ms._available_migrations(f.runtime).values()
+            claude = next(item for item in migrated if item['agent'] == 'claude')
+            self.assertEqual(claude['context'], [[1, 'claude 专属', 1], [2, 'native detail', 1]])
             for hosts in (AGENTS, ['codex']):
                 for a in hosts:
                     first, last, title = ms.ck.MARKERS[a == 'workbuddy']
@@ -170,6 +181,8 @@ class CKChainTests(unittest.TestCase):
             for a,p in native.items():
                 self.assertEqual(p.read_bytes().count(BODY),1)
                 self.assertIn(block(a),p.read_bytes());self.assertIn(b'private prefix',p.read_bytes());self.assertIn(b'private suffix',p.read_bytes())
+                self.assertNotIn('## Context Keeper 通用触发'.encode(), p.read_bytes())
+                self.assertEqual(p.read_bytes(), native_expected[a], a)
             preview=recovery.recover(backup/'manifest.json')
             approved=f.area/'recover-approval.json';approved.write_text(json.dumps(approval(preview['plan'])))
             run=subprocess.run([sys.executable,str(backup/'recover.py'),'--manifest',str(backup/'manifest.json'),'--approval-file',str(approved)],capture_output=True,text=True)
