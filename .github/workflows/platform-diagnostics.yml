@@ -1,0 +1,23 @@
+name: Platform diagnostics safety slice
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnostics:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+        python: ['3.9', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pure platform and unchanged production guards
+        run: python -B -m unittest discover -s tests/unit -p test_platform_diagnostics.py
+      - name: Cold CLI in temporary synthetic root only
+        run: python -B -m unittest discover -s tests/integration -p test_platform_diagnostics_cli.py

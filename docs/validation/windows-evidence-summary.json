@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "kind": "sanitized_persistent_evidence_index_not_new_test_run",
+  "generated_at_utc": "2026-11-09T00:14:17.369850+00:00",
+  "base_commit": "9f4a0ba433085cab23016382c62b5bdec671276c",
+  "candidate_kind": "frozen_uncommitted_working_tree_not_release",
+  "overall_status": "partial",
+  "production_windows_enabled": false,
+  "w01_status": "partial",
+  "w02_status": "partial",
+  "frozen_source": [
+    {
+      "path": "scripts/agm_core/windows_native.py",
+      "bytes": 8794,
+      "sha256": "ef3138c5778ab26807a22ad52769f12fb94bb8b2f41870b2715e896081da3f66"
+    },
+    {
+      "path": "tests/unit/test_windows_native.py",
+      "bytes": 1872,
+      "sha256": "c92cf6ab4ecd38ecdb445ff74df9a67a893cd98b394eec1834ad98b022c61467"
+    },
+    {
+      "path": "tests/integration/windows_native_probe.py",
+      "bytes": 4600,
+      "sha256": "974506be124e7799d76b29ca15616097f1f4797857d62402a54e1f350a607a95"
+    }
+  ],
+  "windows_source_snapshot": {
+    "observed_at_utc": "2026-11-08T16:42:29.687Z",
+    "files": 47,
+    "matched": 47,
+    "manifest_sha256": "75d0ff102aff648a290fa0be621f36e670e4395acd16c1b21d6a7f8fef54a65e",
+    "current_remote_refresh_performed": false
+  },
+  "test_results": {
+    "mac_portable": {
+      "tests": 5,
+      "passed": 5,
+      "exit_code": 0,
+      "evidence_kind": "prior_command_report_not_separate_raw_log"
+    },
+    "windows_portable": {
+      "tests": 5,
+      "passed": 4,
+      "skipped": 1,
+      "exit_code": 0
+    },
+    "native_r1": {
+      "tests": 14,
+      "passed": 10,
+      "failed": 4,
+      "unavailable": 0,
+      "exit_code": 1,
+      "preserved": true
+    },
+    "native_r2": {
+      "tests": 14,
+      "passed": 13,
+      "failed": 1,
+      "unavailable": 0,
+      "exit_code": 1,
+      "preserved": true,
+      "rename_counterexample": {
+        "rename_allowed": true,
+        "named_recheck_detected": true
+      },
+      "remaining_failure": "sharing_conflict_fails_closed",
+      "interpretation": "metadata share=0 exclusion hypothesis disproved; not an old baseline failure or a Windows product defect"
+    },
+    "earlier_diagnostics": {
+      "unit": 6,
+      "integration": 1,
+      "exit_codes": [
+        0,
+        0
+      ],
+      "diagnostic_exit_codes": [
+        0,
+        0,
+        1
+      ],
+      "scope": "earlier diagnostic slice, does not override native r2 exit 1"
+    }
+  },
+  "entry_metadata": {
+    "observed_at_utc": "2026-11-08T16:42:29.687Z",
+    "entries": [
+      {
+        "path": ".zcode/AGENTS.md",
+        "status": "missing"
+      },
+      {
+        "path": ".zcode/skills/mem-sharing/SKILL.md",
+        "status": "missing"
+      },
+      {
+        "path": ".workbuddy/MEMORY.md",
+        "status": "missing"
+      },
+      {
+        "path": ".workbuddy/skills/mem-sharing/SKILL.md",
+        "status": "missing"
+      }
+    ],
+    "interpretation": "four entries missing; no claim of preserving existing body text"
+  },
+  "observed_terminals": {
+    "cwd": "D:\\project\\memsharing-windows-test\\native-20261108T161600Z",
+    "count": 0,
+    "interpretation": "empty observation does not prove a timed-out request never executed"
+  },
+  "isolation": {
+    "status": "partial",
+    "test_home_and_temp_scoped": true,
+    "outside_temp": {
+      "reported_windows_path": "C:\\Users\\VINCEN~1\\AppData\\Local\\Temp\\joined.b64",
+      "bytes": 33959,
+      "sha256": "a0443c14d9aec65ecd3cfdcf7ab8adc40cfa8950d8ed9df965aa2cb21a87dee0",
+      "same_reference": false,
+      "disposition": "preserve; ownership/content match insufficient for deletion"
+    }
+  },
+  "independent_review": {
+    "source": "prior completed Paseo response, agent 837924f5-2d3d-4cc3-a09c-49ee4a2b59a3",
+    "frozen_hashes_reported_equal": true,
+    "p1": 0,
+    "p2": 0,
+    "tests_rerun": false,
+    "p3_open": [
+      "junction exceptional cleanup completeness",
+      "hardlink multiple-name boundary disclosure",
+      "LocalFree return not observed"
+    ],
+    "separate_raw_review_file_available": false
+  },
+  "limitations": [
+    "READ_ATTRIBUTES handles do not guarantee rename or metadata-open exclusion",
+    "named reopen/volume/file-ID checks detect observable drift, not atomic traversal/lock/write approval",
+    "case-sensitive directory flag unverified",
+    "ACL snapshot is readonly; permission writeback/restore/concurrency/crash recovery unimplemented",
+    "timed-out terminal and simplified attempt did not fully separate fixture/evidence prefixes; late-request attribution risk remains",
+    "final SDK snapshot saved complete data, then Daemon client closed cleanup exception produced exit 1",
+    "ZCode and WorkBuddy actual client sessions unvalidated; Codex/Claude/DSH/OpenCode also pending",
+    "production darwin gates retained; no install/release acceptance"
+  ],
+  "excluded_content": [
+    "raw SID",
+    "raw DACL/security-descriptor body",
+    "credentials",
+    "pairing URLs"
+  ],
+  "artifacts": [
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/bootstrap.json",
+      "bytes": 754,
+      "sha256": "8449f987039a90a3e99387a7bf31c58b3c1501c23ec9cf6344567b002bd6d2b4",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/source-verified.json",
+      "bytes": 8010,
+      "sha256": "6771b80fe349556238d6864f66bc0a55a36b60f88874feb2356fa715bf345e49",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/source-manifest-r2.json",
+      "bytes": 6337,
+      "sha256": "75d0ff102aff648a290fa0be621f36e670e4395acd16c1b21d6a7f8fef54a65e",
+      "role": "source_manifest"
+    },
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/final-snapshot.json",
+      "bytes": 9806,
+      "sha256": "1b8dd8e3b356b83999aaae1088ab72e6c0d4399450d2b1ca58dce575d4705120",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/run-result.json",
+      "bytes": 2279,
+      "sha256": "534003a2aab23c7fa22627530c08a895e2dcf6fd88c314a4f4467eee9a345481",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/native-result.json",
+      "bytes": 3204,
+      "sha256": "3374d832827e3ae8a2cc19b6828cbebfce020b7ea50533191f39e95686377853",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/run-result-r2.json",
+      "bytes": 944,
+      "sha256": "463d64ab5c39de44b893b919091ed0eff48718fe68740453c89e4598698dd73d",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/native-result-r2.json",
+      "bytes": 3072,
+      "sha256": "1ccea53150a010b57000bcc9ae7b8244311307a0fa04226368734d1de904a3a3",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/r2-sync.json",
+      "bytes": 252,
+      "sha256": "b5d2aeb6f970efbb1243d9b28f969068f0a59cb1eebe2c7b578abfebfb625518",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/terminal-native-r2.json",
+      "bytes": 128,
+      "sha256": "9aba17b7bf7cb4b85844b3695be70c1a35ab8e5d6ddac6a49a4975a6b385f686",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-native-20261108T161600Z/terminal-native-r2-file.json",
+      "bytes": 374,
+      "sha256": "b1b3012cc3d56ee79e364f06943014dac65f5b50acfde04032b3759a4796da97",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-win-transfer-20261108T133125Z/manifest.json",
+      "bytes": 11145,
+      "sha256": "4d1fdd818d08132ee3380ae954f5aee553e39c53c1c5908548ceecbc98d7a024",
+      "role": "source_manifest"
+    },
+    {
+      "path": "/tmp/memsharing-win-transfer-20261108T133125Z/sdk-transfer-result.json",
+      "bytes": 596,
+      "sha256": "feb955c99e3ec124f5685437f56fd7b50c90dd594981b107db324eb977b3b8b3",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-win-transfer-20261108T133125Z/sdk-pull-result.json",
+      "bytes": 4371,
+      "sha256": "afa7c890fb9fd1322aa4a6010244a524733d3130549d99e3fee787819cbe2881",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-win-transfer-20261108T133125Z/reviewed-results.json",
+      "bytes": 1870,
+      "sha256": "2a19d7a7b2d56368ba305ff6106ef443ecc1b69f0abac7844be673cca6b2a6d0",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-win-transfer-20261108T133125Z/remote-evidence/verify44.json",
+      "bytes": 13684,
+      "sha256": "695bb1376509424fc599cb6f2ee2c186b3f4fc539b02771a7f5891406bc1eabb",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-win-transfer-20261108T133125Z/remote-evidence/run_unit6.json",
+      "bytes": 744,
+      "sha256": "603a3567c438386bd9584b3dd6c5fbc5194b030e139f0bf7c4d048e02aa99815",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-win-transfer-20261108T133125Z/remote-evidence/run_integration1.json",
+      "bytes": 756,
+      "sha256": "464017f13d479805cff5c8ec9ab7388df5def21f4219c9a1fb7ef1ec030177ba",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-win-transfer-20261108T133125Z/remote-evidence/run_diag_normal.json",
+      "bytes": 1592,
+      "sha256": "9d5c8245045e0471f0c62b40c2cedd17369c52159330136aadf605acf59af3b4",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-win-transfer-20261108T133125Z/remote-evidence/run_diag_cn_space.json",
+      "bytes": 1779,
+      "sha256": "b98e069c542e59398b3b12ae5cb1b07c3662dcb1dc91cb64aa5bf1d66605b819",
+      "role": "prior_raw_evidence"
+    },
+    {
+      "path": "/tmp/memsharing-win-transfer-20261108T133125Z/remote-evidence/run_diag_device.json",
+      "bytes": 1780,
+      "sha256": "4e5da3fae43477122d3b081a50cc3fc0ed834f1074ab9c9d89e951d0baec8743",
+      "role": "prior_raw_evidence"
+    }
+  ]
+}

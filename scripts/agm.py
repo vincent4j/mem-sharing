@@ -46,6 +46,7 @@ WRITE_COMMANDS = ("enable-memory", "enable-memory-batch")
 # the new core modules implement their own JSON/approval handling; this shell
 # only forwards the complete argv (command included) and propagates the int.
 CORE_COMMAND_ROUTES = {
+    "diagnose-platform": "agm_core.platform_diagnostics",
     "recover-memory-fusion": "agm_core.fusion_recovery",
     "organize-user-memory": "agm_core.user_rules_organize",
     "organize-project-memory": "agm_core.user_rules_organize",
