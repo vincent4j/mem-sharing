@@ -49,7 +49,7 @@
 
 正式卸载在同一计划内消费合法历史融合入口，不要求先独立 return 再确认卸载。入口须由真实 committed producer 的 before 备份、精确迁出片段、声明入口、完整 after、模式及阶段链重现；marker 或同文不是所有权证明。
 
-旧 return 已移除 Claude import 时，须逐条验证 consumed 指向的真实迁移、连续来源指纹与当前完整 after；每个新增字节和次数都由对应归还原文解释。缺引用、篡改备份、未知新增或漂移拒绝。仅在卸载计划内据此认定旧观察退休，不手工洗 V；外置恢复仍保全原台账。当前验证边界统一见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)。
+旧 return 已移除 Claude import 时，须逐条验证 consumed 指向的真实迁移、连续来源指纹与当前完整 after；每个新增字节和次数都由对应归还原文解释。缺引用、篡改备份、未知新增或漂移拒绝。仅在卸载计划内据此认定旧观察退休，不手工洗 V；外置恢复仍保全原台账。当前验证边界统一见[支持范围（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)。
 
 ## 生成公共包装的来源证明
 

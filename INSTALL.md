@@ -6,7 +6,7 @@ memSharing · 多 Agent 记忆共享与融合。把下面这句话交给正在�
 请从 https://github.com/vincent4j/mem-sharing 安装 memSharing（多 Agent 记忆共享与融合）。
 ```
 
-本页供未安装产品的 Agent 直接使用，无须先有产品 Skill、v0 工具、Context Keeper 或项目配置。依据 [DESIGN](DESIGN.md) 与[系统架构](docs/architecture.md)。本页描述目标流程，执行状态以实际结果为准；M4-09 的本地范围与阻断项见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)，真机项归 M4-10。
+本页供未安装产品的 Agent 直接使用，无须先有产品 Skill、v0 工具、Context Keeper 或项目配置。依据 [DESIGN](DESIGN.md) 与[系统架构](docs/architecture.md)。本页描述目标流程，执行状态以实际结果为准；M4-09 的本地范围与阻断项见[支持范围（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)，真机项归 M4-10。
 
 ## 用户看到的安装对话
 
@@ -185,7 +185,7 @@ python3 -B scripts/install.py --source-manifest /absolute/path/source.json --req
 python3 -B scripts/install.py --approval-file /absolute/path/upgrade-approval.json
 ```
 
-验证边界：本转换为已实现候选，证据为静态与合成测试——单元 557 项（556 过、1 error）、集成 74 项（72 过、2 失败）；修复后定向复测（单元 11 项与原失败的集成 2 项）均通过，全量未重跑，不宣称一次全绿。真实 HOME 未被改动，不覆盖 0.1.2 候选既有升级与验收证据。最终主验收结论与发行版本 hash 以[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)的权威记录收口，本节不另造重复报告。
+验证边界：本转换为已实现候选，证据为静态与合成测试——单元 557 项（556 过、1 error）、集成 74 项（72 过、2 失败）；修复后定向复测（单元 11 项与原失败的集成 2 项）均通过，全量未重跑，不宣称一次全绿。真实 HOME 未被改动，不覆盖 0.1.2 候选既有升级与验收证据。最终主验收结论与发行版本 hash 以[支持范围（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)的权威记录收口，本节不另造重复报告。
 
 ## 整机卸载
 

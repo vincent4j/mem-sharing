@@ -1,6 +1,6 @@
 # Paseo 插件维护手册
 
-本目录维护现行适配合同和[验收记录](acceptance.md)。产品本体的合同、事务和使用方法分别见[设计](../../DESIGN.md)、[系统架构](../architecture.md)、[操作手册](../operations.md)。面向插件用户的说明保留在[OVERVIEW](../../plugins/paseo/OVERVIEW.md)。Orca 未实现，不属于当前交付范围。
+本页维护现行适配约束，当前支持边界见[支持范围](../README.md)。产品本体的合同、事务和使用方法分别见[设计](../../DESIGN.md)、[系统架构](../architecture.md)、[操作手册](../operations.md)。面向插件用户的说明保留在[OVERVIEW](../../plugins/paseo/OVERVIEW.md)。Orca 未实现，不属于当前交付范围。
 
 ## 单仓与发行来源
 
@@ -12,7 +12,7 @@ Python 业务只维护 `scripts/agm_core`，项目与机器入口分别为 `scri
 
 ## 宿主适配
 
-最低 SDK/manifest 为 Paseo 0.13.2，当前只有 Command Center、一次性计划界面和 typed RPC，无常驻管理页、无自动 hooks。workspace 命令提供项目路径，执行器由用户选择；Paseo 是宿主，不是新增 Python Agent 类型。linked worktree、非 Git 项目及 disabled 政策沿用内核，插件不能默默改写主 checkout 或恢复自动记忆。
+最低 SDK/manifest 为 Paseo 0.13.2，界面、命令和typed RPC贡献以当前插件声明为准；前端只展示内核状态/批准流程，不复制业务规则或自动批准。workspace 命令提供项目路径，执行器由用户选择；Paseo 是宿主，不是新增 Python Agent 类型。linked worktree、非 Git 项目及 disabled 政策沿用内核，插件不能默默改写主 checkout 或恢复自动记忆。
 
 宿主用受支持的 `context.paseo.config.get().config.plugins` 定位自身包；只消费 plugins，不记录其他配置。固定包 ID `memsharing` 与编译期 manifest 摘要、完整载荷字节/模式、唯一 canonical 来源共同绑定。CLI runtime 别名不等于包身份。每次 RPC 复验；来源/环境漂移闭锁并取消七类 flow，要求重载后重新预览，不重建 Orchestrator 来继承旧批准。
 
@@ -29,9 +29,9 @@ Python 业务只维护 `scripts/agm_core`，项目与机器入口分别为 `scri
 
 ## Python/Git 供应
 
-固定来源真源是 `plugins/shared/src/production-assets.ts`；RPC 和用户环境不能覆盖 URL/hash。当前资产为 CPython 3.13.18（python-build-standalone 20261026）和 Git 2.56.0（dugite-native v2.56.0-2），含 arm64/x86_64 的 size、SHA256、解包树摘要、入口与精确链接表。目标最低 macOS 为 arm64 11、Intel 10.15；目标存在不等于全部动态平台已验。
+固定来源真源是 `plugins/shared/src/production-assets.ts`；RPC 和用户环境不能覆盖 URL/hash。资产的版本、平台、大小、SHA256、解包树摘要与入口以该真源为准；目标存在不等于动态平台已验。
 
-依赖存放于 HOME 内 `mem-sharing-runtimes`，不改系统 Python、全局 PATH 或 Git 配置。下载、容量、解包链接和完整树检查通过后还要实际 probe 才写 verified；漂移、未知所有权或冲突保全拒绝。取消仅处理自身 inode 匹配的 lease/暂存；保留可审核的中断材料，重试要新计划。许可与对应源码见[运行时披露](../../plugins/shared/THIRD_PARTY_NOTICES.md)，17份 sidecar 不代表完整 transitive SBOM。
+依赖存放于 HOME 内 `mem-sharing-runtimes`，不改系统 Python、全局 PATH 或 Git 配置。下载、容量、解包链接和完整树检查通过后还要实际 probe 才写 verified；漂移、未知所有权或冲突保全拒绝。取消仅处理自身 inode 匹配的 lease/暂存；保留可审核的中断材料，重试要新计划。许可与对应源码见[运行时披露](../../plugins/shared/THIRD_PARTY_NOTICES.md)，许可sidecar不代表完整transitive SBOM。
 
 ## 所有权、取消与恢复
 
@@ -45,11 +45,9 @@ Context Keeper 是独立可选 Skill，每次从官方仓库 `main` 实时获取
 
 按当次上游安装器实际能力核实六家支持范围；多个执行器共用的 Skill 目录只列一次。宿主 enabled、Skill 链接存在、原生新会话实际读取和首次命令/保存是不同证据。无项目聊天、disabled、linked worktree 和首次 `/context-keeper` 规则继续生效，不用插件 hook 模拟自动保存。更新/卸载插件不升级或接管 Context Keeper。
 
-## 维护验证与历史
+## 维护验证
 
-只针对改动执行所需检查：common/notice 修改运行 sync 一致性测试，宿主修改运行相应 Node 测试与 SDK typecheck；内核改动按项目 Python 测试规定验证。发行前执行 source/release CI，不以合成通过代替真实宿主批准或新会话。
-
-旧设计、任务拆分、v1-v5/r1-r2日志与hash清单不再作为当前输入；完整历史保存在 Git `0906d7acea8f0f1dc02ddef734f90322a8180579`。例如 `git show 0906d7a:docs/plugin-adapters/design.md`。Context Keeper 历史中的旧相对链接按同一提交和原路径追溯，不能把已删过程文件当作证据从未存在。
+只针对改动运行必要检查：公共代码/许可变更检查生成一致性，宿主变更运行相关Node测试与SDK typecheck；内核变更按Python测试验证。发行前执行source/release门禁，修改受管文档后也必须重新生成载荷并核验身份。插件running、文件接入、模型新会话读取和发行完成分别报告。
 
 ## 当前内核适配
 

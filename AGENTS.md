@@ -1,6 +1,6 @@
 # memSharing 项目规则
 
-memSharing 负责跨 Agent 的公共用户记忆共享、项目规则接入与执行器适配；产品在其他项目中保持与 Context Keeper 的职责分离。本仓已按用户要求改用 docs/ 根文档维护项目状态、历史和经验，不再自动建立记录库。本文件只维护项目工作规则；产品需求与验收标准见 docs/README.md，进度和事实见 docs/project-state.md，不写入规则文件。
+memSharing负责跨Agent公共用户记忆共享、项目规则接入与执行器适配；产品在其他项目中保持与Context Keeper的职责分离。本仓docs只维护现行产品、平台、架构和操作说明，不保存历史记录或阶段流水。本文件只维护项目工作规则；需求入口为docs/README.md。
 
 ## 结构与检查
 
@@ -22,18 +22,18 @@ memSharing 负责跨 Agent 的公共用户记忆共享、项目规则接入与�
 - Git 提交、推送仅在用户明确指令下由主 Agent 执行；子 Agent 不得自行 commit/push。
 - 不修改上游 Context Keeper 源码。
 
-## 项目文档与经历
+## 文档维护
 
-用户明确将有用文档归并到docs根并删除旧三目录。当前状态见`docs/project-state.md`，历史结论见`docs/project-history.md`，经验边界见`docs/project-lessons.md`。
+有用内容按产品、平台和集成分类维护，入口为`docs/README.md`；发行依赖的架构/操作/卸载技术文档保持固定路径。不新增历史日志、证据流水、过期计划或过程归档。
 
 <!-- mem-sharing:project-experience:start -->
-本仓已明确退出原Context Keeper自动记录目录；不自动init、ensure-bridge、建库或重建已删除目录。后续直接维护上述docs根文档。其他项目的产品默认CK行为不变，不改全局Skill或上游CK。
+本仓已退出自动项目记录库，不运行init、ensure-bridge或重建旧目录。技能仅用于必要整理，不在本仓保存过程历史。其他项目默认CK行为不变，不改全局Skill或上游CK。
 <!-- mem-sharing:project-experience:end -->
 
 ## PRD 与验收约束
 
-1. 开发前关键词检索`docs/README.md`，只读命中的docs根PRD/验收；不全文加载历史。
+1. 开发前关键词检索`docs/README.md`，只读命中的分类文档；不全文加载历史。
 2. 当前无独立生效合同文件，依模块PRD及明确已验范围实施；用户最新决定优先，不将Windows有限预览等同一般平台支持。
 3. 源码、合成、宿主/客户端与发布分别报告；UI/新会话结论要有实际证据。
-4. 本仓已退出原PRD Distill固定目录布局。可使用技能做语义整理，但不运行init/install-bridge重建目录；not_initialized是预期，不冒称结构通过。
+4. 本仓不采用PRD Distill的固定目录布局。可使用技能做语义整理，但不运行init/install-bridge重建目录；not_initialized是预期，不冒称结构通过。
 5. 提交前核需求/实现/证据/文档一致性、有效链接和授权范围；不为文档整理重启真实验收或产品写入。

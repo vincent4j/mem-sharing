@@ -43,7 +43,7 @@
 | 卸载中断 | 按外置备份的独立 recover.py 恢复，产品资产、宿主和 Context Keeper 结果分开报告 |
 | 锁/活动 journal | 核对当前进程与事务，先恢复；不自动抢锁、删未知备份或绕过迁移门禁 |
 
-## 保留的历史兼容入口
+## 兼容与退役入口
 
 这些仍有活跃消费者，未作为文档整理的一部分删除功能。仅在明确命中旧合同、来源完整且当前内核支持时使用，未知旧现场先诊断。
 
@@ -52,4 +52,4 @@
 - `migrate-user-entry-layout --json`：仅重排可证明的产品入口到顶部，原私文/权限/所有权不变。
 - `scripts/retire_staging.py`、`scripts/uninstall_compat.py`：固定独立工具的窄范围 staging/旧卸载处理；预览、宿主身份、完整计划和明确批准不可省略，不替换活动 C。详细旧参数及安全约束从[固定历史操作说明（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/4fb22c0988426c06183d9f4faa71b7b00747a546/docs/operations.md#独立退役旧-paseo-staging未发行工具)追溯，并先核对当前工具 help。
 
-旧 `remove-memory`、`--memory`、`--no-memory` 不再支持新请求；旧 tombstone 仅用于诊断/退出。现行能力与运行缺口见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)。
+旧 `remove-memory`、`--memory`、`--no-memory` 不再支持新请求；旧 tombstone 仅用于诊断/退出。现行能力与运行缺口见[支持范围（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)。

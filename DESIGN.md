@@ -1,6 +1,6 @@
 # memSharing 设计总纲
 
-文档版本 v2.2，2026-11-01。这里只保留现行产品合同；历史裁定与旧 § 编号见 Git `f06db31:docs/plan/decisions-m4.md`。机制详见[系统架构](docs/architecture.md)，操作详见[操作手册](docs/operations.md)，实际完成状态以[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)为准。
+文档版本 v2.2，2026-11-01。这里只保留现行产品合同；历史裁定与旧 § 编号见 Git `f06db31:docs/plan/decisions-m4.md`。机制详见[系统架构](docs/architecture.md)，操作详见[操作手册](docs/operations.md)，实际完成状态以[支持范围（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)为准。
 
 ## 定位与边界
 
@@ -91,6 +91,6 @@ OpenCode 第一版仅支持默认用户配置根 `~/.config/opencode`（default-
 
 完整接力在获授权的合成记录库进行：Codex 保存随机事实/待办 → Claude 普通续接并更新 → WorkBuddy 读取前两轮并追加 → Codex 新会话核对累积结果。四轮提示不带答案或库位置，保留各次 session、来源和库 diff。禁止保存与迁移门禁另做负向测试，不关闭或清空执行器自己的自动记忆来虚构边界。
 
-当前证据与未验范围集中在[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)和[M4-10 判定（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/4fb22c0988426c06183d9f4faa71b7b00747a546/docs/acceptance/m4/m4-10-runtime/verdict.md)。发布准备见[发布清单（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/4fb22c0988426c06183d9f4faa71b7b00747a546/docs/acceptance/m4/m4-10-prep/release-checklist.md)；这份设计不构成发布授权。
+当前证据与未验范围集中在[支持范围（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)和[M4-10 判定（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/4fb22c0988426c06183d9f4faa71b7b00747a546/docs/acceptance/m4/m4-10-runtime/verdict.md)。发布准备见[发布清单（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/4fb22c0988426c06183d9f4faa71b7b00747a546/docs/acceptance/m4/m4-10-prep/release-checklist.md)；这份设计不构成发布授权。
 
 机器资产归还、独立恢复与 Paseo 宿主范围详见[整机卸载方案](docs/uninstall-design.md)。

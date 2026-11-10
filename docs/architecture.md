@@ -1,6 +1,6 @@
 # 系统架构
 
-本页只说明组件、数据和执行边界。用户操作在 [Skill](../SKILL.md)、[安装](../INSTALL.md)及[操作路由](operations.md)；需求真源是[模块 PRD（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)，验证状态见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)。
+本页只说明组件、数据和执行边界。用户操作在 [Skill](../SKILL.md)、[安装](../INSTALL.md)及[操作路由](operations.md)；需求真源是[模块 PRD（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)，验证状态见[支持范围（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)。
 
 ## 职责和数据
 
@@ -33,7 +33,7 @@ Agent 理解原文并提出语境/作用域分组，用户决定共享范围，�
 - `memory_share.py`、`project_share.py`：Agent 提案、选择、共享、归还与恢复；`user_rules_organize.py` 保留安装后整理路由。
 - `paths.py`、`detect.py`、`user_entries.py`：六家路径、安装事实与原生入口。规则引用不等于 Skill 可发现；文件存在不等于模型读取成功。
 - `transaction.py`、`registry.py`、安装/卸载恢复模块：锁、快照、精确写入、台账与恢复；不另造重复事务、日志或服务。
-- Paseo 只作薄宿主适配，复用同一内核；公共 TypeScript 真源在 `plugins/shared/src`，生成副本不手改。细节见[Paseo 手册（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/plugin-adapters/README.md)。
+- Paseo 只作薄宿主适配，复用同一内核；公共 TypeScript 真源在 `plugins/shared/src`，生成副本不手改。细节见[Paseo 手册（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/integrations/paseo.md)。
 
 ## 所有权与事务
 
@@ -49,4 +49,10 @@ V 区分机器对象、项目对象与共享对象。创建、复用、消费者
 
 ## 验证与维护边界
 
-Python 仅标准库；Paseo 的 Node 检查按改动范围运行。源码、合成文件链、真实安装、原生发现、模型读取和发行分别报告。只为有活跃消费者的能力维护兼容；一次性事故工具及过程文档可退役，历史证据留 Git，不删 Context Keeper 工作记录。
+Python 仅标准库；Paseo 的 Node 检查按改动范围运行。源码、合成文件链、真实安装、原生发现、模型读取和发行分别报告。只为有活跃消费者的能力维护兼容；文档维护现行行为、支持范围和操作边界，不保存阶段流水。真实用户数据和其他项目的记录库不属于文档清理范围。
+
+## 判定与恢复原则
+
+宿主running、payload存在、程序支持批准合同、文件接入、模型新会话读取是不同边界；必须确认实际来源与所调用程序，不能手改台账或取消预览冒充可用。
+
+元数据读取句柄和路径快照不是排他写锁。安全描述符、DACL、属性、时间与目录内容分别核对；API成功或单个组件恢复不能宣称完整metadata恢复。写前须保存可复算原像和恢复归属，缺原像不猜值；原像以外的外部编辑保全停止。系统自动更新字段单列，不以弱化断言获得准入。
