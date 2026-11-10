@@ -27,7 +27,8 @@
 | macOS普通产品入口 | 已有真实安装/共享/退出实证；源码、文件适配、各原生客户端会话与发布仍分别验收，不承诺所有客户端/版本都同等通过 |
 | [Windows双端首次预览](platforms/windows-preview.md) | 固定DELL Win11 x64本地NTFS、ZCode3.17.2.9661/WorkBuddy5.9.3.0的首次安装、双向新增/新会话读取、退出保全已验证；非一般Windows生产入口 |
 | [Windows完整适配目标](platforms/windows-support.md) | 更多客户端/配置、升级迁移、权限与恢复等尚未完成；普通生产平台保护不变 |
-| Windows Paseo、Linux/WSL与其他架构 | 未准入，不从其他平台或文件测试推定支持 |
+| [Windows Paseo 双端预览](integrations/paseo.md#windows-预览接线与候选准备) | 固定 DELL/Paseo 0.15.3 已通过隔离 HOME 的 SDK RPC 闭环及日常 Host 安装、Windows 状态/新增/读回；当前候选双客户端新会话读回及 ZCode 新增→WorkBuddy 读取已验，反向写入跳过，其余功能分支待验，未发布 |
+| Linux/WSL与其他架构 | 未准入，不从其他平台或文件测试推定支持 |
 
 ## 维护规则
 

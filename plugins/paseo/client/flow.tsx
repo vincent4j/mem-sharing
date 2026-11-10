@@ -7,11 +7,11 @@
 // The modal closes after confirm or reject; this is not a management page.
 
 import { useMemo, useState, useRef, useEffect } from "react";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import type { PluginTheme } from "@getpaseo/plugin";
 import { useRpc } from "@getpaseo/plugin/client";
-import { Modal } from "@getpaseo/plugin/client/ui";
+import { FlowPage, PlanPreview, PlanConfirmation, OperationResult, PrimaryAction } from "./presentation";
 import {
   fusionPreviewRpc, fusionSelectRpc, fusionConfirmRpc,
   dependencyConfirmRpc, dependencyPreviewRpc,
@@ -35,6 +35,8 @@ import {
 import { Action as Pressable, Details, AGENT_LABELS } from "./ui";
 import { fusionGroups, fusionResult, record, contextKeeperResult } from "./fusion";
 import { uninstallResult, externalSteps, publicPlan } from "./uninstall-result";
+import { PlatformScreen } from "./platform";
+import { flowCopy, flowStage } from "./presentation-model";
 
 type Phase =
   | { kind: "ckChoice"; prompt: string; agents: string[]; choices: string[] }
@@ -84,19 +86,12 @@ function gateOutcome(result: { status: string; message?: string; detail?: string
   return { kind: "gate", message: describe(result.status, result.message ?? result.detail) };
 }
 
-function titleFor(flow: string): string {
-  if (flow === "onboard") return "设置记忆共享";
-  if (flow === "check") return "memSharing 检查当前项目";
-  if (flow === "enable") return "memSharing 启用当前项目";
-  if (flow === "ck") return "memSharing 可选安装 Context Keeper";
-  if (flow === "recover") return "memSharing 恢复未完成操作";
-  if (flow === "uninstall") return "memSharing 整机卸载";
-  if (flow === "stagingCleanup") return "memSharing 宿主暂存清理";
-  if (flow === "uninstallRecover") return "memSharing 外置卸载恢复";
-  return "memSharing";
+
+export function FlowScreen(props: PluginScreenProps) {
+  return <PlatformScreen screen={props}><MacFlowScreen {...props} /></PlatformScreen>;
 }
 
-export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
+function MacFlowScreen({ params, theme, layout }: PluginScreenProps) {
   const fusionPreview = useRpc(fusionPreviewRpc);
   const fusionSelect = useRpc(fusionSelectRpc);
   const fusionConfirm = useRpc(fusionConfirmRpc);
@@ -166,12 +161,10 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
   const styles = useMemo(
     () => ({
       screen: { flex: 1, backgroundColor: theme.colors.surface0 },
-      title: { color: theme.colors.foreground, fontSize: layout.compact ? 25 : 30, lineHeight: 38, fontWeight: "700" as const },
       label: { color: theme.colors.foregroundMuted, fontSize: 13, lineHeight: 22 },
       detail: { color: theme.colors.foreground, fontSize: 14, lineHeight: 24, flexShrink: 1 },
       button: { minHeight: 44, justifyContent: "center" as const, paddingVertical: 12, paddingHorizontal: 20, borderRadius: 10, backgroundColor: theme.colors.accent, alignSelf: "flex-start" as const },
       buttonText: { color: theme.colors.accentForeground, fontWeight: "600" as const },
-      card: { padding: layout.compact ? 16 : 24, borderWidth: 1, borderColor: theme.colors.border, borderRadius: 16, backgroundColor: theme.colors.surface1, gap: 16 },
       secondary: { minHeight: 44, justifyContent: "center" as const, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, borderWidth: 1, borderColor: theme.colors.border, alignSelf: "flex-start" as const, backgroundColor: theme.colors.surface1 },
       secondaryText: { color: theme.colors.foreground, fontWeight: "600" as const },
       chip: (active: boolean) => ({
@@ -411,15 +404,9 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScrollView style={{ flex: 1 }} keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: layout.compact ? 16 : 32, paddingBottom: 48 }}>
-      <View style={{ width: "100%", maxWidth: 820, alignSelf: "center", gap: 20 }}>
-      <View style={{ gap: 8 }}>
-        <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "600" }}>MEMORY SHARING & FUSION</Text>
-        <Text accessibilityRole="header" style={styles.title}>{titleFor(flow)}</Text>
-        <Text style={styles.label}>{flow === "onboard" ? "选择要共享记忆的 Agent，预览改动，再按你的决定执行。" : flow === "check" ? "只读检查当前项目的记忆入口与接入情况。" : flow === "uninstall" ? "先核对归还与备份计划，再决定是否卸载。" : flow === "recover" || flow === "uninstallRecover" ? "保留现场，核对记录后选择继续或恢复。" : "先查看当前方案，所有变更按你的明确选择执行。"}</Text>
-      </View>
-      <View style={styles.card}>
-      <Text style={{ color: phase.kind === "gate" ? theme.colors.statusDanger : theme.colors.accent, fontSize: 12, fontWeight: "600" }}>{phase.kind === "form" ? "填写与选择" : phase.kind === "fusion" ? "记忆融合 · 选择即执行" : phase.kind === "preview" ? "核对变更计划" : phase.kind === "ckChoice" ? "独立可选 · 项目经历" : phase.kind === "busy" || phase.kind === "loading" ? "正在处理" : phase.kind === "gate" ? "预览受阻" : phase.ok ? "操作结果" : "核对与重试"}</Text>
+      <FlowPage theme={theme} layout={layout} {...flowCopy(flow)} blocked={phase.kind === "gate"}
+        stage={flowStage(phase.kind, phase.kind === "result" && phase.ok)}>
+
       {projectRoot.length > 0 ? <Details theme={theme} title="当前项目路径" text={projectRoot} /> : null}
 
       {phase.kind === "form" ? (
@@ -469,10 +456,8 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
               </View>
             </View>
           ) : null}
-          <Pressable
-            accessibilityRole="button"
+          <PrimaryAction theme={theme} label="生成精确预览"
             disabled={(flow === "enable" && agents.length === 0) || (flow === "recover" && !journalPath.trim()) || (flow === "uninstall" && !backupDir.trim()) || (flow === "stagingCleanup" && !evidenceDir.trim()) || (flow === "uninstallRecover" && !manifestPath.trim())}
-            style={styles.button}
             onPress={() => {
               if (flow === "enable" && agents.length === 0) return;
               if (flow === "recover" && journalPath.trim().length === 0) return;
@@ -481,9 +466,7 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
               if (flow === "uninstallRecover" && !manifestPath.trim()) return;
               return runPreview();
             }}
-          >
-            <Text style={styles.buttonText}>生成精确预览</Text>
-          </Pressable>
+          />
         </View>
       ) : null}
 
@@ -532,79 +515,27 @@ export function FlowScreen({ params, theme, layout }: PluginScreenProps) {
         </View>
       ) : null}
 
-      {phase.kind === "preview" ? (
-        <View style={{ gap: 8 }}>
-          <Text style={styles.label}>请核对以下变更；完整计划可展开查看。</Text>
-          {phase.summary.map((row: { label: string; value: string }) => (
-            <Text key={row.label} style={styles.detail}>
-              {row.label}：{row.value}
-            </Text>
-          ))}
-          <Pressable accessibilityRole="button" accessibilityState={{ expanded: showPlan }} onPress={() => setShowPlan(!showPlan)}>
-            <Text style={{ color: theme.colors.accent, fontSize: 13 }}>{showPlan ? "收起完整计划" : "查看完整计划与技术详情"}</Text>
-          </Pressable>
-          {phase.flow === "fusion" ? <View style={{ gap: 8 }}>
-            <Text style={styles.detail}>完整修改清单：参与范围、选中编号、原文、来源、目标与逐阶段变化如下；确认后才修改。</Text>
-            {fusionGroups({ approval_plan: JSON.parse(phase.planText) }).map(group => <View key={group.number}><Text style={styles.label}>{group.number}. {group.summary}</Text><JsonBlock theme={theme} text={group.original} /></View>)}
-          </View> : null}
-          {showPlan ? <JsonBlock theme={theme} text={phase.planText} /> : null}
-          {phase.flow === "fusion" ? <Pressable onPress={() => { return startFusion({ fusion: { automatic_continue: true } }, fusionScope).catch(error => setPhase({ kind: "result", ok: false, message: "融合预览中断，请保留现场。", detail: String(error) })); }}><Text style={{ color: theme.colors.accent }}>返回选择（旧批准作废）</Text></Pressable> : null}
-          <Details theme={theme} title="计划标识" text={`${phase.planKind} · ${phase.digest}`} />
-          <Pressable accessibilityRole="button" style={styles.button} onPress={() => setModalOpen(true)}>
-            <Text style={styles.buttonText}>确认执行…</Text>
-          </Pressable>
-        </View>
-      ) : null}
+      {phase.kind === "preview" ? <PlanPreview theme={theme} summary={phase.summary} planText={phase.planText}
+        planKind={phase.planKind} digest={phase.digest} expanded={showPlan} onExpandedChange={setShowPlan} onConfirm={() => setModalOpen(true)}>
+        {phase.flow === "fusion" ? <View style={{ gap: 8 }}>
+          <Text style={styles.detail}>完整修改清单：参与范围、选中编号、原文、来源、目标与逐阶段变化如下；确认后才修改。</Text>
+          {fusionGroups({ approval_plan: JSON.parse(phase.planText) }).map(group => <View key={group.number}><Text style={styles.label}>{group.number}. {group.summary}</Text><JsonBlock theme={theme} text={group.original} /></View>)}
+          <Pressable onPress={() => startFusion({ fusion: { automatic_continue: true } }, fusionScope).catch(error => setPhase({ kind: "result", ok: false, message: "融合预览中断，请保留现场。", detail: String(error) }))}><Text style={{ color: theme.colors.accent }}>返回选择（旧批准作废）</Text></Pressable>
+        </View> : null}
+      </PlanPreview> : null}
 
       {phase.kind === "result" && flow === "uninstall" && !phase.continuation ? <Pressable style={styles.button} onPress={() => runPreview()}><Text style={styles.buttonText}>继续卸载预览</Text></Pressable> : null}
       {phase.kind === "result" && currentFlow.current === "fusion" && !phase.ok ? <Pressable style={styles.secondary} onPress={() => { return startFusion({ fusion: { automatic_continue: true } }, fusionScope).catch(error => setPhase({ kind: "result", ok: false, message: "融合预览中断，请保留现场。", detail: String(error) })); }}><Text style={styles.secondaryText}>重新预览融合（旧计划作废）</Text></Pressable> : null}
       {phase.kind === "result" && !phase.ok && currentFlow.current !== "fusion" ? <Pressable style={styles.secondary} onPress={() => setPhase({ kind: "form" })}><Text style={styles.secondaryText}>返回填写并重试</Text></Pressable> : null}
-      {phase.kind === "result" ? (
-        <View style={{ gap: 8 }}>
-          <Text style={{ color: phase.ok ? theme.colors.statusSuccess : theme.colors.statusDanger, fontSize: 15 }}>{phase.ok ? "✓ " : "! "}{phase.message}</Text>
-          {phase.rows?.map(row => <Text key={row.label} style={styles.detail}>{row.label}：{row.value}</Text>)}
-          {phase.continuation ? <JsonBlock theme={theme} text={phase.continuation} /> : null}
-          {phase.detail ? <Details theme={theme} title={phase.ok ? "完整结果" : "错误详情与恢复线索"} text={phase.detail} /> : null}
-        </View>
-      ) : null}
-
-      </View>
-      </View>
-      </ScrollView>
-      <Modal title="确认执行精确计划" open={modalOpen && phase.kind === "preview"} onOpenChange={setModalOpen}>
-        <Modal.Content>
-          <View style={{ gap: 12 }}>
-            <Text style={{ color: theme.colors.foreground }}>
-              {phase.kind === "preview" ? phase.planKind : ""} 将按已展示的精确计划执行。
-            </Text>
-            <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>
-              计划摘要 {phase.kind === "preview" ? phase.digest.slice(0, 32) : ""}…
-            </Text>
-            <View style={{ flexDirection: layout.compact ? "column" : "row", flexWrap: "wrap", gap: 12 }}>
-              <Pressable
-                accessibilityRole="button"
-                style={[styles.button, { backgroundColor: flow === "uninstall" || flow === "stagingCleanup" ? theme.colors.statusDanger : theme.colors.accent }]}
-                onPress={() => {
-                  setModalOpen(false);
-                  return confirmPlan("confirm");
-                }}
-              >
-                <Text style={styles.buttonText}>确认执行</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                style={styles.secondary}
-                onPress={() => {
-                  setModalOpen(false);
-                  return confirmPlan("reject");
-                }}
-              >
-                <Text style={styles.secondaryText}>返回并拒绝</Text>
-              </Pressable>
-            </View>
-          </View>
-        </Modal.Content>
-      </Modal>
+      {phase.kind === "result" ? <OperationResult theme={theme} ok={phase.ok} message={phase.message} detail={phase.detail} rows={phase.rows}>
+        {phase.continuation ? <JsonBlock theme={theme} text={phase.continuation} /> : null}
+      </OperationResult> : null}
+      </FlowPage>
+      <PlanConfirmation theme={theme} layout={layout} open={modalOpen && phase.kind === "preview"} onOpenChange={setModalOpen}
+        planKind={phase.kind === "preview" ? phase.planKind : ""} digest={phase.kind === "preview" ? phase.digest : ""}
+        danger={flow === "uninstall" || flow === "stagingCleanup"}
+        onConfirm={() => { setModalOpen(false); return confirmPlan("confirm"); }}
+        onReject={() => { setModalOpen(false); return confirmPlan("reject"); }} />
     </View>
   );
 }

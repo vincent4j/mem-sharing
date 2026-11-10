@@ -14,6 +14,45 @@ Python 业务只维护 `scripts/agm_core`，项目与机器入口分别为 `scri
 
 最低 SDK/manifest 为 Paseo 0.13.2，界面、命令和typed RPC贡献以当前插件声明为准；前端只展示内核状态/批准流程，不复制业务规则或自动批准。workspace 命令提供项目路径，执行器由用户选择；Paseo 是宿主，不是新增 Python Agent 类型。linked worktree、非 Git 项目及 disabled 政策沿用内核，插件不能默默改写主 checkout 或恢复自动记忆。
 
+### macOS 与 Windows 边界
+
+插件后端在所选 Host 的 daemon 上运行，文件路径、Python/Git 和平台准入取该 Host 的系统。Paseo 应用所在电脑的系统不改变后端能力；Mac 应用连接 Windows Host，也不能沿用 macOS 的产品准入。客户端共用 React Native 界面源码，两端应用显示、确认、取消与 Host 切换仍须分别实际验收。
+
+| 项目 | macOS Host | Windows Host |
+| --- | --- | --- |
+| Python/Git 探测 | 标准目录与 PATH，保留 CommandLineTools stub 保护 | 按分号拆分 PATH，查找 python.exe/python3.exe 与 git.exe；盘符、空格和中文路径已有合成测试；Python 已在固定 DELL 实际运行，Git 探测和一般 Windows 仍待验 |
+| 缺依赖时的私有供应 | 已有固定 arm64/x86_64 资产，按原批准流程准备 | 无固定资产，不自动借用 macOS 包 |
+| 插件发行载荷与普通安装 | 复用当前发行来源、原内核计划与批准 | 普通安装继续拒绝；独立预览载荷使用八文件闭包和包内生成摘要 |
+| Windows 双端预览 | 不适用 | 开发候选在固定 DELL/Paseo 0.15.3 的隔离 HOME 已通过真实加载及状态/安装/新增/退出 SDK RPC；部分应用 UI 已验，其余分支见下文，未正式发行 |
+
+Windows 预览不经过 POSIX 模式的普通发行载荷校验或私有依赖供应，也不执行 Git、下载器及其他子进程。独立清单核字节、大小、完整成员闭包，拒绝链接/硬链接和额外文件；实际文件父链、NTFS/reparse 与写保护复用原生预览内核。普通产品的权限校验和 darwin 保护不变。普通 Node 进程树取消与依赖供应仍未完成 Windows 适配，不因本预览绕开这些能力而宣称已解决。
+
+限定预览只调用[Windows 双端首次预览](../platforms/windows-preview.md)既有内核，不获得普通融合、升级、项目接入或 Context Keeper 安装能力。完整能力须另按[Windows 完整适配目标](../platforms/windows-support.md)完成内核与真实客户端验收。发行载荷须在源码适配和相应验证完成后，沿下述固定来源流程重新生成；不直接编辑旧 payload 或沿用同版覆盖。
+
+### Windows 预览接线与候选准备
+
+客户端先查询 `memsharing.host.platform`，按所选 daemon 路由，同一套界面可由 Mac/Windows 应用连接。Windows 只开放 `windows-preview.status/plan/confirm/cancel`；直接调用普通生产 RPC 也会在读取配置或创建暂存前拒绝。项目/Context Keeper/普通恢复命令显示范围说明，不落入普通安装。状态读取公共正文供用户查看，不启动 Agent；模型新会话读取仍单独验收。
+
+桥接使用 Host PATH 中实际探测成功的 Python 3.9+，参数为 `-I -S -B -X utf8 -c`，固定程序从标准输入消费私有计划。Windows 11 x64 与原生文件系统准入仍由桥接/内核检查。安装、新增和退出均先调用原内核计划接口，完整计划只留服务端，界面展示目标路径、前后摘要、备份/导出和本次新增正文。确认 token 绑定当前 HOME/Host、解释器、环境与来源，十分钟过期且仅用一次；执行时原内核重生成方案，任何来源或现场漂移拒绝。
+
+取消只撤销待确认方案；执行中返回 busy，等待内核事务结果。超时、截断或无法解析的执行结果保持 unknown，本 worker 阻止后续写入，先保留锁、备份与事务材料，再由独立预览包核对和 recover。退出保留空目录、备份与导出；不自动清空目录以允许重装。卸载插件不等于退出预览，未闭合事务前保留可用的独立预览包作为恢复来源。
+
+Windows 独立源身份在 `server/shared/windows-preview-identity.ts`，开发值为空，不借用 macOS 0.1.11 的 manifest。候选准备使用已信任渠道的独立 ZIP、独立 SHA256 与完整 preview revision：
+
+```sh
+python3 -B tools/windows-preview/paseo.py --archive "$ARCHIVE" --sha256 "$ARCHIVE_SHA256" --commit "$PREVIEW_REVISION" --output "$OUTPUT"
+```
+
+`OUTPUT` 必须是源码外的新目录；工具复用独立预览包校验，生成 `plugins/paseo/windows-preview/` 和对应摘要常量，不安装、不改 checkout、不提交、不发布。正式候选将这两处作为同包受管生成物审核，Mac payload 仍沿原 S/R 流程。未经生成的开发目录不能安装 Windows 产品。源码/合成联调通过不等于候选已生成、插件 running 或两端应用 UI 验收通过。
+
+当前真机证据限定为固定 DELL、Windows 11 x64、本地 NTFS、Paseo 0.15.3。独立 HOME 的真实 daemon/SDK RPC 已验证插件加载、取消、一次性确认、安装、新增、漂移拒绝和退出导出；导出字节、原生私文及 BOM/CRLF 均核对。日常 Host 已实际安装插件和独立预览，重开 Paseo 后可通过其实际环境中的 Python 读取状态。Python 必须在 daemon 启动环境的 PATH 中可用；WindowsApps stub 不算可用解释器，安装 Python 后旧进程可能需要重新打开应用才能取得环境。
+
+Windows 应用的共用向导已实际完成状态展示、新增预览、拒绝后正文 hash 不变、确认新增仅一次及结果显示，并由所选宿主读回核对。Mac 应用已实际核对共用状态页、设置初始表单及已安装场景的预览入口；检测到已接入后直接显示完成，保护文件 hash 不变。Mac 全新安装、变更确认与退出等其他界面分支仍分别待验。当前候选已在固定 DELL 的 ZCode 与 WorkBuddy 原生新会话中读回同一公共验收标记；ZCode 聊天新增后，WorkBuddy 新会话也已读到新条目，且问题未预填答案。反向聊天写入按用户选择跳过，保持未验。Windows 退出预览与拒绝已实际核对，拒绝后仍为已接入、公共正文 hash 不变；实际退出导出与重新接入的界面闭环、不支持功能入口拦截仍待验。状态页的 busy 提示与刷新后恢复表单已观察，unknown/失败分支仍仅有合成证据。窄窗口下设置表单、状态页滚动与当前公共正文展开已核对；其他宽度、弹窗和主题不据此宣称通过。CUA 远程点击通道不可用时，用户操作与实际画面/宿主读回共同构成已做项目的证据，不能把后端通过扩大为完整 UI 通过。
+
+Mac 与 Windows 共用状态页、向导页、主按钮、变更预览、确认弹窗与结果组件，不维护独立的 Windows 管理页。命令中心入口保持一致：“查看共享状态”只读；“设置记忆共享”与“卸载记忆共享”沿填写/选择 → 生成精确预览 → 核对计划 → 确认执行或返回并拒绝 → 结果的同一顺序。融合选择仍按原语义“选择即执行”，不额外增加确认。
+
+差异只由能力与实际状态提供：macOS 保留现有环境/来源检查、参与者选择和融合/归还等流程；Windows 限定 ZCode/WorkBuddy 成对接入，已接入后的设置表单只提供明确新增，退出先导出再恢复入口。不支持的项目/CK/恢复能力在原命令对应页面提示，不落入普通安装。版本与配置限制只在首次接入或按需详情出现；状态页不放新增或卸载表单。
+
 宿主用受支持的 `context.paseo.config.get().config.plugins` 定位自身包；只消费 plugins，不记录其他配置。固定包 ID `memsharing` 与编译期 manifest 摘要、完整载荷字节/模式、唯一 canonical 来源共同绑定。CLI runtime 别名不等于包身份。每次 RPC 复验；来源/环境漂移闭锁并取消七类 flow，要求重载后重新预览，不重建 Orchestrator 来继承旧批准。
 
 ## 接入与批准

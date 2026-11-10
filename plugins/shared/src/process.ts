@@ -9,6 +9,7 @@
 
 export interface RunProcessOptions {
   readonly argv: readonly string[];
+  readonly stdin?: string;
   readonly cwd?: string;
   readonly env?: Readonly<Record<string, string | undefined>>;
   readonly timeoutMs: number;
@@ -113,6 +114,7 @@ export async function runProcess(options: RunProcessOptions): Promise<ProcessRes
     try {
       child = spawn(options.argv[0], options.argv.slice(1), {
         shell: false,
+        windowsHide: true,
         cwd: options.cwd,
         env: options.env ? { ...options.env } : process.env,
         // Own process group on POSIX so timeout/cancel can terminate the
@@ -124,6 +126,10 @@ export async function runProcess(options: RunProcessOptions): Promise<ProcessRes
       resolve({ kind: "spawn_error", message: String(error) });
       return;
     }
+
+    // Private plans travel over stdin, never command-line arguments or a shell.
+    child.stdin?.on("error", () => {});
+    child.stdin?.end(options.stdin);
 
     const stdout = collector(maxStdout);
     const stderr = collector(maxStderr);

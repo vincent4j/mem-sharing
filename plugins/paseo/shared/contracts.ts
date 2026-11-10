@@ -8,6 +8,24 @@ import { z } from "zod";
 
 const jsonObject = z.object({}).passthrough();
 
+export const hostPlatformRpc = defineRpc({
+  name: "memsharing.host.platform", input: z.object({}).strict(),
+  output: z.object({ platform: z.string(), mode: z.enum(["macos", "windows-preview", "unsupported"]) }),
+});
+export const windowsPreviewStatusRpc = defineRpc({
+  name: "memsharing.windows-preview.status", input: z.object({}).strict(), output: jsonObject,
+});
+export const windowsPreviewPlanRpc = defineRpc({
+  name: "memsharing.windows-preview.plan",
+  input: z.object({ operation: z.enum(["install", "add", "exit"]), text: z.string().max(65536).optional(), verifiedSetup: z.boolean().optional() }).strict(), output: jsonObject,
+});
+export const windowsPreviewConfirmRpc = defineRpc({
+  name: "memsharing.windows-preview.confirm", input: z.object({ confirmationToken: z.string().uuid() }).strict(), output: jsonObject,
+});
+export const windowsPreviewCancelRpc = defineRpc({
+  name: "memsharing.windows-preview.cancel", input: z.object({}).strict(), output: jsonObject,
+});
+
 const interpreterStatus = z.object({
   status: z.enum(["ready", "missing", "blocked", "unknown"]),
   selectedPath: z.string().optional(),

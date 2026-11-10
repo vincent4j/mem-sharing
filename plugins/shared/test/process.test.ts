@@ -5,6 +5,13 @@ import os from "node:os";
 import path from "node:path";
 import { runProcess, ProcessInputError } from "../src/process.ts";
 
+test("stdin carries private Unicode literally and closes at EOF", async () => {
+  const stdin = '私有正文\n{"text":"$() `echo` 中文"}';
+  const result = await runProcess({ argv: [process.execPath, "-e", "process.stdin.pipe(process.stdout)"], stdin, timeoutMs: 5000 });
+  assert.equal(result.kind, "completed");
+  if (result.kind === "completed") { assert.equal(result.exitCode, 0); assert.equal(result.stdout, stdin); }
+});
+
 test("completed: echo argv reaches stdout literally without a shell", async () => {
   const hostile = "hello world; rm -rf /tmp && $(echo pwned)";
   const result = await runProcess({ argv: ["/bin/echo", hostile], timeoutMs: 5000 });

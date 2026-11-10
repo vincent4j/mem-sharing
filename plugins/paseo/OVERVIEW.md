@@ -51,6 +51,10 @@ Requirements
 
 Supports macOS. Requires Paseo 0.13.2 or later, and a configured coding agent. Existing Python 3.9+ and Git can be reused; missing tools can be downloaded with separate approval. Project actions support Git main checkouts, not linked worktrees. Context Keeper follows its own process to enable project records.
 
+Windows 插件首版仅面向已验证 DELL 上的 ZCode/WorkBuddy 双端预览，提供明确新增的公共记忆与退出导出，不提供融合、升级、项目接入或 Context Keeper 安装。开发候选已在 DELL 的隔离 HOME 中通过 Paseo 0.15.3 的实际插件加载与后端操作验证；日常 DELL 安装和 Windows 界面的状态、预览、拒绝与确认新增已验证；Mac 界面已核对状态和已接入分支，当前候选的双客户端原生新会话读取、ZCode 聊天新增后由 WorkBuddy 新会话读回、退出预览与拒绝已验；反向聊天写入跳过，其余界面与功能分支仍待验收。该插件版本尚未发布。Windows 预览需要 Host PATH 中实际可用的 Python 3.9+，不自动下载 Windows 专用运行时。
+
+The first Windows plugin preview targets only the validated DELL ZCode/WorkBuddy setup, with explicit additions and export on exit. Fusion, upgrades, project setup and Context Keeper installation are outside its scope. A development candidate passed real plugin loading and backend operations on Paseo 0.15.3 in an isolated HOME on DELL. Daily installation on DELL and Windows UI status, preview, rejection and confirmed addition have been verified. The Mac status page and existing-installation branch have been checked. Fresh native sessions in both clients read the shared memory, and a new WorkBuddy session read an entry added through ZCode chat. Exit preview and rejection have also been checked. Reverse chat writes were skipped; other UI and functional branches remain unverified. This plugin version is not released. The Windows preview requires working Python 3.9+ on the host PATH and does not download a Windows runtime.
+
 ## 🔒 文件和数据
 
 Files and data

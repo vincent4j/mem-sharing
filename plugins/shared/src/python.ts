@@ -12,6 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { runProcess } from "./process.ts";
 import { privatePythonCandidates } from "./paths.ts";
+import { executableCandidates } from "./executables.ts";
 
 export const MIN_PYTHON_VERSION = "3.9";
 
@@ -51,8 +52,6 @@ const PROBE_PROGRAM = [
   " 'stdlibOk': all(__import__(m) is not None for m in ('json','hashlib','zlib')),",
   "}))",
 ].join("\n");
-
-const SYSTEM_CANDIDATE_DIRS = ["/usr/bin", "/usr/local/bin", "/opt/homebrew/bin", "/opt/local/bin"];
 
 function versionTuple(version: string): number[] {
   return version
@@ -130,7 +129,7 @@ export async function probePythonEnvironment(options: ProbePythonOptions): Promi
     }
   }
 
-  const systemPaths = options.systemCandidates ?? systemPythonPaths();
+  const systemPaths = options.systemCandidates ?? executableCandidates("python");
   for (const candidatePath of systemPaths) {
     const candidate = await examine(candidatePath, "system");
     candidates.push(candidate);
@@ -175,14 +174,4 @@ function statFile(candidatePath: string): fs.Stats {
   } catch {
     return { isFile: () => false } as unknown as fs.Stats;
   }
-}
-
-function systemPythonPaths(): string[] {
-  const candidates = SYSTEM_CANDIDATE_DIRS.map((dir) => path.join(dir, "python3"));
-  if (process.env.PATH && process.env.PATH.length > 0) {
-    for (const dir of process.env.PATH.split(":")) {
-      if (dir.length > 0) candidates.push(path.join(dir, "python3"));
-    }
-  }
-  return [...new Set(candidates)];
 }

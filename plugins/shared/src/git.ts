@@ -13,6 +13,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { runProcess } from "./process.ts";
+import { executableCandidates } from "./executables.ts";
 
 export type GitStatus = "ready" | "missing" | "blocked" | "unknown";
 
@@ -30,20 +31,10 @@ export interface GitEnvironment {
   readonly candidates?: readonly GitCandidate[];
 }
 
-const GIT_CANDIDATE_DIRS = ["/usr/bin", "/usr/local/bin", "/opt/homebrew/bin", "/opt/local/bin"];
 const GIT_VERSION_PATTERN = /^git version \d+\.\d+/;
 
 function candidatePaths(options: ProbeGitOptions): string[] {
-  if (options.candidateDirs) {
-    return [...options.candidateDirs].map((dir) => path.join(dir, "git"));
-  }
-  const candidates = GIT_CANDIDATE_DIRS.map((dir) => path.join(dir, "git"));
-  if (process.env.PATH && process.env.PATH.length > 0) {
-    for (const dir of process.env.PATH.split(":")) {
-      if (dir.length > 0) candidates.push(path.join(dir, "git"));
-    }
-  }
-  return [...new Set(candidates)];
+  return executableCandidates("git", process.platform, process.env.PATH, options.candidateDirs);
 }
 
 async function isMacosCltReady(): Promise<boolean> {

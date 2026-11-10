@@ -14,6 +14,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('preview_package', ROOT / 'tools/windows-preview/package.py')
 pkg = importlib.util.module_from_spec(spec); spec.loader.exec_module(pkg)
+host_spec = importlib.util.spec_from_file_location('preview_paseo', ROOT / 'tools/windows-preview/paseo.py')
+host_pkg = importlib.util.module_from_spec(host_spec); host_spec.loader.exec_module(host_pkg)
 
 
 class PackageTests(unittest.TestCase):
@@ -111,6 +113,30 @@ class PackageTests(unittest.TestCase):
         before = archive.read_bytes()
         with self.assertRaises(FileExistsError): self.build()
         self.assertEqual(archive.read_bytes(), before)
+
+    def test_paseo_payload_matches_independent_archive_without_changing_version(self):
+        archive, report = self.build()
+        output = self.area / 'paseo'
+        result = host_pkg.prepare(archive, report['sha256'], self.revision, output)
+        payload = output / 'plugins/paseo/windows-preview'
+        with zipfile.ZipFile(archive) as zipped:
+            self.assertEqual(sorted(p.relative_to(payload).as_posix() for p in payload.rglob('*') if p.is_file()),
+                             sorted(zipped.namelist()))
+            for name in zipped.namelist(): self.assertEqual((payload / name).read_bytes(), zipped.read(name))
+        identity = (output / 'plugins/paseo/server/shared/windows-preview-identity.ts').read_text()
+        self.assertIn(hashlib.sha256((payload / pkg.MANIFEST).read_bytes()).hexdigest(), identity)
+        self.assertEqual(result['core_version'], report['core_version'])
+        self.assertFalse(result['plugin_installed'])
+        with self.assertRaises(FileExistsError): host_pkg.prepare(archive, report['sha256'], self.revision, output)
+
+    def test_paseo_payload_requires_independent_digest_and_rejects_checkout_output(self):
+        archive, report = self.build()
+        output = self.area / 'rejected'
+        for wrong in ('', 'a' * 64):
+            with self.assertRaises(ValueError): host_pkg.prepare(archive, wrong, self.revision, output)
+        with self.assertRaises(ValueError): host_pkg.prepare(archive, report['sha256'], 'a' * 40, output)
+        self.assertFalse(output.exists())
+        with self.assertRaises(ValueError): host_pkg.prepare(archive, report['sha256'], self.revision, ROOT / 'rejected-preview-output')
 
 
 if __name__ == '__main__':
