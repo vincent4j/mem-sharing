@@ -1,6 +1,6 @@
 # 系统架构
 
-本页只说明组件、数据和执行边界。用户操作在 [Skill](../SKILL.md)、[安装](../INSTALL.md)及[操作路由](operations.md)；需求真源是[模块 PRD（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/prd/README.md)，验证状态见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)。
+本页只说明组件、数据和执行边界。用户操作在 [Skill](../SKILL.md)、[安装](../INSTALL.md)及[操作路由](operations.md)；需求真源是[模块 PRD（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)，验证状态见[验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)。
 
 ## 职责和数据
 

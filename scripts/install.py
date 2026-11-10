@@ -646,6 +646,10 @@ def interactive_install(args, report, *, stdin=None, stdout=None):
 
 
 def main(argv=None):
+    preview_args = list(sys.argv[1:] if argv is None else argv)
+    if preview_args and preview_args[0] == '--windows-preview':
+        from agm_core.windows_preview import main as preview_main
+        return preview_main(preview_args[1:])
     try:
         argv = list(sys.argv[1:] if argv is None else argv)
         seen = set()

@@ -1,6 +1,6 @@
 # 当前验收状态
 
-合成证据基线：[固定源码 `4fb22c09`](https://github.com/vincent4j/mem-sharing/tree/4fb22c0988426c06183d9f4faa71b7b00747a546)，2026-11-04。需求以[模块 PRD](../prd/README.md)为准；此页只记录证据和缺口，不重述操作流程。
+合成证据基线：[固定源码 `4fb22c09`](https://github.com/vincent4j/mem-sharing/tree/4fb22c0988426c06183d9f4faa71b7b00747a546)，2026-11-04。需求以[模块 PRD](../README.md)为准；此页只记录证据和缺口，不重述操作流程。
 
 | 层次 | 当前结论 | 边界 |
 | --- | --- | --- |
@@ -32,7 +32,7 @@
 - [历史安装/手工清理/重装验收](https://github.com/vincent4j/mem-sharing/blob/4fb22c0988426c06183d9f4faa71b7b00747a546/docs/acceptance/skill-first-real-reinstall.md)、[六家入口分发与原生发现边界](https://github.com/vincent4j/mem-sharing/blob/4fb22c0988426c06183d9f4faa71b7b00747a546/docs/acceptance/six-native-skill-distribution.md)。两者是各自当时的结果，不表示本轮已部署。
 - [其余阶段材料的固定目录](https://github.com/vincent4j/mem-sharing/tree/4fb22c0988426c06183d9f4faa71b7b00747a546/docs/acceptance)、[复盘原件](https://github.com/vincent4j/mem-sharing/tree/4fb22c0988426c06183d9f4faa71b7b00747a546/docs/retrospectives)。中间文档不再留在工作树；Git 保留完整原件与失败事实。
 
-`docs/context-keeper/` 由 Context Keeper 独立管理，本次保留全部文件，不改其正文与元数据。旧日志指向已删过程文件的历史相对链接保留，可按固定提交和原路径追溯。真实外置材料不在此次文档整理范围。
+原收口曾保留Context Keeper原库。2026-11-10用户明确退出三目录并把有效内容平铺docs根；原件完整备份在仓库外，当前状态见[项目现状](../project-state.md)、历史见[项目历史](../project-history.md)。旧固定提交与外置原件只作历史定位，不自动重建旧库。
 
 修复前后与部署前待验状态见Git 固定记录 `ed3fd58be3107b0180f7ac4f5a64be96eca46942:docs/acceptance/index.md`。历史失败不覆盖下述已完成的真机复验。
 

@@ -156,3 +156,5 @@ memSharing 用一份公共用户记忆和项目根 `AGENTS.md`，把六家 Agent
 完整设计：[DESIGN.md](DESIGN.md) · 安装操作：[INSTALL.md](INSTALL.md) · 会话操作：[SKILL.md](SKILL.md) · 文档地图：[llms.txt](llms.txt) · [验收总览（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/acceptance/index.md)
 
 完整职责边界、数据归还、自然语言触发与独立恢复见[整机卸载方案](docs/uninstall-design.md)。正式 payload 与真实宿主验收仍按发行/验收门槛执行。
+
+项目源码文档见[docs索引](docs/README.md)。本仓当前状态/历史已按用户要求平铺为docs根文档，不自动初始化旧的项目记录目录；上表的默认Context Keeper路径说明仍适用于其他项目。

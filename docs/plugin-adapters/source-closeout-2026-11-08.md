@@ -44,7 +44,7 @@
 
 ## 过程记录
 
-- [CK 共享、失败反例、修复与最终验收](../context-keeper/worklogs/2026-11-08-Context-Keeper通用触发真实共享准备.md)
-- [Paseo 界面、静态审查与真实界面范围](../context-keeper/worklogs/2026-11-07-Paseo页面体验改进与真实界面验收.md)
+- [CK 共享、失败反例、修复与最终验收](../project-history.md)
+- [Paseo 界面、静态审查与真实界面范围](../project-history.md)
 
 原始测试输出、冻结差异和独立审核报告留在本机证据目录，路径见上述日志。原生会话导出、用户记忆全文和安装备份不进入仓库。

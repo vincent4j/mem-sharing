@@ -2,6 +2,7 @@ import ctypes
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import Mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
 from agm_core import windows_native as native
 
@@ -36,3 +37,30 @@ class WindowsNativePortableTests(unittest.TestCase):
             with native.inspect_path('C:\\'):
                 self.fail('Unsupported host admitted')
         self.assertEqual(caught.exception.code, 'platform_unsupported')
+
+
+class SecurityCleanupTests(unittest.TestCase):
+    def api(self, free_result):
+        api = native._API.__new__(native._API)
+        api.k, api.a = Mock(), Mock()
+        def get_security(*args):
+            args[-1]._obj.value = 123
+            return 5  # fail before dereferencing the synthetic pointer
+        api.a.GetSecurityInfo.side_effect = get_security
+        api.k.LocalFree.return_value = free_result
+        api.fail = lambda code: (_ for _ in ()).throw(native.NativeInspectionError(code, code))
+        return api
+
+    def test_descriptor_freed_once_on_snapshot_failure(self):
+        api = self.api(None)
+        with self.assertRaises(native.NativeInspectionError) as caught:
+            api.security(1)
+        self.assertEqual(caught.exception.code, 'security_snapshot_unavailable')
+        api.k.LocalFree.assert_called_once()
+
+    def test_localfree_failure_is_observed(self):
+        api = self.api(123)
+        with self.assertRaises(native.NativeInspectionError) as caught:
+            api.security(1)
+        self.assertEqual(caught.exception.code, 'security_descriptor_free_failed')
+        api.k.LocalFree.assert_called_once()
