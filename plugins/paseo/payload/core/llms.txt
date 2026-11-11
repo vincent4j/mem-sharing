@@ -1,0 +1,12 @@
+# memSharing 文档地图
+
+- [README](README.md)：产品介绍与使用入口。
+- [INSTALL](INSTALL.md)：固定来源安装、选装与补装、独立 CK 尾步。
+- [SKILL](SKILL.md)：菜单、提案、选择即执行、共享与归还命令。
+- [DESIGN](DESIGN.md)：产品范围和设计原则。
+- [架构](docs/architecture.md)：数据、内核、适配器、所有权与事务边界。
+- [操作路由](docs/operations.md)：命令入口、故障、恢复与仍受支持的兼容能力。
+- [卸载合同](docs/uninstall-design.md)：全机范围、精确归还、外置恢复及宿主义务。
+- [模块 PRD（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)：安装、共享、项目规则、卸载恢复的当前需求真源。
+- [支持范围（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/README.md)：当前支持范围与未验边界。
+- [Paseo 手册（源码仓库）](https://github.com/vincent4j/mem-sharing/blob/main/docs/integrations/paseo.md)：薄宿主适配、发行、批准和依赖边界。
