@@ -1,0 +1,52 @@
+{
+  "channel": "windows-preview",
+  "clients": [
+    "zcode",
+    "workbuddy"
+  ],
+  "core_version": "0.2.0",
+  "entrypoint": "scripts/windows_preview.py",
+  "files": {
+    "INSTALL.md": {
+      "sha256": "afa76aec7c04680375ac2e94febf474c52bb595fe6b67a2e851a5707f23a7f14",
+      "size": 3446
+    },
+    "scripts/agm_core/__init__.py": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "scripts/agm_core/entries.py": {
+      "sha256": "36fded9f7712477e7323b4e8630349cc6cf10711c57be9fda2b80b0f115026bd",
+      "size": 5435
+    },
+    "scripts/agm_core/paths.py": {
+      "sha256": "65b1f2a12a5e96e915e4ad1daf0ce803baa869b128c1c84a009d9878344c94f9",
+      "size": 18231
+    },
+    "scripts/agm_core/platform_diagnostics.py": {
+      "sha256": "d85ca0ac9f37e97919b1126612903dc5430211de5322b4eea227be5169f63a74",
+      "size": 4314
+    },
+    "scripts/agm_core/transaction.py": {
+      "sha256": "4ee55c292d046323c282720143d848068c16d8cf741469ba6513ec76650525f2",
+      "size": 28299
+    },
+    "scripts/agm_core/windows_native.py": {
+      "sha256": "57015e2daf0cfbe6ab2f0c72b78e7c921bf8df97c35550edafbe8c1131221a22",
+      "size": 19202
+    },
+    "scripts/agm_core/windows_preview.py": {
+      "sha256": "8189883f90b0eab7b2b831eaba895add6146de79e5329c5c2702e539bfb54125",
+      "size": 17752
+    },
+    "scripts/windows_preview.py": {
+      "sha256": "6160c019436f0222b7e7d54c0237ec322ea2cb427903af607272ce4837244e9c",
+      "size": 328
+    }
+  },
+  "general_windows_support": false,
+  "preview_revision": "fef7fe82ccf7927389ec3d0838b1730c32ae1a74",
+  "repository": "https://github.com/vincent4j/mem-sharing",
+  "schema": "memsharing-windows-preview-package-1",
+  "upgrade_or_migration": false
+}
