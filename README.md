@@ -23,12 +23,14 @@ Codex 记住的偏好，Claude 接着用；昨天做到一半的工作，今天�
 - 📋 **昨天做到一半，今天从头交代？** 方案昨天定好了、坑昨天踩完了，今天开个新会话，它完全不记得昨天做到哪里。
 - 🧩 **各写一份，越写越散？** Codex 读 `AGENTS.md`，Claude 读 `CLAUDE.md`，WorkBuddy 只认自己的记忆文件——同一个项目，约定散在三处。
 
-memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到你常用的每个 Agent：习惯说一遍各家生效；项目记忆以项目根 `AGENTS.md` 为唯一来源，各家同读；需要记录项目经历时，由Context Keeper 负责保存、查找与续接。
+memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到你常用的每个 Agent：习惯说一遍各家生效；项目记忆以项目根 `AGENTS.md` 为唯一来源，各家同读；需要记录项目经历时，由 Context Keeper 负责保存、查找与续接。
 
 ---
 
 <a id="安装"></a>
 ## 🚀 安装
+
+**已在 macOS 和 Windows 验收通过。** 具体适用环境、各 Agent 与功能的验收范围见[支持说明](docs/README.md#平台与已验证范围)。
 
 把这一句话复制给正在使用的 Agent：
 
@@ -102,7 +104,7 @@ memSharing 用一份公共用户记忆和项目根 `AGENTS.md`，把六家 Agent
 
 安装时会识别并接入你已安装的受支持 Agent；以后换工具，也可以随时添加。
 
-**想要项目经历？** 在需要的项目里使用 `/context-keeper`：首次按 Context Keeper 的流程初始化记录库，记录库建在项目里、随 Git 走，各家 Agent 共用（公共用户记忆流程结束后最后询问是否安装；回复“安装”或“跳过”，回车不算同意）。询问名单来自本机实际安装者，独立于 memSharing 接入范围；固定上游的用户级安装目前支持 Codex、Claude Code 与 WorkBuddy；DeepSeek Harness、ZCode 与 OpenCode 暂不在其安装范围，不影响它们共享记忆。没装它，用户记忆与项目记忆照常工作。
+**想要项目经历？** 可独立选择安装 Context Keeper，在需要的项目里通过 `/context-keeper` 保存进度、续接任务或查找历史。首次使用按其流程启用项目记录库；具体操作与支持范围见 [Context Keeper 仓库使用说明](https://github.com/vincent4j/context-keeper)。安装需要单独确认，跳过不影响用户记忆和项目记忆共享。
 
 命令参数、停用与恢复的精确语义见 [SKILL.md](SKILL.md) 与 [INSTALL.md](INSTALL.md)。
 
