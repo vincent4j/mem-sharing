@@ -26,7 +26,7 @@
 | --- | --- |
 | macOS普通产品入口 | 已有真实安装/共享/退出实证；源码、文件适配、各原生客户端会话与发布仍分别验收，不承诺所有客户端/版本都同等通过 |
 | [Windows双端首次预览](platforms/windows-preview.md) | 固定DELL Win11 x64本地NTFS、ZCode3.17.2.9661/WorkBuddy5.9.3.0的首次安装、双向新增/新会话读取、退出保全已验证；非一般Windows生产入口 |
-| [Windows完整适配目标](platforms/windows-support.md) | 更多客户端/配置、升级迁移、权限与恢复等尚未完成；普通生产平台保护不变 |
+| [Windows完整适配目标](platforms/windows-support.md) | 已补 Codex、Claude Code、DeepSeek Harness、OpenCode 的官方 Windows 目录及 Mac 对照；各家运行验收、升级迁移与恢复分别记录，普通生产平台保护不变 |
 | [Windows Paseo 双端预览](integrations/paseo.md#windows-预览接线与候选准备) | 固定 DELL 已验安装、状态/新增与双客户端新会话读取，ZCode 新增→WorkBuddy 读取已验；反向写入跳过，实际退出/重装待验，未发布 |
 | [Windows 可选 Context Keeper](integrations/paseo.md#windows-可选-context-keeper) | 固定 DELL 已验安装、技能加载和 WorkBuddy 原生客户端保存→独立新会话续接；收尾修复已审核并部署，Paseo WorkBuddy 运行入口仍需登录，其余边界见安装说明 |
 | Linux/WSL与其他架构 | 未准入，不从其他平台或文件测试推定支持 |

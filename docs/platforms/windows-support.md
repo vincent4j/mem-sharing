@@ -30,20 +30,53 @@
 
 ## 3. 六家能力矩阵与准入
 
-下表的路径只是**现有 darwin 表的比对线索，不是 Windows 原生路径声明**。Windows 的 HOME/配置目录覆盖、App 与 CLI 差异、Skill 搜索根、规则导入语法均须取官方来源并在真实固定版本复验。不将 `.app`、POSIX 可执行位或目录存在用于 Windows 强安装判据。
+按客户端分别记录路径依据、实现接线和宿主运行结果。Codex、Claude Code、DeepSeek Harness、OpenCode 的官方默认目录已核对，详见下方路径表；官方目录确认不等于本项目已安装或客户端已加载。Windows 的 HOME/配置目录覆盖、App 与 CLI 差异及实际规则加载仍须按目标版本核验。不将 `.app`、POSIX 可执行位或目录存在用于 Windows 强安装判据。
 
 | 客户端 | 当前线索 | Windows 必须关闭的独有验证门 | 当前状态 |
 |---|---|---|---|
-| Codex | `.codex/AGENTS.md`，项目 AGENTS；`.agents/skills` 与专属 roots | CLI/App 分别识别；自定义配置根；用户规则与 Skill 在新会话可发现并读取 | 所有 Windows 层待验 |
-| Claude Code | `.claude/CLAUDE.md`，`@AGENTS.md` | 原生 Windows 执行形态、导入路径含空格/中文、已有 CLAUDE 正文和引用幂等 | 所有 Windows 层待验 |
+| Codex | `.codex/AGENTS.md`，项目 AGENTS；`.agents/skills` 与专属 roots | CLI/App 分别识别；自定义配置根；用户规则与 Skill 在新会话可发现并读取 | 官方默认目录已核对；本项目 Windows 安装与新会话加载未执行 |
+| Claude Code | `.claude/CLAUDE.md`，`@AGENTS.md` | 原生 Windows 执行形态、导入路径含空格/中文、已有 CLAUDE 正文和引用幂等 | 官方默认目录已核对；本项目 Windows 安装与新会话加载未执行 |
 | WorkBuddy | `.workbuddy/MEMORY.md`，项目 `.workbuddy/memory/MEMORY.md` | 桌面实际安装证据；用户约定入口和项目桥接实际加载；不能以目录残留认定安装 | 仅DELL首次预览已验；完整安装/升级/迁移与其他配置待验 |
-| DeepSeek Harness | `.dsh/AGENTS.md`、项目 AGENTS | 目标 Windows 发行形态是否存在；配置根及 Skill 查找；原生规则加载 | 所有 Windows 层待验 |
+| DeepSeek Harness | `.dsh/AGENTS.md`、项目 AGENTS | 官方 Windows 桌面发行已确认；自定义配置根、Skill 查找及原生规则实际加载 | 官方默认目录已核对；本项目 Windows 安装与新会话加载未执行 |
 | ZCode | `.zcode/AGENTS.md`、项目 AGENTS | 目标发行版本、配置根/覆盖与 Skill 查找；与其他共用 AGENTS 不重复消费 | 仅DELL首次预览已验；完整安装/升级/迁移与其他配置待验 |
-| OpenCode v2 | `.config/opencode/AGENTS.md`、项目 AGENTS | Windows 实际配置根而非推定 XDG；CLI/Desktop 分开；v2 入口加载 | 所有 Windows 层待验 |
+| OpenCode v2 | `.config/opencode/AGENTS.md`、项目 AGENTS | 默认配置根与 Skill 根已有官方依据；自定义环境、CLI/Desktop 差异及 v2 入口实际加载 | 官方默认目录已核对；本项目 Windows 安装与新会话加载未执行 |
 
 每家分别记录：官方资料/版本、强安装信号、文件接入、原生发现、模型实际读取、共享往返、卸载恢复。只有前两项不能判定支持；没有第三方 Windows 发行证据时维持不准入。未登录可报告文件层完成，但不得冒称模型读取通过。
 
 平台表建议保留六家结构，另增加显式准入能力/原因；校验器不得接受“待验路径”供写入使用。默认名单=强证据已安装且该版本已准入的交集；目录只作为提示。用户显式选择未准入客户端时展示原因并停止该项，不静默绕过。App/CLI 指向同一原生文件时只算一个真实来源。
+
+### 3.1 官方默认规则与 Skill 目录
+
+核对日期：2026-11-11。这里只读官方资料和官方仓库，没有安装或启动下列客户端。`H` 表示原生 Windows 用户主目录，默认写作 `%USERPROFILE%`；Mac 对应 `~`。表内 Windows 路径按官方的 home 相对目录展开；配置覆盖、WSL 的 Linux HOME 和远程 Host 必须另行解析，不能机械替换为当前应用电脑的目录。
+
+| Agent | Mac 默认用户级入口 | Windows 默认用户级入口 | 对照结论 |
+| --- | --- | --- | --- |
+| Codex | 规则 `~/.codex/AGENTS.md`；Skill `~/.agents/skills/<name>/SKILL.md` | 规则 `H\.codex\AGENTS.md`；Skill `H\.agents\skills\<name>\SKILL.md` | 默认相对结构一致。`CODEX_HOME` 可改变 Codex 配置/规则根；规则还存在 `AGENTS.override.md` 优先级。当前官方 Skill 文档列 `.agents/skills`，不能把它与 `.codex` 配置根混为一谈 |
+| Claude Code | 规则 `~/.claude/CLAUDE.md`；Skill `~/.claude/skills/<name>/SKILL.md` | 规则 `H\.claude\CLAUDE.md`；Skill `H\.claude\skills\<name>\SKILL.md` | 默认相对结构一致。官方明确 Windows 的 `~/.claude` 为 `%USERPROFILE%\.claude`，另有 `CLAUDE_CONFIG_DIR` 覆盖 |
+| DeepSeek Harness | 规则 `~/.dsh/AGENTS.md`；Skill `~/.dsh/skills/<name>/SKILL.md` | 规则 `H\.dsh\AGENTS.md`；Skill `H\.dsh\skills\<name>\SKILL.md` | 默认相对结构一致。官方实现按 OS HOME 解析；`DSH_HOME` 可覆盖，另读取共享 `.agents/AGENTS.md` 与 `.agents/skills`，共享根由 `DSH_AGENTS_HOME` 控制 |
+| OpenCode v2 | 规则 `~/.config/opencode/AGENTS.md`；Skill `~/.config/opencode/skills/<name>/SKILL.md` | 规则 `H\.config\opencode\AGENTS.md`；Skill `H\.config\opencode\skills\<name>\SKILL.md` | 官网默认结构一致，不把用户根改写为 AppData。官方另列 `.claude/skills`、`.agents/skills` 兼容搜索根。机器级目录不同：Mac 为 `/Library/Application Support/opencode`，Windows 为 `%ProgramData%\opencode` |
+
+官方依据：
+
+- Codex：[Windows 用户根](https://learn.chatgpt.com/docs/app/windows#share-config-auth-and-sessions-with-wsl)、[AGENTS.md 与 CODEX_HOME](https://learn.chatgpt.com/docs/agent-configuration/agents-md)、[Skill 搜索根](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills)。
+- Claude Code：[Windows 配置目录](https://code.claude.com/docs/en/settings#find-or-create-your-settings-files)、[用户规则](https://code.claude.com/docs/en/memory#choose-where-to-put-claudemd-files)、[个人 Skill](https://code.claude.com/docs/en/skills)。
+- DeepSeek Harness：[官方开发文档入口](https://www.deepseek.com/en/harness/)、[Skill 搜索顺序](https://deepseek-harness.github.io/deepseek-harness/en/reference/subsystems/skills#local-discovery-priority)、[配置根定义](https://deepseek-harness.github.io/deepseek-harness/en/reference/config-catalog)、[官方 HOME 解析实现](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/util/home-paths/src/index.ts)、[官方用户规则发现实现](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/context/agent-instructions/src/files.ts)。
+- OpenCode v2：[配置目录](https://opencode.ai/docs/config/#locations)、[规则目录](https://opencode.ai/docs/instructions/#scope)、[Skill 搜索根](https://opencode.ai/docs/skills/#discovery)。本表使用 v2 文档，不混用 `/v1/` 规则页。
+
+本项目当前 `scripts/agm_core/paths.py` 的 Codex 薄 Skill 入口仍为 `.codex/skills`，与本次官网列出的 `.agents/skills` 存在差异；后续接线须核对目标版本的发现规则和已有安装归属，不在路径核查时迁移、覆盖或补装。Claude Code、DeepSeek Harness 与 OpenCode 的现有默认薄入口目录分别与上表一致。`scripts/agents.json` 当前仍只声明 darwin，不因文档路径确认自动放开 Windows 写入。
+
+### 3.2 程序安装位置与接入目录的区别
+
+规则/Skill 目录不是应用程序目录。应用本体不能沿用 Mac `.app` 路径作为 Windows 探测依据，也不能从下列程序位置推断规则已经加载：
+
+| Agent | 官方明确的 Windows 程序安装位置或规则 |
+| --- | --- |
+| Codex | 独立 CLI 安装器的默认命令目录为 `%LOCALAPPDATA%\Programs\OpenAI\Codex\bin`；npm 安装取实际全局包位置，桌面应用采用 MSIX 部署。不能对这些安装方式写死同一个 EXE 目录。见[官方 Windows 部署](https://learn.chatgpt.com/docs/enterprise/windows-deployment#set-the-installation-context) |
+| Claude Code | 原生安装命令为 `%USERPROFILE%\.local\bin\claude.exe`，版本文件在 `%USERPROFILE%\.local\share\claude`；Mac 原生启动入口为 `~/.local/bin/claude`，指向 `~/.local/share/claude/versions/`。WinGet/npm 等安装形态分别识别。见[官方安装与卸载](https://code.claude.com/docs/en/setup#uninstall-a-native-installation) |
+| DeepSeek Harness | 官方确认 Windows 桌面版，安装器为当前用户安装且目录可编辑；本次所读官方说明未给出可跨版本写死的默认应用绝对目录，不能由 `.dsh` 反推 EXE 位置。桌面附带命令为安装目录中的 `resources/runtime/cli/bin/dsh.cmd`；Mac 对应脚本，命令管理入口可创建 `/usr/local/bin/dsh`。见[官方 Desktop 说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md#windows-installer-interface) |
+| OpenCode v2 | 官网提供 Windows CLI 独立二进制及桌面下载，并明确 Windows 不支持页面列出的包管理器安装；独立二进制的存放目录由用户选择，不能编造固定目录。规则/Skill 根仍按上表处理。见[官方安装入口](https://opencode.ai/docs/#cli)，实际路径可由[只读 paths 命令](https://opencode.ai/docs/cli/#paths)查询，但本轮未执行 |
+
+对外逐家说明“官方目录已确认”“当前实现是否一致”“实际宿主运行是否验收”，不以总数替代具体结论，也不把官网路径核对写成实际安装成功。
 
 ## 4. 用户全旅程
 
@@ -57,12 +90,12 @@
 | 首次共享 | 完整读原文与语境；两块连续编号，展示全部合格待选；查看原文零写；选择即执行 | 专属/未知保留，空/缺失与读失败分开；公共和入口核验后才删精确源片段 |
 | 再次安装/补装 | 同版同范围幂等零写；仅补本次选定的新客户端 | 新检测结果不得追溯扩大旧批准；不覆盖陌生同名目录 |
 | 增量共享 | 保留公共前缀、源次数、私文与合法公共后续编辑；等价提案仍绑定整文件基线 | CRLF/LF 或编码差异不当作字节相等；不修改公共字节来“适配 Windows” |
-| 项目接入 | Git 主工作目录首次接入；保留 AGENTS/CLAUDE 全文，仅补当前执行者入口 | disabled、非 Git、linked worktree 跳过；路径别名不重复登记；CK 不自动初始化 |
+| 项目接入 | Git 主工作目录首次接入；保留 AGENTS/CLAUDE 全文，仅补当前执行者入口 | disabled、非 Git、linked worktree 跳过；路径别名不重复登记；Context Keeper 不自动初始化 |
 | 升级/回滚 | 固定版本及代码清单；保留数据、来源链、入口；验证后提交台账 | 不动 dirty checkout；不做逆 schema；失败保留恢复材料，不降级洗台账 |
 | 独立归还 | 公共完整正文直接还回各处原生来源，次数与上下文可核对 | 不只写备份链接；来源漂移或 producer 链不足时停止 |
-| 全机卸载 | 精确预览和授权覆盖所有已登记客户端；先归还核验，再删已知产品资产 | 未知资产保留；不删 CK、客户端、账号及无关插件；备份留待明确清理 |
+| 全机卸载 | 精确预览和授权覆盖所有已登记客户端；先归还核验，再删已知产品资产 | 未知资产保留；不删 Context Keeper、客户端、账号及无关插件；备份留待明确清理 |
 | 崩溃/占用后恢复 | 外置清单+备份+恢复入口能在核心已删除后工作；明确待恢复状态 | 不偷锁、不按超时自动强解，不以重装绕过未完成事务 |
-| Context Keeper 尾步 | 公共整理完成/明确跳过后单独询问；按上游现场能力列实际支持名单 | 不借 memSharing Windows 支持承诺 CK Windows 支持；上游不支持时可跳过并说明 |
+| Context Keeper 尾步 | 公共整理完成/明确跳过后单独询问；按上游现场能力列实际支持名单 | 不借 memSharing Windows 支持承诺 Context Keeper Windows 支持；上游不支持时可跳过并说明 |
 
 ## 5. 平台适配方案
 
@@ -106,7 +139,7 @@ Git 来源固定 commit、tree 与逐文件哈希；Git for Windows 的 autocrlf
 
 ### 5.5 历史兼容与 Paseo
 
-历史 schema、producer、来源替代和 CK 通用触发沿既有规则，不为 Windows 放宽环检测、整文件基线或来源证明。schema v1/v2 只读诊断；v0 只复制已授权内容且旧源原地保留。macOS 备份复制到 Windows 不自动成为可恢复本机安装：平台、路径、权限表示和来源身份不匹配时拒绝自动恢复，单独迁移方案另审。
+历史 schema、producer、来源替代和 Context Keeper 通用触发沿既有规则，不为 Windows 放宽环检测、整文件基线或来源证明。schema v1/v2 只读诊断；v0 只复制已授权内容且旧源原地保留。macOS 备份复制到 Windows 不自动成为可恢复本机安装：平台、路径、权限表示和来源身份不匹配时拒绝自动恢复，单独迁移方案另审。
 
 Paseo 不列首批阻断依赖：Python 原生入口可以独立交付。插件后续需单独核实 Windows 宿主发行、插件加载、Node 进程路径与引号、Python/Git 获取、运行时资产许可与 hash、UI 调用及卸载义务；[插件验收](../README.md)沿用分层口径。未完成前插件展示“不支持此平台”，不能隐藏错误后继续或复用 macOS 下载资产。
 
@@ -132,10 +165,10 @@ Paseo 不列首批阻断依赖：Python 原生入口可以独立交付。插件�
 | 层级 | 必测范围 | 通过条件 |
 |---|---|---|
 | L0 源码/静态 | 未知平台拒绝、六家准入、无 macOS 回退、参数列表启动子进程 | 审查与结构测试通过；不冒称 Windows 可用 |
-| L1 跨平台合成 | bytes/编码、别名/链接、来源次数、等价、CK 替代反例、权限失败、占用、并发、各阶段故障 | 保护性失败零写或明确可恢复；完整往返不丢字节 |
+| L1 跨平台合成 | bytes/编码、别名/链接、来源次数、等价、Context Keeper 替代反例、权限失败、占用、并发、各阶段故障 | 保护性失败零写或明确可恢复；完整往返不丢字节 |
 | L2 Windows 隔离真实文件系统 | 普通用户临时根，NTFS、中文空格、不同盘、PowerShell；真实句柄占用和 ACL | 不是 mock sys.platform；完整安装→两轮共享→归还→卸载→恢复→fresh 成功 |
 | L3 Windows 客户端真机 | 每家独立：强安装事实、Skill 发现、规则链、全新会话读到唯一测试标记 | 记录实际加载证据；有文件≠已读，模型口述≠完整链证明 |
-| L4 用户旅程 | 用户从 README 普通请求开始，默认/部分选择、查看/拒绝、增量、项目、升级、退出 | 不需维护者隐藏命令；私文、未选项、CK 与备份符合范围 |
+| L4 用户旅程 | 用户从 README 普通请求开始，默认/部分选择、查看/拒绝、增量、项目、升级、退出 | 不需维护者隐藏命令；私文、未选项、Context Keeper 与备份符合范围 |
 | macOS 回归 | 原有 Python unit/integration；代表性安装共享退出；插件受影响时其类型检查和测试 | 原支持不退化，Windows 分支不改变既有来源/权限语义 |
 
 建议 CI：固定 Windows runner 镜像 x64（具体 OS 与 Windows 11 真机差异必须记录），Python 3.9、用户报告的 3.13 系列、实施时选定稳定版本；macOS 跑最低和主测 Python。3.9 无法在 runner 获取时不能静默删格，需单列兼容任务或评审提高最低版本。Git autocrlf=true/false/input 用独立配置组合，避免污染全局；PowerShell 主测，cmd 调用烟测。ARM64、网络盘、WSL 明确不在绿色矩阵内。
