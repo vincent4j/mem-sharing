@@ -55,9 +55,9 @@ Windows 首版为固定 DELL Windows 11、本地 NTFS 上 ZCode/WorkBuddy 的限
 
 The Windows preview is limited to ZCode and WorkBuddy on the validated DELL Windows 11 setup with local NTFS. It supports explicit shared-memory additions, exit/export preview, and optional Context Keeper installation. Memory fusion, upgrades and project setup are outside its scope. The host needs working Python 3.9+ and Git for Context Keeper; Windows runtimes are not downloaded automatically. Source acquisition and installation require separate confirmations. If the upstream version differs from the existing skill, the operation stops and preserves the current source pending a separate upgrade review.
 
-固定 DELL 已验安装、公共记忆新增与双客户端新会话读取，WorkBuddy 原生客户端已完成 Context Keeper 保存→独立新会话续接。收尾修复已独立审核并部署；实际退出/重装、一般 Windows 及其余未验分支不据此宣称支持。Paseo 中 WorkBuddy 的运行入口仍需单独登录。该插件版本尚未发布。
+固定 DELL 已验安装、公共记忆新增与双客户端新会话读取，WorkBuddy 原生客户端已完成 Context Keeper 保存→独立新会话续接。收尾修复已独立审核并部署；实际退出/重装、一般 Windows 及其余未验分支不据此宣称支持。Paseo 中 WorkBuddy 的运行入口仍需单独登录。本插件随 v0.2.0 提供，Windows 保持上述限定预览范围。
 
-Installation, shared-memory additions and fresh-session reads in both clients have been verified on this DELL. Native WorkBuddy completed a Context Keeper save-to-fresh-session resume flow. The final fixes passed independent review and deployment checks. Actual exit/reinstallation, general Windows support and other unverified branches remain outside that conclusion. The WorkBuddy runtime launched through Paseo still requires its own login. This plugin version has not been released.
+Installation, shared-memory additions and fresh-session reads in both clients have been verified on this DELL. Native WorkBuddy completed a Context Keeper save-to-fresh-session resume flow. The final fixes passed independent review and deployment checks. Actual exit/reinstallation, general Windows support and other unverified branches remain outside that conclusion. The WorkBuddy runtime launched through Paseo still requires its own login. This plugin is included in v0.2.0; Windows remains within the limited preview scope above.
 
 ## 🔒 文件和数据
 
