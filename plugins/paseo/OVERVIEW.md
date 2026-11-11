@@ -43,6 +43,10 @@ What you can do in Paseo
 
 Search for **memSharing** in the Command Center to check your setup or enable or disable memory for the current project. Setup and project changes are previewed for confirmation; fusion executes your explicit selection directly. After the shared user memory workflow ends, you can independently choose to install Context Keeper. Disabling a project preserves its memory and work history.
 
+Context Keeper 源码来自官方仓库 [vincent4j/context-keeper](https://github.com/vincent4j/context-keeper) 的当前 `main` 分支，不随本插件打包。第一次确认允许获取并核验源码；随后展示安装计划，只有你第二次确认安装后，才执行 Context Keeper 自身的安装器。拒绝安装不会替换正在使用的技能；已有源码与当前 `main` 版本不同时会停止，保留现有版本，另行审核升级。
+
+Context Keeper source comes from the current `main` branch of its official repository, [vincent4j/context-keeper](https://github.com/vincent4j/context-keeper), and is not bundled with this plugin. The first confirmation allows source retrieval and verification. The plugin then previews the installation plan and runs Context Keeper’s own installer only after your second confirmation to install. Declining installation leaves the active skill unchanged. If the existing source differs from the current `main` revision, the operation stops and preserves the installed version pending a separate upgrade review.
+
 ## ⚙️ 使用条件
 
 Requirements

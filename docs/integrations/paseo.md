@@ -4,6 +4,8 @@
 
 ## 单仓与发行来源
 
+新版交付、商店审核和用户更新按[插件更新工作流](paseo-update.md)执行；发行生成与验证细节仍以发行工具说明为准。
+
 Python 业务只维护 `scripts/agm_core`，项目与机器入口分别为 `scripts/agm.py`、`scripts/install.py`。Node 公共代码只维护 `plugins/shared/src`，通过 `sync-to-plugins.mjs` 生成到 `plugins/paseo/server/shared/common`；许可披露同步进入插件目录。宿主子目录不依赖安装后的父仓库文件。
 
 源码提交 S 必须干净且固定完整 SHA。生成器从 S 的八份受管文档与 scripts 集合生成 `payload/core`、`payload/release.json`、根 `release/core-release.json` 和 `server/shared/release-identity.ts`。R 仅包含允许的生成变化，S/R 的受管字节和模式必须相同。内核身份记录 S，获取来源记录 R；摘要校验只证明完整性，不自证官方来源。开发 identity 保持空哨兵，不能手填摘要使开发目录冒充发行。

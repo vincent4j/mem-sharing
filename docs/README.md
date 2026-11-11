@@ -17,6 +17,7 @@
 - [操作路由](operations.md)：常用命令、批准、故障和兼容入口。
 - [卸载技术合同](uninstall-design.md)：精确归还、producer链、宿主义务和恢复条件。
 - [Paseo维护](integrations/paseo.md)：薄宿主适配、固定来源、依赖供应、批准、取消及发行。
+- [Paseo 插件更新工作流](integrations/paseo-update.md)：新版准备、商店审核、用户更新及失败处理。
 
 前三份路径是发行文档闭包的一部分，保持兼容位置；其他文档按产品、平台和集成分类。
 

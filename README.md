@@ -42,7 +42,7 @@ memSharing 把「用户记忆 + 项目记忆 + 项目经历（可选）」接到
 
 按回车开始安装，装好就能使用；随后自动只读对比各 Agent 已有记忆，分“建议合并的相同规则”与“需要你确认是否合并”两块给你选，明确选定即按方案执行，不再二次确认；查看保持零写。项目经历可选安装 Context Keeper。
 
-也可作为 Paseo 插件安装，插件名称为 Memory Sharing & Fusion。
+也可通过 [Paseo 官方插件商店](https://paseo.sh/plugins/vincent4j/memsharing)安装 **Memory Sharing & Fusion**。后续发布与更新见[插件更新工作流](docs/integrations/paseo-update.md)。
 
 完整安装对话见 [INSTALL.md](INSTALL.md)。
 
@@ -58,7 +58,7 @@ memSharing 用一份公共用户记忆和项目根 `AGENTS.md`，把六家 Agent
 - **无需额外部署。** 不需要单独配置云端模型、Hook 或常驻服务，继续使用你现有的 Agent。
 - **一句话开始安装。** 把安装说明发给 Agent，按提示确认即可，不用自己配置服务和接口。
 
-![memSharing 工作原理：六家 Agent 各自读写汇聚到公共用户记忆与项目根 AGENTS.md 两个共享来源，Agent 独有内容原位保留，Context Keeper 可选独立管理项目经历](https://raw.githubusercontent.com/vincent4j/mem-sharing/main/docs/assets/memory-sharing-workflow.png)
+![memSharing 工作原理：六家 Agent 各自读写汇聚到公共用户记忆与项目根 AGENTS.md 两个共享来源，Agent 独有内容原位保留，Context Keeper 可选独立管理项目经历](https://raw.githubusercontent.com/vincent4j/mem-sharing/main/docs/assets/memsharing-workflow.png)
 
 | 名称 | 解决什么问题 | 放在哪里 |
 |---|---|---|
