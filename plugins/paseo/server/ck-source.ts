@@ -2,7 +2,7 @@
 // The Python kernel revalidates the acquired commit and tracked bytes.
 import fs from "node:fs";
 import path from "node:path";
-import { hostname } from "node:os";
+import { hostname, devNull } from "node:os";
 import { ensureRealDirectory } from "./owned-paths";
 import type { Runner } from "./orchestrator";
 
@@ -14,7 +14,7 @@ export function ckDestination(home: string): string {
 export function ckAcquisitionPlan(home: string): Record<string, unknown> {
   return { command: "prepare-context-keeper-source", home, host: hostname(), url: CK_URL,
     branch: CK_BRANCH, destination: ckDestination(home), network: "Git fetch from current upstream main",
-    installs_context_keeper: false, agent_support: "determined by the acquired upstream installer plan" };
+    installs_context_keeper: false, updates_existing_source: false, agent_support: "determined by the acquired upstream installer plan" };
 }
 
 export async function acquireCkSource(home: string, git: string, runner: Runner, signal?: AbortSignal): Promise<string> {
@@ -30,7 +30,7 @@ export async function acquireCkSource(home: string, git: string, runner: Runner,
   const identity = fs.lstatSync(lock);
   let stage: string | undefined;
   const run = async (args: string[]): Promise<string> => {
-    const out = await runner.run([git, "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", ...args], { timeoutMs: 120_000, signal });
+    const out = await runner.run([git, "-c", `core.hooksPath=${devNull}`, "-c", "core.fsmonitor=false", "-c", "core.autocrlf=false", ...args], { timeoutMs: 120_000, signal });
     if (out.kind !== "completed" || out.exitCode !== 0) throw new Error(`Context Keeper Git acquisition ${out.kind}; outcome unknown, inspect operation before retry`);
     return (out.stdout ?? "").trim();
   };
@@ -45,13 +45,9 @@ export async function acquireCkSource(home: string, git: string, runner: Runner,
     }
   };
   try {
-    if (fs.existsSync(destination)) {
-      await verify(destination, false);
-      await run(["-C", destination, "fetch", "--no-tags", "origin", "+refs/heads/main:refs/remotes/origin/main"]);
-      await run(["-C", destination, "merge", "--ff-only", "refs/remotes/origin/main"]);
-      await verify(destination);
-      return destination;
-    }
+    // Existing clients may load this checkout through live Skill aliases.
+    // Fetch only into a fresh staging checkout, never into their active source.
+    if (fs.existsSync(destination)) await verify(destination, false);
     stage = fs.mkdtempSync(path.join(parent, ".acquire-"));
     await run(["init", "--quiet", stage]);
     await run(["-C", stage, "remote", "add", "origin", CK_URL]);
@@ -59,7 +55,17 @@ export async function acquireCkSource(home: string, git: string, runner: Runner,
     await run(["-C", stage, "checkout", "--quiet", "--detach", "refs/remotes/origin/main"]);
     await verify(stage);
     if (signal?.aborted) throw new Error("Context Keeper acquisition canceled");
-    if (fs.existsSync(destination)) throw new Error("Context Keeper destination appeared during acquisition");
+    if (fs.existsSync(destination)) {
+      await verify(destination, false);
+      if (await run(["-C", destination, "rev-parse", "HEAD"]) !== await run(["-C", stage, "rev-parse", "HEAD"])) {
+        throw new Error("Context Keeper 官方 main 已更新；当前技能源码保持不变，请单独审核升级，不能通过重新安装原地更新。");
+      }
+      // Same-version acquisition is safe; preserve the installed checkout and
+      // remove only the fresh, verified staging tree created by this operation.
+      fs.rmSync(stage, { recursive: true });
+      stage = undefined;
+      return destination;
+    }
     fs.renameSync(stage, destination);
     stage = undefined;
     return destination;

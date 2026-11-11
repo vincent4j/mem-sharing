@@ -26,6 +26,19 @@ export const windowsPreviewCancelRpc = defineRpc({
   name: "memsharing.windows-preview.cancel", input: z.object({}).strict(), output: jsonObject,
 });
 
+export const windowsCkPlanRpc = defineRpc({
+  name: "memsharing.windows-ck.plan", input: z.object({ operation: z.enum(["prepare", "install"]) }).strict(), output: jsonObject,
+});
+export const windowsCkConfirmRpc = defineRpc({
+  name: "memsharing.windows-ck.confirm", input: z.object({ confirmationToken: z.string().uuid() }).strict(), output: jsonObject,
+});
+export const windowsCkStatusRpc = defineRpc({
+  name: "memsharing.windows-ck.status", input: z.object({}).strict(), output: jsonObject,
+});
+export const windowsCkCancelRpc = defineRpc({
+  name: "memsharing.windows-ck.cancel", input: z.object({}).strict(), output: jsonObject,
+});
+
 const interpreterStatus = z.object({
   status: z.enum(["ready", "missing", "blocked", "unknown"]),
   selectedPath: z.string().optional(),

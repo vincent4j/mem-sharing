@@ -4,6 +4,7 @@ import { useRpc } from "@getpaseo/plugin/client";
 import type { PluginScreenProps } from "@getpaseo/plugin/client";
 import { hostPlatformRpc } from "../shared/contracts";
 import { WindowsStatusScreen, WindowsFlowScreen } from "./windows-preview";
+import { WindowsCkScreen } from "./windows-ck";
 
 // Route by the selected daemon, never React Native's client OS. A Windows
 // application connected to a Mac daemon must retain the Mac product flow.
@@ -16,7 +17,7 @@ export function PlatformScreen({ screen, children }: { screen: PluginScreenProps
     return () => { active = false; };
   }, [info]);
   if (mode === "macos") return children;
-  if (mode === "windows-preview") return screen.params.flow === "status" ? <WindowsStatusScreen {...screen} /> : <WindowsFlowScreen {...screen} />;
+  if (mode === "windows-preview") return screen.params.flow === "status" ? <WindowsStatusScreen {...screen} /> : screen.params.flow === "ck" ? <WindowsCkScreen {...screen} /> : <WindowsFlowScreen {...screen} />;
   return <View style={{ padding: 24, backgroundColor: screen.theme.colors.surface0, flex: 1 }}>
     <Text style={{ color: screen.theme.colors.foreground }}>{mode === "loading" ? "正在检查所选 Host…" : mode === "error" ? "无法确认 Host 平台，请重新打开页面。" : "此 Host 平台尚不支持记忆共享。"}</Text>
   </View>;

@@ -51,9 +51,13 @@ Requirements
 
 Supports macOS. Requires Paseo 0.13.2 or later, and a configured coding agent. Existing Python 3.9+ and Git can be reused; missing tools can be downloaded with separate approval. Project actions support Git main checkouts, not linked worktrees. Context Keeper follows its own process to enable project records.
 
-Windows 插件首版仅面向已验证 DELL 上的 ZCode/WorkBuddy 双端预览，提供明确新增的公共记忆与退出导出，不提供融合、升级、项目接入或 Context Keeper 安装。开发候选已在 DELL 的隔离 HOME 中通过 Paseo 0.15.3 的实际插件加载与后端操作验证；日常 DELL 安装和 Windows 界面的状态、预览、拒绝与确认新增已验证；Mac 界面已核对状态和已接入分支，当前候选的双客户端原生新会话读取、ZCode 聊天新增后由 WorkBuddy 新会话读回、退出预览与拒绝已验；反向聊天写入跳过，其余界面与功能分支仍待验收。该插件版本尚未发布。Windows 预览需要 Host PATH 中实际可用的 Python 3.9+，不自动下载 Windows 专用运行时。
+Windows 首版为固定 DELL Windows 11、本地 NTFS 上 ZCode/WorkBuddy 的限定预览。可共享明确新增的公共记忆、预览退出导出，并独立选择安装 Context Keeper；不提供旧记忆融合、升级或项目接入。需要 Host 上实际可用的 Python 3.9+；安装 Context Keeper 还需 Git，不自动下载 Windows 运行时。获取 Context Keeper 源码与安装分别确认；已有技能的版本变化会停止，保留当前源码，需另行审核升级。
 
-The first Windows plugin preview targets only the validated DELL ZCode/WorkBuddy setup, with explicit additions and export on exit. Fusion, upgrades, project setup and Context Keeper installation are outside its scope. A development candidate passed real plugin loading and backend operations on Paseo 0.15.3 in an isolated HOME on DELL. Daily installation on DELL and Windows UI status, preview, rejection and confirmed addition have been verified. The Mac status page and existing-installation branch have been checked. Fresh native sessions in both clients read the shared memory, and a new WorkBuddy session read an entry added through ZCode chat. Exit preview and rejection have also been checked. Reverse chat writes were skipped; other UI and functional branches remain unverified. This plugin version is not released. The Windows preview requires working Python 3.9+ on the host PATH and does not download a Windows runtime.
+The Windows preview is limited to ZCode and WorkBuddy on the validated DELL Windows 11 setup with local NTFS. It supports explicit shared-memory additions, exit/export preview, and optional Context Keeper installation. Memory fusion, upgrades and project setup are outside its scope. The host needs working Python 3.9+ and Git for Context Keeper; Windows runtimes are not downloaded automatically. Source acquisition and installation require separate confirmations. If the upstream version differs from the existing skill, the operation stops and preserves the current source pending a separate upgrade review.
+
+固定 DELL 已验安装、公共记忆新增与双客户端新会话读取，WorkBuddy 原生客户端已完成 Context Keeper 保存→独立新会话续接。收尾修复已独立审核并部署；实际退出/重装、一般 Windows 及其余未验分支不据此宣称支持。Paseo 中 WorkBuddy 的运行入口仍需单独登录。该插件版本尚未发布。
+
+Installation, shared-memory additions and fresh-session reads in both clients have been verified on this DELL. Native WorkBuddy completed a Context Keeper save-to-fresh-session resume flow. The final fixes passed independent review and deployment checks. Actual exit/reinstallation, general Windows support and other unverified branches remain outside that conclusion. The WorkBuddy runtime launched through Paseo still requires its own login. This plugin version has not been released.
 
 ## 🔒 文件和数据
 

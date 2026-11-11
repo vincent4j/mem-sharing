@@ -27,11 +27,12 @@
 | macOS普通产品入口 | 已有真实安装/共享/退出实证；源码、文件适配、各原生客户端会话与发布仍分别验收，不承诺所有客户端/版本都同等通过 |
 | [Windows双端首次预览](platforms/windows-preview.md) | 固定DELL Win11 x64本地NTFS、ZCode3.17.2.9661/WorkBuddy5.9.3.0的首次安装、双向新增/新会话读取、退出保全已验证；非一般Windows生产入口 |
 | [Windows完整适配目标](platforms/windows-support.md) | 更多客户端/配置、升级迁移、权限与恢复等尚未完成；普通生产平台保护不变 |
-| [Windows Paseo 双端预览](integrations/paseo.md#windows-预览接线与候选准备) | 固定 DELL/Paseo 0.15.3 已通过隔离 HOME 的 SDK RPC 闭环及日常 Host 安装、Windows 状态/新增/读回；当前候选双客户端新会话读回及 ZCode 新增→WorkBuddy 读取已验，反向写入跳过，其余功能分支待验，未发布 |
+| [Windows Paseo 双端预览](integrations/paseo.md#windows-预览接线与候选准备) | 固定 DELL 已验安装、状态/新增与双客户端新会话读取，ZCode 新增→WorkBuddy 读取已验；反向写入跳过，实际退出/重装待验，未发布 |
+| [Windows 可选 Context Keeper](integrations/paseo.md#windows-可选-context-keeper) | 固定 DELL 已验安装、技能加载和 WorkBuddy 原生客户端保存→独立新会话续接；收尾修复已审核并部署，Paseo WorkBuddy 运行入口仍需登录，其余边界见安装说明 |
 | Linux/WSL与其他架构 | 未准入，不从其他平台或文件测试推定支持 |
 
 ## 维护规则
 
 开发先检索本索引并只读命中文档。当前无独立生效合同文件；以模块PRD与明确支持边界为准。界面/模型读取结论要有对应客户端证据，状态字段或测试通过不替代真实运行。
 
-本仓不自动初始化PRD/Context Keeper旧目录或记录库；技能可用于语义整理，但不要init/ensure-bridge重建过程文档。其他项目的产品默认CK行为不变。正式发行、真实安装部署与Git提交合并分别按授权执行。
+本仓不自动初始化PRD/Context Keeper旧目录或记录库；技能可用于语义整理，但不要init/ensure-bridge重建过程文档。其他项目的产品默认 Context Keeper 行为不变。正式发行、真实安装部署与Git提交合并分别按授权执行。

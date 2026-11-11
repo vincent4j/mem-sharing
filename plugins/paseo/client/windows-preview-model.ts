@@ -1,6 +1,6 @@
 // Adapt capability-specific replies to the same presentation used on macOS.
 export type PreviewReply = Record<string, unknown>;
-export const WINDOWS_SCOPE = "Windows 目前仅支持此 DELL 上 ZCode 与 WorkBuddy 的双端预览：只共享明确新增的内容，保留原有私有记忆；暂不支持旧记忆融合、升级、项目接入或 Context Keeper 安装。";
+export const WINDOWS_SCOPE = "Windows 目前仅支持此 DELL 上 ZCode 与 WorkBuddy 的双端预览：只共享明确新增的内容，保留原有私有记忆；可独立选择安装 Context Keeper。暂不支持旧记忆融合、升级或项目接入。";
 export const WINDOWS_SETUP = "DELL Windows 11 x64、本地 NTFS、ZCode 3.17.2.9661 和 WorkBuddy 5.9.3.0，均使用默认用户配置。";
 export function previewOperation(flow: string, installed: boolean): "install" | "add" | "exit" {
   return flow === "uninstall" ? "exit" : installed ? "add" : "install";

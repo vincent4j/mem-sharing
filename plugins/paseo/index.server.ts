@@ -12,10 +12,12 @@ import { WINDOWS_PREVIEW_MANIFEST_SHA256 } from "./server/shared/windows-preview
 import { WindowsPreviewBinding, verifyPreviewSource } from "./server/windows-preview-source";
 import path from "node:path";
 import { WindowsPreviewHost } from "./server/windows-preview";
+import { WindowsCkHost } from "./server/windows-ck";
 import type { PluginRpcContract } from "@getpaseo/plugin";
 import type { ZodType, input as ZodInput, output as ZodOutput } from "zod";
 import {
   hostPlatformRpc, windowsPreviewStatusRpc, windowsPreviewPlanRpc, windowsPreviewConfirmRpc, windowsPreviewCancelRpc,
+  windowsCkPlanRpc, windowsCkConfirmRpc, windowsCkCancelRpc, windowsCkStatusRpc,
   fusionPreviewRpc, fusionProposeRpc, fusionSelectRpc, fusionConfirmRpc,
   dependencyPreviewRpc,
   dependencyConfirmRpc,
@@ -50,6 +52,10 @@ export default function contribute(server: PluginServerContext) {
     if (!previewSource) throw new Error("windows_preview_source_missing");
     return verifyPreviewSource(path.dirname(previewSource), WINDOWS_PREVIEW_MANIFEST_SHA256);
   } });
+  const windowsCk = new WindowsCkHost({ home: homedir(), previewSource: () => {
+    if (!previewSource) throw new Error("windows_preview_source_missing");
+    return verifyPreviewSource(path.dirname(previewSource), WINDOWS_PREVIEW_MANIFEST_SHA256);
+  } });
   server.handle(hostPlatformRpc, () => ({ platform: process.platform,
     mode: process.platform === "darwin" ? "macos" as const : process.platform === "win32" ? "windows-preview" as const : "unsupported" as const }));
   function previewHandle<I extends ZodType, O extends ZodType>(contract: PluginRpcContract<I, O>,
@@ -68,6 +74,10 @@ export default function contribute(server: PluginServerContext) {
   });
   previewHandle(windowsPreviewConfirmRpc, input => preview.confirm(input.confirmationToken));
   previewHandle(windowsPreviewCancelRpc, () => preview.cancel());
+  previewHandle(windowsCkPlanRpc, input => windowsCk.preview(input.operation));
+  previewHandle(windowsCkConfirmRpc, input => windowsCk.confirm(input.confirmationToken));
+  previewHandle(windowsCkStatusRpc, () => windowsCk.status());
+  previewHandle(windowsCkCancelRpc, () => windowsCk.cancel());
   let active: Orchestrator | undefined;
   const cancelAll = () => {
     for (const flow of ["dependency", "bootstrap", "machine", "enable", "uninstall", "stagingCleanup", "ck", "recover", "ckUninstall", "fusion"] as const) active?.cancel(flow);

@@ -20,18 +20,18 @@ Python 业务只维护 `scripts/agm_core`，项目与机器入口分别为 `scri
 
 | 项目 | macOS Host | Windows Host |
 | --- | --- | --- |
-| Python/Git 探测 | 标准目录与 PATH，保留 CommandLineTools stub 保护 | 按分号拆分 PATH，查找 python.exe/python3.exe 与 git.exe；盘符、空格和中文路径已有合成测试；Python 已在固定 DELL 实际运行，Git 探测和一般 Windows 仍待验 |
+| Python/Git 探测 | 标准目录与 PATH，保留 CommandLineTools stub 保护 | 按分号拆分 PATH，查找 python.exe/python3.exe 与 git.exe；盘符、空格和中文路径已有合成测试；Python/Git 已在固定 DELL 实际探测与运行，一般 Windows 仍待验 |
 | 缺依赖时的私有供应 | 已有固定 arm64/x86_64 资产，按原批准流程准备 | 无固定资产，不自动借用 macOS 包 |
 | 插件发行载荷与普通安装 | 复用当前发行来源、原内核计划与批准 | 普通安装继续拒绝；独立预览载荷使用八文件闭包和包内生成摘要 |
 | Windows 双端预览 | 不适用 | 开发候选在固定 DELL/Paseo 0.15.3 的隔离 HOME 已通过真实加载及状态/安装/新增/退出 SDK RPC；部分应用 UI 已验，其余分支见下文，未正式发行 |
 
-Windows 预览不经过 POSIX 模式的普通发行载荷校验或私有依赖供应，也不执行 Git、下载器及其他子进程。独立清单核字节、大小、完整成员闭包，拒绝链接/硬链接和额外文件；实际文件父链、NTFS/reparse 与写保护复用原生预览内核。普通产品的权限校验和 darwin 保护不变。普通 Node 进程树取消与依赖供应仍未完成 Windows 适配，不因本预览绕开这些能力而宣称已解决。
+Windows 公共记忆共享预览流程不经过 POSIX 模式的普通发行载荷校验或私有依赖供应，仅调用预览 Python 桥接，不执行 Git、下载器及其他子进程；可选 Context Keeper 是下述独立流程，会调用 Git 获取源码及 Python 上游安装器。独立清单核字节、大小、完整成员闭包，拒绝链接/硬链接和额外文件；实际文件父链、NTFS/reparse 与写保护复用原生预览内核。普通产品的权限校验和 darwin 保护不变。普通 Node 进程树取消与依赖供应仍未完成 Windows 适配，不因本预览绕开这些能力而宣称已解决。
 
-限定预览只调用[Windows 双端首次预览](../platforms/windows-preview.md)既有内核，不获得普通融合、升级、项目接入或 Context Keeper 安装能力。完整能力须另按[Windows 完整适配目标](../platforms/windows-support.md)完成内核与真实客户端验收。发行载荷须在源码适配和相应验证完成后，沿下述固定来源流程重新生成；不直接编辑旧 payload 或沿用同版覆盖。
+限定预览只调用[Windows 双端首次预览](../platforms/windows-preview.md)既有内核，不获得普通融合、升级或项目接入能力；可选 Context Keeper 使用下述独立适配器与上游安装器。完整能力须另按[Windows 完整适配目标](../platforms/windows-support.md)完成内核与真实客户端验收。发行载荷须在源码适配和相应验证完成后，沿下述固定来源流程重新生成；不直接编辑旧 payload 或沿用同版覆盖。
 
 ### Windows 预览接线与候选准备
 
-客户端先查询 `memsharing.host.platform`，按所选 daemon 路由，同一套界面可由 Mac/Windows 应用连接。Windows 只开放 `windows-preview.status/plan/confirm/cancel`；直接调用普通生产 RPC 也会在读取配置或创建暂存前拒绝。项目/Context Keeper/普通恢复命令显示范围说明，不落入普通安装。状态读取公共正文供用户查看，不启动 Agent；模型新会话读取仍单独验收。
+客户端先查询 `memsharing.host.platform`，按所选 daemon 路由，同一套界面可由 Mac/Windows 应用连接。Windows 公共记忆共享预览仅开放 `windows-preview.status/plan/confirm/cancel`，可选 Context Keeper 另开放下述 `windows-ck.plan/confirm/cancel/status`；直接调用普通生产 RPC 也会在读取配置或创建暂存前拒绝。项目/普通恢复命令显示范围说明，不落入普通安装。状态读取公共正文供用户查看，不启动 Agent；模型新会话读取仍单独验收。
 
 桥接使用 Host PATH 中实际探测成功的 Python 3.9+，参数为 `-I -S -B -X utf8 -c`，固定程序从标准输入消费私有计划。Windows 11 x64 与原生文件系统准入仍由桥接/内核检查。安装、新增和退出均先调用原内核计划接口，完整计划只留服务端，界面展示目标路径、前后摘要、备份/导出和本次新增正文。确认 token 绑定当前 HOME/Host、解释器、环境与来源，十分钟过期且仅用一次；执行时原内核重生成方案，任何来源或现场漂移拒绝。
 
@@ -45,15 +45,49 @@ python3 -B tools/windows-preview/paseo.py --archive "$ARCHIVE" --sha256 "$ARCHIV
 
 `OUTPUT` 必须是源码外的新目录；工具复用独立预览包校验，生成 `plugins/paseo/windows-preview/` 和对应摘要常量，不安装、不改 checkout、不提交、不发布。正式候选将这两处作为同包受管生成物审核，Mac payload 仍沿原 S/R 流程。未经生成的开发目录不能安装 Windows 产品。源码/合成联调通过不等于候选已生成、插件 running 或两端应用 UI 验收通过。
 
-当前真机证据限定为固定 DELL、Windows 11 x64、本地 NTFS、Paseo 0.15.3。独立 HOME 的真实 daemon/SDK RPC 已验证插件加载、取消、一次性确认、安装、新增、漂移拒绝和退出导出；导出字节、原生私文及 BOM/CRLF 均核对。日常 Host 已实际安装插件和独立预览，重开 Paseo 后可通过其实际环境中的 Python 读取状态。Python 必须在 daemon 启动环境的 PATH 中可用；WindowsApps stub 不算可用解释器，安装 Python 后旧进程可能需要重新打开应用才能取得环境。
+当前真机证据限定为固定 DELL、Windows 11 x64、本地 NTFS。Paseo 0.15.3 的独立 HOME 真实 daemon/SDK RPC 已验证插件加载、取消、一次性确认、安装、新增、漂移拒绝和退出导出；导出字节、原生私文及 BOM/CRLF 均核对。日常 Host 已实际安装插件和独立预览，重开 Paseo 后可通过其实际环境中的 Python 读取状态。Python 必须在 daemon 启动环境的 PATH 中可用；WindowsApps stub 不算可用解释器，安装 Python 后旧进程可能需要重新打开应用才能取得环境。
 
 Windows 应用的共用向导已实际完成状态展示、新增预览、拒绝后正文 hash 不变、确认新增仅一次及结果显示，并由所选宿主读回核对。Mac 应用已实际核对共用状态页、设置初始表单及已安装场景的预览入口；检测到已接入后直接显示完成，保护文件 hash 不变。Mac 全新安装、变更确认与退出等其他界面分支仍分别待验。当前候选已在固定 DELL 的 ZCode 与 WorkBuddy 原生新会话中读回同一公共验收标记；ZCode 聊天新增后，WorkBuddy 新会话也已读到新条目，且问题未预填答案。反向聊天写入按用户选择跳过，保持未验。Windows 退出预览与拒绝已实际核对，拒绝后仍为已接入、公共正文 hash 不变；实际退出导出与重新接入的界面闭环、不支持功能入口拦截仍待验。状态页的 busy 提示与刷新后恢复表单已观察，unknown/失败分支仍仅有合成证据。窄窗口下设置表单、状态页滚动与当前公共正文展开已核对；其他宽度、弹窗和主题不据此宣称通过。CUA 远程点击通道不可用时，用户操作与实际画面/宿主读回共同构成已做项目的证据，不能把后端通过扩大为完整 UI 通过。
 
 Mac 与 Windows 共用状态页、向导页、主按钮、变更预览、确认弹窗与结果组件，不维护独立的 Windows 管理页。命令中心入口保持一致：“查看共享状态”只读；“设置记忆共享”与“卸载记忆共享”沿填写/选择 → 生成精确预览 → 核对计划 → 确认执行或返回并拒绝 → 结果的同一顺序。融合选择仍按原语义“选择即执行”，不额外增加确认。
 
-差异只由能力与实际状态提供：macOS 保留现有环境/来源检查、参与者选择和融合/归还等流程；Windows 限定 ZCode/WorkBuddy 成对接入，已接入后的设置表单只提供明确新增，退出先导出再恢复入口。不支持的项目/CK/恢复能力在原命令对应页面提示，不落入普通安装。版本与配置限制只在首次接入或按需详情出现；状态页不放新增或卸载表单。
+差异只由能力与实际状态提供：macOS 保留现有环境/来源检查、参与者选择和融合/归还等流程；Windows 限定 ZCode/WorkBuddy 成对接入，已接入后的设置表单只提供明确新增，退出先导出再恢复入口。不支持的项目/恢复能力在原命令对应页面提示，不落入普通安装。版本与配置限制只在首次接入或按需详情出现；状态页不放新增或卸载表单。
 
 宿主用受支持的 `context.paseo.config.get().config.plugins` 定位自身包；只消费 plugins，不记录其他配置。固定包 ID `memsharing` 与编译期 manifest 摘要、完整载荷字节/模式、唯一 canonical 来源共同绑定。CLI runtime 别名不等于包身份。每次 RPC 复验；来源/环境漂移闭锁并取消七类 flow，要求重载后重新预览，不重建 Orchestrator 来继承旧批准。
+
+### Windows 可选 Context Keeper
+
+此流程仅为固定 DELL 上的 ZCode 与 WorkBuddy 安装用户级 Context Keeper，使用独立的 `windows-ck.plan/confirm/cancel/status` RPC；普通生产 RPC 的 Windows 拒绝不变。需要 Host 上实际可用的 Python 3.9+ 与 Git，不自动下载 Windows 运行时，也不自动创建项目记录库。
+
+操作顺序：
+
+1. 预览官方 `main` 的获取位置，确认后在独立暂存目录获取并核验源码。
+2. 获取完成后生成安装预览，核对实际支持/跳过的客户端、规则文件、Skill 目录联接及共享回执的变更。
+3. 单独确认安装；后台执行时由页面只读查询状态。关闭再打开页面可查询本插件进程内的结果，不重复执行。插件重载会清除旧批准。
+4. 不安装时拒绝计划。源码准备完成不等于安装完成；暂存源码不会因获取或拒绝安装而替换正在使用的技能。
+
+每个新安装意图重新获取官方 `main`。已有源码与最新 `main` 的 HEAD 相同才复用；版本不同则停止并保留当前技能，提示单独审核升级，不支持通过重新安装原地更新，不回退到旧版本。Context Keeper 源码不打包进 memSharing，实际安装调用核验后的上游安装器。
+
+安装与公共记忆共享预览共用写锁。确认 token 单次有效、十分钟过期，并绑定 Host/HOME、解释器、环境和源码字节；锁内重新核对精确计划。Windows 磁盘和文件标识用十进制字符串跨 RPC 传递，避免大整数舍入。提交前逐一要求批准计划中的 Skill 入口为指向批准源码的有效联接，缺失也进入失败恢复。
+
+原生规则的私文快照仅保留在服务端及用户目录的 `.mem-sharing-ck-operations/<run_id>/journal.json`，不传给界面。失败时只恢复仍匹配本次预期的规则和回执，移除本次新增且仍指向所选源码的联接；外来修改保留。未知结果或未闭合日志会阻止继续安装，须保留材料核对，不自动抢锁或重放。
+
+写入两家规则时，同步更新共享回执中的安装摘要和退出恢复快照。以后退出公共记忆共享会保留 Context Keeper 原生入口与联接，并完整导出公共记忆；退出共享或卸载插件均不等于卸载 Context Keeper。
+
+当前验收边界：
+
+| 场景 | 固定 DELL 的已验范围 |
+| --- | --- |
+| 实际安装 | 两端规则、共享回执匹配批准摘要，三个 Skill 联接入口与官方源码一致；公共记忆、原有共享 Skill 和 Paseo 配置保持原字节 |
+| ZCode 新会话 | 实际读取 Context Keeper 与公共记忆；无项目记录时停止，没有初始化记录库。已有记录的续接/查找未在本轮验证 |
+| WorkBuddy 原生客户端 | 实际加载技能；无记录时只读停止；从历史测试项目只读恢复进度；合成项目完成保存→独立新会话续接，恢复完成事项、决定、待办和来源 |
+| 只读保护 | 历史恢复前后 50 个记录文件不变；合成项目续接前后四个记录文件不变；九个用户级关键文件摘要保持一致 |
+| 收尾修复部署 | 两个已审核服务端文件部署并读回摘要一致；两个插件运行正常、共享仍已接入、Context Keeper 空闲；九个关键文件及原有 Context Keeper 源码摘要不变 |
+| 尚未验证 | 修复后的重新安装与真实失败恢复、实际退出/重装、Mac 完整新安装与退出，以及一般 Windows 支持 |
+
+WorkBuddy 的 Paseo 运行入口与原生客户端分别验收：前者的原始记录返回需要登录，Paseo 时间线未展示该认证错误；原生客户端的成功不代表 Paseo 运行入口已通过。保存→续接是实际客户端上的合成项目测试，项目日记也包含测试事实，因此不是排除其他记忆通道的盲测，更不代表测试项目的业务功能已验证。
+
+收尾修复已通过插件测试、Python 适配测试、类型检查及巴克队长独立审核，并完成部署与状态读回；未重新执行客户端保存→续接或真实故障注入。当前仅可按固定 DELL 已有配置的限定预览交付，不能据此宣称一般 Windows 支持或正式发布。
 
 ## 接入与批准
 
@@ -80,7 +114,7 @@ R=`~/.mem-sharing`、C=`~/.local/share/mem-sharing`、V=`~/.mem-sharing/var/regi
 
 ## Context Keeper
 
-Context Keeper 是独立可选 Skill，每次从官方仓库 `main` 实时获取最新代码，不锁定版本或内置源码。来源获取先独立批准，持久 clean checkout 验证后再调用原上游安装器，安装批准单独进行。拒绝/失败不回滚 memSharing，不自动建项目记录库。
+Context Keeper 是独立可选 Skill，每次从官方仓库 `main` 获取当前代码，不内置源码。来源获取与安装分别批准；使用独立暂存 checkout 获取并验证，已有技能源码不在获取阶段更新，同 HEAD 才复用，版本不同保护性停止。需要升级时另行审核，不能以获取或重新安装替代升级批准。拒绝/失败不回滚 memSharing，不自动建项目记录库。Windows 的具体范围见[可选安装流程](#windows-可选-context-keeper)。
 
 按当次上游安装器实际能力核实六家支持范围；多个执行器共用的 Skill 目录只列一次。宿主 enabled、Skill 链接存在、原生新会话实际读取和首次命令/保存是不同证据。无项目聊天、disabled、linked worktree 和首次 `/context-keeper` 规则继续生效，不用插件 hook 模拟自动保存。更新/卸载插件不升级或接管 Context Keeper。
 
