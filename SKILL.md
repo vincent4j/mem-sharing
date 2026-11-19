@@ -1,6 +1,6 @@
 ---
 name: mem-sharing
-description: 多 Agent 记忆共享与融合，给你的每一个 AI Agent 同一份记忆。
+description: 给你的每一个 AI Agent 同一份记忆。Codex 记住的偏好，Claude Code 和 WorkBuddy 接着用；昨天做到一半的工作，今天任何 Agent 接着做。
 ---
 
 # memSharing
