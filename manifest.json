@@ -1,8 +1,8 @@
 {
   "type": "skill",
   "code": "mem-sharing",
-  "version": "0.2.0",
-  "name": "memSharing 多 Agent 编排记忆共享与融合",
+  "version": "0.2.1",
+  "name": "多Agent编排记忆共享与融合 memSharing",
   "description": "给你的每一个 AI Agent 同一份记忆。Codex 记住的偏好，Claude Code 和 WorkBuddy 接着用；昨天做到一半的工作，今天任何 Agent 接着做。",
   "runtimeTargets": [
     "codex",
@@ -32,11 +32,11 @@
     },
     {
       "path": "SKILL.md",
-      "sha256": "d631a3cc18561172220a82e245955d9d8782df15f9048b64d62d30ce78b498a5"
+      "sha256": "2a49e3c4253713010470c20d14d78876d8a02db48081cda8d3687e39fc163a8e"
     },
     {
       "path": "assets/icon.png",
-      "sha256": "fb3a50140c7dcf023475c11e2a79eb9e1d8d56e0a951b21a02f50dbfe84403de"
+      "sha256": "1d8f8d2ac6ae3faf140ef0bb40d7eea693a216a344a4a8a7b13c18671c41108e"
     },
     {
       "path": "docs/README.md",
